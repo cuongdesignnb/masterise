@@ -34,8 +34,9 @@ export default function RootLayout({
     <html
       lang="vi"
       className={`${playfair.variable} ${beVietnam.variable} scroll-smooth`}
+      suppressHydrationWarning
     >
-      <body className="bg-cream text-ink antialiased">
+      <body className="bg-cream text-ink antialiased" suppressHydrationWarning>
         <Providers>{children}</Providers>
       </body>
     </html>
