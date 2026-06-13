@@ -25,6 +25,7 @@ import {
   Settings
 } from 'lucide-react';
 import MediaSelectModal from '@/components/admin/MediaSelectModal';
+import RichTextEditor from '@/components/admin/RichTextEditor';
 
 export default function AdminProjects() {
   const queryClient = useQueryClient();
@@ -47,34 +48,65 @@ export default function AdminProjects() {
   const [editingCategory, setEditingCategory] = useState<ProjectCategory | null>(null);
   
   // Media Selector state
-  const [mediaSelectorTarget, setMediaSelectorTarget] = useState<'thumbnail' | 'gallery' | 'brochure' | null>(null);
+  const [mediaSelectorTarget, setMediaSelectorTarget] = useState<'thumbnail' | 'banner' | 'gallery' | 'brochure' | null>(null);
 
   // Form states
   const [formName, setFormName] = useState('');
   const [formSlug, setFormSlug] = useState('');
+  const [formCode, setFormCode] = useState('');
+  const [formDeveloperId, setFormDeveloperId] = useState<number | ''>('');
+  const [formLocationId, setFormLocationId] = useState<number | ''>('');
   const [formStatus, setFormStatus] = useState<'upcoming' | 'selling' | 'completed'>('upcoming');
+  const [formSalesStatus, setFormSalesStatus] = useState<string>('coming_soon');
   const [formIsFeatured, setFormIsFeatured] = useState(false);
+  const [formIsPublished, setFormIsPublished] = useState(false);
+  const [formSortOrder, setFormSortOrder] = useState<number>(0);
   const [formDeveloper, setFormDeveloper] = useState('Masterise Homes');
   const [formScale, setFormScale] = useState('');
   const [formHandoverYear, setFormHandoverYear] = useState<number | ''>('');
-  const [formAreaSize, setFormAreaSize] = useState('');
+  const [formHandoverTime, setFormHandoverTime] = useState('');
   
   const [formLocation, setFormLocation] = useState('');
   const [formRegion, setFormRegion] = useState('Miền Nam');
+  const [formAddress, setFormAddress] = useState('');
+  const [formProvince, setFormProvince] = useState('');
+  const [formDistrict, setFormDistrict] = useState('');
+  const [formWard, setFormWard] = useState('');
   const [formLat, setFormLat] = useState<number | ''>('');
   const [formLng, setFormLng] = useState<number | ''>('');
+  
   const [formPriceMin, setFormPriceMin] = useState<number | ''>('');
   const [formPriceMax, setFormPriceMax] = useState<number | ''>('');
   const [formPriceText, setFormPriceText] = useState('');
+  const [formAreaMin, setFormAreaMin] = useState<number | ''>('');
+  const [formAreaMax, setFormAreaMax] = useState<number | ''>('');
+  const [formAreaText, setFormAreaText] = useState('');
+  const [formAreaSize, setFormAreaSize] = useState('');
+  
+  const [formLegalStatus, setFormLegalStatus] = useState('');
+  const [formOwnershipType, setFormOwnershipType] = useState('');
+  const [formConstructionDensity, setFormConstructionDensity] = useState('');
+  const [formTotalArea, setFormTotalArea] = useState('');
+  const [formTotalUnits, setFormTotalUnits] = useState<number | ''>('');
+  const [formTotalBlocks, setFormTotalBlocks] = useState<number | ''>('');
+  const [formTotalFloors, setFormTotalFloors] = useState<number | ''>('');
   
   const [formDescription, setFormDescription] = useState('');
   const [formContent, setFormContent] = useState('');
   const [formAmenities, setFormAmenities] = useState<string>('');
   const [formCategoryIds, setFormCategoryIds] = useState<number[]>([]);
+  const [formHighlightPoints, setFormHighlightPoints] = useState<string>('');
+  const [formNearbyPlaces, setFormNearbyPlaces] = useState<string>('');
+  const [formPaymentPolicy, setFormPaymentPolicy] = useState('');
+  const [formSalesPolicy, setFormSalesPolicy] = useState('');
+  const [formBookingPolicy, setFormBookingPolicy] = useState('');
   
   const [formThumbnail, setFormThumbnail] = useState('');
+  const [formBannerImage, setFormBannerImage] = useState('');
   const [formGallery, setFormGallery] = useState<string[]>([]);
   const [formBrochureUrl, setFormBrochureUrl] = useState('');
+  const [formVideoUrl, setFormVideoUrl] = useState('');
+  const [formVirtualTourUrl, setFormVirtualTourUrl] = useState('');
   
   const [formSeoTitle, setFormSeoTitle] = useState('');
   const [formSeoDescription, setFormSeoDescription] = useState('');
@@ -99,6 +131,25 @@ export default function AdminProjects() {
       return response.data;
     },
   });
+
+  const { data: developersData } = useQuery({
+    queryKey: ['admin-developers-select'],
+    queryFn: async () => {
+      const response = await api.get<any>('/developers?all=true');
+      return response.data || [];
+    }
+  });
+
+  const { data: locationsData } = useQuery({
+    queryKey: ['admin-locations-select'],
+    queryFn: async () => {
+      const response = await api.get<any>('/locations?all=true');
+      return response.data || [];
+    }
+  });
+
+  const developersSelect = Array.isArray(developersData) ? developersData : [];
+  const locationsSelect = Array.isArray(locationsData) ? locationsData : [];
 
   // Helper to slugify
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -128,26 +179,55 @@ export default function AdminProjects() {
     // Reset fields
     setFormName('');
     setFormSlug('');
+    setFormCode('');
+    setFormDeveloperId('');
+    setFormLocationId('');
     setFormStatus('upcoming');
+    setFormSalesStatus('coming_soon');
     setFormIsFeatured(false);
+    setFormIsPublished(false);
+    setFormSortOrder(0);
     setFormDeveloper('Masterise Homes');
     setFormScale('');
     setFormHandoverYear('');
-    setFormAreaSize('');
+    setFormHandoverTime('');
     setFormLocation('');
     setFormRegion('Miền Nam');
+    setFormAddress('');
+    setFormProvince('');
+    setFormDistrict('');
+    setFormWard('');
     setFormLat('');
     setFormLng('');
     setFormPriceMin('');
     setFormPriceMax('');
     setFormPriceText('');
+    setFormAreaMin('');
+    setFormAreaMax('');
+    setFormAreaText('');
+    setFormAreaSize('');
+    setFormLegalStatus('');
+    setFormOwnershipType('');
+    setFormConstructionDensity('');
+    setFormTotalArea('');
+    setFormTotalUnits('');
+    setFormTotalBlocks('');
+    setFormTotalFloors('');
     setFormDescription('');
     setFormContent('');
     setFormAmenities('');
     setFormCategoryIds([]);
+    setFormHighlightPoints('');
+    setFormNearbyPlaces('');
+    setFormPaymentPolicy('');
+    setFormSalesPolicy('');
+    setFormBookingPolicy('');
     setFormThumbnail('');
+    setFormBannerImage('');
     setFormGallery([]);
     setFormBrochureUrl('');
+    setFormVideoUrl('');
+    setFormVirtualTourUrl('');
     setFormSeoTitle('');
     setFormSeoDescription('');
     setFormSeoKeywords('');
@@ -163,26 +243,55 @@ export default function AdminProjects() {
     // Fill fields
     setFormName(project.name);
     setFormSlug(project.slug);
+    setFormCode(project.code || '');
+    setFormDeveloperId(project.developer_id || '');
+    setFormLocationId(project.location_id || '');
     setFormStatus(project.status);
+    setFormSalesStatus(project.sales_status || 'coming_soon');
     setFormIsFeatured(project.is_featured);
+    setFormIsPublished(project.is_published || false);
+    setFormSortOrder(project.sort_order || 0);
     setFormDeveloper(project.developer || 'Masterise Homes');
     setFormScale(project.scale || '');
     setFormHandoverYear(project.handover_year || '');
-    setFormAreaSize(project.area_size || '');
+    setFormHandoverTime(project.handover_time || '');
     setFormLocation(project.location || '');
     setFormRegion(project.region || 'Miền Nam');
+    setFormAddress(project.address || '');
+    setFormProvince(project.province || '');
+    setFormDistrict(project.district || '');
+    setFormWard(project.ward || '');
     setFormLat(project.lat || '');
     setFormLng(project.lng || '');
     setFormPriceMin(project.price_min ? Number(project.price_min) : '');
     setFormPriceMax(project.price_max ? Number(project.price_max) : '');
     setFormPriceText(project.price_text || '');
+    setFormAreaMin(project.area_min ? Number(project.area_min) : '');
+    setFormAreaMax(project.area_max ? Number(project.area_max) : '');
+    setFormAreaText(project.area_text || '');
+    setFormAreaSize(project.area_size || '');
+    setFormLegalStatus(project.legal_status || '');
+    setFormOwnershipType(project.ownership_type || '');
+    setFormConstructionDensity(project.construction_density || '');
+    setFormTotalArea(project.total_area || '');
+    setFormTotalUnits(project.total_units || '');
+    setFormTotalBlocks(project.total_blocks || '');
+    setFormTotalFloors(project.total_floors || '');
     setFormDescription(project.description || '');
     setFormContent(project.content || '');
     setFormAmenities(project.amenities ? project.amenities.join(', ') : '');
     setFormCategoryIds(project.categories ? project.categories.map(c => c.id) : []);
+    setFormHighlightPoints(project.highlight_points ? project.highlight_points.join('\n') : '');
+    setFormNearbyPlaces(project.nearby_places ? project.nearby_places.join('\n') : '');
+    setFormPaymentPolicy(project.payment_policy || '');
+    setFormSalesPolicy(project.sales_policy || '');
+    setFormBookingPolicy(project.booking_policy || '');
     setFormThumbnail(project.thumbnail || '');
+    setFormBannerImage(project.banner_image || '');
     setFormGallery(project.gallery || []);
     setFormBrochureUrl(project.brochure_url || '');
+    setFormVideoUrl(project.video_url || '');
+    setFormVirtualTourUrl(project.virtual_tour_url || '');
     
     setFormSeoTitle(project.seo_meta?.title || '');
     setFormSeoDescription(project.seo_meta?.description || '');
@@ -199,32 +308,77 @@ export default function AdminProjects() {
         .map(a => a.trim())
         .filter(a => a.length > 0);
       
+      const highlightsArr = formHighlightPoints
+        .split('\n')
+        .map(h => h.trim())
+        .filter(h => h.length > 0);
+
+      const nearbyArr = formNearbyPlaces
+        .split('\n')
+        .map(n => n.trim())
+        .filter(n => n.length > 0);
+
       const payload = {
         name: formName,
         slug: formSlug,
+        code: formCode || null,
+        developer_id: formDeveloperId !== '' ? Number(formDeveloperId) : null,
+        location_id: formLocationId !== '' ? Number(formLocationId) : null,
         status: formStatus,
+        sales_status: formSalesStatus,
         is_featured: formIsFeatured,
+        is_published: formIsPublished,
+        sort_order: Number(formSortOrder),
         developer: formDeveloper,
         scale: formScale,
         handover_year: formHandoverYear !== '' ? Number(formHandoverYear) : null,
-        area_size: formAreaSize,
+        handover_time: formHandoverTime || null,
+        
         location: formLocation,
         region: formRegion,
+        address: formAddress || null,
+        province: formProvince || null,
+        district: formDistrict || null,
+        ward: formWard || null,
         lat: formLat !== '' ? Number(formLat) : null,
         lng: formLng !== '' ? Number(formLng) : null,
+        
         price_min: formPriceMin !== '' ? Number(formPriceMin) : null,
         price_max: formPriceMax !== '' ? Number(formPriceMax) : null,
         price_text: formPriceText,
+        area_min: formAreaMin !== '' ? Number(formAreaMin) : null,
+        area_max: formAreaMax !== '' ? Number(formAreaMax) : null,
+        area_text: formAreaText || null,
+        area_size: formAreaSize,
+        
+        legal_status: formLegalStatus || null,
+        ownership_type: formOwnershipType || null,
+        construction_density: formConstructionDensity || null,
+        total_area: formTotalArea || null,
+        total_units: formTotalUnits !== '' ? Number(formTotalUnits) : null,
+        total_blocks: formTotalBlocks !== '' ? Number(formTotalBlocks) : null,
+        total_floors: formTotalFloors !== '' ? Number(formTotalFloors) : null,
+        
         description: formDescription,
         content: formContent,
         amenities: amenitiesArr,
         category_ids: formCategoryIds,
+        highlight_points: highlightsArr,
+        nearby_places: nearbyArr,
+        payment_policy: formPaymentPolicy || null,
+        sales_policy: formSalesPolicy || null,
+        booking_policy: formBookingPolicy || null,
+        
+        thumbnail: formThumbnail,
+        banner_image: formBannerImage || null,
+        gallery: formGallery,
+        brochure_url: formBrochureUrl,
+        video_url: formVideoUrl || null,
+        virtual_tour_url: formVirtualTourUrl || null,
+        
         seo_title: formSeoTitle || formName,
         seo_description: formSeoDescription || formDescription,
         seo_keywords: formSeoKeywords,
-        thumbnail: formThumbnail,
-        gallery: formGallery,
-        brochure_url: formBrochureUrl,
       };
 
       if (editingProject) {
@@ -276,6 +430,8 @@ export default function AdminProjects() {
   const handleMediaSelected = (url: string | string[]) => {
     if (mediaSelectorTarget === 'thumbnail') {
       setFormThumbnail(url as string);
+    } else if (mediaSelectorTarget === 'banner') {
+      setFormBannerImage(url as string);
     } else if (mediaSelectorTarget === 'brochure') {
       setFormBrochureUrl(url as string);
     } else if (mediaSelectorTarget === 'gallery') {
@@ -620,7 +776,8 @@ export default function AdminProjects() {
                 {/* TAB 1: General Info */}
                 {activeTab === 'general' && (
                   <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Name, Slug, Code */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
                         <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Tên dự án *</label>
                         <input
@@ -643,22 +800,76 @@ export default function AdminProjects() {
                           placeholder="vi-du-the-global-city"
                         />
                       </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Mã dự án (Code)</label>
+                        <input
+                          type="text"
+                          value={formCode}
+                          onChange={(e) => setFormCode(e.target.value)}
+                          className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
+                          placeholder="Ví dụ: TGC-2026"
+                        />
+                      </div>
                     </div>
 
+                    {/* Developer dropdown, Developer name, Location dropdown */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
-                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Trạng thái bán *</label>
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Liên kết Chủ đầu tư</label>
                         <select
-                          value={formStatus}
-                          onChange={(e: any) => setFormStatus(e.target.value)}
+                          value={formDeveloperId}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setFormDeveloperId(val !== '' ? Number(val) : '');
+                            // Auto sync default name string if matching
+                            const found = developersSelect.find(d => d.id === Number(val));
+                            if (found) setFormDeveloper(found.name);
+                          }}
                           className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
                         >
-                          <option value="upcoming">Sắp mở bán</option>
-                          <option value="selling">Đang mở bán</option>
-                          <option value="completed">Đã bàn giao</option>
+                          <option value="">-- Chọn Chủ đầu tư --</option>
+                          {developersSelect.map(d => (
+                            <option key={d.id} value={d.id}>{d.name}</option>
+                          ))}
                         </select>
                       </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Tên chủ đầu tư hiển thị</label>
+                        <input
+                          type="text"
+                          value={formDeveloper}
+                          onChange={(e) => setFormDeveloper(e.target.value)}
+                          className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
+                          placeholder="Masterise Homes"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Liên kết Vị trí/Khu vực</label>
+                        <select
+                          value={formLocationId}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setFormLocationId(val !== '' ? Number(val) : '');
+                            const found = locationsSelect.find(l => l.id === Number(val));
+                            if (found) {
+                              setFormLocation(found.address || found.name);
+                              if (found.province) setFormProvince(found.province);
+                              if (found.district) setFormDistrict(found.district);
+                              if (found.ward) setFormWard(found.ward);
+                            }
+                          }}
+                          className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
+                        >
+                          <option value="">-- Chọn Vị trí khu vực --</option>
+                          {locationsSelect.map(l => (
+                            <option key={l.id} value={l.id}>{l.name} ({l.province || '—'})</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
 
+                    {/* Handover Year, Handover Time, Construction Density */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
                         <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Năm bàn giao</label>
                         <input
@@ -669,31 +880,30 @@ export default function AdminProjects() {
                           placeholder="Ví dụ: 2026"
                         />
                       </div>
-
                       <div>
-                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Quy mô diện tích</label>
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Thời gian bàn giao chi tiết</label>
                         <input
                           type="text"
-                          value={formAreaSize}
-                          onChange={(e) => setFormAreaSize(e.target.value)}
+                          value={formHandoverTime}
+                          onChange={(e) => setFormHandoverTime(e.target.value)}
                           className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
-                          placeholder="Ví dụ: 117.4 ha"
+                          placeholder="Ví dụ: Quý IV/2026, Đã bàn giao..."
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Mật độ xây dựng</label>
+                        <input
+                          type="text"
+                          value={formConstructionDensity}
+                          onChange={(e) => setFormConstructionDensity(e.target.value)}
+                          className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
+                          placeholder="Ví dụ: 23.5%"
                         />
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Chủ đầu tư</label>
-                        <input
-                          type="text"
-                          value={formDeveloper}
-                          onChange={(e) => setFormDeveloper(e.target.value)}
-                          className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
-                          placeholder="Masterise Homes"
-                        />
-                      </div>
-
+                    {/* Scale, Area size, Total area */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
                         <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Quy mô sản phẩm (scale)</label>
                         <input
@@ -704,20 +914,151 @@ export default function AdminProjects() {
                           placeholder="Ví dụ: 1800 căn hộ, 20 block"
                         />
                       </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Quy mô diện tích chung</label>
+                        <input
+                          type="text"
+                          value={formAreaSize}
+                          onChange={(e) => setFormAreaSize(e.target.value)}
+                          className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
+                          placeholder="Ví dụ: 117.4 ha"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Tổng diện tích đất cụ thể</label>
+                        <input
+                          type="text"
+                          value={formTotalArea}
+                          onChange={(e) => setFormTotalArea(e.target.value)}
+                          className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
+                          placeholder="Ví dụ: 1,174,000 m2"
+                        />
+                      </div>
                     </div>
 
-                    {/* Featured Checkbox */}
-                    <div className="flex items-center gap-2 py-2">
-                      <input
-                        type="checkbox"
-                        id="formIsFeatured"
-                        checked={formIsFeatured}
-                        onChange={(e) => setFormIsFeatured(e.target.checked)}
-                        className="w-4 h-4 rounded text-[#B88746] focus:ring-[#B88746] border-[#E8DCCB]"
-                      />
-                      <label htmlFor="formIsFeatured" className="text-xs font-semibold text-[#1F1B16] cursor-pointer">
-                        Đánh dấu dự án này là <b>Nổi bật</b> (Hiển thị trang chủ)
-                      </label>
+                    {/* Legal Status, Ownership Type, Sort Order */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Pháp lý dự án</label>
+                        <input
+                          type="text"
+                          value={formLegalStatus}
+                          onChange={(e) => setFormLegalStatus(e.target.value)}
+                          className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
+                          placeholder="Ví dụ: Đã phê duyệt 1/500, Sổ hồng lâu dài"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Hình thức sở hữu</label>
+                        <input
+                          type="text"
+                          value={formOwnershipType}
+                          onChange={(e) => setFormOwnershipType(e.target.value)}
+                          className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
+                          placeholder="Ví dụ: Lâu dài đối với người Việt"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Thứ tự sắp xếp hiển thị</label>
+                        <input
+                          type="number"
+                          value={formSortOrder}
+                          onChange={(e) => setFormSortOrder(Number(e.target.value))}
+                          className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
+                          placeholder="0"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Total units, Total blocks, Total floors */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Tổng số căn hộ/sản phẩm</label>
+                        <input
+                          type="number"
+                          value={formTotalUnits}
+                          onChange={(e) => setFormTotalUnits(e.target.value !== '' ? Number(e.target.value) : '')}
+                          className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
+                          placeholder="Ví dụ: 1800"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Tổng số block/tòa</label>
+                        <input
+                          type="number"
+                          value={formTotalBlocks}
+                          onChange={(e) => setFormTotalBlocks(e.target.value !== '' ? Number(e.target.value) : '')}
+                          className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
+                          placeholder="Ví dụ: 20"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Số tầng cao tối đa</label>
+                        <input
+                          type="number"
+                          value={formTotalFloors}
+                          onChange={(e) => setFormTotalFloors(e.target.value !== '' ? Number(e.target.value) : '')}
+                          className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
+                          placeholder="Ví dụ: 40"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Status selection, Sales status selection */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Trạng thái thi công/bàn giao *</label>
+                        <select
+                          value={formStatus}
+                          onChange={(e: any) => setFormStatus(e.target.value)}
+                          className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
+                        >
+                          <option value="upcoming">Chưa khởi công / Sắp mở bán</option>
+                          <option value="selling">Đang thi công / Đang mở bán</option>
+                          <option value="completed">Đã hoàn thành / Bàn giao</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Trạng thái giỏ hàng bán lẻ *</label>
+                        <select
+                          value={formSalesStatus}
+                          onChange={(e) => setFormSalesStatus(e.target.value)}
+                          className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
+                        >
+                          <option value="coming_soon">Sắp ra mắt (Coming Soon)</option>
+                          <option value="selling">Đang nhận booking/mở bán</option>
+                          <option value="sold_out">Đã cháy hàng (Sold Out)</option>
+                          <option value="handover">Đang bàn giao nhà</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Featured Checkbox & Publish Checkbox */}
+                    <div className="flex flex-col sm:flex-row gap-4 py-2 border-t border-b border-[#E8DCCB]/40">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id="formIsFeatured"
+                          checked={formIsFeatured}
+                          onChange={(e) => setFormIsFeatured(e.target.checked)}
+                          className="w-4 h-4 rounded text-[#B88746] focus:ring-[#B88746] border-[#E8DCCB]"
+                        />
+                        <label htmlFor="formIsFeatured" className="text-xs font-semibold text-[#1F1B16] cursor-pointer">
+                          Đánh dấu dự án này là <b>Nổi bật</b> (Hiển thị trang chủ)
+                        </label>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id="formIsPublished"
+                          checked={formIsPublished}
+                          onChange={(e) => setFormIsPublished(e.target.checked)}
+                          className="w-4 h-4 rounded text-[#B88746] focus:ring-[#B88746] border-[#E8DCCB]"
+                        />
+                        <label htmlFor="formIsPublished" className="text-xs font-semibold text-[#1F1B16] cursor-pointer">
+                          Xuất bản công khai dự án lên website
+                        </label>
+                      </div>
                     </div>
 
                     {/* Category Selection */}
@@ -753,18 +1094,18 @@ export default function AdminProjects() {
                 {/* TAB 2: Location & Price */}
                 {activeTab === 'location' && (
                   <div className="space-y-4">
-                    <div>
-                      <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Địa chỉ chính xác (location)</label>
-                      <input
-                        type="text"
-                        value={formLocation}
-                        onChange={(e) => setFormLocation(e.target.value)}
-                        className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
-                        placeholder="Ví dụ: Phường An Phú, TP. Thủ Đức, TP. Hồ Chí Minh"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* Location and Region */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Địa chỉ đầy đủ hiển thị (location)</label>
+                        <input
+                          type="text"
+                          value={formLocation}
+                          onChange={(e) => setFormLocation(e.target.value)}
+                          className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
+                          placeholder="Ví dụ: Phường An Phú, TP. Thủ Đức, TP. Hồ Chí Minh"
+                        />
+                      </div>
                       <div>
                         <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Vùng miền (region)</label>
                         <select
@@ -777,7 +1118,54 @@ export default function AdminProjects() {
                           <option value="Miền Nam">Miền Nam</option>
                         </select>
                       </div>
+                    </div>
 
+                    {/* Address components */}
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Địa chỉ số/đường</label>
+                        <input
+                          type="text"
+                          value={formAddress}
+                          onChange={(e) => setFormAddress(e.target.value)}
+                          className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
+                          placeholder="Số 2 Tôn Đức Thắng"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Phường/Xã</label>
+                        <input
+                          type="text"
+                          value={formWard}
+                          onChange={(e) => setFormWard(e.target.value)}
+                          className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
+                          placeholder="Phường Bến Nghé"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Quận/Huyện</label>
+                        <input
+                          type="text"
+                          value={formDistrict}
+                          onChange={(e) => setFormDistrict(e.target.value)}
+                          className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
+                          placeholder="Quận 1"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Tỉnh/Thành phố</label>
+                        <input
+                          type="text"
+                          value={formProvince}
+                          onChange={(e) => setFormProvince(e.target.value)}
+                          className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
+                          placeholder="TP. Hồ Chí Minh"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Coordinates */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Kinh độ (Longitude)</label>
                         <input
@@ -789,7 +1177,6 @@ export default function AdminProjects() {
                           placeholder="Ví dụ: 106.7725"
                         />
                       </div>
-
                       <div>
                         <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Vĩ độ (Latitude)</label>
                         <input
@@ -803,6 +1190,7 @@ export default function AdminProjects() {
                       </div>
                     </div>
 
+                    {/* Price Range and Text */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
                         <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Giá tối thiểu (Triệu VND / USD)</label>
@@ -814,7 +1202,6 @@ export default function AdminProjects() {
                           placeholder="Ví dụ: 5000 (cho 5 tỷ)"
                         />
                       </div>
-
                       <div>
                         <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Giá tối đa (Triệu VND / USD)</label>
                         <input
@@ -825,7 +1212,6 @@ export default function AdminProjects() {
                           placeholder="Ví dụ: 15000 (cho 15 tỷ)"
                         />
                       </div>
-
                       <div>
                         <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Text hiển thị giá *</label>
                         <input
@@ -835,6 +1221,42 @@ export default function AdminProjects() {
                           onChange={(e) => setFormPriceText(e.target.value)}
                           className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
                           placeholder="Ví dụ: Từ 5.5 tỷ / căn"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Area Size Range and Text */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Diện tích tối thiểu (m2)</label>
+                        <input
+                          type="number"
+                          step="any"
+                          value={formAreaMin}
+                          onChange={(e) => setFormAreaMin(e.target.value !== '' ? Number(e.target.value) : '')}
+                          className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
+                          placeholder="Ví dụ: 50"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Diện tích tối đa (m2)</label>
+                        <input
+                          type="number"
+                          step="any"
+                          value={formAreaMax}
+                          onChange={(e) => setFormAreaMax(e.target.value !== '' ? Number(e.target.value) : '')}
+                          className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
+                          placeholder="Ví dụ: 120"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Text hiển thị diện tích</label>
+                        <input
+                          type="text"
+                          value={formAreaText}
+                          onChange={(e) => setFormAreaText(e.target.value)}
+                          className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
+                          placeholder="Ví dụ: 50m2 - 120m2"
                         />
                       </div>
                     </div>
@@ -856,12 +1278,10 @@ export default function AdminProjects() {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Nội dung chi tiết (Markdown / HTML)</label>
-                      <textarea
+                      <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Nội dung chi tiết (Rich Text Editor)</label>
+                      <RichTextEditor
                         value={formContent}
-                        onChange={(e) => setFormContent(e.target.value)}
-                        rows={8}
-                        className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm font-mono focus:outline-none focus:ring-1 focus:ring-[#B88746]"
+                        onChange={setFormContent}
                         placeholder="Nội dung đầy đủ của dự án (Giới thiệu, quy mô chi tiết, hạ tầng...)"
                       />
                     </div>
@@ -873,9 +1293,59 @@ export default function AdminProjects() {
                         value={formAmenities}
                         onChange={(e) => setFormAmenities(e.target.value)}
                         className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
-                        placeholder="Ví dụ: Hồ bơi vô cực, Công viên trung tâm, Trung tâm thương mại, Sân tennis, Khu BBQ"
+                        placeholder="Ví dụ: Hồ bơi vô cực, Công viên trung tâm, Trung tâm thương mại"
                       />
                       <span className="text-[10px] text-[#8C7A6B] mt-1 block">Nhập danh sách tiện ích, mỗi tiện ích cách nhau bởi dấu phẩy (,)</span>
+                    </div>
+
+                    {/* Highlight points & Nearby places */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Đặc điểm nổi bật (Mỗi dòng một ý)</label>
+                        <textarea
+                          value={formHighlightPoints}
+                          onChange={(e) => setFormHighlightPoints(e.target.value)}
+                          rows={4}
+                          className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
+                          placeholder="Ví dụ:&#10;Vị trí kim cương trung tâm Thủ Đức&#10;Thiết kế bởi Foster + Partners&#10;Tiện ích chuẩn quốc tế 5 sao"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Liên kết vùng / Địa điểm lân cận (Mỗi dòng một ý)</label>
+                        <textarea
+                          value={formNearbyPlaces}
+                          onChange={(e) => setFormNearbyPlaces(e.target.value)}
+                          rows={4}
+                          className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
+                          placeholder="Ví dụ:&#10;Cách Chợ Bến Thành 15 phút di chuyển&#10;Liền kề Tuyến Metro số 1 Bến Thành - Suối Tiên&#10;Cách Sân bay Tân Sơn Nhất 20 phút"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Policies: Payment, Sales, Booking */}
+                    <div>
+                      <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Chính sách thanh toán (Rich Text)</label>
+                      <RichTextEditor
+                        value={formPaymentPolicy}
+                        onChange={setFormPaymentPolicy}
+                        placeholder="Tiến độ thanh toán, chiết khấu thanh toán sớm, hỗ trợ vay ngân hàng..."
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Chính sách ưu đãi bán hàng (Rich Text)</label>
+                      <RichTextEditor
+                        value={formSalesPolicy}
+                        onChange={setFormSalesPolicy}
+                        placeholder="Quà tặng tân gia, miễn phí dịch vụ quản lý, chiết khấu mua sỉ..."
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Quy định đặt giữ chỗ (Booking) (Rich Text)</label>
+                      <RichTextEditor
+                        value={formBookingPolicy}
+                        onChange={setFormBookingPolicy}
+                        placeholder="Số tiền booking/căn, hoàn tiền booking có điều kiện..."
+                      />
                     </div>
                   </div>
                 )}
@@ -885,7 +1355,7 @@ export default function AdminProjects() {
                   <div className="space-y-6">
                     {/* Thumbnail Selection */}
                     <div className="space-y-2">
-                      <label className="block text-xs font-semibold text-[#8C7A6B]">Ảnh đại diện (Thumbnail)</label>
+                      <label className="block text-xs font-semibold text-[#8C7A6B]">Ảnh đại diện hiển thị (Thumbnail)</label>
                       <div className="flex gap-4 items-center">
                         <div className="w-24 h-16 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] overflow-hidden flex items-center justify-center shrink-0">
                           {formThumbnail ? (
@@ -905,6 +1375,36 @@ export default function AdminProjects() {
                           <button
                             type="button"
                             onClick={() => setMediaSelectorTarget('thumbnail')}
+                            className="px-3 py-1.5 bg-[#1F1B16] hover:bg-[#B88746] text-white text-xs font-semibold rounded-lg transition-colors"
+                          >
+                            Chọn từ Media Library
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Banner Image Selection */}
+                    <div className="space-y-2">
+                      <label className="block text-xs font-semibold text-[#8C7A6B]">Ảnh Banner quảng cáo lớn (Banner Image)</label>
+                      <div className="flex gap-4 items-center">
+                        <div className="w-24 h-16 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] overflow-hidden flex items-center justify-center shrink-0">
+                          {formBannerImage ? (
+                            <img src={formBannerImage} alt="Banner Preview" className="w-full h-full object-cover" />
+                          ) : (
+                            <ImageIcon className="w-6 h-6 text-[#B88746]/40" />
+                          )}
+                        </div>
+                        <div className="flex-1 space-y-2">
+                          <input
+                            type="text"
+                            value={formBannerImage}
+                            onChange={(e) => setFormBannerImage(e.target.value)}
+                            className="w-full px-3 py-1.5 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-xs focus:outline-none"
+                            placeholder="URL hình ảnh banner lớn"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setMediaSelectorTarget('banner')}
                             className="px-3 py-1.5 bg-[#1F1B16] hover:bg-[#B88746] text-white text-xs font-semibold rounded-lg transition-colors"
                           >
                             Chọn từ Media Library
@@ -966,6 +1466,30 @@ export default function AdminProjects() {
                         >
                           Chọn từ Media
                         </button>
+                      </div>
+                    </div>
+
+                    {/* Video and Virtual Tour Links */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="block text-xs font-semibold text-[#8C7A6B]">Video giới thiệu (YouTube / Vimeo URL)</label>
+                        <input
+                          type="url"
+                          value={formVideoUrl}
+                          onChange={(e) => setFormVideoUrl(e.target.value)}
+                          className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                          placeholder="https://www.youtube.com/watch?v=..."
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="block text-xs font-semibold text-[#8C7A6B]">Link tham quan thực tế ảo (Virtual Tour 360/3D URL)</label>
+                        <input
+                          type="url"
+                          value={formVirtualTourUrl}
+                          onChange={(e) => setFormVirtualTourUrl(e.target.value)}
+                          className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                          placeholder="https://my.matterport.com/show/?m=..."
+                        />
                       </div>
                     </div>
                   </div>

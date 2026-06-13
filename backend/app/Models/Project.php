@@ -9,19 +9,49 @@ class Project extends Model
     protected $fillable = [
         'name',
         'slug',
+        'code',
+        'developer_id',
+        'location_id',
         'description',
         'content',
         'location',
         'region',
+        'address',
+        'province',
+        'district',
+        'ward',
         'price_min',
         'price_max',
         'price_text',
+        'area_min',
+        'area_max',
+        'area_text',
         'status',
+        'sales_status',
         'handover_year',
+        'handover_time',
+        'legal_status',
+        'ownership_type',
+        'construction_density',
+        'total_area',
+        'total_units',
+        'total_blocks',
+        'total_floors',
+        'highlight_points',
+        'nearby_places',
+        'payment_policy',
+        'sales_policy',
+        'booking_policy',
         'is_featured',
+        'is_published',
+        'published_at',
+        'sort_order',
         'thumbnail',
+        'banner_image',
         'gallery',
         'brochure_url',
+        'video_url',
+        'virtual_tour_url',
         'lat',
         'lng',
         'area_size',
@@ -35,12 +65,32 @@ class Project extends Model
         return [
             'gallery' => 'array',
             'amenities' => 'array',
+            'highlight_points' => 'array',
+            'nearby_places' => 'array',
             'is_featured' => 'boolean',
+            'is_published' => 'boolean',
+            'published_at' => 'datetime',
             'price_min' => 'decimal:2',
             'price_max' => 'decimal:2',
+            'area_min' => 'decimal:2',
+            'area_max' => 'decimal:2',
+            'sort_order' => 'integer',
+            'total_units' => 'integer',
+            'total_blocks' => 'integer',
+            'total_floors' => 'integer',
             'lat' => 'float',
             'lng' => 'float',
         ];
+    }
+
+    public function developerRelation()
+    {
+        return $this->belongsTo(Developer::class, 'developer_id');
+    }
+
+    public function locationRelation()
+    {
+        return $this->belongsTo(Location::class, 'location_id');
     }
 
     public function categories()
@@ -68,3 +118,4 @@ class Project extends Model
         return $this->morphOne(SeoMeta::class, 'seoable');
     }
 }
+

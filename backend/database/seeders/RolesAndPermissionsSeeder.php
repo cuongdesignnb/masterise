@@ -19,17 +19,44 @@ class RolesAndPermissionsSeeder extends Seeder
         // Reset cached roles and permissions
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
-        // Create permissions
+        // Extensive permissions list
         $permissions = [
             'dashboard.view',
+            
+            // Projects
             'projects.view', 'projects.create', 'projects.update', 'projects.delete', 'projects.publish', 'projects.seo',
+            
+            // Units (Sản phẩm)
+            'units.view', 'units.create', 'units.update', 'units.delete', 'units.import', 'units.export', 'units.status.update', 'units.seo',
+            
+            // Posts
             'posts.view', 'posts.create', 'posts.update', 'posts.delete', 'posts.publish', 'posts.seo',
-            'media.view', 'media.upload', 'media.delete',
-            'leads.view', 'leads.create', 'leads.update', 'leads.assign', 'leads.delete', 'leads.export',
-            'users.view', 'users.create', 'users.update', 'users.delete',
-            'seo.view', 'seo.update', 'redirects.manage', 'sitemap.manage',
+            
+            // Landing Pages
+            'landing_pages.view', 'landing_pages.create', 'landing_pages.update', 'landing_pages.delete', 'landing_pages.publish', 'landing_pages.seo',
+            
+            // Media
+            'media.view', 'media.upload', 'media.update', 'media.delete',
+            
+            // Leads
+            'leads.view', 'leads.create', 'leads.update', 'leads.assign', 'leads.delete', 'leads.export', 'leads.import',
+            
+            // Appointments
+            'appointments.view', 'appointments.create', 'appointments.update', 'appointments.delete', 'appointments.status.update',
+            
+            // SEO
+            'seo.view', 'seo.update', 'redirects.manage', 'sitemap.manage', 'schema.manage', 'seo.audit.view',
+            
+            // Settings
             'settings.view', 'settings.update',
-            'reports.view'
+            
+            // Users & Roles
+            'users.view', 'users.create', 'users.update', 'users.delete',
+            'roles.view', 'roles.create', 'roles.update', 'roles.delete',
+            
+            // Reports & Logs
+            'reports.view', 'reports.export',
+            'audit_logs.view'
         ];
 
         foreach ($permissions as $permission) {
@@ -38,53 +65,50 @@ class RolesAndPermissionsSeeder extends Seeder
 
         // Create roles and assign existing permissions
         
-        // 1. Super Admin
-        $superAdminRole = Role::findOrCreate('super_admin', 'web');
-        // Super Admin gets all permissions implicitly via Gate::before in AuthServiceProvider, but assigning them is also fine.
+        // 1. Super Admin (Implicitly gets all via Gate::before, but assigning for completeness)
+        $superAdmin = Role::findOrCreate('super_admin', 'web');
+        $superAdmin->syncPermissions($permissions);
 
         // 2. Admin
-        $adminRole = Role::findOrCreate('admin', 'web');
-        $adminRole->givePermissionTo([
-            'dashboard.view',
-            'projects.view', 'projects.create', 'projects.update', 'projects.delete', 'projects.publish', 'projects.seo',
-            'posts.view', 'posts.create', 'posts.update', 'posts.delete', 'posts.publish', 'posts.seo',
-            'media.view', 'media.upload', 'media.delete',
-            'leads.view', 'leads.create', 'leads.update', 'leads.assign', 'leads.delete', 'leads.export',
-            'users.view', 'users.create', 'users.update',
-            'seo.view', 'seo.update',
-            'settings.view'
-        ]);
+        $admin = Role::findOrCreate('admin', 'web');
+        $admin->syncPermissions($permissions); // Admin gets everything in default config
 
         // 3. Marketing
-        $marketingRole = Role::findOrCreate('marketing', 'web');
-        $marketingRole->givePermissionTo([
+        $marketing = Role::findOrCreate('marketing', 'web');
+        $marketing->syncPermissions([
             'dashboard.view',
             'projects.view', 'projects.seo',
             'posts.view', 'posts.create', 'posts.update', 'posts.delete', 'posts.publish', 'posts.seo',
-            'media.view', 'media.upload', 'media.delete',
-            'seo.view', 'seo.update', 'redirects.manage', 'sitemap.manage'
+            'landing_pages.view', 'landing_pages.create', 'landing_pages.update', 'landing_pages.delete', 'landing_pages.publish', 'landing_pages.seo',
+            'media.view', 'media.upload', 'media.update', 'media.delete',
+            'seo.view', 'seo.update', 'redirects.manage', 'sitemap.manage', 'schema.manage',
+            'settings.view'
         ]);
 
         // 4. Sales Manager
-        $salesManagerRole = Role::findOrCreate('sale_manager', 'web');
-        $salesManagerRole->givePermissionTo([
+        $salesManager = Role::findOrCreate('sale_manager', 'web');
+        $salesManager->syncPermissions([
             'dashboard.view',
             'projects.view',
-            'leads.view', 'leads.update', 'leads.assign', 'leads.delete', 'leads.export',
+            'units.view', 'units.status.update',
+            'leads.view', 'leads.update', 'leads.assign', 'leads.delete', 'leads.export', 'leads.import',
+            'appointments.view', 'appointments.update', 'appointments.status.update',
             'reports.view'
         ]);
 
         // 5. Sales Agent
-        $salesRole = Role::findOrCreate('sale', 'web');
-        $salesRole->givePermissionTo([
+        $sales = Role::findOrCreate('sale', 'web');
+        $sales->syncPermissions([
             'dashboard.view',
             'projects.view',
-            'leads.view', 'leads.update'
+            'units.view',
+            'leads.view', 'leads.update',
+            'appointments.view', 'appointments.status.update'
         ]);
 
         // 6. Customer
-        $customerRole = Role::findOrCreate('customer', 'web');
-        $customerRole->givePermissionTo([
+        $customer = Role::findOrCreate('customer', 'web');
+        $customer->syncPermissions([
             'dashboard.view'
         ]);
     }

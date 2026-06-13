@@ -9,6 +9,9 @@ use App\Http\Controllers\Api\SettingController;
 use App\Http\Controllers\Api\SeoController;
 use App\Http\Controllers\Api\MediaController;
 use App\Http\Controllers\Api\ReportController;
+use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\DeveloperController;
+use App\Http\Controllers\Api\LocationController;
 use Illuminate\Support\Facades\Route;
 
 Route::group(['prefix' => 'v1'], function() {
@@ -30,6 +33,14 @@ Route::group(['prefix' => 'v1'], function() {
     Route::get('/posts/featured', [PostController::class, 'featured']);
     Route::get('/posts/{slug}', [PostController::class, 'show']);
     Route::get('/post-categories', [PostController::class, 'categories']);
+
+    // Developers
+    Route::get('/developers', [DeveloperController::class, 'index']);
+    Route::get('/developers/{id}', [DeveloperController::class, 'show']);
+
+    // Locations
+    Route::get('/locations', [LocationController::class, 'index']);
+    Route::get('/locations/{id}', [LocationController::class, 'show']);
 
     // Leads submit
     Route::post('/leads/submit', [LeadController::class, 'submit']);
@@ -66,6 +77,16 @@ Route::group(['prefix' => 'v1'], function() {
 
         // Admin/Super Admin/Marketing only routes
         Route::group(['middleware' => ['role:super_admin|admin|marketing']], function() {
+            // Developers CRUD
+            Route::post('/developers', [DeveloperController::class, 'store']);
+            Route::put('/developers/{id}', [DeveloperController::class, 'update']);
+            Route::delete('/developers/{id}', [DeveloperController::class, 'destroy']);
+
+            // Locations CRUD
+            Route::post('/locations', [LocationController::class, 'store']);
+            Route::put('/locations/{id}', [LocationController::class, 'update']);
+            Route::delete('/locations/{id}', [LocationController::class, 'destroy']);
+
             // Projects CRUD
             Route::post('/projects', [ProjectController::class, 'store']);
             Route::put('/projects/{id}', [ProjectController::class, 'update']);
@@ -101,6 +122,9 @@ Route::group(['prefix' => 'v1'], function() {
             // Bulk settings update
             Route::get('/settings', [SettingController::class, 'index']);
             Route::put('/settings', [SettingController::class, 'update']);
+
+            // User management
+            Route::apiResource('/users', UserController::class);
         });
 
     });

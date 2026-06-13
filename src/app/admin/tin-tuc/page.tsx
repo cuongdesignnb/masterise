@@ -22,6 +22,7 @@ import {
   User
 } from 'lucide-react';
 import MediaSelectModal from '@/components/admin/MediaSelectModal';
+import RichTextEditor from '@/components/admin/RichTextEditor';
 
 export default function AdminNews() {
   const queryClient = useQueryClient();
@@ -595,12 +596,10 @@ export default function AdminNews() {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Nội dung bài viết (Markdown / HTML)</label>
-                      <textarea
+                      <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Nội dung bài viết (Rich Text Editor)</label>
+                      <RichTextEditor
                         value={formContent}
-                        onChange={(e) => setFormContent(e.target.value)}
-                        rows={10}
-                        className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm font-mono focus:outline-none"
+                        onChange={setFormContent}
                         placeholder="Nhập nội dung bài viết đầy đủ..."
                       />
                     </div>

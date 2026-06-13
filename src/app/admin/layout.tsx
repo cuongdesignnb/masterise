@@ -18,7 +18,10 @@ import {
   X,
   Home,
   Shield,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Globe,
+  MapPin,
+  Award
 } from 'lucide-react';
 
 export default function AdminLayout({
@@ -65,10 +68,15 @@ export default function AdminLayout({
   const menuItems = [
     { name: 'Tổng quan', href: '/admin', icon: LayoutDashboard, roles: ['super_admin', 'admin', 'marketing', 'sale_manager', 'sale'] },
     { name: 'Quản lý Dự án', href: '/admin/du-an', icon: Building, roles: ['super_admin', 'admin', 'marketing'] },
+    { name: 'Chủ đầu tư', href: '/admin/developers', icon: Award, roles: ['super_admin', 'admin', 'marketing'] },
+    { name: 'Vị trí địa lý', href: '/admin/locations', icon: MapPin, roles: ['super_admin', 'admin', 'marketing'] },
     { name: 'Quản lý Tin tức', href: '/admin/tin-tuc', icon: Newspaper, roles: ['super_admin', 'admin', 'marketing'] },
     { name: 'Thư viện Media', href: '/admin/media', icon: ImageIcon, roles: ['super_admin', 'admin', 'marketing'] },
     { name: 'Quản lý Lead (CRM)', href: '/admin/leads', icon: FileSpreadsheet, roles: ['super_admin', 'admin', 'sale_manager', 'sale'] },
     { name: 'Lịch hẹn tham quan', href: '/admin/lich-hen', icon: Calendar, roles: ['super_admin', 'admin', 'sale_manager', 'sale'] },
+    { name: 'Quản lý Thành viên', href: '/admin/users', icon: Users, roles: ['super_admin', 'admin'] },
+    { name: 'Cấu hình SEO URL', href: '/admin/seo', icon: Globe, roles: ['super_admin', 'admin', 'marketing'] },
+    { name: 'Cài đặt hệ thống', href: '/admin/cai-dat', icon: Settings, roles: ['super_admin', 'admin'] },
   ];
 
   const filteredMenuItems = menuItems.filter(item => hasRole(item.roles));

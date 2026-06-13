@@ -15,7 +15,7 @@ class ProjectController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Project::query()->with(['categories', 'seoMeta']);
+        $query = Project::query()->with(['categories', 'seoMeta', 'developerRelation', 'locationRelation']);
 
         // Filter by search query
         if ($request->has('q') && !empty($request->q)) {
@@ -103,7 +103,7 @@ class ProjectController extends Controller
     public function show($slug)
     {
         $project = Project::where('slug', $slug)
-            ->with(['categories', 'seoMeta'])
+            ->with(['categories', 'seoMeta', 'developerRelation', 'locationRelation'])
             ->first();
 
         if (!$project) {
@@ -169,19 +169,48 @@ class ProjectController extends Controller
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:projects',
+            'code' => 'nullable|string|max:50',
+            'developer_id' => 'nullable|integer|exists:developers,id',
+            'location_id' => 'nullable|integer|exists:locations,id',
             'description' => 'nullable|string',
             'content' => 'nullable|string',
             'location' => 'nullable|string',
             'region' => 'nullable|string',
+            'address' => 'nullable|string',
+            'province' => 'nullable|string',
+            'district' => 'nullable|string',
+            'ward' => 'nullable|string',
             'price_min' => 'nullable|numeric',
             'price_max' => 'nullable|numeric',
             'price_text' => 'nullable|string',
+            'area_min' => 'nullable|numeric',
+            'area_max' => 'nullable|numeric',
+            'area_text' => 'nullable|string',
             'status' => 'required|string|in:upcoming,selling,completed',
+            'sales_status' => 'nullable|string|in:coming_soon,selling,sold_out,handover',
             'handover_year' => 'nullable|integer',
+            'handover_time' => 'nullable|string',
+            'legal_status' => 'nullable|string',
+            'ownership_type' => 'nullable|string',
+            'construction_density' => 'nullable|string',
+            'total_area' => 'nullable|string',
+            'total_units' => 'nullable|integer',
+            'total_blocks' => 'nullable|integer',
+            'total_floors' => 'nullable|integer',
+            'highlight_points' => 'nullable|array',
+            'nearby_places' => 'nullable|array',
+            'payment_policy' => 'nullable|string',
+            'sales_policy' => 'nullable|string',
+            'booking_policy' => 'nullable|string',
             'is_featured' => 'boolean',
+            'is_published' => 'boolean',
+            'sort_order' => 'nullable|integer',
             'thumbnail' => 'nullable|string',
+            'banner_image' => 'nullable|string',
             'gallery' => 'nullable|array',
             'brochure_url' => 'nullable|string',
+            'video_url' => 'nullable|string',
+            'virtual_tour_url' => 'nullable|string',
             'lat' => 'nullable|numeric',
             'lng' => 'nullable|numeric',
             'area_size' => 'nullable|string',
@@ -206,9 +235,15 @@ class ProjectController extends Controller
 
         // Create project
         $project = Project::create($request->only([
-            'name', 'slug', 'description', 'content', 'location', 'region',
-            'price_min', 'price_max', 'price_text', 'status', 'handover_year',
-            'is_featured', 'thumbnail', 'gallery', 'brochure_url', 'lat', 'lng',
+            'name', 'slug', 'code', 'developer_id', 'location_id', 'description', 'content', 
+            'location', 'region', 'address', 'province', 'district', 'ward',
+            'price_min', 'price_max', 'price_text', 'area_min', 'area_max', 'area_text',
+            'status', 'sales_status', 'handover_year', 'handover_time', 'legal_status', 
+            'ownership_type', 'construction_density', 'total_area', 'total_units', 
+            'total_blocks', 'total_floors', 'highlight_points', 'nearby_places', 
+            'payment_policy', 'sales_policy', 'booking_policy', 'is_featured', 
+            'is_published', 'sort_order', 'thumbnail', 'banner_image', 'gallery', 
+            'brochure_url', 'video_url', 'virtual_tour_url', 'lat', 'lng',
             'area_size', 'developer', 'scale', 'amenities'
         ]));
 
@@ -227,7 +262,7 @@ class ProjectController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Project created successfully',
-            'data' => $project->load(['categories', 'seoMeta'])
+            'data' => $project->load(['categories', 'seoMeta', 'developerRelation', 'locationRelation'])
         ], 201);
     }
 
@@ -248,19 +283,48 @@ class ProjectController extends Controller
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:projects,slug,' . $id,
+            'code' => 'nullable|string|max:50',
+            'developer_id' => 'nullable|integer|exists:developers,id',
+            'location_id' => 'nullable|integer|exists:locations,id',
             'description' => 'nullable|string',
             'content' => 'nullable|string',
             'location' => 'nullable|string',
             'region' => 'nullable|string',
+            'address' => 'nullable|string',
+            'province' => 'nullable|string',
+            'district' => 'nullable|string',
+            'ward' => 'nullable|string',
             'price_min' => 'nullable|numeric',
             'price_max' => 'nullable|numeric',
             'price_text' => 'nullable|string',
+            'area_min' => 'nullable|numeric',
+            'area_max' => 'nullable|numeric',
+            'area_text' => 'nullable|string',
             'status' => 'required|string|in:upcoming,selling,completed',
+            'sales_status' => 'nullable|string|in:coming_soon,selling,sold_out,handover',
             'handover_year' => 'nullable|integer',
+            'handover_time' => 'nullable|string',
+            'legal_status' => 'nullable|string',
+            'ownership_type' => 'nullable|string',
+            'construction_density' => 'nullable|string',
+            'total_area' => 'nullable|string',
+            'total_units' => 'nullable|integer',
+            'total_blocks' => 'nullable|integer',
+            'total_floors' => 'nullable|integer',
+            'highlight_points' => 'nullable|array',
+            'nearby_places' => 'nullable|array',
+            'payment_policy' => 'nullable|string',
+            'sales_policy' => 'nullable|string',
+            'booking_policy' => 'nullable|string',
             'is_featured' => 'boolean',
+            'is_published' => 'boolean',
+            'sort_order' => 'nullable|integer',
             'thumbnail' => 'nullable|string',
+            'banner_image' => 'nullable|string',
             'gallery' => 'nullable|array',
             'brochure_url' => 'nullable|string',
+            'video_url' => 'nullable|string',
+            'virtual_tour_url' => 'nullable|string',
             'lat' => 'nullable|numeric',
             'lng' => 'nullable|numeric',
             'area_size' => 'nullable|string',
@@ -284,9 +348,15 @@ class ProjectController extends Controller
         }
 
         $project->update($request->only([
-            'name', 'slug', 'description', 'content', 'location', 'region',
-            'price_min', 'price_max', 'price_text', 'status', 'handover_year',
-            'is_featured', 'thumbnail', 'gallery', 'brochure_url', 'lat', 'lng',
+            'name', 'slug', 'code', 'developer_id', 'location_id', 'description', 'content', 
+            'location', 'region', 'address', 'province', 'district', 'ward',
+            'price_min', 'price_max', 'price_text', 'area_min', 'area_max', 'area_text',
+            'status', 'sales_status', 'handover_year', 'handover_time', 'legal_status', 
+            'ownership_type', 'construction_density', 'total_area', 'total_units', 
+            'total_blocks', 'total_floors', 'highlight_points', 'nearby_places', 
+            'payment_policy', 'sales_policy', 'booking_policy', 'is_featured', 
+            'is_published', 'sort_order', 'thumbnail', 'banner_image', 'gallery', 
+            'brochure_url', 'video_url', 'virtual_tour_url', 'lat', 'lng',
             'area_size', 'developer', 'scale', 'amenities'
         ]));
 
@@ -308,7 +378,7 @@ class ProjectController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Project updated successfully',
-            'data' => $project->load(['categories', 'seoMeta'])
+            'data' => $project->load(['categories', 'seoMeta', 'developerRelation', 'locationRelation'])
         ], 200);
     }
 
