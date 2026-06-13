@@ -30,8 +30,14 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# env files
+.env
+.env.local
+.env.production
+.env.*.local
+# Keep these in git:
+!.env.docker
+!.env.production.example
 
 # vercel
 .vercel
@@ -39,3 +45,24 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# ===== Docker =====
+docker-compose.override.yml
+
+# ===== Laravel Backend =====
+backend/vendor/
+backend/node_modules/
+backend/.env
+backend/storage/framework/cache/data/*
+backend/storage/framework/sessions/*
+backend/storage/framework/views/*
+backend/storage/logs/*
+backend/bootstrap/cache/*
+!backend/storage/framework/cache/.gitkeep
+!backend/storage/framework/sessions/.gitkeep
+!backend/storage/framework/views/.gitkeep
+!backend/storage/logs/.gitkeep
+!backend/bootstrap/cache/.gitkeep
+backend/.phpunit.cache
+backend/storage/app/public/*
+!backend/storage/app/public/.gitkeep

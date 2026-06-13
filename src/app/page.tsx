@@ -1,65 +1,119 @@
-import Image from "next/image";
+import Header from "@/components/Header";
+import MobileTabBar from "@/components/MobileTabBar";
+import Hero from "@/components/Hero";
+import SearchBar from "@/components/SearchBar";
+import Stats from "@/components/Stats";
+import HotProjects from "@/components/HotProjects";
+import FeaturedProjects from "@/components/FeaturedProjects";
+import LuxuryCollections from "@/components/LuxuryCollections";
+import RegionProjects from "@/components/RegionProjects";
+import InvestmentOpportunities from "@/components/InvestmentOpportunities";
+import PropertyTypes from "@/components/PropertyTypes";
+import ProjectStatus from "@/components/ProjectStatus";
+import WhyChooseUs from "@/components/WhyChooseUs";
+import LifestyleAmenities from "@/components/LifestyleAmenities";
+import Testimonials from "@/components/Testimonials";
+import Partners from "@/components/Partners";
+import NewsAndGuide from "@/components/NewsAndGuide";
+import FAQ from "@/components/FAQ";
+import AccountCTA from "@/components/AccountCTA";
+import Footer from "@/components/Footer";
+import Container from "@/components/Container";
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+    <>
+      {/* 8.1 Header & Mobile Tab Bar */}
+      <Header />
+      <MobileTabBar />
+
+      <main className="relative z-10 pb-16 lg:pb-0">
+        {/* 8.2 Hero Section */}
+        <Hero />
+
+        {/* 8.3 Search Bar */}
+        <SearchBar />
+
+        {/* 8.4 Stats Strip */}
+        <Stats />
+
+        {/* 8.5 HOT Projects Carousel */}
+        <HotProjects />
+
+        {/* 8.6 Featured Projects Grid */}
+        <FeaturedProjects />
+
+        {/* 8.7 Luxury Collections Cards (horizontal split layout inside) */}
+        <LuxuryCollections />
+
+        {/* Region Projects + Investment Opportunities + Property Types in a unified 2-column layout row */}
+        <section id="phan-khuc" className="py-16 sm:py-20 bg-[#FFFDF8] border-t border-line/30">
+          <Container>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-stretch">
+              {/* Left Column: Region Projects (5/12 cols) */}
+              <div className="lg:col-span-5 flex flex-col lg:h-full">
+                <RegionProjects />
+              </div>
+              {/* Right Column: Investment Opportunities & Property Types (7/12 cols) */}
+              <div className="lg:col-span-7 flex flex-col lg:justify-between lg:h-full gap-10">
+                <div>
+                  <InvestmentOpportunities />
+                </div>
+                <div className="border-t border-line/20 pt-10">
+                  <PropertyTypes />
+                </div>
+              </div>
+            </div>
+          </Container>
+        </section>
+
+        {/* 8.11 Project Status columns (upcoming, selling, done) */}
+        <ProjectStatus />
+
+        {/* 8.12 Why Choose Us Benefits */}
+        <WhyChooseUs />
+
+        {/* 8.13 Lifestyle Amenities Gallery */}
+        <LifestyleAmenities />
+
+        {/* 8.14 & 8.15 Testimonials + Partners in a unified 2-column layout row */}
+        <section className="py-16 sm:py-20 bg-cream border-t border-line/35">
+          <Container>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-stretch">
+              {/* Left half: Testimonials */}
+              <div className="lg:col-span-6 flex flex-col lg:h-full">
+                <Testimonials />
+              </div>
+              {/* Right half: Partners logos */}
+              <div className="lg:col-span-6 flex flex-col lg:h-full">
+                <Partners />
+              </div>
+            </div>
+          </Container>
+        </section>
+
+        {/* 8.16 & 8.17 NewsAndGuide + FAQ in a unified 2-column layout row */}
+        <section className="py-16 sm:py-20 bg-ivory border-t border-line/35">
+          <Container>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-stretch">
+              {/* Left half: News */}
+              <div className="lg:col-span-6 flex flex-col lg:h-full">
+                <NewsAndGuide />
+              </div>
+              {/* Right half: FAQ Accordions */}
+              <div className="lg:col-span-6 flex flex-col lg:h-full">
+                <FAQ />
+              </div>
+            </div>
+          </Container>
+        </section>
+
+        {/* 8.18 Account Registration CTA & Dashboard Mockup */}
+        <AccountCTA />
       </main>
-    </div>
+
+      {/* 8.20 Footer */}
+      <Footer />
+    </>
   );
 }
