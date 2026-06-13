@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import MediaSelectModal from '@/components/admin/MediaSelectModal';
+import 'quill/dist/quill.snow.css';
 
 interface RichTextEditorProps {
   value: string;
@@ -23,7 +24,6 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
       
       try {
         const Quill = (await import('quill')).default;
-        await import('quill/dist/quill.snow.css');
 
         if (!active || !containerRef.current || quillRef.current) return;
 
