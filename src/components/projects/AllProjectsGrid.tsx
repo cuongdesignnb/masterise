@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
@@ -16,12 +17,29 @@ import EmptyState from "@/components/common/EmptyState";
 import ErrorState from "@/components/common/ErrorState";
 
 export default function AllProjectsGrid() {
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState("Tất cả");
 
+  // Read search query parameters
+  const q = searchParams.get("q") || "";
+  const region = searchParams.get("region") || "";
+  const category = searchParams.get("category") || "";
+  const status = searchParams.get("status") || "";
+  const priceMin = searchParams.get("price_min") || "";
+  const priceMax = searchParams.get("price_max") || "";
+
+  const queryParams: Record<string, string> = {};
+  if (q) queryParams.q = q;
+  if (region) queryParams.region = region;
+  if (category) queryParams.category = category;
+  if (status) queryParams.status = status;
+  if (priceMin) queryParams.price_min = priceMin;
+  if (priceMax) queryParams.price_max = priceMax;
+
   const { data: projects = [], isLoading, error, refetch } = useQuery({
-    queryKey: ["all-projects-grid"],
+    queryKey: ["all-projects-grid", queryParams],
     queryFn: async () => {
-      return await projectService.getProjects();
+      return await projectService.getProjects(queryParams);
     },
   });
 

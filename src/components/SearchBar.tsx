@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { MapPin, Building2, Home, Sliders, ShieldCheck, Search, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useRouter } from "next/navigation";
 import Button from "./Button";
 
 const filterOptions = {
@@ -39,6 +40,7 @@ const filterOptions = {
 };
 
 export default function SearchBar() {
+  const router = useRouter();
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [selectedValues, setSelectedValues] = useState<Record<string, string>>({
     location: "",
@@ -156,11 +158,50 @@ export default function SearchBar() {
           <div className="sm:col-span-2 lg:col-span-5 xl:col-span-1 flex items-center justify-end w-full">
             <Button
               onClick={() => {
-                const searchParams = Object.entries(selectedValues)
-                  .filter(([_, v]) => !!v)
-                  .map(([k, v]) => `${k}=${encodeURIComponent(v)}`)
-                  .join("&");
-                alert(`Tìm kiếm dự án với bộ lọc: \n${searchParams || "Tất cả dự án"}`);
+                const queryParams: string[] = [];
+                
+                if (selectedValues.location) {
+                  queryParams.push(`q=${encodeURIComponent(selectedValues.location)}`);
+                }
+                
+                if (selectedValues.price) {
+                  const pr = selectedValues.price;
+                  if (pr === "Dưới 5 tỷ") {
+                    queryParams.push("price_max=5000000000");
+                  } else if (pr === "Từ 5 - 10 tỷ") {
+                    queryParams.push("price_min=5000000000");
+                    queryParams.push("price_max=10000000000");
+                  } else if (pr === "Từ 10 - 20 tỷ") {
+                    queryParams.push("price_min=10000000000");
+                    queryParams.push("price_max=20000000000");
+                  } else if (pr === "Từ 20 - 50 tỷ") {
+                    queryParams.push("price_min=20000000000");
+                    queryParams.push("price_max=50000000000");
+                  } else if (pr === "Trên 50 tỷ") {
+                    queryParams.push("price_min=50000000000");
+                  }
+                }
+                
+                if (selectedValues.type) {
+                  const ty = selectedValues.type;
+                  if (ty.includes("Căn hộ") || ty.includes("Residences")) {
+                    queryParams.push("category=can-ho-cao-cap");
+                  } else if (ty.includes("Biệt thự")) {
+                    queryParams.push("category=biet-thu-dinh-thu");
+                  } else if (ty.includes("Shophouse")) {
+                    queryParams.push("category=shophouse-commercial");
+                  }
+                }
+                
+                if (selectedValues.status) {
+                  const st = selectedValues.status;
+                  if (st === "Sắp mở bán") queryParams.push("status=upcoming");
+                  else if (st === "Đang mở bán") queryParams.push("status=selling");
+                  else if (st === "Đã bàn giao") queryParams.push("status=completed");
+                }
+                
+                const searchString = queryParams.join("&");
+                router.push(`/du-an?${searchString}`);
               }}
               variant="solid"
               size="md"
