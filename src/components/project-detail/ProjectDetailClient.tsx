@@ -127,14 +127,14 @@ function SectionTitle({
   );
 }
 
-function LocationMap() {
+function LocationMap({ projectName }: { projectName: string }) {
   return (
     <div className="relative h-[330px] overflow-hidden rounded-[18px] border border-gold/35 bg-[#f8f4ec] lg:h-[410px]">
       <svg
         viewBox="0 0 900 520"
         className="h-full w-full"
         role="img"
-        aria-label="Bản đồ kết nối The Global City với trung tâm Thành phố Hồ Chí Minh"
+        aria-label={`Bản đồ kết nối ${projectName} với trung tâm Thành phố Hồ Chí Minh`}
       >
         <rect width="900" height="520" fill="#faf7f0" />
         <g fill="none" stroke="#d8eaf1" strokeWidth="18" opacity=".95">
@@ -176,7 +176,7 @@ function LocationMap() {
           <circle r="39" fill="none" stroke="#fff" strokeOpacity=".55" />
           <path d="M-13 10V-13L0-2 13-13V10M0-2V15" fill="none" stroke="#fff" strokeWidth="4" strokeLinecap="round" />
           <text x="0" y="30" textAnchor="middle" fill="#fff" fontFamily="Arial" fontSize="9">
-            THE GLOBAL CITY
+            {projectName.toUpperCase()}
           </text>
         </g>
       </svg>
@@ -216,7 +216,7 @@ export default function ProjectDetailClient({ project = defaultProject }: { proj
         >
           <Image
             src={project.heroImage}
-            alt="Toàn cảnh khu đô thị The Global City bên sông"
+            alt={`Toàn cảnh dự án ${project.name}`}
             fill
             priority
             sizes="(max-width: 768px) 100vw, 1500px"
@@ -405,7 +405,7 @@ export default function ProjectDetailClient({ project = defaultProject }: { proj
                 ))}
               </div>
             </div>
-            <LocationMap />
+            <LocationMap projectName={project.name} />
           </section>
         </Reveal>
 
@@ -599,7 +599,7 @@ export default function ProjectDetailClient({ project = defaultProject }: { proj
 
         <Reveal>
           <section>
-            <SectionTitle>VÌ SAO NÊN ĐẦU TƯ THE GLOBAL CITY?</SectionTitle>
+            <SectionTitle>VÌ SAO NÊN ĐẦU TƯ {project.name}?</SectionTitle>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
               {project.investmentReasons.map((reason) => (
                 <motion.article
@@ -710,7 +710,7 @@ export default function ProjectDetailClient({ project = defaultProject }: { proj
           >
             <Image
               src="https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?q=88&w=1600&auto=format&fit=crop"
-              alt="Không gian nội thất cao cấp tại The Global City"
+              alt={`Không gian nội thất cao cấp tại ${project.name}`}
               fill
               sizes="1500px"
               className="object-cover opacity-[.14]"
