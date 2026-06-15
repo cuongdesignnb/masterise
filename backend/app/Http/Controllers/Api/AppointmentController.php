@@ -137,7 +137,14 @@ class AppointmentController extends Controller
         }
 
         // Authorization check
-        if ($user->hasRole('customer') && $appointment->user_id !== $user->id) {
+        if ($user->hasRole('customer')) {
+            if ($appointment->user_id !== $user->id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized operation'
+                ], 403);
+            }
+            
             // Customer can only cancel their own appointment
             if ($request->status === 'cancelled') {
                 $appointment->update(['status' => 'cancelled']);
@@ -147,9 +154,10 @@ class AppointmentController extends Controller
                     'data' => $appointment
                 ], 200);
             }
+            
             return response()->json([
                 'success' => false,
-                'message' => 'Unauthorized operation'
+                'message' => 'Customers can only cancel their own appointments'
             ], 403);
         }
 

@@ -66,7 +66,7 @@ Route::group(['prefix' => 'v1'], function() {
         Route::post('/auth/change-password', [AuthController::class, 'changePassword']);
         Route::put('/auth/profile', [AuthController::class, 'updateProfile']);
         Route::post('/projects/{id}/toggle-save', [ProjectController::class, 'toggleSave']);
-        Route::get('/reports/stats', [ReportController::class, 'stats']);
+        Route::get('/reports/stats', [ReportController::class, 'stats'])->middleware('permission:dashboard.view');
         Route::get('/users/sales', [AuthController::class, 'salesAgents']);
 
         // Appointments booking & list (accessible by customer to book/list, agent to view/confirm)
@@ -79,11 +79,11 @@ Route::group(['prefix' => 'v1'], function() {
         Route::get('/lead-dashboard', [LeadController::class, 'dashboard'])->middleware('role:super_admin|admin|sale_manager');
 
         // Leads CRM notes & list (agent can view list of assigned, update status, add notes)
-        Route::get('/leads', [LeadController::class, 'index']);
-        Route::get('/leads/{id}', [LeadController::class, 'show']);
-        Route::patch('/leads/{id}', [LeadController::class, 'updateStatus']); // alias
-        Route::patch('/leads/{id}/status', [LeadController::class, 'updateStatus']);
-        Route::post('/leads/{id}/notes', [LeadController::class, 'addNote']);
+        Route::get('/leads', [LeadController::class, 'index'])->middleware('permission:leads.view');
+        Route::get('/leads/{id}', [LeadController::class, 'show'])->middleware('permission:leads.view');
+        Route::patch('/leads/{id}', [LeadController::class, 'updateStatus'])->middleware('permission:leads.view'); // alias
+        Route::patch('/leads/{id}/status', [LeadController::class, 'updateStatus'])->middleware('permission:leads.view');
+        Route::post('/leads/{id}/notes', [LeadController::class, 'addNote'])->middleware('permission:leads.view');
 
         // Admin/Super Admin/Marketing/Manager routes
         Route::group(['middleware' => ['role:super_admin|admin|marketing|sale_manager']], function() {

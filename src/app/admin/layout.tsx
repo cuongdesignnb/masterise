@@ -37,16 +37,23 @@ export default function AdminLayout({
   // Admin Guard
   useEffect(() => {
     if (!isLoading) {
+      console.log("[AdminGuard] Checking authorization:", {
+        user: user?.email,
+        pathname
+      });
       if (!user) {
+        console.log("[AdminGuard] No user found. Redirecting to /dang-nhap");
         router.push('/dang-nhap');
       } else {
         const isAdmin = hasRole(['super_admin', 'admin', 'marketing', 'sale_manager', 'sale']);
+        console.log("[AdminGuard] Is admin check:", isAdmin);
         if (!isAdmin) {
+          console.log("[AdminGuard] Non-admin user detected. Redirecting to /tai-khoan");
           router.push('/tai-khoan'); // Redirect non-staff to customer portal
         }
       }
     }
-  }, [user, isLoading, router, hasRole]);
+  }, [user, isLoading, router, hasRole, pathname]);
 
   if (isLoading) {
     return (
