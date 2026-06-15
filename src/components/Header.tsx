@@ -2,13 +2,15 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Menu, X, User } from "lucide-react";
+import { Menu, X, User, LogOut, LayoutDashboard } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { navigation } from "@/data/seed";
 import Container from "./Container";
 import Button from "./Button";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Header() {
+  const { user, roles, logout, isLoading } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
@@ -104,18 +106,52 @@ export default function Header() {
 
           {/* Right: Auth buttons (Desktop) */}
           <div className="hidden lg:flex items-center gap-3">
-            <Link
-              href="#login"
-              className="flex items-center justify-center w-10 h-10 rounded-full border border-line hover:border-gold hover:text-gold text-muted transition-colors"
-            >
-              <User size={18} />
-            </Link>
-            <Button href="#login" variant="outline" size="sm">
-              Đăng nhập
-            </Button>
-            <Button href="#register" variant="solid" size="sm">
-              Đăng ký
-            </Button>
+            {isLoading ? (
+              <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin" />
+            ) : user ? (
+              <div className="flex items-center gap-3">
+                <Link
+                  href="/tai-khoan"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-gold/30 hover:border-gold bg-gold/5 text-ink hover:text-gold transition-colors text-sm font-semibold"
+                >
+                  <div className="w-6 h-6 rounded-full bg-gold text-white flex items-center justify-center text-xs font-bold uppercase">
+                    {user.name.charAt(0)}
+                  </div>
+                  <span className="max-w-[120px] truncate">{user.name}</span>
+                </Link>
+                {roles.some(role => ['super_admin', 'admin', 'marketing', 'sale_manager', 'sale'].includes(role)) && (
+                  <Link
+                    href="/admin"
+                    className="flex items-center gap-1 text-xs font-semibold text-gold hover:text-gold-dark hover:underline"
+                  >
+                    <LayoutDashboard size={14} />
+                    Quản trị
+                  </Link>
+                )}
+                <button
+                  onClick={logout}
+                  className="p-2 text-muted hover:text-rose-600 transition-colors cursor-pointer"
+                  title="Đăng xuất"
+                >
+                  <LogOut size={16} />
+                </button>
+              </div>
+            ) : (
+              <>
+                <Link
+                  href="/dang-nhap"
+                  className="flex items-center justify-center w-10 h-10 rounded-full border border-line hover:border-gold hover:text-gold text-muted transition-colors"
+                >
+                  <User size={18} />
+                </Link>
+                <Button href="/dang-nhap" variant="outline" size="sm">
+                  Đăng nhập
+                </Button>
+                <Button href="/dang-ky" variant="solid" size="sm">
+                  Đăng ký
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Hamburger Menu Icon (Mobile) */}
@@ -182,24 +218,73 @@ export default function Header() {
 
             {/* Drawer Footer Actions */}
             <div className="flex flex-col gap-3 pt-5 border-t border-[#E8DCCB]/35 mt-auto flex-shrink-0">
-              <Button
-                href="#login"
-                variant="outline"
-                size="md"
-                className="w-full text-center"
-                onClick={() => setIsOpen(false)}
-              >
-                Đăng nhập
-              </Button>
-              <Button
-                href="#register"
-                variant="solid"
-                size="md"
-                className="w-full text-center"
-                onClick={() => setIsOpen(false)}
-              >
-                Đăng ký
-              </Button>
+              {isLoading ? (
+                <div className="flex justify-center py-2">
+                  <div className="w-6 h-6 border-2 border-gold border-t-transparent rounded-full animate-spin" />
+                </div>
+              ) : user ? (
+                <div className="space-y-3">
+                  <div className="p-3 bg-[#FBF8F2] rounded-xl border border-[#E8DCCB]/50 flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gold text-white flex items-center justify-center font-bold text-sm uppercase">
+                      {user.name.charAt(0)}
+                    </div>
+                    <div className="overflow-hidden">
+                      <p className="font-semibold text-sm text-ink truncate">{user.name}</p>
+                      <p className="text-xs text-muted truncate">{user.email}</p>
+                    </div>
+                  </div>
+                  <Button
+                    href="/tai-khoan"
+                    variant="outline"
+                    size="md"
+                    className="w-full text-center"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Vào trang cá nhân
+                  </Button>
+                  {roles.some(role => ['super_admin', 'admin', 'marketing', 'sale_manager', 'sale'].includes(role)) && (
+                    <Button
+                      href="/admin"
+                      variant="solid"
+                      size="md"
+                      className="w-full text-center"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      Trang quản trị
+                    </Button>
+                  )}
+                  <button
+                    onClick={() => {
+                      logout();
+                      setIsOpen(false);
+                    }}
+                    className="w-full py-3 text-center text-sm font-semibold text-rose-600 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer border border-rose-200"
+                  >
+                    Đăng xuất
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <Button
+                    href="/dang-nhap"
+                    variant="outline"
+                    size="md"
+                    className="w-full text-center"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Đăng nhập
+                  </Button>
+                  <Button
+                    href="/dang-ky"
+                    variant="solid"
+                    size="md"
+                    className="w-full text-center"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Đăng ký
+                  </Button>
+                </>
+              )}
             </div>
           </motion.div>
         )}
