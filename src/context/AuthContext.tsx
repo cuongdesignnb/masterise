@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { User } from '@/types/api';
-import { api } from '@/lib/api';
+import { authService } from '@/services/authService';
 
 interface AuthContextType {
   user: User | null;
@@ -40,11 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       try {
         setToken(storedToken);
-        const response = await api.get<{
-          user: User;
-          roles: string[];
-          permissions: string[];
-        }>('/auth/me');
+        const response = await authService.getMe();
         
         if (response.success && response.data) {
           setUser(response.data.user);
@@ -75,15 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (loginVal: string, passwordVal: string) => {
     setIsLoading(true);
     try {
-      const response = await api.post<{
-        user: User;
-        roles: string[];
-        permissions: string[];
-        token: string;
-      }>('/auth/login', {
-        login: loginVal,
-        password: passwordVal,
-      });
+      const response = await authService.login(loginVal, passwordVal);
 
       if (response.success && response.data) {
         const { user: loggedUser, roles: userRoles, permissions: userPerms, token: authToken } = response.data;
@@ -109,23 +97,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   ) => {
     setIsLoading(true);
     try {
-      const response = await api.post<{
-        user: User;
-        roles: string[];
-        token: string;
-      }>('/auth/register', {
-        name: nameVal,
-        email: emailVal,
-        phone: phoneVal,
-        password: passwordVal,
-        password_confirmation: confirmPasswordVal,
-      });
+      const response = await authService.register(
+        nameVal,
+        emailVal,
+        phoneVal,
+        passwordVal,
+        confirmPasswordVal
+      );
 
       if (response.success && response.data) {
         const { user: registeredUser, roles: userRoles, token: authToken } = response.data;
         setUser(registeredUser);
         setRoles(userRoles);
-        setPermissions(['dashboard.view']); // default customer perm
+        setPermissions([]); // default client perms are empty
         setToken(authToken);
         localStorage.setItem('mh_token', authToken);
         return response.data;
@@ -139,7 +123,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     setIsLoading(true);
     try {
-      await api.post('/auth/logout').catch(() => {});
+      await authService.logout().catch(() => {});
     } finally {
       clearSession();
       setIsLoading(false);
@@ -150,11 +134,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshUser = async () => {
     if (!token) return;
     try {
-      const response = await api.get<{
-        user: User;
-        roles: string[];
-        permissions: string[];
-      }>('/auth/me');
+      const response = await authService.getMe();
       if (response.success && response.data) {
         setUser(response.data.user);
         setRoles(response.data.roles);

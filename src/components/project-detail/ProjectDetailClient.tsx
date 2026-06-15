@@ -30,8 +30,9 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useState } from "react";
-import { projectDetail as project } from "@/data/projectDetailSeed";
-import type { ProjectIconName } from "@/types/project-detail";
+import { projectDetail as defaultProject } from "@/data/projectDetailSeed";
+import type { ProjectIconName, ProjectDetail } from "@/types/project-detail";
+import VR360Section from "@/components/vr360/VR360Section";
 
 const iconMap: Record<ProjectIconName, LucideIcon> = {
   BadgeDollarSign,
@@ -200,7 +201,7 @@ function FloorPlanSketch() {
   );
 }
 
-export default function ProjectDetailClient() {
+export default function ProjectDetailClient({ project = defaultProject }: { project?: ProjectDetail }) {
   const [activeTab, setActiveTab] = useState(project.floorTabs[0]);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
@@ -336,6 +337,13 @@ export default function ProjectDetailClient() {
             ))}
           </div>
         </Reveal>
+
+        <VR360Section
+          projectId={project.id || 1}
+          projectSlug={project.slug}
+          projectName={project.name}
+          fallbackUrl={project.virtualTourUrl}
+        />
 
         <Reveal
           className="rounded-[22px] border border-line/80 bg-white p-4 shadow-soft sm:p-5"

@@ -117,5 +117,10 @@ class Project extends Model
     {
         return $this->morphOne(SeoMeta::class, 'seoable');
     }
+
+    public function vrTour()
+    {
+        return $this->hasOne(ProjectVrTour::class, 'project_id');
+    }
 }
 

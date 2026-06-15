@@ -170,9 +170,13 @@ export default function LoginPage() {
             </div>
 
             <div className="text-sm">
-              <Link href="#" className="font-medium text-[#B88746] hover:text-[#8C7A6B] transition-colors">
+              <button
+                type="button"
+                onClick={() => alert('Tính năng đang được hoàn thiện, vui lòng liên hệ hotline để được hỗ trợ.')}
+                className="font-medium text-[#B88746] hover:text-[#8C7A6B] transition-colors bg-transparent border-none cursor-pointer focus:outline-none"
+              >
                 Quên mật khẩu?
-              </Link>
+              </button>
             </div>
           </div>
 

@@ -102,7 +102,7 @@ export default function HotProjectCard({
           </div>
 
           <Link
-            href={project.name === "The Global City" ? "/du-an/the-global-city" : "#du-an-hot"}
+            href={project.slug ? `/du-an/${project.slug}` : `#project-${project.id}`}
             aria-label="Xem chi tiết dự án"
             className="group/btn flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#E8DCCB] bg-white/70 text-[#B88746] shadow-sm backdrop-blur-md transition-all duration-300 hover:border-[#B88746] hover:bg-[#B88746] hover:text-white"
           >

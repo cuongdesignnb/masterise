@@ -73,6 +73,7 @@ export default function AdminLayout({
     { name: 'Quản lý Tin tức', href: '/admin/tin-tuc', icon: Newspaper, roles: ['super_admin', 'admin', 'marketing'] },
     { name: 'Thư viện Media', href: '/admin/media', icon: ImageIcon, roles: ['super_admin', 'admin', 'marketing'] },
     { name: 'Quản lý Lead (CRM)', href: '/admin/leads', icon: FileSpreadsheet, roles: ['super_admin', 'admin', 'sale_manager', 'sale'] },
+    { name: 'Dashboard Lead', href: '/admin/lead-dashboard', icon: LayoutDashboard, roles: ['super_admin', 'admin', 'sale_manager'] },
     { name: 'Lịch hẹn tham quan', href: '/admin/lich-hen', icon: Calendar, roles: ['super_admin', 'admin', 'sale_manager', 'sale'] },
     { name: 'Quản lý Thành viên', href: '/admin/users', icon: Users, roles: ['super_admin', 'admin'] },
     { name: 'Cấu hình SEO URL', href: '/admin/seo', icon: Globe, roles: ['super_admin', 'admin', 'marketing'] },

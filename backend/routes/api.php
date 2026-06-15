@@ -43,14 +43,19 @@ Route::group(['prefix' => 'v1'], function() {
     Route::get('/locations/{id}', [LocationController::class, 'show']);
 
     // Leads submit
+    Route::post('/leads', [LeadController::class, 'submit']);
     Route::post('/leads/submit', [LeadController::class, 'submit']);
     Route::post('/leads/contact', [LeadController::class, 'submit']); // alias
     Route::post('/leads/project-consultation', [LeadController::class, 'submit']); // alias
     Route::post('/leads/download-brochure', [LeadController::class, 'submit']); // alias
+    Route::post('/lead-events', [LeadController::class, 'trackEvent']);
 
     // System config & SEO
     Route::get('/settings/public', [SettingController::class, 'publicSettings']);
     Route::get('/seo/by-path', [SeoController::class, 'byPath']);
+    
+    // VR 360 Tour public route
+    Route::get('/projects/{slug}/vr-tour', [App\Http\Controllers\Api\ProjectVrTourController::class, 'show']);
 
     // 3. Authenticated routes (auth:sanctum)
     Route::group(['middleware' => 'auth:sanctum'], function() {
@@ -69,14 +74,19 @@ Route::group(['prefix' => 'v1'], function() {
         Route::get('/appointments', [AppointmentController::class, 'index']);
         Route::patch('/appointments/{id}/status', [AppointmentController::class, 'updateStatus']);
 
+        // Leads CRM Dashboard and Export (placed before dynamic {id} routes)
+        Route::get('/leads/export', [LeadController::class, 'export'])->middleware('role:super_admin|admin|sale_manager');
+        Route::get('/lead-dashboard', [LeadController::class, 'dashboard'])->middleware('role:super_admin|admin|sale_manager');
+
         // Leads CRM notes & list (agent can view list of assigned, update status, add notes)
         Route::get('/leads', [LeadController::class, 'index']);
         Route::get('/leads/{id}', [LeadController::class, 'show']);
+        Route::patch('/leads/{id}', [LeadController::class, 'updateStatus']); // alias
         Route::patch('/leads/{id}/status', [LeadController::class, 'updateStatus']);
         Route::post('/leads/{id}/notes', [LeadController::class, 'addNote']);
 
-        // Admin/Super Admin/Marketing only routes
-        Route::group(['middleware' => ['role:super_admin|admin|marketing']], function() {
+        // Admin/Super Admin/Marketing/Manager routes
+        Route::group(['middleware' => ['role:super_admin|admin|marketing|sale_manager']], function() {
             // Developers CRUD
             Route::post('/developers', [DeveloperController::class, 'store']);
             Route::put('/developers/{id}', [DeveloperController::class, 'update']);
@@ -114,11 +124,25 @@ Route::group(['prefix' => 'v1'], function() {
             Route::post('/seo', [SeoController::class, 'update']);
         });
 
+        // Admin/Super Admin/Manager only
+        Route::group(['middleware' => ['role:super_admin|admin|sale_manager']], function() {
+            // Assign leads
+            Route::post('/leads/{id}/assign', [LeadController::class, 'assign']);
+            Route::patch('/leads/{id}/assign', [LeadController::class, 'assign']); // alias
+
+            // VR 360 Admin routes
+            Route::get('/admin/projects/{project_id}/vr-tour', [App\Http\Controllers\Api\Admin\ProjectVrTourAdminController::class, 'getTour']);
+            Route::post('/admin/projects/{project_id}/vr-tour', [App\Http\Controllers\Api\Admin\ProjectVrTourAdminController::class, 'saveTour']);
+            Route::post('/admin/vr-tours/{tour_id}/scenes', [App\Http\Controllers\Api\Admin\ProjectVrTourAdminController::class, 'addScene']);
+            Route::patch('/admin/vr-scenes/{scene_id}', [App\Http\Controllers\Api\Admin\ProjectVrTourAdminController::class, 'updateScene']);
+            Route::delete('/admin/vr-scenes/{scene_id}', [App\Http\Controllers\Api\Admin\ProjectVrTourAdminController::class, 'destroyScene']);
+            Route::post('/admin/vr-scenes/{scene_id}/hotspots', [App\Http\Controllers\Api\Admin\ProjectVrTourAdminController::class, 'addHotspot']);
+            Route::patch('/admin/vr-hotspots/{hotspot_id}', [App\Http\Controllers\Api\Admin\ProjectVrTourAdminController::class, 'updateHotspot']);
+            Route::delete('/admin/vr-hotspots/{hotspot_id}', [App\Http\Controllers\Api\Admin\ProjectVrTourAdminController::class, 'destroyHotspot']);
+        });
+
         // Admin/Super Admin only
         Route::group(['middleware' => ['role:super_admin|admin']], function() {
-            // Assign leads
-            Route::patch('/leads/{id}/assign', [LeadController::class, 'assign']);
-
             // Bulk settings update
             Route::get('/settings', [SettingController::class, 'index']);
             Route::put('/settings', [SettingController::class, 'update']);

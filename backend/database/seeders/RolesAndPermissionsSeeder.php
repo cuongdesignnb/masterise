@@ -106,10 +106,12 @@ class RolesAndPermissionsSeeder extends Seeder
             'appointments.view', 'appointments.status.update'
         ]);
 
-        // 6. Customer
+        // 6. Customer (Transitional compatibility)
         $customer = Role::findOrCreate('customer', 'web');
-        $customer->syncPermissions([
-            'dashboard.view'
-        ]);
+        $customer->syncPermissions([]);
+
+        // 7. Client (Standard Client Role)
+        $client = Role::findOrCreate('client', 'web');
+        $client->syncPermissions([]);
     }
 }

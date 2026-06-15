@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import MediaSelectModal from '@/components/admin/MediaSelectModal';
 import RichTextEditor from '@/components/admin/RichTextEditor';
+import VR360Tab from '@/components/admin/vr360/VR360Tab';
 
 export default function AdminProjects() {
   const queryClient = useQueryClient();
@@ -40,7 +41,7 @@ export default function AdminProjects() {
   // Modal states
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
-  const [activeTab, setActiveTab] = useState<'general' | 'location' | 'content' | 'media' | 'seo'>('general');
+  const [activeTab, setActiveTab] = useState<'general' | 'location' | 'content' | 'media' | 'seo' | 'vr360'>('general');
   
   // Category manager modal state
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
@@ -754,7 +755,8 @@ export default function AdminProjects() {
                   { id: 'location', label: 'Vị trí & Giá' },
                   { id: 'content', label: 'Mô tả & Tiện ích' },
                   { id: 'media', label: 'Ảnh & Tài liệu' },
-                  { id: 'seo', label: 'Cấu hình SEO' }
+                  { id: 'seo', label: 'Cấu hình SEO' },
+                  { id: 'vr360', label: 'VR 360' }
                 ].map(tab => (
                   <button
                     key={tab.id}
@@ -1532,6 +1534,13 @@ export default function AdminProjects() {
                       <span className="text-[10px] text-[#8C7A6B] mt-1 block">Các từ khóa cách nhau bằng dấu phẩy</span>
                     </div>
                   </div>
+                )}
+
+                {activeTab === 'vr360' && (
+                  <VR360Tab 
+                    projectId={editingProject?.id}
+                    projectName={editingProject?.name || ''}
+                  />
                 )}
 
               </div>

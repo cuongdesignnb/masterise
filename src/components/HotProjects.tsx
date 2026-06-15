@@ -3,17 +3,30 @@
 import React, { useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
-import { hotProjects } from "@/data/seed";
+import { useQuery } from "@tanstack/react-query";
+import { projectService } from "@/services/projectService";
+import { mapApiProjectToProjectCard } from "@/adapters/projectAdapter";
 import HotProjectCard from "@/components/HotProjectCard";
 import Container from "@/components/Container";
+import LoadingState from "./common/LoadingState";
+import EmptyState from "./common/EmptyState";
+import ErrorState from "./common/ErrorState";
 
 export default function HotProjects() {
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  const { data: projects = [], isLoading, error, refetch } = useQuery({
+    queryKey: ["hot-projects"],
+    queryFn: async () => {
+      const data = await projectService.getProjects();
+      // Filter or slice for first 4 hot projects
+      return data.slice(0, 4).map(mapApiProjectToProjectCard);
+    },
+  });
+
   const scroll = (direction: "left" | "right") => {
     if (scrollRef.current) {
       const { scrollLeft, clientWidth } = scrollRef.current;
-      // Scroll by one card width on mobile (approx 85% of clientWidth)
       const scrollAmount = clientWidth > 768 ? clientWidth / 2 : clientWidth * 0.85;
       const scrollTo =
         direction === "left"
@@ -61,22 +74,41 @@ export default function HotProjects() {
           </div>
         </motion.div>
 
-        <div
-          ref={scrollRef}
-          className="flex overflow-x-auto snap-x snap-mandatory scroll-smooth hide-scrollbar gap-6 pb-6 -mx-4 px-4 lg:grid lg:gap-8 lg:grid-cols-2 2xl:grid-cols-4 lg:mx-0 lg:px-0 lg:pb-0 lg:overflow-visible"
-        >
-          {hotProjects.map((project, index) => (
-            <div
-              key={project.id}
-              className="w-[85vw] sm:w-[380px] flex-shrink-0 snap-center lg:w-auto lg:flex-shrink-0 lg:snap-align-none"
-            >
-              <HotProjectCard
-                project={project}
-                index={index}
-              />
-            </div>
-          ))}
-        </div>
+        {/* Loading / Error / Empty States */}
+        {isLoading && <LoadingState message="Đang tải danh sách dự án nổi bật..." />}
+        
+        {error && (
+          <ErrorState
+            message="Không thể kết nối máy chủ để tải dự án hot."
+            onRetry={() => refetch()}
+          />
+        )}
+
+        {!isLoading && !error && projects.length === 0 && (
+          <EmptyState
+            title="Chưa có dự án nào"
+            description="Thông tin các dự án hot sẽ sớm được cập nhật."
+          />
+        )}
+
+        {!isLoading && !error && projects.length > 0 && (
+          <div
+            ref={scrollRef}
+            className="flex overflow-x-auto snap-x snap-mandatory scroll-smooth hide-scrollbar gap-6 pb-6 -mx-4 px-4 lg:grid lg:gap-8 lg:grid-cols-2 2xl:grid-cols-4 lg:mx-0 lg:px-0 lg:pb-0 lg:overflow-visible"
+          >
+            {projects.map((project, index) => (
+              <div
+                key={project.id}
+                className="w-[85vw] sm:w-[380px] flex-shrink-0 snap-center lg:w-auto lg:flex-shrink-0 lg:snap-align-none"
+              >
+                <HotProjectCard
+                  project={project}
+                  index={index}
+                />
+              </div>
+            ))}
+          </div>
+        )}
       </Container>
     </section>
   );

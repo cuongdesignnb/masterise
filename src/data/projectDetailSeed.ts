@@ -248,4 +248,7 @@ export const projectDetail: ProjectDetail = {
         "Khách hàng có thể đăng ký lịch tham quan nhà mẫu qua biểu mẫu tư vấn trên website.",
     },
   ],
+  id: 1,
+  virtualTourUrl: "https://kuula.co/share/collection/7K98F",
 };
+

@@ -71,4 +71,7 @@ export type ProjectDetail = {
     avatar: string;
   }[];
   faqs: { question: string; answer: string }[];
+  id?: number;
+  virtualTourUrl?: string | null;
 };
+

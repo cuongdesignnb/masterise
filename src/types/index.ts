@@ -35,6 +35,7 @@ export type Project = {
   status?: "hot" | "best-seller" | "upcoming" | "selling" | "done";
   type?: string;
   description?: string;
+  slug?: string;
 };
 
 export type CollectionItem = {

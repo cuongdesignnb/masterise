@@ -40,8 +40,8 @@ class AuthController extends Controller
             'status' => 'active',
         ]);
 
-        // Assign customer role
-        $user->assignRole('customer');
+        // Assign customer and client roles (transitional compatibility)
+        $user->assignRole(['customer', 'client']);
 
         // Create blank customer profile
         $user->customerProfile()->create([
