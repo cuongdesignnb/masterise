@@ -1,0 +1,9 @@
+node_modules
+.next
+backend/vendor
+backend/public/storage
+backend/bootstrap/cache/*
+backend/storage/framework/cache/*
+backend/storage/framework/sessions/*
+backend/storage/framework/views/*
+.git
