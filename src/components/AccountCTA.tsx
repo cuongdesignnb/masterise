@@ -7,8 +7,10 @@ import { accountBenefits } from "@/data/seed";
 import Container from "./Container";
 import Button from "./Button";
 import MotionWrapper from "./MotionWrapper";
+import { useAuth } from "@/context/AuthContext";
 
 export default function AccountCTA() {
+  const { user } = useAuth();
   return (
     <section className="py-16 sm:py-20 bg-cream overflow-hidden">
       <Container>
@@ -54,12 +56,25 @@ export default function AccountCTA() {
 
                 {/* Buttons CTA */}
                 <div className="mt-10 flex flex-wrap gap-4 items-center">
-                  <Button href="#register" variant="solid" className="bg-gold text-white border-none hover:bg-gold-light" size="lg">
-                    Đăng ký ngay
-                  </Button>
-                  <Button href="#login" variant="outline" className="border-white text-white hover:bg-white hover:text-ink" size="lg">
-                    Đăng nhập
-                  </Button>
+                  {user ? (
+                    <>
+                      <Button href="/tai-khoan" variant="solid" className="bg-gold text-white border-none hover:bg-gold-light" size="lg">
+                        Vào trang cá nhân
+                      </Button>
+                      <Button href="/du-an" variant="outline" className="border-white text-white hover:bg-white hover:text-ink" size="lg">
+                        Khám phá dự án
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button href="/dang-ky" variant="solid" className="bg-gold text-white border-none hover:bg-gold-light" size="lg">
+                        Đăng ký ngay
+                      </Button>
+                      <Button href="/dang-nhap" variant="outline" className="border-white text-white hover:bg-white hover:text-ink" size="lg">
+                        Đăng nhập
+                      </Button>
+                    </>
+                  )}
                 </div>
               </MotionWrapper>
             </div>
