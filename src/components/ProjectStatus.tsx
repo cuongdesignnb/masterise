@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { MapPin, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { projectStatusColumns } from "@/data/seed";
@@ -50,9 +51,11 @@ export default function ProjectStatus() {
                       <div className="flex items-center gap-3.5 min-w-0 flex-1">
                         {/* Compact Thumbnail Image */}
                         <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 relative">
-                          <img
+                          <Image
                             src={project.image}
                             alt={project.name}
+                            fill
+                            sizes="(max-width: 768px) 100vw, 33vw"
                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                           />
                         </div>

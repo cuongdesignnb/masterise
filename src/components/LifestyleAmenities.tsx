@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { amenities } from "@/data/seed";
 import Container from "./Container";
@@ -25,9 +26,11 @@ export default function LifestyleAmenities() {
             <MotionWrapper key={amenity.id} delay={idx * 0.05} className="h-full">
               <div className="relative h-64 sm:h-72 w-full rounded-2xl overflow-hidden group cursor-pointer shadow-soft border border-line/45">
                 {/* Amenity Image */}
-                <img
+                <Image
                   src={amenity.image}
                   alt={amenity.title}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 50vw"
                   className="w-full h-full object-cover transition-transform duration-750 ease-out group-hover:scale-108"
                 />
 

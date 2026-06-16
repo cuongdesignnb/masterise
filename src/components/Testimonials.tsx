@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { testimonials } from "@/data/seed";
 import MotionWrapper from "./MotionWrapper";
@@ -33,10 +34,12 @@ export default function Testimonials() {
             >
               {/* Left Side: Avatar */}
               <div className="w-14 h-14 rounded-full overflow-hidden border border-[#E8DCCB]/40 flex-shrink-0">
-                <img
+                <Image
                   src={testimonial.avatar}
                   alt={testimonial.name}
-                  className="w-full h-full object-cover"
+                  width={48}
+                  height={48}
+                  className="w-full h-full object-cover rounded-full"
                 />
               </div>
 

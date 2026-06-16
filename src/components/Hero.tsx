@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Image from "next/image";
 import { Play, ArrowLeft, ArrowRight, Phone, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { heroSlides } from "@/data/seed";
@@ -46,9 +47,17 @@ export default function Hero() {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
-            className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: `url(${currentSlide.image})` }}
+            className="absolute inset-0"
           >
+            <Image
+              src={currentSlide.image}
+              alt={currentSlide.titleLines.join(' ')}
+              fill
+              sizes="100vw"
+              className="object-cover"
+              priority={current === 0}
+              quality={80}
+            />
             {/* White/Cream Left Gradient Overlay & Luxury Glass Overlay */}
             <div className="absolute inset-0 bg-gradient-to-r from-cream via-cream/80 to-transparent lg:from-cream lg:via-cream/60 lg:to-transparent" />
             <div className="absolute inset-0 bg-gradient-to-t from-cream via-transparent to-black/5" />

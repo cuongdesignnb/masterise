@@ -2,6 +2,7 @@
 
 import React, { useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { news } from "@/data/seed";
@@ -106,10 +107,12 @@ export default function NewsAndGuide() {
                 >
                   {/* Image Container with tag badge overlay on boundary */}
                   <div className="relative h-28 sm:h-32 w-full flex-shrink-0">
-                    <div className="w-full h-full overflow-hidden rounded-t-[15px] bg-beige/10">
-                      <img
+                    <div className="w-full h-full overflow-hidden rounded-t-[15px] bg-beige/10 relative">
+                      <Image
                         src={item.image}
                         alt={item.title}
+                        fill
+                        sizes="(max-width: 768px) 100vw, 33vw"
                         className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
                       />
                     </div>

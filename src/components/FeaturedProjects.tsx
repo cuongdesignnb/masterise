@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Heart, MapPin, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
@@ -94,10 +95,12 @@ export default function FeaturedProjects() {
                       <div className="relative h-60 w-full overflow-hidden">
                         {/* Image wrapped in Link */}
                         <Link href={project.slug ? `/du-an/${project.slug}` : `#project-${project.id}`} className="block w-full h-full">
-                          <img
+                          <Image
                             src={project.image}
                             alt={project.name}
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-106"
+                            fill
+                            sizes="(max-width: 768px) 85vw, (max-width: 1024px) 50vw, 33vw"
+                            className="object-cover transition-transform duration-500 group-hover:scale-106"
                           />
                         </Link>
 
