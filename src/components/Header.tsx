@@ -141,6 +141,7 @@ export default function Header() {
                 <Link
                   href="/dang-nhap"
                   className="flex items-center justify-center w-10 h-10 rounded-full border border-line hover:border-gold hover:text-gold text-muted transition-colors"
+                  aria-label="Đăng nhập"
                 >
                   <User size={18} />
                 </Link>

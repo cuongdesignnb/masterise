@@ -110,7 +110,7 @@ export default function SearchBar() {
                       <span className="text-[10px] sm:text-xs font-bold text-muted uppercase tracking-wider block">
                         {filter.label}
                       </span>
-                      <span className={`text-xs sm:text-sm mt-0.5 block truncate font-medium ${isSelected ? "text-ink font-semibold" : "text-muted/60"}`}>
+                      <span className={`text-xs sm:text-sm mt-0.5 block truncate font-medium ${isSelected ? "text-ink font-semibold" : "text-muted"}`}>
                         {displayValue}
                       </span>
                     </div>

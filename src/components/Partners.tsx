@@ -37,7 +37,7 @@ export default function Partners() {
       {/* Horizontal row centered vertically to match Testimonials height */}
       <div className="flex-grow flex items-center w-full relative">
         {/* Left Arrow Button */}
-        <button className="absolute left-0 z-10 w-6 h-6 flex items-center justify-center text-muted/40 hover:text-gold transition-colors cursor-pointer select-none">
+        <button className="absolute left-0 z-10 w-6 h-6 flex items-center justify-center text-muted/40 hover:text-gold transition-colors cursor-pointer select-none" aria-label="Đối tác trước">
           <ChevronLeft size={16} className="stroke-[2.5]" />
         </button>
 
@@ -54,7 +54,7 @@ export default function Partners() {
         </div>
 
         {/* Right Arrow Button */}
-        <button className="absolute right-0 z-10 w-6 h-6 flex items-center justify-center text-muted/40 hover:text-gold transition-colors cursor-pointer select-none">
+        <button className="absolute right-0 z-10 w-6 h-6 flex items-center justify-center text-muted/40 hover:text-gold transition-colors cursor-pointer select-none" aria-label="Đối tác tiếp theo">
           <ChevronRight size={16} className="stroke-[2.5]" />
         </button>
       </div>

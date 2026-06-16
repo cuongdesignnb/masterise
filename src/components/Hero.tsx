@@ -195,11 +195,11 @@ export default function Hero() {
                             setIsAutoplay(false);
                             setCurrent(idx);
                           }}
-                          className={`w-2 h-2 rounded-full transition-all duration-300 border border-gold ${
-                            idx === current ? "bg-gold" : "bg-transparent"
-                          }`}
+                          className={`w-8 h-8 flex items-center justify-center transition-all duration-300`}
                           aria-label={`Go to slide ${idx + 1}`}
-                        />
+                        >
+                          <span className={`w-2 h-2 rounded-full border border-gold ${idx === current ? "bg-gold" : "bg-transparent"}`} />
+                        </button>
                       ))}
                     </div>
 
@@ -270,11 +270,11 @@ export default function Hero() {
                           setIsAutoplay(false);
                           setCurrent(idx);
                         }}
-                        className={`w-2 h-2 rounded-full transition-all duration-300 border border-gold ${
-                          idx === current ? "bg-gold" : "bg-transparent"
-                        }`}
+                        className={`w-8 h-8 flex items-center justify-center transition-all duration-300`}
                         aria-label={`Go to slide ${idx + 1}`}
-                      />
+                      >
+                        <span className={`w-2 h-2 rounded-full border border-gold ${idx === current ? "bg-gold" : "bg-transparent"}`} />
+                      </button>
                     ))}
                   </div>
 
