@@ -45,20 +45,23 @@ export default function AiSettingsPage() {
   });
 
   // Fetch categories
-  const { data: categoriesResponse } = useQuery({
+  const { data: categories = [] } = useQuery({
     queryKey: ['admin-post-categories'],
-    queryFn: async () => api.get<PostCategory[]>('/post-categories'),
+    queryFn: async () => {
+      const res = await api.get<PostCategory[]>('/post-categories');
+      return res.data;
+    },
   });
 
   // Fetch users (only for admin/super_admin)
-  const { data: usersResponse, error: usersError } = useQuery({
+  const { data: users = [], error: usersError } = useQuery({
     queryKey: ['admin-users-list'],
-    queryFn: async () => api.get<{ data: User[] }>('/users?per_page=100'),
+    queryFn: async () => {
+      const res = await api.get<User[]>('/users?per_page=100');
+      return res.data;
+    },
     enabled: isWritable,
   });
-
-  const categories = categoriesResponse?.data || [];
-  const users = usersResponse?.data?.data || [];
 
   // Form states
   const [formData, setFormData] = useState<Partial<AiSettingsPublic>>({});
