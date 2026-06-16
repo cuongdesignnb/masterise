@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { Play, ArrowLeft, ArrowRight, Phone, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -11,26 +11,32 @@ import Button from "./Button";
 export default function Hero() {
   const [current, setCurrent] = useState(0);
   const [isAutoplay, setIsAutoplay] = useState(true);
+  const hasInteracted = useRef(false);
 
   useEffect(() => {
     if (!isAutoplay) return;
     const interval = setInterval(() => {
+      hasInteracted.current = true;
       setCurrent((prev) => (prev + 1) % heroSlides.length);
     }, 8000);
     return () => clearInterval(interval);
   }, [isAutoplay]);
 
   const handleNext = () => {
+    hasInteracted.current = true;
     setIsAutoplay(false);
     setCurrent((prev) => (prev + 1) % heroSlides.length);
   };
 
   const handlePrev = () => {
+    hasInteracted.current = true;
     setIsAutoplay(false);
     setCurrent((prev) => (prev - 1 + heroSlides.length) % heroSlides.length);
   };
 
   const currentSlide = heroSlides[current];
+  // Skip animation on first render so LCP image is visible immediately
+  const shouldAnimate = hasInteracted.current;
 
   return (
     <section className="relative h-[680px] sm:h-[700px] lg:h-[730px] w-full overflow-hidden bg-cream pt-[72px]">
@@ -40,92 +46,190 @@ export default function Hero() {
 
       {/* Image Carousel Background */}
       <div className="absolute inset-0 z-0">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentSlide.id}
-            initial={{ opacity: 0, scale: 1.05 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
-            className="absolute inset-0"
-          >
+        {shouldAnimate ? (
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentSlide.id}
+              initial={{ opacity: 0, scale: 1.05 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+              className="absolute inset-0"
+            >
+              <Image
+                src={currentSlide.image}
+                alt={currentSlide.titleLines.join(' ')}
+                fill
+                sizes="100vw"
+                className="object-cover"
+                quality={80}
+              />
+              <div className="absolute inset-0 bg-gradient-to-r from-cream via-cream/80 to-transparent lg:from-cream lg:via-cream/60 lg:to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-cream via-transparent to-black/5" />
+            </motion.div>
+          </AnimatePresence>
+        ) : (
+          /* First render: NO animation, image visible immediately for LCP */
+          <div className="absolute inset-0">
             <Image
-              src={currentSlide.image}
-              alt={currentSlide.titleLines.join(' ')}
+              src={heroSlides[0].image}
+              alt={heroSlides[0].titleLines.join(' ')}
               fill
               sizes="100vw"
               className="object-cover"
-              priority={current === 0}
+              priority
               quality={80}
             />
-            {/* White/Cream Left Gradient Overlay & Luxury Glass Overlay */}
             <div className="absolute inset-0 bg-gradient-to-r from-cream via-cream/80 to-transparent lg:from-cream lg:via-cream/60 lg:to-transparent" />
             <div className="absolute inset-0 bg-gradient-to-t from-cream via-transparent to-black/5" />
-          </motion.div>
-        </AnimatePresence>
+          </div>
+        )}
       </div>
 
       <Container className="relative z-10 h-full flex flex-col justify-center pb-12 sm:pb-16">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center h-full pt-10 sm:pt-6">
           {/* Left Column: Heading and description */}
           <div className="lg:col-span-7 flex flex-col justify-center">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={current}
-                initial="hidden"
-                animate="visible"
-                variants={{
-                  hidden: { opacity: 0 },
-                  visible: {
-                    opacity: 1,
-                    transition: { staggerChildren: 0.12 },
-                  },
-                }}
-              >
-                {/* Title */}
-                <h1 className="text-3xl sm:text-5xl lg:text-[52px] heading-font font-bold text-ink tracking-tight leading-[1.15]">
-                  {currentSlide.titleLines.map((line, idx) => (
+            {shouldAnimate ? (
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={current}
+                  initial="hidden"
+                  animate="visible"
+                  variants={{
+                    hidden: { opacity: 0 },
+                    visible: {
+                      opacity: 1,
+                      transition: { staggerChildren: 0.12 },
+                    },
+                  }}
+                >
+                  {/* Title */}
+                  <h1 className="text-3xl sm:text-5xl lg:text-[52px] heading-font font-bold text-ink tracking-tight leading-[1.15]">
+                    {currentSlide.titleLines.map((line, idx) => (
+                      <motion.span
+                        key={idx}
+                        variants={{
+                          hidden: { opacity: 0, y: 25 },
+                          visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: "easeOut" } },
+                        }}
+                        className="block"
+                      >
+                        {line}
+                      </motion.span>
+                    ))}
                     <motion.span
-                      key={idx}
                       variants={{
                         hidden: { opacity: 0, y: 25 },
                         visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: "easeOut" } },
                       }}
-                      className="block"
+                      className="block text-gold Shimmer-effect mt-2 text-2xl sm:text-3xl lg:text-[38px] tracking-wide font-semibold"
                     >
-                      {line}
+                      {currentSlide.highlight}
                     </motion.span>
-                  ))}
-                  <motion.span
+                  </h1>
+
+                  {/* Description */}
+                  <motion.p
                     variants={{
-                      hidden: { opacity: 0, y: 25 },
+                      hidden: { opacity: 0, y: 15 },
                       visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: "easeOut" } },
                     }}
-                    className="block text-gold Shimmer-effect mt-2 text-2xl sm:text-3xl lg:text-[38px] tracking-wide font-semibold"
+                    className="mt-5 text-sm text-muted max-w-xl leading-relaxed font-light"
                   >
+                    {currentSlide.description}
+                  </motion.p>
+
+                  {/* Buttons CTA */}
+                  <motion.div
+                    variants={{
+                      hidden: { opacity: 0, y: 15 },
+                      visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: "easeOut" } },
+                    }}
+                    className="mt-8 flex flex-wrap gap-4 items-center"
+                  >
+                    <Button
+                      href="#du-an"
+                      variant="solid"
+                      size="md"
+                      className="sm:px-8 sm:py-3 sm:text-sm"
+                      icon={<ChevronDown size={14} />}
+                      iconPosition="right"
+                    >
+                      Khám phá dự án
+                    </Button>
+                    <Button
+                      href="#lien-he"
+                      variant="outline"
+                      size="md"
+                      className="bg-white/90 border-white text-ink hover:bg-gold hover:text-white sm:px-8 sm:py-3 sm:text-sm"
+                      icon={<Phone size={14} className="text-gold" />}
+                      iconPosition="left"
+                    >
+                      Tư vấn ngay
+                    </Button>
+                  </motion.div>
+
+                  {/* Slider Controls */}
+                  <motion.div
+                    variants={{
+                      hidden: { opacity: 0, y: 10 },
+                      visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: "easeOut" } },
+                    }}
+                    className="flex items-center gap-3 mt-6"
+                  >
+                    <button
+                      onClick={handlePrev}
+                      className="w-7 h-7 rounded-full border border-gold/40 flex items-center justify-center text-gold hover:bg-gold hover:text-white transition-all duration-300 cursor-pointer focus:outline-none"
+                      aria-label="Previous slide"
+                    >
+                      <ArrowLeft size={12} />
+                    </button>
+
+                    <div className="flex items-center gap-2">
+                      {heroSlides.map((slide, idx) => (
+                        <button
+                          key={slide.id}
+                          onClick={() => {
+                            hasInteracted.current = true;
+                            setIsAutoplay(false);
+                            setCurrent(idx);
+                          }}
+                          className={`w-2 h-2 rounded-full transition-all duration-300 border border-gold ${
+                            idx === current ? "bg-gold" : "bg-transparent"
+                          }`}
+                          aria-label={`Go to slide ${idx + 1}`}
+                        />
+                      ))}
+                    </div>
+
+                    <button
+                      onClick={handleNext}
+                      className="w-7 h-7 rounded-full border border-gold/40 flex items-center justify-center text-gold hover:bg-gold hover:text-white transition-all duration-300 cursor-pointer focus:outline-none"
+                      aria-label="Next slide"
+                    >
+                      <ArrowRight size={12} />
+                    </button>
+                  </motion.div>
+                </motion.div>
+              </AnimatePresence>
+            ) : (
+              /* First render: static content, no animation for faster paint */
+              <div>
+                <h1 className="text-3xl sm:text-5xl lg:text-[52px] heading-font font-bold text-ink tracking-tight leading-[1.15]">
+                  {currentSlide.titleLines.map((line, idx) => (
+                    <span key={idx} className="block">{line}</span>
+                  ))}
+                  <span className="block text-gold Shimmer-effect mt-2 text-2xl sm:text-3xl lg:text-[38px] tracking-wide font-semibold">
                     {currentSlide.highlight}
-                  </motion.span>
+                  </span>
                 </h1>
 
-                {/* Description */}
-                <motion.p
-                  variants={{
-                    hidden: { opacity: 0, y: 15 },
-                    visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: "easeOut" } },
-                  }}
-                  className="mt-5 text-sm text-muted max-w-xl leading-relaxed font-light"
-                >
+                <p className="mt-5 text-sm text-muted max-w-xl leading-relaxed font-light">
                   {currentSlide.description}
-                </motion.p>
+                </p>
 
-                {/* Buttons CTA */}
-                <motion.div
-                  variants={{
-                    hidden: { opacity: 0, y: 15 },
-                    visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: "easeOut" } },
-                  }}
-                  className="mt-8 flex flex-wrap gap-4 items-center"
-                >
+                <div className="mt-8 flex flex-wrap gap-4 items-center">
                   <Button
                     href="#du-an"
                     variant="solid"
@@ -146,16 +250,9 @@ export default function Hero() {
                   >
                     Tư vấn ngay
                   </Button>
-                </motion.div>
+                </div>
 
-                {/* Slider Controls Directly Below Buttons */}
-                <motion.div
-                  variants={{
-                    hidden: { opacity: 0, y: 10 },
-                    visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: "easeOut" } },
-                  }}
-                  className="flex items-center gap-3 mt-6"
-                >
+                <div className="flex items-center gap-3 mt-6">
                   <button
                     onClick={handlePrev}
                     className="w-7 h-7 rounded-full border border-gold/40 flex items-center justify-center text-gold hover:bg-gold hover:text-white transition-all duration-300 cursor-pointer focus:outline-none"
@@ -169,6 +266,7 @@ export default function Hero() {
                       <button
                         key={slide.id}
                         onClick={() => {
+                          hasInteracted.current = true;
                           setIsAutoplay(false);
                           setCurrent(idx);
                         }}
@@ -187,18 +285,14 @@ export default function Hero() {
                   >
                     <ArrowRight size={12} />
                   </button>
-                </motion.div>
-
-              </motion.div>
-            </AnimatePresence>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Right Column: Play teaser button */}
           <div className="lg:col-span-5 flex items-center justify-center lg:justify-end lg:pr-8">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.6, duration: 0.8 }}
+            <div
               className="flex items-center gap-4 cursor-pointer group mt-4 lg:mt-0 mb-8 lg:mb-0"
             >
               <div className="relative">
@@ -219,10 +313,11 @@ export default function Hero() {
                   Masterise Homes
                 </span>
               </div>
-            </motion.div>
+            </div>
           </div>
         </div>
       </Container>
     </section>
   );
 }
+
