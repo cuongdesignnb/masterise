@@ -7,7 +7,7 @@ export const projectsHero = {
   primaryCta: "Khám phá dự án",
   secondaryCta: "Tải brochure tổng hợp",
   image:
-    "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=1800&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=1400&auto=format&fit=crop",
   overview: [
     { value: "15+", label: "Dự án đang triển khai" },
     { value: "30.000+", label: "Sản phẩm điển hình" },

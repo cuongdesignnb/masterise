@@ -35,7 +35,7 @@ export const heroSlides: HeroSlide[] = [
     description:
       "Masterise Homes mang đến những bất động sản hàng hiệu với tầm nhìn quốc tế, kiến tạo cộng đồng thịnh vượng và phong cách sống xứng tầm.",
     image:
-      "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1400&auto=format&fit=crop",
   },
   {
     id: 2,
@@ -44,7 +44,7 @@ export const heroSlides: HeroSlide[] = [
     description:
       "Mỗi dự án là một biểu tượng kiến trúc, kết nối vị trí chiến lược, tiện ích toàn diện và giá trị đầu tư dài hạn.",
     image:
-      "https://images.unsplash.com/photo-1518005020951-eccb494ad742?q=80&w=1800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1518005020951-eccb494ad742?q=80&w=1400&auto=format&fit=crop",
   },
   {
     id: 3,
@@ -53,7 +53,7 @@ export const heroSlides: HeroSlide[] = [
     description:
       "Trải nghiệm hệ sinh thái sống đẳng cấp, dịch vụ quản lý chuyên nghiệp và cộng đồng cư dân văn minh.",
     image:
-      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1400&auto=format&fit=crop",
   },
 ];
 

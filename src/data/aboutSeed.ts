@@ -7,7 +7,7 @@ export const aboutHero = {
   primaryCta: "Khám phá hành trình",
   secondaryCta: "Khám phá dự án",
   image:
-    "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1800&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1400&auto=format&fit=crop",
   statsCard: [
     { value: "10+", label: "Năm kinh nghiệm phát triển BĐS", icon: "BadgeCheck" },
     { value: "60+", label: "Dự án đã triển khai trên toàn quốc", icon: "Building2" },

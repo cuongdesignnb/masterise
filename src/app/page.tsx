@@ -1,24 +1,27 @@
+import dynamic from "next/dynamic";
 import Header from "@/components/Header";
 import MobileTabBar from "@/components/MobileTabBar";
 import Hero from "@/components/Hero";
 import SearchBar from "@/components/SearchBar";
 import Stats from "@/components/Stats";
-import HotProjects from "@/components/HotProjects";
-import FeaturedProjects from "@/components/FeaturedProjects";
-import LuxuryCollections from "@/components/LuxuryCollections";
-import RegionProjects from "@/components/RegionProjects";
-import InvestmentOpportunities from "@/components/InvestmentOpportunities";
-import PropertyTypes from "@/components/PropertyTypes";
-import ProjectStatus from "@/components/ProjectStatus";
-import WhyChooseUs from "@/components/WhyChooseUs";
-import LifestyleAmenities from "@/components/LifestyleAmenities";
-import Testimonials from "@/components/Testimonials";
-import Partners from "@/components/Partners";
-import NewsAndGuide from "@/components/NewsAndGuide";
-import FAQ from "@/components/FAQ";
-import AccountCTA from "@/components/AccountCTA";
-import Footer from "@/components/Footer";
 import Container from "@/components/Container";
+
+// Below-the-fold: lazy load to reduce render-blocking CSS/JS
+const HotProjects = dynamic(() => import("@/components/HotProjects"));
+const FeaturedProjects = dynamic(() => import("@/components/FeaturedProjects"));
+const LuxuryCollections = dynamic(() => import("@/components/LuxuryCollections"));
+const RegionProjects = dynamic(() => import("@/components/RegionProjects"));
+const InvestmentOpportunities = dynamic(() => import("@/components/InvestmentOpportunities"));
+const PropertyTypes = dynamic(() => import("@/components/PropertyTypes"));
+const ProjectStatus = dynamic(() => import("@/components/ProjectStatus"));
+const WhyChooseUs = dynamic(() => import("@/components/WhyChooseUs"));
+const LifestyleAmenities = dynamic(() => import("@/components/LifestyleAmenities"));
+const Testimonials = dynamic(() => import("@/components/Testimonials"));
+const Partners = dynamic(() => import("@/components/Partners"));
+const NewsAndGuide = dynamic(() => import("@/components/NewsAndGuide"));
+const FAQ = dynamic(() => import("@/components/FAQ"));
+const AccountCTA = dynamic(() => import("@/components/AccountCTA"));
+const Footer = dynamic(() => import("@/components/Footer"));
 
 export default function Home() {
   return (
@@ -117,3 +120,4 @@ export default function Home() {
     </>
   );
 }
+
