@@ -56,7 +56,10 @@ class RolesAndPermissionsSeeder extends Seeder
             
             // Reports & Logs
             'reports.view', 'reports.export',
-            'audit_logs.view'
+            'audit_logs.view',
+
+            // AI Content Automation
+            'ai.settings.view', 'ai.settings.update', 'ai.article.generate', 'ai.image.generate', 'ai.bulk.generate', 'ai.schedule.manage', 'ai.jobs.view'
         ];
 
         foreach ($permissions as $permission) {
@@ -82,7 +85,14 @@ class RolesAndPermissionsSeeder extends Seeder
             'landing_pages.view', 'landing_pages.create', 'landing_pages.update', 'landing_pages.delete', 'landing_pages.publish', 'landing_pages.seo',
             'media.view', 'media.upload', 'media.update', 'media.delete',
             'seo.view', 'seo.update', 'redirects.manage', 'sitemap.manage', 'schema.manage',
-            'settings.view'
+            'settings.view',
+            // AI permissions (read-only for settings)
+            'ai.settings.view',
+            'ai.article.generate',
+            'ai.image.generate',
+            'ai.bulk.generate',
+            'ai.schedule.manage',
+            'ai.jobs.view',
         ]);
 
         // 4. Sales Manager

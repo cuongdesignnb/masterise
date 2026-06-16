@@ -21,7 +21,13 @@ import {
   FileSpreadsheet,
   Globe,
   MapPin,
-  Award
+  Award,
+  Sparkles,
+  Layers,
+  History,
+  Clock,
+  FileText,
+  Wrench
 } from 'lucide-react';
 
 export default function AdminLayout({
@@ -79,6 +85,16 @@ export default function AdminLayout({
     { name: 'Vị trí địa lý', href: '/admin/locations', icon: MapPin, roles: ['super_admin', 'admin', 'marketing'] },
     { name: 'Quản lý Tin tức', href: '/admin/tin-tuc', icon: Newspaper, roles: ['super_admin', 'admin', 'marketing'] },
     { name: 'Thư viện Media', href: '/admin/media', icon: ImageIcon, roles: ['super_admin', 'admin', 'marketing'] },
+    
+    // AI Content Section
+    { name: 'Viết bài bằng AI', href: '/admin/ai-content/write', icon: Sparkles, roles: ['super_admin', 'admin', 'marketing'] },
+    { name: 'Tạo bài hàng loạt', href: '/admin/ai-content/bulk', icon: Layers, roles: ['super_admin', 'admin', 'marketing'] },
+    { name: 'Bài nháp AI', href: '/admin/ai-content/drafts', icon: FileText, roles: ['super_admin', 'admin', 'marketing'] },
+    { name: 'Lịch đăng bài', href: '/admin/ai-content/schedule', icon: Clock, roles: ['super_admin', 'admin', 'marketing'] },
+    { name: 'Lịch sử AI Jobs', href: '/admin/ai-content/jobs', icon: History, roles: ['super_admin', 'admin', 'marketing'] },
+    { name: 'Cấu hình AI', href: '/admin/ai-content/settings', icon: Wrench, roles: ['super_admin', 'admin', 'marketing'] },
+
+    // CRM Section
     { name: 'Quản lý Lead (CRM)', href: '/admin/leads', icon: FileSpreadsheet, roles: ['super_admin', 'admin', 'sale_manager', 'sale'] },
     { name: 'Dashboard Lead', href: '/admin/lead-dashboard', icon: LayoutDashboard, roles: ['super_admin', 'admin', 'sale_manager'] },
     { name: 'Lịch hẹn tham quan', href: '/admin/lich-hen', icon: Calendar, roles: ['super_admin', 'admin', 'sale_manager', 'sale'] },

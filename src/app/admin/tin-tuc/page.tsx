@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSearchParams } from 'next/navigation';
 import { api } from '@/lib/api';
 import { Post, PostCategory } from '@/types/api';
 import { useAuth } from '@/context/AuthContext';
@@ -24,9 +25,26 @@ import {
 import MediaSelectModal from '@/components/admin/MediaSelectModal';
 import RichTextEditor from '@/components/admin/RichTextEditor';
 
-export default function AdminNews() {
+function AdminNews() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+
+  const searchParams = useSearchParams();
+  const editId = searchParams.get('edit');
+
+  useEffect(() => {
+    if (editId) {
+      api.get<Post[]>(`/posts?id=${editId}`)
+        .then((res) => {
+          if (res.data && res.data.length > 0) {
+            handleEditOpen(res.data[0]);
+          }
+        })
+        .catch((err) => {
+          console.error("Failed to load post for editing:", err);
+        });
+    }
+  }, [editId]);
   
   // States
   const [search, setSearch] = useState('');
@@ -52,7 +70,7 @@ export default function AdminNews() {
   const [formSummary, setFormSummary] = useState('');
   const [formContent, setFormContent] = useState('');
   const [formThumbnail, setFormThumbnail] = useState('');
-  const [formStatus, setFormStatus] = useState<'draft' | 'published'>('draft');
+  const [formStatus, setFormStatus] = useState<'draft' | 'published' | 'scheduled'>('draft');
   const [formIsFeatured, setFormIsFeatured] = useState(false);
   const [formCategoryId, setFormCategoryId] = useState<number | ''>('');
   
@@ -567,6 +585,9 @@ export default function AdminNews() {
                         >
                           <option value="draft">Bản nháp</option>
                           <option value="published">Xuất bản ngay</option>
+                          {formStatus === 'scheduled' && (
+                            <option value="scheduled">Đang hẹn giờ đăng</option>
+                          )}
                         </select>
                       </div>
 
@@ -804,5 +825,20 @@ export default function AdminNews() {
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+export default function AdminNewsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#FBF8F2] flex items-center justify-center font-body text-[#1F1B16]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-[#B88746] border-t-transparent rounded-full animate-spin" />
+          <p className="text-[#8C7A6B] text-sm">Đang tải trình quản lý tin tức...</p>
+        </div>
+      </div>
+    }>
+      <AdminNews />
+    </Suspense>
   );
 }

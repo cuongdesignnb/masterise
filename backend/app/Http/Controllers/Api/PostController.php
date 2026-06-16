@@ -24,6 +24,11 @@ class PostController extends Controller
             $query->where('status', $request->status);
         }
 
+        // Filter by id
+        if ($request->has('id') && !empty($request->id)) {
+            $query->where('id', $request->id);
+        }
+
         // Search by query
         if ($request->has('q') && !empty($request->q)) {
             $search = $request->q;

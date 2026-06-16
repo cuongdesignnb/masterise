@@ -12,6 +12,9 @@ use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\DeveloperController;
 use App\Http\Controllers\Api\LocationController;
+use App\Http\Controllers\Api\Admin\AiSettingsController;
+use App\Http\Controllers\Api\Admin\AiContentController;
+use App\Http\Controllers\Api\Admin\AiBatchController;
 use Illuminate\Support\Facades\Route;
 
 Route::group(['prefix' => 'v1'], function() {
@@ -153,6 +156,58 @@ Route::group(['prefix' => 'v1'], function() {
             // User management
             Route::apiResource('/users', UserController::class);
         });
+
+        // AI Content Automation API Routes
+        Route::prefix('admin/ai-content')
+            ->group(function () {
+                Route::get('/settings', [AiSettingsController::class, 'index'])
+                    ->middleware('permission:ai.settings.view');
+
+                Route::post('/settings', [AiSettingsController::class, 'update'])
+                    ->middleware('permission:ai.settings.update');
+
+                Route::post('/settings/test-connection', [AiSettingsController::class, 'testConnection'])
+                    ->middleware('permission:ai.settings.update');
+
+                Route::post('/generate-article', [AiContentController::class, 'generateArticle'])
+                    ->middleware('permission:ai.article.generate');
+
+                Route::post('/generate-article-with-image', [AiContentController::class, 'generateArticle'])
+                    ->middleware('permission:ai.article.generate');
+
+                Route::post('/posts/{post}/regenerate-image', [AiContentController::class, 'regenerateImage'])
+                    ->middleware('permission:ai.image.generate');
+
+                Route::get('/drafts', [AiContentController::class, 'drafts'])
+                    ->middleware('permission:posts.view');
+
+                Route::patch('/posts/{post}/schedule', [AiContentController::class, 'schedulePost'])
+                    ->middleware('permission:ai.schedule.manage');
+
+                Route::post('/posts/{post}/publish-now', [AiContentController::class, 'publishNow'])
+                    ->middleware('permission:posts.publish');
+
+                Route::post('/posts/publish-due', [AiContentController::class, 'publishDue'])
+                    ->middleware('permission:posts.publish');
+
+                Route::post('/batches', [AiBatchController::class, 'store'])
+                    ->middleware('permission:ai.bulk.generate');
+
+                Route::get('/batches', [AiBatchController::class, 'index'])
+                    ->middleware('permission:ai.jobs.view');
+
+                Route::get('/batches/{batch}', [AiBatchController::class, 'show'])
+                    ->middleware('permission:ai.jobs.view');
+
+                Route::post('/batches/{batch}/schedule', [AiBatchController::class, 'schedule'])
+                    ->middleware('permission:ai.schedule.manage');
+
+                Route::post('/batches/{batch}/cancel', [AiBatchController::class, 'cancel'])
+                    ->middleware('permission:ai.bulk.generate');
+
+                Route::get('/jobs', [AiContentController::class, 'jobsHistory'])
+                    ->middleware('permission:ai.jobs.view');
+            });
 
     });
 });

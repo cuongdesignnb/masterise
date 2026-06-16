@@ -111,7 +111,7 @@ export interface Post {
   summary: string | null;
   content: string | null;
   thumbnail: string | null;
-  status: 'draft' | 'published';
+  status: 'draft' | 'published' | 'scheduled';
   is_featured: boolean;
   post_category_id: number;
   author_id: number;
@@ -120,6 +120,11 @@ export interface Post {
   author?: User;
   tags?: Tag[];
   seo_meta?: SeoMeta | null;
+  ai_generated?: boolean;
+  ai_generation_job_id?: number | null;
+  ai_prompt?: string | null;
+  source_keyword?: string | null;
+  scheduled_at?: string | null;
   created_at: string;
   updated_at: string;
 }

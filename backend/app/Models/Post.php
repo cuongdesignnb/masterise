@@ -17,6 +17,11 @@ class Post extends Model
         'post_category_id',
         'author_id',
         'published_at',
+        'ai_generated',
+        'ai_generation_job_id',
+        'ai_prompt',
+        'source_keyword',
+        'scheduled_at',
     ];
 
     protected function casts(): array
@@ -24,6 +29,8 @@ class Post extends Model
         return [
             'is_featured' => 'boolean',
             'published_at' => 'datetime',
+            'ai_generated' => 'boolean',
+            'scheduled_at' => 'datetime',
         ];
     }
 
