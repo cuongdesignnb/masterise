@@ -1,6 +1,26 @@
 import { ApiResponse } from '@/types/api';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8747/api/v1';
+function getApiUrl(): string {
+  // Client-side: derive API URL from current hostname (runtime, not build-time)
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    // Production: masterise-homes.net.vn -> api.masterise-homes.net.vn
+    if (hostname === 'masterise-homes.net.vn') {
+      return 'https://api.masterise-homes.net.vn/api/v1';
+    }
+    // Add more production domains here if needed
+    // Development: localhost
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return 'http://localhost:8747/api/v1';
+    }
+    // Fallback: use same protocol and prepend 'api.' to current hostname
+    return `${window.location.protocol}//api.${hostname}/api/v1`;
+  }
+  // Server-side: use environment variable
+  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8747/api/v1';
+}
+
+const API_URL = getApiUrl();
 
 class ApiError extends Error {
   status: number;
