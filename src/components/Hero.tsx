@@ -4,14 +4,77 @@ import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { Play, ArrowLeft, ArrowRight, Phone, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { heroSlides } from "@/data/seed";
+import { homepageService } from "@/services/homepageService";
+import { unwrapData } from "@/adapters/apiResponseAdapter";
 import Container from "./Container";
 import Button from "./Button";
 
+import type { HeroSlide } from "@/types";
+
+// Fallback data in case API fails or returns empty
+const FALLBACK_SLIDES: HeroSlide[] = [
+  {
+    id: 1,
+    titleLines: ["NÂNG TẦM", "PHONG CÁCH SỐNG"],
+    highlight: "KIẾN TẠO GIÁ TRỊ BỀN VỮNG",
+    description:
+      "Masterise Homes mang đến những bất động sản hàng hiệu với tầm nhìn quốc tế, kiến tạo cộng đồng thịnh vượng và phong cách sống xứng tầm.",
+    image:
+      "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1400&auto=format&fit=crop",
+  },
+  {
+    id: 2,
+    titleLines: ["DẤU ẤN", "BẤT ĐỘNG SẢN HÀNG HIỆU"],
+    highlight: "CHUẨN SỐNG QUỐC TẾ",
+    description:
+      "Mỗi dự án là một biểu tượng kiến trúc, kết nối vị trí chiến lược, tiện ích toàn diện và giá trị đầu tư dài hạn.",
+    image:
+      "https://images.unsplash.com/photo-1518005020951-eccb494ad742?q=80&w=1400&auto=format&fit=crop",
+  },
+  {
+    id: 3,
+    titleLines: ["KHÔNG GIAN", "SỐNG THỊNH VƯỢNG"],
+    highlight: "DÀNH CHO CỘNG ĐỒNG TINH HOA",
+    description:
+      "Trải nghiệm hệ sinh thái sống đẳng cấp, dịch vụ quản lý chuyên nghiệp và cộng đồng cư dân văn minh.",
+    image:
+      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1400&auto=format&fit=crop",
+  },
+];
+
 export default function Hero() {
+  const [heroSlides, setHeroSlides] = useState<HeroSlide[]>(FALLBACK_SLIDES);
   const [current, setCurrent] = useState(0);
   const [isAutoplay, setIsAutoplay] = useState(true);
   const hasInteracted = useRef(false);
+
+  useEffect(() => {
+    const fetchBanners = async () => {
+      try {
+        const response = await homepageService.getHeroBanners();
+        const data = unwrapData<any[]>(response) || [];
+        if (data.length > 0) {
+          const mapped: HeroSlide[] = data
+            .filter((item: any) => item.is_active !== false)
+            .sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0))
+            .map((item: any) => ({
+              id: item.id,
+              titleLines: item.title_lines || [item.title || ""],
+              highlight: item.highlight || "",
+              description: item.description || "",
+              image: item.image || item.image_url || "",
+            }));
+          if (mapped.length > 0) {
+            setHeroSlides(mapped);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching hero banners:", error);
+        // Keep FALLBACK_SLIDES on error
+      }
+    };
+    fetchBanners();
+  }, []);
 
   useEffect(() => {
     if (!isAutoplay) return;
@@ -20,7 +83,7 @@ export default function Hero() {
       setCurrent((prev) => (prev + 1) % heroSlides.length);
     }, 8000);
     return () => clearInterval(interval);
-  }, [isAutoplay]);
+  }, [isAutoplay, heroSlides.length]);
 
   const handleNext = () => {
     hasInteracted.current = true;

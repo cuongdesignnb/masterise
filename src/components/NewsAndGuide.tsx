@@ -1,12 +1,22 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
-import { news } from "@/data/seed";
+import { postService } from "@/services/postService";
+import { unwrapData } from "@/adapters/apiResponseAdapter";
 import MotionWrapper from "./MotionWrapper";
+
+interface NewsDisplayItem {
+  id: number;
+  title: string;
+  date: string;
+  tag: string;
+  image: string;
+  slug?: string;
+}
 
 const getTagStyles = (tag: string) => {
   const styles: Record<string, { text: string; border: string }> = {
@@ -32,6 +42,31 @@ const getTagStyles = (tag: string) => {
 
 export default function NewsAndGuide() {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [news, setNews] = useState<NewsDisplayItem[]>([]);
+
+  useEffect(() => {
+    const fetchNews = async () => {
+      try {
+        const response = await postService.getPosts({ limit: 6 });
+        const posts = unwrapData<any[]>(response) || [];
+        const mapped: NewsDisplayItem[] = posts.map((post: any) => ({
+          id: post.id,
+          title: post.title,
+          date: post.published_at
+            ? new Date(post.published_at).toLocaleDateString("vi-VN")
+            : "",
+          tag: post.category_name || post.category?.name || "Tin tức",
+          image: post.thumbnail_url || post.image || "",
+          slug: post.slug,
+        }));
+        setNews(mapped);
+      } catch (error) {
+        console.error("Error fetching news:", error);
+        setNews([]);
+      }
+    };
+    fetchNews();
+  }, []);
 
   const scroll = (direction: "left" | "right") => {
     if (scrollRef.current) {
@@ -45,6 +80,8 @@ export default function NewsAndGuide() {
       scrollRef.current.scrollTo({ left: scrollTo, behavior: "smooth" });
     }
   };
+
+  if (news.length === 0) return null;
 
   return (
     <div className="flex flex-col h-full text-left">

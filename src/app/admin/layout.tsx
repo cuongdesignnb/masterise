@@ -27,7 +27,11 @@ import {
   History,
   Clock,
   FileText,
-  Wrench
+  Wrench,
+  Layout,
+  HelpCircle,
+  MessageSquare,
+  Handshake
 } from 'lucide-react';
 
 export default function AdminLayout({
@@ -85,6 +89,12 @@ export default function AdminLayout({
     { name: 'Vị trí địa lý', href: '/admin/locations', icon: MapPin, roles: ['super_admin', 'admin', 'marketing'] },
     { name: 'Quản lý Tin tức', href: '/admin/tin-tuc', icon: Newspaper, roles: ['super_admin', 'admin', 'marketing'] },
     { name: 'Thư viện Media', href: '/admin/media', icon: ImageIcon, roles: ['super_admin', 'admin', 'marketing'] },
+
+    // Homepage Content Section
+    { name: 'Banner trang chủ', href: '/admin/banners', icon: Layout, roles: ['super_admin', 'admin', 'marketing'] },
+    { name: 'FAQ', href: '/admin/faq', icon: HelpCircle, roles: ['super_admin', 'admin', 'marketing'] },
+    { name: 'Nhận xét KH', href: '/admin/testimonials', icon: MessageSquare, roles: ['super_admin', 'admin', 'marketing'] },
+    { name: 'Đối tác', href: '/admin/partners', icon: Handshake, roles: ['super_admin', 'admin', 'marketing'] },
     
     // AI Content Section
     { name: 'Viết bài bằng AI', href: '/admin/ai-content/write', icon: Sparkles, roles: ['super_admin', 'admin', 'marketing'] },

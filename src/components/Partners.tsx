@@ -1,11 +1,38 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { partners } from "@/data/seed";
+import { homepageService } from "@/services/homepageService";
+import { unwrapData } from "@/adapters/apiResponseAdapter";
 import MotionWrapper from "./MotionWrapper";
 
+interface PartnerDisplayItem {
+  id: number;
+  name: string;
+  logo_url?: string;
+}
+
 export default function Partners() {
+  const [partners, setPartners] = useState<PartnerDisplayItem[]>([]);
+
+  useEffect(() => {
+    const fetchPartners = async () => {
+      try {
+        const response = await homepageService.getPartners();
+        const data = unwrapData<any[]>(response) || [];
+        const mapped: PartnerDisplayItem[] = data.map((item: any) => ({
+          id: item.id,
+          name: item.name,
+          logo_url: item.logo_url,
+        }));
+        setPartners(mapped);
+      } catch (error) {
+        console.error("Error fetching partners:", error);
+        setPartners([]);
+      }
+    };
+    fetchPartners();
+  }, []);
   const renderPartnerName = (name: string) => {
     if (name.toLowerCase() === "savills") {
       // Render "savills" in lowercase serif logotype
@@ -21,6 +48,8 @@ export default function Partners() {
       </span>
     );
   };
+
+  if (partners.length === 0) return null;
 
   return (
     <div className="flex flex-col h-full text-left">

@@ -12,6 +12,10 @@ use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\DeveloperController;
 use App\Http\Controllers\Api\LocationController;
+use App\Http\Controllers\Api\HeroBannerController;
+use App\Http\Controllers\Api\FaqController;
+use App\Http\Controllers\Api\TestimonialController;
+use App\Http\Controllers\Api\PartnerController;
 use App\Http\Controllers\Api\Admin\AiSettingsController;
 use App\Http\Controllers\Api\Admin\AiContentController;
 use App\Http\Controllers\Api\Admin\AiBatchController;
@@ -59,6 +63,12 @@ Route::group(['prefix' => 'v1'], function() {
     // System config & SEO
     Route::get('/settings/public', [SettingController::class, 'publicSettings']);
     Route::get('/seo/by-path', [SeoController::class, 'byPath']);
+
+    // Homepage content
+    Route::get('/hero-banners', [HeroBannerController::class, 'index']);
+    Route::get('/faqs', [FaqController::class, 'index']);
+    Route::get('/testimonials', [TestimonialController::class, 'index']);
+    Route::get('/partners', [PartnerController::class, 'index']);
     
     // VR 360 Tour public route
     Route::get('/projects/{slug}/vr-tour', [App\Http\Controllers\Api\ProjectVrTourController::class, 'show']);
@@ -128,6 +138,23 @@ Route::group(['prefix' => 'v1'], function() {
 
             // SEO Meta updates
             Route::post('/seo', [SeoController::class, 'update']);
+
+            // Homepage content CRUD
+            Route::post('/hero-banners', [HeroBannerController::class, 'store']);
+            Route::put('/hero-banners/{id}', [HeroBannerController::class, 'update']);
+            Route::delete('/hero-banners/{id}', [HeroBannerController::class, 'destroy']);
+
+            Route::post('/faqs', [FaqController::class, 'store']);
+            Route::put('/faqs/{id}', [FaqController::class, 'update']);
+            Route::delete('/faqs/{id}', [FaqController::class, 'destroy']);
+
+            Route::post('/testimonials', [TestimonialController::class, 'store']);
+            Route::put('/testimonials/{id}', [TestimonialController::class, 'update']);
+            Route::delete('/testimonials/{id}', [TestimonialController::class, 'destroy']);
+
+            Route::post('/partners', [PartnerController::class, 'store']);
+            Route::put('/partners/{id}', [PartnerController::class, 'update']);
+            Route::delete('/partners/{id}', [PartnerController::class, 'destroy']);
         });
 
         // Admin/Super Admin/Manager only

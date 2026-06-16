@@ -2,10 +2,18 @@
 
 import React from "react";
 import * as Icons from "lucide-react";
-import { stats } from "@/data/seed";
 import Container from "./Container";
 import Counter from "./Counter";
 import MotionWrapper from "./MotionWrapper";
+
+// TODO: Replace with Settings API fetch in the future
+// These stats will be managed via the admin Settings panel
+const stats = [
+  { id: 1, value: 50, suffix: "+", label: "DỰ ÁN CAO CẤP", icon: "Building2" },
+  { id: 2, value: 15000, suffix: "+", label: "NHÀ ĐẦU TƯ TIN TƯỞNG", icon: "Handshake" },
+  { id: 3, value: 30000, suffix: "+", label: "GIAO DỊCH THÀNH CÔNG", icon: "BadgeCheck" },
+  { id: 4, value: 10, suffix: "+", label: "NĂM KINH NGHIỆM", icon: "ShieldCheck" },
+];
 
 const getIcon = (iconName: string) => {
   const LucideIcon = (Icons as any)[iconName];

@@ -33,7 +33,10 @@ class DatabaseSeeder extends Seeder
         // 6. Run Lead Seeder
         $this->call(LeadSeeder::class);
 
-        // 7. Seed System Settings (Idempotent)
+        // 7. Run Homepage Content Seeder
+        $this->call(HomepageContentSeeder::class);
+
+        // 8. Seed System Settings (Idempotent)
         Setting::set('company_name', 'Masterise Homes');
         Setting::set('company_address', 'Tòa nhà Masterise, Thảo Điền, Thành phố Thủ Đức, TP. HCM');
         Setting::set('hotline', '028 39 159 159');
@@ -49,7 +52,7 @@ class DatabaseSeeder extends Seeder
             'hero_video_url' => 'https://www.w3schools.com/html/mov_bbb.mp4',
         ], 'json');
 
-        // 8. Seed SEO Meta for Static pages (Idempotent)
+        // 9. Seed SEO Meta for Static pages (Idempotent)
         SeoMeta::updateOrCreate(
             ['path' => '/'],
             [

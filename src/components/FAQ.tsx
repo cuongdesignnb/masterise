@@ -1,17 +1,46 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { faqs } from "@/data/seed";
+import { homepageService } from "@/services/homepageService";
+import { unwrapData } from "@/adapters/apiResponseAdapter";
 import MotionWrapper from "./MotionWrapper";
+
+interface FaqDisplayItem {
+  id: number;
+  question: string;
+  answer: string;
+}
 
 export default function FAQ() {
   const [openId, setOpenId] = useState<number | null>(null);
+  const [faqs, setFaqs] = useState<FaqDisplayItem[]>([]);
+
+  useEffect(() => {
+    const fetchFaqs = async () => {
+      try {
+        const response = await homepageService.getFaqs();
+        const data = unwrapData<any[]>(response) || [];
+        const mapped: FaqDisplayItem[] = data.map((item: any) => ({
+          id: item.id,
+          question: item.question,
+          answer: item.answer,
+        }));
+        setFaqs(mapped);
+      } catch (error) {
+        console.error("Error fetching FAQs:", error);
+        setFaqs([]);
+      }
+    };
+    fetchFaqs();
+  }, []);
 
   const handleToggle = (id: number) => {
     setOpenId((prev) => (prev === id ? null : id));
   };
+
+  if (faqs.length === 0) return null;
 
   return (
     <div className="flex flex-col h-full text-left">

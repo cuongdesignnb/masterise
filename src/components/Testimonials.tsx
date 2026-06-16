@@ -1,12 +1,46 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { testimonials } from "@/data/seed";
+import { homepageService } from "@/services/homepageService";
+import { unwrapData } from "@/adapters/apiResponseAdapter";
 import MotionWrapper from "./MotionWrapper";
 
+interface TestimonialDisplayItem {
+  id: number;
+  name: string;
+  role: string;
+  content: string;
+  avatar: string;
+}
+
 export default function Testimonials() {
+  const [testimonials, setTestimonials] = useState<TestimonialDisplayItem[]>([]);
+
+  useEffect(() => {
+    const fetchTestimonials = async () => {
+      try {
+        const response = await homepageService.getTestimonials();
+        const data = unwrapData<any[]>(response) || [];
+        const mapped: TestimonialDisplayItem[] = data.map((item: any) => ({
+          id: item.id,
+          name: item.name,
+          role: item.role || item.position || "",
+          content: item.content,
+          avatar: item.avatar || item.avatar_url || "",
+        }));
+        setTestimonials(mapped);
+      } catch (error) {
+        console.error("Error fetching testimonials:", error);
+        setTestimonials([]);
+      }
+    };
+    fetchTestimonials();
+  }, []);
+
+  if (testimonials.length === 0) return null;
+
   return (
     <div className="flex flex-col h-full text-left">
       <MotionWrapper>
