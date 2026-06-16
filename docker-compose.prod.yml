@@ -75,7 +75,7 @@ services:
       context: .
       dockerfile: docker/node/Dockerfile
       args:
-        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+        - NEXT_PUBLIC_API_URL=https://api.masterise-homes.net.vn/api/v1
     container_name: mh_frontend
     restart: always
     ports:
