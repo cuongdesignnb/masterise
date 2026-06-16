@@ -19,6 +19,9 @@ Route::group(['prefix' => 'v1'], function() {
     // 1. Auth routes (public / guest)
     Route::post('/auth/register', [AuthController::class, 'register']);
     Route::post('/auth/login', [AuthController::class, 'login']);
+    Route::get('/login', function() {
+        return response()->json(['message' => 'Unauthenticated.'], 401);
+    })->name('login');
 
     // 2. Public / Guest routes (no auth needed)
     // Projects

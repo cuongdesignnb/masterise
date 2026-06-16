@@ -22,6 +22,8 @@ async function request<T>(
 
   const headers = new Headers(options.headers || {});
   
+  headers.set('Accept', 'application/json');
+
   // Do not add Content-Type for FormData as the browser handles boundary configuration
   if (!(options.body instanceof FormData) && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json');
