@@ -9,7 +9,7 @@ import Container from "@/components/Container";
 // Below-the-fold: lazy load to reduce render-blocking CSS/JS
 const HotProjects = dynamic(() => import("@/components/HotProjects"));
 const FeaturedProjects = dynamic(() => import("@/components/FeaturedProjects"));
-const LuxuryCollections = dynamic(() => import("@/components/LuxuryCollections"));
+
 const RegionProjects = dynamic(() => import("@/components/RegionProjects"));
 const InvestmentOpportunities = dynamic(() => import("@/components/InvestmentOpportunities"));
 const PropertyTypes = dynamic(() => import("@/components/PropertyTypes"));
@@ -46,8 +46,7 @@ export default function Home() {
         {/* 8.6 Featured Projects Grid */}
         <FeaturedProjects />
 
-        {/* 8.7 Luxury Collections Cards (horizontal split layout inside) */}
-        <LuxuryCollections />
+
 
         {/* Region Projects + Investment Opportunities + Property Types in a unified 2-column layout row */}
         <section id="phan-khuc" className="py-16 sm:py-20 bg-[#FFFDF8] border-t border-line/30">

@@ -21,7 +21,7 @@ import type {
 export const navigation: NavItem[] = [
   { label: "Trang chủ", href: "/" },
   { label: "Dự án", href: "/du-an" },
-  { label: "Bộ sưu tập", href: "/#phan-khuc" },
+
   { label: "Tin tức", href: "/tin-tuc" },
   { label: "Về chúng tôi", href: "/gioi-thieu" },
   { label: "Liên hệ", href: "/lien-he" },
@@ -176,40 +176,8 @@ export const featuredProjects: Project[] = [
   },
 ];
 
-export const luxuryCollections: CollectionItem[] = [
-  {
-    id: 1,
-    title: "Căn hộ hạng sang",
-    description: "Không gian sống đẳng cấp, tiện nghi vượt trội",
-    icon: "Building2",
-    image:
-      "https://images.unsplash.com/photo-1600566752355-35792bedcfea?q=80&w=1000&auto=format&fit=crop",
-  },
-  {
-    id: 2,
-    title: "Biệt thự cao cấp",
-    description: "Dinh thự độc bản giữa thiên nhiên",
-    icon: "Landmark",
-    image:
-      "https://images.unsplash.com/photo-1613977257363-707ba9348227?q=80&w=1000&auto=format&fit=crop",
-  },
-  {
-    id: 3,
-    title: "Shophouse thương mại",
-    description: "Vị trí vàng – Kinh doanh thịnh vượng",
-    icon: "Store",
-    image:
-      "https://images.unsplash.com/photo-1497366754035-f200968a6e72?q=80&w=1000&auto=format&fit=crop",
-  },
-  {
-    id: 4,
-    title: "Branded Residences",
-    description: "Chuẩn sống quốc tế được bảo chứng",
-    icon: "Gem",
-    image:
-      "https://images.unsplash.com/photo-1600607687644-c7171b42498f?q=80&w=1000&auto=format&fit=crop",
-  },
-];
+
+
 
 export const regions: RegionItem[] = [
   { id: 1, name: "TP. Thủ Đức", count: 18 },

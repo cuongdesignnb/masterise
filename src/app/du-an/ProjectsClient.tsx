@@ -7,7 +7,7 @@ import MobileTabBar from "@/components/MobileTabBar";
 import ProjectsHero from "@/components/projects/ProjectsHero";
 import ProjectsSearchBar from "@/components/projects/ProjectsSearchBar";
 import FeaturedProjects from "@/components/projects/FeaturedProjects";
-import ProjectCollections from "@/components/projects/ProjectCollections";
+
 import ProjectsByRegion from "@/components/projects/ProjectsByRegion";
 import WhyChooseProjects from "@/components/projects/WhyChooseProjects";
 import AllProjectsGrid from "@/components/projects/AllProjectsGrid";
@@ -22,7 +22,7 @@ export default function ProjectsClient() {
         <ProjectsHero />
         <ProjectsSearchBar />
         <FeaturedProjects />
-        <ProjectCollections />
+
         <ProjectsByRegion />
         <WhyChooseProjects />
         <Suspense fallback={
