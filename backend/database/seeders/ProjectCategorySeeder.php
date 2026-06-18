@@ -35,5 +35,20 @@ class ProjectCategorySeeder extends Seeder
                 'description' => 'Nhà phố thương mại, shophouse mặt tiền kinh doanh sầm uất tại các đại đô thị.',
             ]
         );
+        ProjectCategory::updateOrCreate(
+            ['slug' => 'masterise-colletion'],
+            [
+                'name' => 'Masterise Colletion',
+                'description' => 'Bo suu tap bat dong san can ho cao cap, huong den chuan song hien dai, tien ich dong bo va gia tri so huu ben vung. Alias SEO: Masterise Collection.',
+            ]
+        );
+
+        ProjectCategory::updateOrCreate(
+            ['slug' => 'lumiere-series'],
+            [
+                'name' => 'Lumiere Series',
+                'description' => 'Dong bat dong san can ho hang sang mang phong cach thiet ke tinh te, khong gian song xanh, rieng tu va chuan trai nghiem cao cap.',
+            ]
+        );
     }
 }

@@ -3,7 +3,8 @@
 import React from "react";
 import Link from "next/link";
 import { Phone, Mail, MapPin, ArrowUp } from "lucide-react";
-import { footerColumns, contactInfo } from "@/data/seed";
+import { contactInfo } from "@/data/seed";
+import { publicFooterColumns } from "@/data/publicNavigation";
 import Container from "./Container";
 
 export default function Footer() {
@@ -15,7 +16,7 @@ export default function Footer() {
   };
 
   return (
-    <footer className="bg-ink text-white pt-16 pb-8 border-t border-line/10 relative">
+    <footer className="bg-ink-deep text-white pt-16 pb-8 border-t border-white/5 relative">
       <Container>
         {/* Main Footer Links & Info Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-12 pb-12 border-b border-white/10">
@@ -126,7 +127,7 @@ export default function Footer() {
           </div>
 
           {/* Columns 2-4: Navigation links */}
-          {footerColumns.map((col) => (
+          {publicFooterColumns.map((col) => (
             <div key={col.title} className="lg:col-span-2 flex flex-col text-left">
               <h3 className="text-xs font-bold text-gold tracking-widest uppercase mb-6">
                 {col.title}

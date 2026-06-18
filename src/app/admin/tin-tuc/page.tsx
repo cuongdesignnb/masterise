@@ -70,6 +70,11 @@ function AdminNews() {
   const [formSummary, setFormSummary] = useState('');
   const [formContent, setFormContent] = useState('');
   const [formThumbnail, setFormThumbnail] = useState('');
+  const [formPostType, setFormPostType] = useState<'news' | 'investment' | 'event'>('news');
+  const [formEventStartAt, setFormEventStartAt] = useState('');
+  const [formEventEndAt, setFormEventEndAt] = useState('');
+  const [formEventLocation, setFormEventLocation] = useState('');
+  const [formEventRegisterUrl, setFormEventRegisterUrl] = useState('');
   const [formStatus, setFormStatus] = useState<'draft' | 'published' | 'scheduled'>('draft');
   const [formIsFeatured, setFormIsFeatured] = useState(false);
   const [formCategoryId, setFormCategoryId] = useState<number | ''>('');
@@ -128,6 +133,11 @@ function AdminNews() {
     setFormSummary('');
     setFormContent('');
     setFormThumbnail('');
+    setFormPostType('news');
+    setFormEventStartAt('');
+    setFormEventEndAt('');
+    setFormEventLocation('');
+    setFormEventRegisterUrl('');
     setFormStatus('draft');
     setFormIsFeatured(false);
     setFormCategoryId(categoriesData && categoriesData.length > 0 ? categoriesData[0].id : '');
@@ -148,6 +158,11 @@ function AdminNews() {
     setFormSummary(post.summary || '');
     setFormContent(post.content || '');
     setFormThumbnail(post.thumbnail || '');
+    setFormPostType(post.post_type || 'news');
+    setFormEventStartAt(post.event_start_at ? post.event_start_at.slice(0, 16) : '');
+    setFormEventEndAt(post.event_end_at ? post.event_end_at.slice(0, 16) : '');
+    setFormEventLocation(post.event_location || '');
+    setFormEventRegisterUrl(post.event_register_url || '');
     setFormStatus(post.status);
     setFormIsFeatured(post.is_featured);
     setFormCategoryId(post.post_category_id);
@@ -168,6 +183,11 @@ function AdminNews() {
         summary: formSummary,
         content: formContent,
         thumbnail: formThumbnail,
+        post_type: formPostType,
+        event_start_at: formEventStartAt || null,
+        event_end_at: formEventEndAt || null,
+        event_location: formEventLocation || null,
+        event_register_url: formEventRegisterUrl || null,
         status: formStatus,
         is_featured: formIsFeatured,
         post_category_id: Number(formCategoryId),
@@ -573,7 +593,62 @@ function AdminNews() {
                           ))}
                         </select>
                       </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Loại nội dung *</label>
+                        <select
+                          value={formPostType}
+                          onChange={(e: any) => setFormPostType(e.target.value)}
+                          className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
+                        >
+                          <option value="news">Tin tức</option>
+                          <option value="investment">Đầu tư</option>
+                          <option value="event">Event</option>
+                        </select>
+                      </div>
                     </div>
+
+                    {formPostType === 'event' && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                        <div>
+                          <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Thời gian bắt đầu</label>
+                          <input
+                            type="datetime-local"
+                            value={formEventStartAt}
+                            onChange={(e) => setFormEventStartAt(e.target.value)}
+                            className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Thời gian kết thúc</label>
+                          <input
+                            type="datetime-local"
+                            value={formEventEndAt}
+                            onChange={(e) => setFormEventEndAt(e.target.value)}
+                            className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Địa điểm sự kiện</label>
+                          <input
+                            type="text"
+                            value={formEventLocation}
+                            onChange={(e) => setFormEventLocation(e.target.value)}
+                            className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
+                            placeholder="VD: Sales Gallery Masterise Homes"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">URL đăng ký</label>
+                          <input
+                            type="url"
+                            value={formEventRegisterUrl}
+                            onChange={(e) => setFormEventRegisterUrl(e.target.value)}
+                            className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
+                            placeholder="https://..."
+                          />
+                        </div>
+                      </div>
+                    )}
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
                       <div>

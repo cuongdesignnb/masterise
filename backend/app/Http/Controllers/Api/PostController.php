@@ -29,6 +29,11 @@ class PostController extends Controller
             $query->where('id', $request->id);
         }
 
+        if ($request->has('post_type') && !empty($request->post_type)) {
+            $postTypes = is_array($request->post_type) ? $request->post_type : explode(',', $request->post_type);
+            $query->whereIn('post_type', $postTypes);
+        }
+
         // Search by query
         if ($request->has('q') && !empty($request->q)) {
             $search = $request->q;
@@ -79,6 +84,10 @@ class PostController extends Controller
         $posts = Post::where('status', 'published')
             ->where('is_featured', true)
             ->with(['category', 'author', 'seoMeta'])
+            ->when($request->filled('post_type'), function ($query) use ($request) {
+                $postTypes = is_array($request->post_type) ? $request->post_type : explode(',', $request->post_type);
+                $query->whereIn('post_type', $postTypes);
+            })
             ->orderBy('published_at', 'desc')
             ->limit($limit)
             ->get();
@@ -145,12 +154,17 @@ class PostController extends Controller
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'title' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:posts',
+            'post_type' => 'nullable|string|in:news,investment,event',
             'summary' => 'nullable|string',
             'content' => 'nullable|string',
             'thumbnail' => 'nullable|string',
-            'status' => 'required|string|in:draft,published',
+            'status' => 'required|string|in:draft,published,scheduled',
             'is_featured' => 'boolean',
             'post_category_id' => 'required|exists:post_categories,id',
+            'event_start_at' => 'nullable|date',
+            'event_end_at' => 'nullable|date|after_or_equal:event_start_at',
+            'event_location' => 'nullable|string|max:255',
+            'event_register_url' => 'nullable|string|max:255',
             // SEO Meta
             'seo_title' => 'nullable|string|max:255',
             'seo_description' => 'nullable|string',
@@ -169,6 +183,7 @@ class PostController extends Controller
         $post = Post::create([
             'title' => $request->title,
             'slug' => $request->slug,
+            'post_type' => $request->get('post_type', 'news'),
             'summary' => $request->summary,
             'content' => $request->content,
             'thumbnail' => $request->thumbnail,
@@ -177,6 +192,10 @@ class PostController extends Controller
             'post_category_id' => $request->post_category_id,
             'author_id' => $request->user()->id,
             'published_at' => $request->status === 'published' ? now() : null,
+            'event_start_at' => $request->event_start_at,
+            'event_end_at' => $request->event_end_at,
+            'event_location' => $request->event_location,
+            'event_register_url' => $request->event_register_url,
         ]);
 
         // Create SEO Meta
@@ -210,12 +229,17 @@ class PostController extends Controller
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'title' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:posts,slug,' . $id,
+            'post_type' => 'nullable|string|in:news,investment,event',
             'summary' => 'nullable|string',
             'content' => 'nullable|string',
             'thumbnail' => 'nullable|string',
-            'status' => 'required|string|in:draft,published',
+            'status' => 'required|string|in:draft,published,scheduled',
             'is_featured' => 'boolean',
             'post_category_id' => 'required|exists:post_categories,id',
+            'event_start_at' => 'nullable|date',
+            'event_end_at' => 'nullable|date|after_or_equal:event_start_at',
+            'event_location' => 'nullable|string|max:255',
+            'event_register_url' => 'nullable|string|max:255',
             // SEO Meta
             'seo_title' => 'nullable|string|max:255',
             'seo_description' => 'nullable|string',
@@ -235,6 +259,7 @@ class PostController extends Controller
         $post->update([
             'title' => $request->title,
             'slug' => $request->slug,
+            'post_type' => $request->get('post_type', 'news'),
             'summary' => $request->summary,
             'content' => $request->content,
             'thumbnail' => $request->thumbnail,
@@ -242,6 +267,10 @@ class PostController extends Controller
             'is_featured' => $request->get('is_featured', false),
             'post_category_id' => $request->post_category_id,
             'published_at' => ($request->status === 'published' && $oldStatus !== 'published') ? now() : $post->published_at,
+            'event_start_at' => $request->event_start_at,
+            'event_end_at' => $request->event_end_at,
+            'event_location' => $request->event_location,
+            'event_register_url' => $request->event_register_url,
         ]);
 
         // Update or create SEO Meta

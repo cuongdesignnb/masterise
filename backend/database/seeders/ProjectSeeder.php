@@ -318,5 +318,144 @@ class ProjectSeeder extends Seeder
                 'keywords' => 'masteri waterfront, ocean park ha noi, bat dong san gia lam',
             ]
         );
+        $catMasteriseColletion = ProjectCategory::where('slug', 'masterise-colletion')->first();
+        $catLumiere = ProjectCategory::where('slug', 'lumiere-series')->first();
+
+        $requiredProjects = [
+            [
+                'category' => $catMasteriseColletion,
+                'slug' => 'masterise-grand-view',
+                'name' => 'Masterise Grand View',
+                'description' => 'Can ho cao cap voi tam nhin rong mo, tien ich dong bo va khong gian song hien dai.',
+                'location' => 'Thanh pho Thu Duc, TP. Ho Chi Minh',
+                'region' => 'TP. Ho Chi Minh',
+                'price_text' => 'Tu 6,8 ty/can',
+                'sales_status' => 'coming_soon',
+                'is_hot' => false,
+                'open_sale_at' => now()->addMonths(2),
+                'is_featured' => true,
+                'thumbnail' => 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1200&auto=format&fit=crop',
+            ],
+            [
+                'category' => $catMasteriseColletion,
+                'slug' => 'masterise-central-point',
+                'name' => 'Masterise Central Point',
+                'description' => 'Du an can ho cao cap nam tai truc ket noi trung tam, thiet ke cho cu dan thanh dat.',
+                'location' => 'Trung tam TP. Ho Chi Minh',
+                'region' => 'TP. Ho Chi Minh',
+                'price_text' => 'Tu 7,2 ty/can',
+                'sales_status' => 'selling',
+                'is_hot' => false,
+                'open_sale_at' => now()->subDays(10),
+                'is_featured' => true,
+                'thumbnail' => 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1200&auto=format&fit=crop',
+            ],
+            [
+                'category' => $catMasteriseColletion,
+                'slug' => 'masterise-riverside',
+                'name' => 'Masterise Riverside',
+                'description' => 'Khong gian song ven song cao cap voi he tien ich nghi duong va gia tri khai thac dai han.',
+                'location' => 'Ven song Sai Gon, TP. Ho Chi Minh',
+                'region' => 'TP. Ho Chi Minh',
+                'price_text' => 'Tu 8,5 ty/can',
+                'sales_status' => 'selling',
+                'is_hot' => true,
+                'open_sale_at' => now()->subMonth(),
+                'is_featured' => true,
+                'thumbnail' => 'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?q=80&w=1200&auto=format&fit=crop',
+            ],
+            [
+                'category' => $catLumiere,
+                'slug' => 'lumiere-boulevard',
+                'name' => 'Lumiere Boulevard',
+                'description' => 'Dong can ho hang sang thuoc Lumiere Series voi kien truc xanh va phong cach song tinh te.',
+                'location' => 'Vinhomes Grand Park, TP. Thu Duc',
+                'region' => 'TP. Ho Chi Minh',
+                'price_text' => 'Tu 5,5 ty/can',
+                'sales_status' => 'selling',
+                'is_hot' => false,
+                'open_sale_at' => now()->subDays(20),
+                'is_featured' => true,
+                'thumbnail' => 'https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?q=80&w=1200&auto=format&fit=crop',
+            ],
+            [
+                'category' => $catLumiere,
+                'slug' => 'lumiere-riverside',
+                'name' => 'Lumiere Riverside',
+                'description' => 'Can ho hang sang ven song voi cong dong cu dan rieng tu va dich vu quan ly cao cap.',
+                'location' => 'Thao Dien, TP. Thu Duc',
+                'region' => 'TP. Ho Chi Minh',
+                'price_text' => 'Tu 7,9 ty/can',
+                'sales_status' => 'selling',
+                'is_hot' => true,
+                'open_sale_at' => now()->subDays(5),
+                'is_featured' => true,
+                'thumbnail' => 'https://images.unsplash.com/photo-1613977257363-707ba9348227?q=80&w=1200&auto=format&fit=crop',
+            ],
+            [
+                'category' => $catLumiere,
+                'slug' => 'lumiere-midtown',
+                'name' => 'Lumiere Midtown',
+                'description' => 'San pham hang sang sap mo ban danh cho khach hang uu tien va nha dau tu dai han.',
+                'location' => 'Khu do thi moi, TP. Ho Chi Minh',
+                'region' => 'TP. Ho Chi Minh',
+                'price_text' => 'Dang cap nhat',
+                'sales_status' => 'coming_soon',
+                'is_hot' => false,
+                'open_sale_at' => now()->addMonths(1),
+                'is_featured' => true,
+                'thumbnail' => 'https://images.unsplash.com/photo-1518005020951-eccb494ad742?q=80&w=1200&auto=format&fit=crop',
+            ],
+        ];
+
+        foreach ($requiredProjects as $index => $item) {
+            $category = $item['category'];
+            unset($item['category']);
+
+            $project = Project::updateOrCreate(
+                ['slug' => $item['slug']],
+                array_merge($item, [
+                    'content' => $item['description'] . ' Du an duoc phat trien theo dinh huong bat dong san cao cap, toi uu trai nghiem song, gia tri so huu va tiem nang dau tu.',
+                    'status' => $item['sales_status'] === 'coming_soon' ? 'upcoming' : 'selling',
+                    'developer' => 'Masterise Homes',
+                    'scale' => 'Can ho cao cap',
+                    'area_text' => '55 - 120 m2',
+                    'area_size' => 'Dang cap nhat',
+                    'banner_image' => $item['thumbnail'],
+                    'gallery' => [$item['thumbnail']],
+                    'highlight_points' => [
+                        'Vi tri ket noi thuan tien',
+                        'Tien ich noi khu dong bo',
+                        'Thiet ke hien dai va rieng tu',
+                        'Gia tri khai thac dai han',
+                    ],
+                    'nearby_places' => [
+                        '5 phut den trung tam thuong mai',
+                        '10 phut den khu van phong trung tam',
+                        '15 phut den cac truc giao thong chinh',
+                    ],
+                    'payment_policy' => 'Thanh toan linh hoat theo tien do, ho tro vay ngan hang theo chinh sach tung giai doan.',
+                    'sales_policy' => 'Chinh sach ban hang va uu dai duoc cap nhat theo dot mo ban.',
+                    'booking_policy' => 'Dang ky tu van de nhan thong tin gio hang va lich mo ban moi nhat.',
+                    'is_published' => true,
+                    'published_at' => now(),
+                    'sort_order' => $index + 1,
+                    'amenities' => ['Trees', 'Waves', 'Dumbbell', 'ShieldCheck'],
+                ])
+            );
+
+            if ($category) {
+                $project->categories()->syncWithoutDetaching([$category->id]);
+            }
+
+            $project->seoMeta()->updateOrCreate(
+                ['seoable_id' => $project->id, 'seoable_type' => get_class($project)],
+                [
+                    'title' => $project->name . ' | Masterise Homes',
+                    'description' => $project->description,
+                    'keywords' => $project->name . ', Masterise Homes, Masterise Collection, Lumiere Series, can ho cao cap',
+                ]
+            );
+        }
     }
 }

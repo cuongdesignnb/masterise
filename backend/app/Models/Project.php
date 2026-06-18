@@ -28,6 +28,7 @@ class Project extends Model
         'area_text',
         'status',
         'sales_status',
+        'open_sale_at',
         'handover_year',
         'handover_time',
         'legal_status',
@@ -43,6 +44,7 @@ class Project extends Model
         'sales_policy',
         'booking_policy',
         'is_featured',
+        'is_hot',
         'is_published',
         'published_at',
         'sort_order',
@@ -68,7 +70,9 @@ class Project extends Model
             'highlight_points' => 'array',
             'nearby_places' => 'array',
             'is_featured' => 'boolean',
+            'is_hot' => 'boolean',
             'is_published' => 'boolean',
+            'open_sale_at' => 'datetime',
             'published_at' => 'datetime',
             'price_min' => 'decimal:2',
             'price_max' => 'decimal:2',
@@ -123,4 +127,3 @@ class Project extends Model
         return $this->hasOne(ProjectVrTour::class, 'project_id');
     }
 }
-

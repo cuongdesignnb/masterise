@@ -25,6 +25,7 @@ export default function AllProjectsGrid() {
   const region = searchParams.get("region") || "";
   const category = searchParams.get("category") || "";
   const status = searchParams.get("status") || "";
+  const salesStatus = searchParams.get("sales_status") || "";
   const priceMin = searchParams.get("price_min") || "";
   const priceMax = searchParams.get("price_max") || "";
 
@@ -33,8 +34,11 @@ export default function AllProjectsGrid() {
   if (region) queryParams.region = region;
   if (category) queryParams.category = category;
   if (status) queryParams.status = status;
+  if (salesStatus) queryParams.sales_status = salesStatus;
   if (priceMin) queryParams.price_min = priceMin;
   if (priceMax) queryParams.price_max = priceMax;
+  queryParams.sort_by = "open_sale_at";
+  queryParams.sort_order = "asc";
 
   const { data: projects = [], isLoading, error, refetch } = useQuery({
     queryKey: ["all-projects-grid", queryParams],

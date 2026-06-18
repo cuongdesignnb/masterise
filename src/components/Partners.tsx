@@ -35,9 +35,9 @@ export default function Partners() {
   }, []);
   const renderPartnerName = (name: string) => {
     if (name.toLowerCase() === "savills") {
-      // Render "savills" in lowercase serif logotype
+      // Keep the lowercase partner wordmark without switching font family.
       return (
-        <span className="font-serif italic lowercase tracking-wide text-sm font-semibold text-muted/80 group-hover:text-gold transition-colors">
+        <span className="italic lowercase tracking-wide text-sm font-semibold text-muted/80 group-hover:text-gold transition-colors">
           savills
         </span>
       );

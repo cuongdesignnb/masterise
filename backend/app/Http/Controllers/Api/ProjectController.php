@@ -16,6 +16,12 @@ class ProjectController extends Controller
     public function index(Request $request)
     {
         $query = Project::query()->with(['categories', 'seoMeta', 'developerRelation', 'locationRelation']);
+        $user = $request->user('sanctum');
+        $canViewUnpublished = $user && $user->hasAnyRole(['super_admin', 'admin', 'marketing']);
+
+        if (!$canViewUnpublished) {
+            $query->where('is_published', true);
+        }
 
         // Filter by search query
         if ($request->has('q') && !empty($request->q)) {
@@ -38,6 +44,16 @@ class ProjectController extends Controller
             $query->whereIn('status', $statuses);
         }
 
+        // Filter by public sales status badge state
+        if ($request->has('sales_status') && !empty($request->sales_status)) {
+            $salesStatuses = is_array($request->sales_status) ? $request->sales_status : explode(',', $request->sales_status);
+            $query->whereIn('sales_status', $salesStatuses);
+        }
+
+        if ($request->has('is_hot') && $request->is_hot !== '') {
+            $query->where('is_hot', filter_var($request->is_hot, FILTER_VALIDATE_BOOLEAN));
+        }
+
         // Filter by category slug
         if ($request->has('category') && !empty($request->category)) {
             $categorySlug = $request->category;
@@ -58,7 +74,7 @@ class ProjectController extends Controller
         $sortBy = $request->get('sort_by', 'created_at');
         $sortOrder = $request->get('sort_order', 'desc');
 
-        if (in_array($sortBy, ['price_min', 'handover_year', 'created_at', 'name'])) {
+        if (in_array($sortBy, ['price_min', 'handover_year', 'open_sale_at', 'created_at', 'name', 'sort_order'])) {
             $query->orderBy($sortBy, $sortOrder);
         } else {
             $query->orderBy('created_at', 'desc');
@@ -85,8 +101,18 @@ class ProjectController extends Controller
     public function featured(Request $request)
     {
         $limit = $request->get('limit', 6);
-        $projects = Project::where('is_featured', true)
+        $query = Project::where('is_featured', true);
+        $user = $request->user('sanctum');
+        $canViewUnpublished = $user && $user->hasAnyRole(['super_admin', 'admin', 'marketing']);
+
+        if (!$canViewUnpublished) {
+            $query->where('is_published', true);
+        }
+
+        $projects = $query
             ->with(['categories', 'seoMeta'])
+            ->orderByRaw('open_sale_at IS NULL')
+            ->orderBy('open_sale_at', 'asc')
             ->orderBy('created_at', 'desc')
             ->limit($limit)
             ->get();
@@ -102,9 +128,16 @@ class ProjectController extends Controller
      */
     public function show($slug)
     {
-        $project = Project::where('slug', $slug)
-            ->with(['categories', 'seoMeta', 'developerRelation', 'locationRelation'])
-            ->first();
+        $query = Project::where('slug', $slug)
+            ->with(['categories', 'seoMeta', 'developerRelation', 'locationRelation']);
+        $user = request()->user('sanctum');
+        $canViewUnpublished = $user && $user->hasAnyRole(['super_admin', 'admin', 'marketing']);
+
+        if (!$canViewUnpublished) {
+            $query->where('is_published', true);
+        }
+
+        $project = $query->first();
 
         if (!$project) {
             return response()->json([
@@ -116,6 +149,7 @@ class ProjectController extends Controller
         // Get related projects in the same categories
         $categoryIds = $project->categories->pluck('id')->toArray();
         $relatedProjects = Project::where('id', '!=', $project->id)
+            ->when(!$canViewUnpublished, fn($q) => $q->where('is_published', true))
             ->whereHas('categories', function($q) use ($categoryIds) {
                 $q->whereIn('project_categories.id', $categoryIds);
             })
@@ -188,6 +222,7 @@ class ProjectController extends Controller
             'area_text' => 'nullable|string',
             'status' => 'required|string|in:upcoming,selling,completed',
             'sales_status' => 'nullable|string|in:coming_soon,selling,sold_out,handover',
+            'open_sale_at' => 'nullable|date',
             'handover_year' => 'nullable|integer',
             'handover_time' => 'nullable|string',
             'legal_status' => 'nullable|string',
@@ -203,6 +238,7 @@ class ProjectController extends Controller
             'sales_policy' => 'nullable|string',
             'booking_policy' => 'nullable|string',
             'is_featured' => 'boolean',
+            'is_hot' => 'boolean',
             'is_published' => 'boolean',
             'sort_order' => 'nullable|integer',
             'thumbnail' => 'nullable|string',
@@ -238,10 +274,10 @@ class ProjectController extends Controller
             'name', 'slug', 'code', 'developer_id', 'location_id', 'description', 'content', 
             'location', 'region', 'address', 'province', 'district', 'ward',
             'price_min', 'price_max', 'price_text', 'area_min', 'area_max', 'area_text',
-            'status', 'sales_status', 'handover_year', 'handover_time', 'legal_status', 
+            'status', 'sales_status', 'open_sale_at', 'handover_year', 'handover_time', 'legal_status', 
             'ownership_type', 'construction_density', 'total_area', 'total_units', 
             'total_blocks', 'total_floors', 'highlight_points', 'nearby_places', 
-            'payment_policy', 'sales_policy', 'booking_policy', 'is_featured', 
+            'payment_policy', 'sales_policy', 'booking_policy', 'is_featured', 'is_hot',
             'is_published', 'sort_order', 'thumbnail', 'banner_image', 'gallery', 
             'brochure_url', 'video_url', 'virtual_tour_url', 'lat', 'lng',
             'area_size', 'developer', 'scale', 'amenities'
@@ -302,6 +338,7 @@ class ProjectController extends Controller
             'area_text' => 'nullable|string',
             'status' => 'required|string|in:upcoming,selling,completed',
             'sales_status' => 'nullable|string|in:coming_soon,selling,sold_out,handover',
+            'open_sale_at' => 'nullable|date',
             'handover_year' => 'nullable|integer',
             'handover_time' => 'nullable|string',
             'legal_status' => 'nullable|string',
@@ -317,6 +354,7 @@ class ProjectController extends Controller
             'sales_policy' => 'nullable|string',
             'booking_policy' => 'nullable|string',
             'is_featured' => 'boolean',
+            'is_hot' => 'boolean',
             'is_published' => 'boolean',
             'sort_order' => 'nullable|integer',
             'thumbnail' => 'nullable|string',
@@ -351,10 +389,10 @@ class ProjectController extends Controller
             'name', 'slug', 'code', 'developer_id', 'location_id', 'description', 'content', 
             'location', 'region', 'address', 'province', 'district', 'ward',
             'price_min', 'price_max', 'price_text', 'area_min', 'area_max', 'area_text',
-            'status', 'sales_status', 'handover_year', 'handover_time', 'legal_status', 
+            'status', 'sales_status', 'open_sale_at', 'handover_year', 'handover_time', 'legal_status', 
             'ownership_type', 'construction_density', 'total_area', 'total_units', 
             'total_blocks', 'total_floors', 'highlight_points', 'nearby_places', 
-            'payment_policy', 'sales_policy', 'booking_policy', 'is_featured', 
+            'payment_policy', 'sales_policy', 'booking_policy', 'is_featured', 'is_hot',
             'is_published', 'sort_order', 'thumbnail', 'banner_image', 'gallery', 
             'brochure_url', 'video_url', 'virtual_tour_url', 'lat', 'lng',
             'area_size', 'developer', 'scale', 'amenities'

@@ -5,11 +5,11 @@ import Footer from "@/components/Footer";
 import MobileTabBar from "@/components/MobileTabBar";
 import NewsHero from "@/components/news/NewsHero";
 import NewsFilterBar from "@/components/news/NewsFilterBar";
-import FeaturedNews from "@/components/news/FeaturedNews";
 import NewsSidebar from "@/components/news/NewsSidebar";
 import ArticleGrid from "@/components/news/ArticleGrid";
 import NewsCTA from "@/components/news/NewsCTA";
 import Container from "@/components/Container";
+import GlobalContactForm from "@/components/lead/GlobalContactForm";
 
 export default function NewsClient() {
   return (
@@ -23,7 +23,6 @@ export default function NewsClient() {
           <div className="grid gap-8 lg:grid-cols-[1fr_300px] py-10 lg:py-14">
             {/* Main Content */}
             <div className="space-y-10 lg:space-y-14">
-              <FeaturedNews />
               <ArticleGrid />
             </div>
             {/* Sidebar */}
@@ -33,6 +32,7 @@ export default function NewsClient() {
           </div>
         </Container>
         <NewsCTA />
+        <GlobalContactForm leadSourcePosition="news_listing_footer_form" />
       </main>
       <Footer />
     </>

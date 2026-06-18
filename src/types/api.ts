@@ -58,6 +58,7 @@ export interface Project {
   area_text: string | null;
   status: 'upcoming' | 'selling' | 'completed';
   sales_status: 'coming_soon' | 'selling' | 'sold_out' | 'handover';
+  open_sale_at: string | null;
   handover_year: number | null;
   handover_time: string | null;
   legal_status: string | null;
@@ -73,6 +74,7 @@ export interface Project {
   sales_policy: string | null;
   booking_policy: string | null;
   is_featured: boolean;
+  is_hot: boolean;
   is_published: boolean;
   published_at: string | null;
   sort_order: number;
@@ -108,6 +110,7 @@ export interface Post {
   id: number;
   title: string;
   slug: string;
+  post_type: 'news' | 'investment' | 'event';
   summary: string | null;
   content: string | null;
   thumbnail: string | null;
@@ -116,6 +119,10 @@ export interface Post {
   post_category_id: number;
   author_id: number;
   published_at: string | null;
+  event_start_at?: string | null;
+  event_end_at?: string | null;
+  event_location?: string | null;
+  event_register_url?: string | null;
   category?: PostCategory;
   author?: User;
   tags?: Tag[];
@@ -161,6 +168,15 @@ export interface Lead {
   utm_source: string | null;
   utm_medium: string | null;
   utm_campaign: string | null;
+  utm_content?: string | null;
+  utm_term?: string | null;
+  landing_page?: string | null;
+  referrer?: string | null;
+  demand_type?: string | null;
+  budget_range?: string | null;
+  product_type?: string | null;
+  visitor_id?: string | null;
+  lead_source_position?: string | null;
   project?: Project | null;
   agent?: User | null;
   notes?: LeadNote[];

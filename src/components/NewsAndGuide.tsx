@@ -97,7 +97,7 @@ export default function NewsAndGuide() {
           
           <div className="flex items-center gap-4">
             <Link
-              href="#news"
+              href="/tin-tuc"
               className="text-xs font-bold text-gold hover:text-gold-dark transition-colors inline-flex items-center gap-1 group"
             >
               <span>Xem tất cả</span>
@@ -136,7 +136,7 @@ export default function NewsAndGuide() {
             className="flex-shrink-0 snap-start min-w-[82%] md:min-w-[calc((100%-12px)/2)] lg:min-w-[calc((100%-24px)/3)] w-[82%] md:w-[calc((100%-12px)/2)] lg:w-[calc((100%-24px)/3)] h-full"
           >
             <MotionWrapper delay={idx * 0.04} className="h-full">
-              <Link href={`#news-${item.id}`} className="block h-full group">
+              <Link href={item.slug ? `/tin-tuc/${item.slug}` : "/tin-tuc"} className="block h-full group">
                 <motion.div
                   whileHover={{ y: -4 }}
                   transition={{ duration: 0.3 }}

@@ -2,15 +2,17 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Menu, X, User, LogOut, LayoutDashboard } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { navigation } from "@/data/seed";
+import { publicNavigation } from "@/data/publicNavigation";
 import Container from "./Container";
 import Button from "./Button";
 import { useAuth } from "@/context/AuthContext";
 
 export default function Header() {
   const { user, roles, logout, isLoading } = useAuth();
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
@@ -81,16 +83,20 @@ export default function Header() {
 
           {/* Center: Navigation Menu (Desktop) */}
           <nav className="hidden lg:flex items-center gap-1">
-            {navigation.map((item, idx) => (
+            {publicNavigation.map((item, idx) => {
+              const isActive = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+              return (
               <Link
                 key={item.label}
                 href={item.href}
-                className="relative px-4 py-2 text-sm text-ink hover:text-gold transition-colors duration-200 font-medium"
+                className={`relative px-4 py-2 text-sm hover:text-gold transition-colors duration-200 font-medium ${
+                  isActive ? "text-gold" : "text-ink"
+                }`}
                 onMouseEnter={() => setHoveredIdx(idx)}
                 onMouseLeave={() => setHoveredIdx(null)}
               >
                 {item.label}
-                {hoveredIdx === idx && (
+                {(hoveredIdx === idx || isActive) && (
                   <motion.span
                     layoutId="header-underline"
                     className="absolute bottom-0 left-4 right-4 h-0.5 bg-gold"
@@ -101,7 +107,8 @@ export default function Header() {
                   />
                 )}
               </Link>
-            ))}
+              );
+            })}
           </nav>
 
           {/* Right: Auth buttons (Desktop) */}
@@ -148,8 +155,8 @@ export default function Header() {
                 <Button href="/dang-nhap" variant="outline" size="sm">
                   Đăng nhập
                 </Button>
-                <Button href="/dang-ky" variant="solid" size="sm">
-                  Đăng ký
+                <Button href="#global-contact-form" variant="solid" size="sm">
+                  Đăng ký tư vấn
                 </Button>
               </>
             )}
@@ -205,16 +212,21 @@ export default function Header() {
 
             {/* Drawer Navigation Links */}
             <nav className="flex flex-col gap-1 overflow-y-auto pr-1 flex-grow">
-              {navigation.map((item) => (
+              {publicNavigation.map((item) => {
+                const isActive = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+                return (
                 <Link
                   key={item.label}
                   href={item.href}
                   onClick={() => setIsOpen(false)}
-                  className="py-3 text-[14.5px] text-ink hover:text-gold border-b border-[#E8DCCB]/15 transition-colors font-medium"
+                  className={`py-3 text-[14.5px] hover:text-gold border-b border-[#E8DCCB]/15 transition-colors font-medium ${
+                    isActive ? "text-gold" : "text-ink"
+                  }`}
                 >
                   {item.label}
                 </Link>
-              ))}
+                );
+              })}
             </nav>
 
             {/* Drawer Footer Actions */}
@@ -276,13 +288,13 @@ export default function Header() {
                     Đăng nhập
                   </Button>
                   <Button
-                    href="/dang-ky"
+                    href="#global-contact-form"
                     variant="solid"
                     size="md"
                     className="w-full text-center"
                     onClick={() => setIsOpen(false)}
                   >
-                    Đăng ký
+                    Đăng ký tư vấn
                   </Button>
                 </>
               )}

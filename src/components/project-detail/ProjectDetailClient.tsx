@@ -152,7 +152,7 @@ function LocationMap({ projectName }: { projectName: string }) {
           <path d="M0 390 L900 215" />
           <path d="M40 110 L900 450" />
         </g>
-        <g fill="#948a7e" fontFamily="Arial, sans-serif" fontSize="14">
+        <g fill="#948a7e" fontFamily="Roboto, sans-serif" fontSize="14">
           <text x="145" y="350">QUẬN 1</text>
           <text x="335" y="245">THỦ THIÊM</text>
           <text x="620" y="135">TP. THỦ ĐỨC</text>
@@ -175,7 +175,7 @@ function LocationMap({ projectName }: { projectName: string }) {
           <circle r="47" fill="#b88746" />
           <circle r="39" fill="none" stroke="#fff" strokeOpacity=".55" />
           <path d="M-13 10V-13L0-2 13-13V10M0-2V15" fill="none" stroke="#fff" strokeWidth="4" strokeLinecap="round" />
-          <text x="0" y="30" textAnchor="middle" fill="#fff" fontFamily="Arial" fontSize="9">
+          <text x="0" y="30" textAnchor="middle" fill="#fff" fontFamily="Roboto, sans-serif" fontSize="9">
             {projectName.toUpperCase()}
           </text>
         </g>

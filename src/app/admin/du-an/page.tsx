@@ -59,7 +59,9 @@ export default function AdminProjects() {
   const [formLocationId, setFormLocationId] = useState<number | ''>('');
   const [formStatus, setFormStatus] = useState<'upcoming' | 'selling' | 'completed'>('upcoming');
   const [formSalesStatus, setFormSalesStatus] = useState<string>('coming_soon');
+  const [formOpenSaleAt, setFormOpenSaleAt] = useState('');
   const [formIsFeatured, setFormIsFeatured] = useState(false);
+  const [formIsHot, setFormIsHot] = useState(false);
   const [formIsPublished, setFormIsPublished] = useState(false);
   const [formSortOrder, setFormSortOrder] = useState<number>(0);
   const [formDeveloper, setFormDeveloper] = useState('Masterise Homes');
@@ -185,7 +187,9 @@ export default function AdminProjects() {
     setFormLocationId('');
     setFormStatus('upcoming');
     setFormSalesStatus('coming_soon');
+    setFormOpenSaleAt('');
     setFormIsFeatured(false);
+    setFormIsHot(false);
     setFormIsPublished(false);
     setFormSortOrder(0);
     setFormDeveloper('Masterise Homes');
@@ -249,7 +253,9 @@ export default function AdminProjects() {
     setFormLocationId(project.location_id || '');
     setFormStatus(project.status);
     setFormSalesStatus(project.sales_status || 'coming_soon');
+    setFormOpenSaleAt(project.open_sale_at ? project.open_sale_at.slice(0, 10) : '');
     setFormIsFeatured(project.is_featured);
+    setFormIsHot(project.is_hot || false);
     setFormIsPublished(project.is_published || false);
     setFormSortOrder(project.sort_order || 0);
     setFormDeveloper(project.developer || 'Masterise Homes');
@@ -327,7 +333,9 @@ export default function AdminProjects() {
         location_id: formLocationId !== '' ? Number(formLocationId) : null,
         status: formStatus,
         sales_status: formSalesStatus,
+        open_sale_at: formOpenSaleAt || null,
         is_featured: formIsFeatured,
+        is_hot: formIsHot,
         is_published: formIsPublished,
         sort_order: Number(formSortOrder),
         developer: formDeveloper,
@@ -1035,8 +1043,32 @@ export default function AdminProjects() {
                       </div>
                     </div>
 
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Thời gian mở bán</label>
+                        <input
+                          type="date"
+                          value={formOpenSaleAt}
+                          onChange={(e) => setFormOpenSaleAt(e.target.value)}
+                          className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
+                        />
+                      </div>
+                    </div>
+
                     {/* Featured Checkbox & Publish Checkbox */}
                     <div className="flex flex-col sm:flex-row gap-4 py-2 border-t border-b border-[#E8DCCB]/40">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id="formIsHot"
+                          checked={formIsHot}
+                          onChange={(e) => setFormIsHot(e.target.checked)}
+                          className="w-4 h-4 rounded text-[#B88746] focus:ring-[#B88746] border-[#E8DCCB]"
+                        />
+                        <label htmlFor="formIsHot" className="text-xs font-semibold text-[#1F1B16] cursor-pointer">
+                          Gắn nhãn <b>Hot</b>
+                        </label>
+                      </div>
                       <div className="flex items-center gap-2">
                         <input
                           type="checkbox"

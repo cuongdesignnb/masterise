@@ -21,9 +21,8 @@ import type {
 export const navigation: NavItem[] = [
   { label: "Trang chủ", href: "/" },
   { label: "Dự án", href: "/du-an" },
-
   { label: "Tin tức", href: "/tin-tuc" },
-  { label: "Về chúng tôi", href: "/gioi-thieu" },
+  { label: "Đầu tư", href: "/dau-tu" },
   { label: "Liên hệ", href: "/lien-he" },
 ];
 

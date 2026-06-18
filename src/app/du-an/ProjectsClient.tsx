@@ -12,6 +12,7 @@ import ProjectsByRegion from "@/components/projects/ProjectsByRegion";
 import WhyChooseProjects from "@/components/projects/WhyChooseProjects";
 import AllProjectsGrid from "@/components/projects/AllProjectsGrid";
 import ProjectsCTA from "@/components/projects/ProjectsCTA";
+import GlobalContactForm from "@/components/lead/GlobalContactForm";
 
 export default function ProjectsClient() {
   return (
@@ -33,6 +34,7 @@ export default function ProjectsClient() {
           <AllProjectsGrid />
         </Suspense>
         <ProjectsCTA />
+        <GlobalContactForm leadSourcePosition="projects_listing_footer_form" />
       </main>
       <Footer />
     </>

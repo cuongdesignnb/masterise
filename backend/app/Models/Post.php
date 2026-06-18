@@ -9,6 +9,7 @@ class Post extends Model
     protected $fillable = [
         'title',
         'slug',
+        'post_type',
         'summary',
         'content',
         'thumbnail',
@@ -17,6 +18,10 @@ class Post extends Model
         'post_category_id',
         'author_id',
         'published_at',
+        'event_start_at',
+        'event_end_at',
+        'event_location',
+        'event_register_url',
         'ai_generated',
         'ai_generation_job_id',
         'ai_prompt',
@@ -29,6 +34,8 @@ class Post extends Model
         return [
             'is_featured' => 'boolean',
             'published_at' => 'datetime',
+            'event_start_at' => 'datetime',
+            'event_end_at' => 'datetime',
             'ai_generated' => 'boolean',
             'scheduled_at' => 'datetime',
         ];

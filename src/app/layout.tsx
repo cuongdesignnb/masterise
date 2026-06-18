@@ -1,17 +1,11 @@
 import type { Metadata } from "next";
-import { Be_Vietnam_Pro, Playfair_Display } from "next/font/google";
+import { Roboto } from "next/font/google";
 import "./globals.css";
 
-const playfair = Playfair_Display({
+const roboto = Roboto({
   subsets: ["latin", "vietnamese"],
-  variable: "--font-heading",
-  display: "swap",
-});
-
-const beVietnam = Be_Vietnam_Pro({
-  subsets: ["latin", "vietnamese"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-body",
+  weight: ["300", "400", "500", "700", "900"],
+  variable: "--font-roboto",
   display: "swap",
 });
 
@@ -19,7 +13,7 @@ export const metadata: Metadata = {
   title: "Masterise Homes - Bất động sản hàng hiệu",
   description:
     "Masterise Homes mang đến những bất động sản hàng hiệu với tầm nhìn quốc tế, kiến tạo cộng đồng thịnh vượng và phong cách sống xứng tầm.",
-  keywords: "masterise homes, bat dong san, hang hieu, can ho cao cap, biet thu",
+  keywords: "masterise homes, bất động sản, hàng hiệu, căn hộ cao cấp, biệt thự, đầu tư bất động sản",
   authors: [{ name: "Masterise Homes" }],
 };
 
@@ -33,7 +27,7 @@ export default function RootLayout({
   return (
     <html
       lang="vi"
-      className={`${playfair.variable} ${beVietnam.variable} scroll-smooth`}
+      className={`${roboto.variable} ${roboto.className} scroll-smooth`}
       suppressHydrationWarning
     >
       <body className="bg-cream text-ink antialiased" suppressHydrationWarning>
