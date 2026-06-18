@@ -28,8 +28,7 @@ export default function FAQ() {
           answer: item.answer,
         }));
         setFaqs(mapped);
-      } catch (error) {
-        console.error("Error fetching FAQs:", error);
+      } catch {
         setFaqs([]);
       }
     };

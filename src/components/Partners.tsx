@@ -26,8 +26,7 @@ export default function Partners() {
           logo_url: item.logo_url,
         }));
         setPartners(mapped);
-      } catch (error) {
-        console.error("Error fetching partners:", error);
+      } catch {
         setPartners([]);
       }
     };

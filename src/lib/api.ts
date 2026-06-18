@@ -1,6 +1,9 @@
 import { ApiResponse } from '@/types/api';
 
 function getApiUrl(): string {
+  // Allow env var to override everything (useful for local dev against prod API)
+  const envUrl = typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_API_URL : undefined;
+
   // Client-side: derive API URL from current hostname (runtime, not build-time)
   if (typeof window !== 'undefined') {
     const hostname = window.location.hostname;
@@ -8,16 +11,15 @@ function getApiUrl(): string {
     if (hostname === 'masterise-homes.net.vn') {
       return 'https://api.masterise-homes.net.vn/api/v1';
     }
-    // Add more production domains here if needed
-    // Development: localhost
+    // Development: localhost — use env var if set, else local backend
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
-      return 'http://localhost:8747/api/v1';
+      return envUrl || 'http://localhost:8747/api/v1';
     }
     // Fallback: use same protocol and prepend 'api.' to current hostname
     return `${window.location.protocol}//api.${hostname}/api/v1`;
   }
   // Server-side: use environment variable
-  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8747/api/v1';
+  return envUrl || 'http://localhost:8747/api/v1';
 }
 
 const API_URL = getApiUrl();

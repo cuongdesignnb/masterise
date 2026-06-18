@@ -31,8 +31,7 @@ export default function Testimonials() {
           avatar: item.avatar || item.avatar_url || "",
         }));
         setTestimonials(mapped);
-      } catch (error) {
-        console.error("Error fetching testimonials:", error);
+      } catch {
         setTestimonials([]);
       }
     };
