@@ -129,7 +129,7 @@ export default function HomePageClient() {
             <motion.div
               className="max-w-3xl pt-24 pb-32 text-left"
               variants={staggerContainer}
-              initial="hidden"
+              initial={false}
               whileInView="visible"
               viewport={{ once: true }}
             >
@@ -202,7 +202,7 @@ export default function HomePageClient() {
         <motion.section
           className="section-depth bg-ivory py-16 sm:py-24"
           variants={staggerContainer}
-          initial="hidden"
+          initial={false}
           whileInView="visible"
           viewport={{ once: true, margin: "-80px" }}
         >
@@ -310,7 +310,7 @@ export default function HomePageClient() {
         ═══════════════════════════════════════════ */}
         <motion.section
           className="relative bg-cream py-16 sm:py-24 overflow-hidden"
-          initial="hidden"
+          initial={false}
           whileInView="visible"
           viewport={{ once: true, margin: "-80px" }}
         >
@@ -389,7 +389,7 @@ export default function HomePageClient() {
         <motion.section
           className="section-depth bg-ivory py-16 sm:py-24"
           variants={staggerContainer}
-          initial="hidden"
+          initial={false}
           whileInView="visible"
           viewport={{ once: true, margin: "-80px" }}
         >
@@ -416,7 +416,7 @@ export default function HomePageClient() {
         <motion.section
           className="section-depth bg-cream py-16 sm:py-24"
           variants={staggerContainerSlow}
-          initial="hidden"
+          initial={false}
           whileInView="visible"
           viewport={{ once: true, margin: "-80px" }}
         >

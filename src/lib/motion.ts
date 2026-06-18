@@ -7,7 +7,7 @@ export const smoothTransition: Transition = {
 };
 
 export const fadeUp: Variants = {
-  hidden: { opacity: 0, y: 32 },
+  hidden: { opacity: 0, y: 24 },
   visible: { opacity: 1, y: 0, transition: smoothTransition },
 };
 
@@ -22,12 +22,12 @@ export const scaleIn: Variants = {
 };
 
 export const slideInLeft: Variants = {
-  hidden: { opacity: 0, x: -40 },
+  hidden: { opacity: 0, x: -30 },
   visible: { opacity: 1, x: 0, transition: smoothTransition },
 };
 
 export const slideInRight: Variants = {
-  hidden: { opacity: 0, x: 40 },
+  hidden: { opacity: 0, x: 30 },
   visible: { opacity: 1, x: 0, transition: smoothTransition },
 };
 
@@ -47,4 +47,13 @@ export const staggerContainerSlow: Variants = {
       staggerChildren: 0.12,
     },
   },
+};
+
+/**
+ * Default viewport config for whileInView.
+ * `amount: 0.1` means animation triggers when 10% of element is visible.
+ */
+export const viewportConfig = {
+  once: true,
+  amount: 0.1 as const,
 };

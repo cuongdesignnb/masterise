@@ -120,7 +120,7 @@ export default function GlobalContactForm({
       id="global-contact-form"
       className={`bg-ink-deep text-white ${compact ? "py-10" : "py-14 sm:py-20"}`}
       variants={fadeUp}
-      initial="hidden"
+      initial={false}
       whileInView="visible"
       viewport={{ once: true, amount: 0.2 }}
     >
