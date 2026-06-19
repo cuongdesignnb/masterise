@@ -11,6 +11,15 @@ export interface SocialLinks {
   linkedin: string;
 }
 
+export interface ContactDepartment {
+  name: string;
+  phone: string;
+  email: string;
+  description?: string;
+  time?: string;
+  icon?: string;
+}
+
 export interface SiteSettings {
   companyName: string;
   companyAddress: string;
@@ -18,6 +27,7 @@ export interface SiteSettings {
   email: string;
   logoUrl: string;
   socialLinks: SocialLinks;
+  contactDepartments: ContactDepartment[];
   isLoaded: boolean;
 }
 
@@ -34,6 +44,7 @@ const defaultSettings: SiteSettings = {
     instagram: "",
     linkedin: "",
   },
+  contactDepartments: [],
   isLoaded: false,
 };
 
@@ -80,6 +91,21 @@ export default function SiteSettingsProvider({
           }
         }
 
+        let contactDepartments: ContactDepartment[] = [];
+        if (data.contact_departments) {
+          try {
+            const parsed =
+              typeof data.contact_departments === "string"
+                ? JSON.parse(data.contact_departments)
+                : data.contact_departments;
+            if (Array.isArray(parsed)) {
+              contactDepartments = parsed;
+            }
+          } catch {
+            // keep default
+          }
+        }
+
         setSettings({
           companyName:
             (data.company_name as string) || defaultSettings.companyName,
@@ -88,6 +114,7 @@ export default function SiteSettingsProvider({
           email: (data.email as string) || "",
           logoUrl: (data.logo_url as string) || "",
           socialLinks,
+          contactDepartments,
           isLoaded: true,
         });
       } catch {

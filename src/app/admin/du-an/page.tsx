@@ -64,7 +64,7 @@ export default function AdminProjects() {
   const [formIsHot, setFormIsHot] = useState(false);
   const [formIsPublished, setFormIsPublished] = useState(false);
   const [formSortOrder, setFormSortOrder] = useState<number>(0);
-  const [formDeveloper, setFormDeveloper] = useState('Masterise Homes');
+  const [formDeveloper, setFormDeveloper] = useState('Masterise Homes'); // Default developer - matches company_name in settings
   const [formScale, setFormScale] = useState('');
   const [formHandoverYear, setFormHandoverYear] = useState<number | ''>('');
   const [formHandoverTime, setFormHandoverTime] = useState('');

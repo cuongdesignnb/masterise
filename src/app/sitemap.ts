@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import { fetchApi } from "@/lib/serverApi";
 import type { Post, Project } from "@/types/api";
 
-const siteUrl = "https://masterisehomes.com";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://masterisehomes.com";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [

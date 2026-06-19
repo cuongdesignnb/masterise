@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { aboutFaqs } from "@/data/aboutSeed";
 import AboutClient from "./AboutClient";
 
-const siteUrl = "https://masterisehomes.com";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://masterisehomes.com";
 
 export const metadata: Metadata = {
   title:
@@ -42,6 +42,7 @@ export default function GioiThieuPage() {
         description:
           "Nhà phát triển bất động sản hàng hiệu hàng đầu Việt Nam",
         foundingDate: "2014",
+        // TODO: Replace hardcoded social URLs with dynamic values from site settings when possible
         sameAs: [
           "https://www.facebook.com/MasteriseHomes",
           "https://www.linkedin.com/company/masterise-homes",

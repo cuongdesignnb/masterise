@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import ProjectsClient from "./ProjectsClient";
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://masterisehomes.com";
+
 export const metadata: Metadata = {
   title: "Dự án Masterise Homes | Bộ sưu tập bất động sản hàng hiệu",
   description:
@@ -35,8 +37,8 @@ export default function ProjectsPage() {
       {
         "@type": "Organization",
         name: "Masterise Homes",
-        url: "https://masterisehomes.com",
-        logo: "https://masterisehomes.com/logo.png",
+        url: siteUrl,
+        logo: `${siteUrl}/logo.png`,
       },
       {
         "@type": "BreadcrumbList",
@@ -45,13 +47,13 @@ export default function ProjectsPage() {
             "@type": "ListItem",
             position: 1,
             name: "Trang chủ",
-            item: "https://masterisehomes.com",
+            item: siteUrl,
           },
           {
             "@type": "ListItem",
             position: 2,
             name: "Dự án",
-            item: "https://masterisehomes.com/du-an",
+            item: `${siteUrl}/du-an`,
           },
         ],
       },

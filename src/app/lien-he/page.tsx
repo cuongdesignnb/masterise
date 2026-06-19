@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { contactFaqs } from "@/data/contactSeed";
 import ContactClient from "./ContactClient";
 
-const siteUrl = "https://masterisehomes.com";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://masterisehomes.com";
 
 export const metadata: Metadata = {
   title: "Liên hệ Masterise Homes | Tư vấn dự án bất động sản cao cấp",
