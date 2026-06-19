@@ -4,6 +4,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, MessageSquare, Phone, ArrowRight, X } from 'lucide-react';
 import { trackEvent } from '@/services/trackingService';
+import { useSiteSettings } from '@/providers/SiteSettingsProvider';
 
 interface LeadSuccessModalProps {
   isOpen: boolean;
@@ -12,9 +13,8 @@ interface LeadSuccessModalProps {
 }
 
 export default function LeadSuccessModal({ isOpen, onClose, projectId }: LeadSuccessModalProps) {
-  const hotline = '0901234567'; // Fallback
-  const zaloPhone = '0901234567'; 
-  const zaloUrl = `https://zalo.me/${zaloPhone}`;
+  const { hotline, socialLinks } = useSiteSettings();
+  const zaloUrl = socialLinks.zalo.startsWith('http') ? socialLinks.zalo : `https://zalo.me/${socialLinks.zalo}`;
 
   const handleZaloClick = () => {
     trackEvent('click_zalo', { project_id: projectId });
@@ -24,7 +24,7 @@ export default function LeadSuccessModal({ isOpen, onClose, projectId }: LeadSuc
 
   const handleHotlineClick = () => {
     trackEvent('click_hotline', { project_id: projectId });
-    window.open(`tel:${hotline}`);
+    window.open(`tel:${hotline.replace(/\D/g, '')}`);
     onClose();
   };
 

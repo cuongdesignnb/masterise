@@ -6,7 +6,7 @@ import type { LucideIcon } from "lucide-react";
 
 import Container from "@/components/Container";
 import MotionWrapper from "@/components/MotionWrapper";
-import { contactInfoCards } from "@/data/contactSeed";
+import { useSiteSettings } from "@/providers/SiteSettingsProvider";
 
 const infoIconMap: Record<string, LucideIcon> = {
   PhoneCall,
@@ -16,11 +16,39 @@ const infoIconMap: Record<string, LucideIcon> = {
 };
 
 export default function ContactInfoCards() {
+  const { hotline, email, companyAddress } = useSiteSettings();
+
+  const cards = [
+    {
+      title: "Hotline",
+      value: hotline || "Đang cập nhật",
+      description: "Hỗ trợ 24/7",
+      icon: "PhoneCall",
+    },
+    {
+      title: "Email",
+      value: email || "Đang cập nhật",
+      description: "Phản hồi trong 24h",
+      icon: "Mail",
+    },
+    {
+      title: "Văn phòng",
+      value: companyAddress || "Đang cập nhật",
+      description: "Xem bản đồ",
+      icon: "MapPin",
+    },
+    {
+      title: "Giờ làm việc",
+      value: "Thứ 2 – Chủ nhật",
+      description: "08:30 – 18:00",
+      icon: "Clock3",
+    },
+  ];
   return (
     <section className="py-8">
       <Container>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {contactInfoCards.map((card, i) => {
+          {cards.map((card, i) => {
             const Icon = infoIconMap[card.icon] ?? PhoneCall;
             const isAddress = card.icon === "MapPin";
             const isMap = card.description === "Xem bản đồ";

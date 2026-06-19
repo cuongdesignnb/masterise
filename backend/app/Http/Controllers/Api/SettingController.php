@@ -14,7 +14,7 @@ class SettingController extends Controller
      */
     public function publicSettings()
     {
-        $keys = ['company_name', 'company_address', 'hotline', 'email', 'social_links', 'homepage_meta'];
+        $keys = ['company_name', 'company_address', 'hotline', 'email', 'social_links', 'homepage_meta', 'logo_url', 'about_mission', 'about_vision', 'about_timeline', 'contact_departments'];
         $settings = [];
 
         foreach ($keys as $key) {

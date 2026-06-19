@@ -4,6 +4,7 @@ import React, { useEffect } from 'react';
 import { X, Phone, MessageSquare, FileText, CalendarCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ProjectVrScene } from '@/types/vr360';
+import { useSiteSettings } from '@/providers/SiteSettingsProvider';
 import VR360Viewer from './VR360Viewer';
 import VR360SceneSelector from './VR360SceneSelector';
 
@@ -28,6 +29,8 @@ export default function VR360FullscreenModal({
   onSceneChange,
   onCtaClick
 }: VR360FullscreenModalProps) {
+  const { hotline, socialLinks } = useSiteSettings();
+
   // Prevent body scroll when open
   useEffect(() => {
     if (isOpen) {
@@ -43,11 +46,11 @@ export default function VR360FullscreenModal({
   const activeScene = scenes.find((s) => s.slug === currentSceneSlug) || scenes[0];
 
   const handleHotlineCall = () => {
-    window.open('tel:0901234567');
+    window.open(`tel:${hotline.replace(/\D/g, '')}`);
   };
 
   const handleZaloChat = () => {
-    window.open('https://zalo.me/0901234567', '_blank');
+    window.open(socialLinks.zalo.startsWith('http') ? socialLinks.zalo : `https://zalo.me/${socialLinks.zalo}`, '_blank');
   };
 
   return (

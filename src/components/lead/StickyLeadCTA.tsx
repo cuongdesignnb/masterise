@@ -6,6 +6,7 @@ import { trackEvent } from '@/services/trackingService';
 import LeadPriceForm from './LeadPriceForm';
 import ScheduleVisitForm from './ScheduleVisitForm';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSiteSettings } from '@/providers/SiteSettingsProvider';
 
 interface StickyLeadCTAProps {
   projectId?: number | null;
@@ -14,14 +15,12 @@ interface StickyLeadCTAProps {
 
 export default function StickyLeadCTA({ projectId, projectName }: StickyLeadCTAProps) {
   const [activeModal, setActiveModal] = useState<'price' | 'visit' | null>(null);
-
-  const hotline = '0901234567';
-  const zaloPhone = '0901234567';
-  const zaloUrl = `https://zalo.me/${zaloPhone}`;
+  const { hotline, socialLinks } = useSiteSettings();
+  const zaloUrl = socialLinks.zalo.startsWith('http') ? socialLinks.zalo : `https://zalo.me/${socialLinks.zalo}`;
 
   const handleHotlineCall = () => {
     trackEvent('click_hotline', { project_id: projectId });
-    window.open(`tel:${hotline}`);
+    window.open(`tel:${hotline.replace(/\D/g, '')}`);
   };
 
   const handleZaloChat = () => {

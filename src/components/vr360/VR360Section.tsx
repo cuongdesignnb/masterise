@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { vr360Service } from '@/services/vr360Service';
 import { trackEvent } from '@/services/trackingService';
+import { useSiteSettings } from '@/providers/SiteSettingsProvider';
 import { Sparkles, Maximize2, RefreshCw, Phone, MessageSquare, AlertCircle, FileText, X } from 'lucide-react';
 import VR360Viewer from './VR360Viewer';
 import VR360SceneSelector from './VR360SceneSelector';
@@ -26,6 +27,7 @@ export default function VR360Section({
   projectName,
   fallbackUrl
 }: VR360SectionProps) {
+  const { hotline, socialLinks } = useSiteSettings();
   const [currentSceneSlug, setCurrentSceneSlug] = useState<string>('');
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [webGlError, setWebGlError] = useState<string | null>(null);
@@ -120,10 +122,10 @@ export default function VR360Section({
               Nhận tư vấn ngay
             </button>
             <button
-              onClick={() => window.open('tel:0901234567')}
+              onClick={() => window.open(`tel:${hotline.replace(/\D/g, '')}`)}
               className="px-6 py-2.5 border border-[#E8DCCB]/30 hover:border-[#B88746] text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-colors"
             >
-              Gọi hotline: 090 123 4567
+              Gọi hotline: {hotline}
             </button>
           </div>
         </div>
@@ -243,13 +245,13 @@ export default function VR360Section({
             </button>
             <div className="grid grid-cols-2 gap-2 text-[10px] font-bold uppercase tracking-wider">
               <button
-                onClick={() => window.open('tel:0901234567')}
+                onClick={() => window.open(`tel:${hotline.replace(/\D/g, '')}`)}
                 className="py-2.5 border border-white/10 hover:border-[#B88746] rounded-xl flex items-center justify-center gap-1 transition-colors"
               >
                 <Phone className="w-3.5 h-3.5 text-[#B88746]" /> Gọi Hotline
               </button>
               <button
-                onClick={() => window.open('https://zalo.me/0901234567', '_blank')}
+                onClick={() => window.open(socialLinks.zalo.startsWith('http') ? socialLinks.zalo : `https://zalo.me/${socialLinks.zalo}`, '_blank')}
                 className="py-2.5 border border-white/10 hover:border-[#B88746] rounded-xl flex items-center justify-center gap-1 transition-colors"
               >
                 <MessageSquare className="w-3.5 h-3.5 text-sky-400" /> Chat Zalo

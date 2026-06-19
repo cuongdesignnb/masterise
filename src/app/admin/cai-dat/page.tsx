@@ -62,6 +62,8 @@ export default function AdminSettings() {
   const [facebookUrl, setFacebookUrl] = useState('');
   const [youtubeUrl, setYoutubeUrl] = useState('');
   const [zaloUrl, setZaloUrl] = useState('');
+  const [instagramUrl, setInstagramUrl] = useState('');
+  const [linkedinUrl, setLinkedinUrl] = useState('');
 
   const [slides, setSlides] = useState<SlideItem[]>([]);
   const [faqs, setFaqs] = useState<FaqItem[]>([]);
@@ -107,6 +109,8 @@ export default function AdminSettings() {
       setFacebookUrl(social?.facebook || '');
       setYoutubeUrl(social?.youtube || '');
       setZaloUrl(social?.zalo || '');
+      setInstagramUrl(social?.instagram || '');
+      setLinkedinUrl(social?.linkedin || '');
 
       setSlides(getVal('homepage_slides', 'json') || []);
       setFaqs(getVal('homepage_faq', 'json') || []);
@@ -131,7 +135,7 @@ export default function AdminSettings() {
           { key: 'logo_url', value: logoUrl, type: 'string' },
           { 
             key: 'social_links', 
-            value: { facebook: facebookUrl, youtube: youtubeUrl, zalo: zaloUrl }, 
+            value: { facebook: facebookUrl, youtube: youtubeUrl, zalo: zaloUrl, instagram: instagramUrl, linkedin: linkedinUrl }, 
             type: 'json' 
           },
           { key: 'homepage_slides', value: slides, type: 'json' },
@@ -391,6 +395,29 @@ export default function AdminSettings() {
                     onChange={(e) => setZaloUrl(e.target.value)}
                     className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
                     placeholder="https://zalo.me/..."
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div>
+                  <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Instagram (URL)</label>
+                  <input
+                    type="text"
+                    value={instagramUrl}
+                    onChange={(e) => setInstagramUrl(e.target.value)}
+                    className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                    placeholder="https://instagram.com/..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">LinkedIn (URL)</label>
+                  <input
+                    type="text"
+                    value={linkedinUrl}
+                    onChange={(e) => setLinkedinUrl(e.target.value)}
+                    className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                    placeholder="https://linkedin.com/company/..."
                   />
                 </div>
               </div>

@@ -17,7 +17,7 @@ import type { LucideIcon } from "lucide-react";
 import Container from "@/components/Container";
 import MotionWrapper from "@/components/MotionWrapper";
 import Button from "@/components/Button";
-import { officeInfo } from "@/data/contactSeed";
+import { useSiteSettings } from "@/providers/SiteSettingsProvider";
 
 const socialIconMap: Record<string, LucideIcon> = {
   Globe,
@@ -29,7 +29,7 @@ const socialIconMap: Record<string, LucideIcon> = {
 
 /* ── Sub-components ── */
 
-function OfficeInfoCard() {
+function OfficeInfoCard({ address, hotline, email }: { address: string; hotline: string; email: string }) {
   return (
     <div className="bg-white rounded-[18px] border border-line/50 p-5">
       <h3 className="heading-font font-bold text-ink text-base mb-4">
@@ -39,19 +39,19 @@ function OfficeInfoCard() {
       {/* Address */}
       <div className="flex items-start gap-3 py-2 border-b border-line/20">
         <MapPin className="w-4 h-4 text-gold shrink-0 mt-0.5" />
-        <p className="text-xs text-muted">{officeInfo.address}</p>
+        <p className="text-xs text-muted">{address || 'Đang cập nhật'}</p>
       </div>
 
       {/* Hotline */}
       <div className="flex items-start gap-3 py-2 border-b border-line/20">
         <PhoneCall className="w-4 h-4 text-gold shrink-0 mt-0.5" />
-        <p className="text-sm font-bold text-ink">{officeInfo.hotline}</p>
+        <p className="text-sm font-bold text-ink">{hotline || 'Đang cập nhật'}</p>
       </div>
 
       {/* Email */}
       <div className="flex items-start gap-3 py-2">
         <Mail className="w-4 h-4 text-gold shrink-0 mt-0.5" />
-        <p className="text-xs text-muted">{officeInfo.email}</p>
+        <p className="text-xs text-muted">{email || 'Đang cập nhật'}</p>
       </div>
     </div>
   );
@@ -122,23 +122,34 @@ function MapCard() {
   );
 }
 
-function SocialLinksCard() {
+function SocialLinksCard({ socialLinks }: { socialLinks: { facebook: string; youtube: string; zalo: string; instagram: string; linkedin: string } }) {
+  const socials = [
+    { label: "Facebook", icon: "Globe", url: socialLinks.facebook },
+    { label: "Instagram", icon: "Share2", url: socialLinks.instagram },
+    { label: "YouTube", icon: "Play", url: socialLinks.youtube },
+    { label: "LinkedIn", icon: "Link2", url: socialLinks.linkedin },
+    { label: "Zalo", icon: "MessageCircle", url: socialLinks.zalo },
+  ].filter(s => s.url);
+
   return (
     <div className="bg-white rounded-[18px] border border-line/50 p-5">
       <h3 className="heading-font font-bold text-ink text-base mb-4">
         Kết nối với chúng tôi
       </h3>
       <div className="flex gap-3">
-        {officeInfo.socials.map((s) => {
+        {socials.map((s) => {
           const Icon = socialIconMap[s.icon] ?? Globe;
           return (
-            <button
+            <a
               key={s.label}
+              href={s.url}
+              target="_blank"
+              rel="noopener noreferrer"
               aria-label={s.label}
-              className="w-10 h-10 rounded-full border border-line/60 flex items-center justify-center text-muted hover:bg-gold hover:text-white hover:border-gold transition-all duration-300 cursor-pointer"
+              className="w-10 h-10 rounded-full border border-line/60 flex items-center justify-center text-muted hover:bg-gold hover:text-white hover:border-gold transition-all duration-300"
             >
               <Icon className="w-4 h-4" />
-            </button>
+            </a>
           );
         })}
       </div>
@@ -168,6 +179,7 @@ const inputClass =
 
 export default function ContactFormSection() {
   const [agreed, setAgreed] = useState(false);
+  const settings = useSiteSettings();
 
   return (
     <section className="py-10">
@@ -300,7 +312,7 @@ export default function ContactFormSection() {
           {/* Right: Side cards */}
           <div className="space-y-4 mt-7 lg:mt-0">
             <MotionWrapper delay={0.1}>
-              <OfficeInfoCard />
+              <OfficeInfoCard address={settings.companyAddress} hotline={settings.hotline} email={settings.email} />
             </MotionWrapper>
 
             <MotionWrapper delay={0.18}>
@@ -308,7 +320,7 @@ export default function ContactFormSection() {
             </MotionWrapper>
 
             <MotionWrapper delay={0.26}>
-              <SocialLinksCard />
+              <SocialLinksCard socialLinks={settings.socialLinks} />
             </MotionWrapper>
           </div>
         </div>

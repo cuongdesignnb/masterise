@@ -4,8 +4,11 @@ import React from "react";
 import Link from "next/link";
 import { Home, Building2, Phone, Menu } from "lucide-react";
 import { motion } from "framer-motion";
+import { useSiteSettings } from '@/providers/SiteSettingsProvider';
 
 export default function MobileTabBar() {
+  const { hotline } = useSiteSettings();
+
   const triggerMobileMenu = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -27,7 +30,7 @@ export default function MobileTabBar() {
     {
       label: "Liên hệ",
       icon: Phone,
-      href: "tel:18006886", // Typical hotline number style
+      href: `tel:${hotline.replace(/\D/g, '')}`,
     },
     {
       label: "Danh mục",

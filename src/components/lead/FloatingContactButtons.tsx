@@ -3,19 +3,19 @@
 import React from 'react';
 import { Phone, MessageSquare } from 'lucide-react';
 import { trackEvent } from '@/services/trackingService';
+import { useSiteSettings } from '@/providers/SiteSettingsProvider';
 
 interface FloatingContactButtonsProps {
   projectId?: number | null;
 }
 
 export default function FloatingContactButtons({ projectId }: FloatingContactButtonsProps) {
-  const hotline = '0901234567';
-  const zaloPhone = '0901234567';
-  const zaloUrl = `https://zalo.me/${zaloPhone}`;
+  const { hotline, socialLinks } = useSiteSettings();
+  const zaloUrl = socialLinks.zalo.startsWith('http') ? socialLinks.zalo : `https://zalo.me/${socialLinks.zalo}`;
 
   const handleHotlineCall = () => {
     trackEvent('click_hotline', { project_id: projectId, source: 'floating_button' });
-    window.open(`tel:${hotline}`);
+    window.open(`tel:${hotline.replace(/\D/g, '')}`);
   };
 
   const handleZaloChat = () => {
@@ -55,7 +55,7 @@ export default function FloatingContactButtons({ projectId }: FloatingContactBut
 
         {/* Hover Label */}
         <span className="absolute right-14 lg:right-16 bg-[#1F1B16] text-[#E8DCCB] text-xs font-semibold px-3 py-1.5 rounded-lg border border-[#B88746]/20 shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap">
-          Hotline: 090 123 4567
+          Hotline: {hotline}
         </span>
       </button>
 

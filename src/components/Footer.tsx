@@ -3,11 +3,13 @@
 import React from "react";
 import Link from "next/link";
 import { Phone, Mail, MapPin, ArrowUp } from "lucide-react";
-import { contactInfo } from "@/data/seed";
+import { useSiteSettings } from "@/providers/SiteSettingsProvider";
 import { publicFooterColumns } from "@/data/publicNavigation";
 import Container from "./Container";
 
 export default function Footer() {
+  const { hotline, email, companyAddress, companyName, socialLinks } = useSiteSettings();
+
   const handleBackToTop = () => {
     window.scrollTo({
       top: 0,
@@ -66,7 +68,7 @@ export default function Footer() {
               {[
                 {
                   label: "Facebook",
-                  href: "#facebook",
+                  href: socialLinks.facebook || "#",
                   svg: (
                     <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c4.56-.93 8-4.96 8-9.75z" />
@@ -75,7 +77,7 @@ export default function Footer() {
                 },
                 {
                   label: "Instagram",
-                  href: "#instagram",
+                  href: socialLinks.instagram || "#",
                   svg: (
                     <svg
                       width="16"
@@ -95,7 +97,7 @@ export default function Footer() {
                 },
                 {
                   label: "Youtube",
-                  href: "#youtube",
+                  href: socialLinks.youtube || "#",
                   svg: (
                     <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M23.498 6.163a3.003 3.003 0 0 0-2.11-2.107C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.388.511a3.002 3.002 0 0 0-2.11 2.107C0 8.046 0 12 0 12s0 3.954.502 5.837a3.003 3.003 0 0 0 2.11 2.107C4.495 20.455 12 20.455 12 20.455s7.505 0 9.388-.511a3.003 3.003 0 0 0 2.11-2.107C24 15.954 24 12 24 12s0-3.954-.502-5.837zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
@@ -104,7 +106,7 @@ export default function Footer() {
                 },
                 {
                   label: "Linkedin",
-                  href: "#linkedin",
+                  href: socialLinks.linkedin || "#",
                   svg: (
                     <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452z" />
@@ -155,16 +157,16 @@ export default function Footer() {
             <ul className="flex flex-col gap-4">
               <li className="flex items-start gap-2.5">
                 <Phone size={14} className="text-gold mt-1 flex-shrink-0" />
-                <span className="text-sm font-bold text-line/90">{contactInfo.phone}</span>
+                <span className="text-sm font-bold text-line/90">{hotline || 'Đang cập nhật'}</span>
               </li>
               <li className="flex items-start gap-2.5">
                 <Mail size={14} className="text-gold mt-1 flex-shrink-0" />
-                <span className="text-sm text-line/80 break-all">{contactInfo.email}</span>
+                <span className="text-sm text-line/80 break-all">{email || 'Đang cập nhật'}</span>
               </li>
               <li className="flex items-start gap-2.5">
                 <MapPin size={14} className="text-gold mt-1 flex-shrink-0" />
                 <span className="text-sm text-line/80 leading-relaxed">
-                  {contactInfo.address}
+                  {companyAddress || 'Đang cập nhật'}
                 </span>
               </li>
             </ul>
@@ -175,7 +177,7 @@ export default function Footer() {
         {/* Bottom Bar */}
         <div className="pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <span className="text-xs text-line/50 font-light">
-            © 2026 Masterise Homes. All rights reserved.
+            © {new Date().getFullYear()} {companyName}. All rights reserved.
           </span>
 
           <div className="flex flex-wrap gap-4 sm:gap-6 justify-center">
