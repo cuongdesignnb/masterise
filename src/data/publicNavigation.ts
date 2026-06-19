@@ -2,6 +2,7 @@ import type { FooterColumn, NavItem } from "@/types";
 
 export const publicNavigation: NavItem[] = [
   { label: "Trang chủ", href: "/" },
+  { label: "Giới thiệu", href: "/gioi-thieu" },
   { label: "Dự án", href: "/du-an" },
   { label: "Tin tức", href: "/tin-tuc" },
   { label: "Đầu tư", href: "/dau-tu" },
