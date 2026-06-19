@@ -57,7 +57,7 @@ export interface Project {
   area_max: string | null;
   area_text: string | null;
   status: 'upcoming' | 'selling' | 'completed';
-  sales_status: 'coming_soon' | 'selling' | 'sold_out' | 'handover';
+  sales_status: 'coming_soon' | 'selling' | 'handing_over' | 'handover';
   open_sale_at: string | null;
   handover_year: number | null;
   handover_time: string | null;

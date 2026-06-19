@@ -28,6 +28,7 @@ import { homepageService } from "@/services/homepageService";
 import { projectService } from "@/services/projectService";
 import { postService } from "@/services/postService";
 import { unwrapData } from "@/adapters/apiResponseAdapter";
+import { getSalesStatusLabel, getSalesStatusColor } from "@/lib/salesStatus";
 import {
   fadeUp,
   fadeIn,
@@ -57,12 +58,7 @@ const fallbackHero: Required<
     "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1800&auto=format&fit=crop",
 };
 
-const salesStatusLabel: Record<string, string> = {
-  coming_soon: "Sắp mở bán",
-  selling: "Đang mở bán",
-  sold_out: "Đã bán hết",
-  handover: "Đã bàn giao",
-};
+// Sales status labels are now centralized in @/lib/salesStatus
 
 const heroStats = [
   { icon: Building2, label: "BĐS cao cấp" },
@@ -270,8 +266,8 @@ export default function HomePageClient() {
                               Hot
                             </span>
                           )}
-                          <span className="rounded-full bg-champagne/90 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-ink-deep backdrop-blur-sm">
-                            {salesStatusLabel[project.sales_status] || "Đang cập nhật"}
+                          <span className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider backdrop-blur-sm ${getSalesStatusColor(project.sales_status).bg} ${getSalesStatusColor(project.sales_status).text}`}>
+                            {getSalesStatusLabel(project.sales_status)}
                           </span>
                         </div>
                       </div>

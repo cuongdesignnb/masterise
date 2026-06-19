@@ -1035,10 +1035,10 @@ export default function AdminProjects() {
                           onChange={(e) => setFormSalesStatus(e.target.value)}
                           className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
                         >
-                          <option value="coming_soon">Sắp ra mắt (Coming Soon)</option>
-                          <option value="selling">Đang nhận booking/mở bán</option>
-                          <option value="sold_out">Đã cháy hàng (Sold Out)</option>
-                          <option value="handover">Đang bàn giao nhà</option>
+                          <option value="coming_soon">Sắp mở bán</option>
+                          <option value="selling">Đang mở bán</option>
+                          <option value="handing_over">Đang bàn giao</option>
+                          <option value="handover">Đã bàn giao</option>
                         </select>
                       </div>
                     </div>

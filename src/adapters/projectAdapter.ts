@@ -2,6 +2,7 @@ import { Project as ApiProject } from '@/types/api';
 import { Project as FrontendProject } from '@/types';
 import { ProjectDetail, IconDetail } from '@/types/project-detail';
 import { projectDetail as defaultSeed } from '@/data/projectDetailSeed';
+import { getSalesStatusLabel } from '@/lib/salesStatus';
 
 export function mapApiProjectToProjectCard(api: ApiProject): FrontendProject {
   const price = api.price_text || (api.price_min ? `Từ ${api.price_min} tỷ` : 'Liên hệ');
@@ -25,7 +26,7 @@ export function mapApiProjectToProjectCard(api: ApiProject): FrontendProject {
 export function mapApiProjectToProjectDetail(api: ApiProject): ProjectDetail {
   const priceFrom = api.price_text || (api.price_min ? `Từ ${api.price_min} tỷ` : 'Liên hệ');
   const location = api.location || api.address || 'Đang cập nhật';
-  const statusLabel = api.status === 'completed' ? 'Đã bàn giao' : (api.status === 'selling' ? 'Đang mở bán' : 'Sắp mở bán');
+  const statusLabel = getSalesStatusLabel(api.sales_status);
 
   // QuickCard mapping
   const quickCard: IconDetail[] = [
@@ -239,6 +240,7 @@ export function mapApiProjectToProjectDetail(api: ApiProject): ProjectDetail {
     id: api.id,
     slug: api.slug,
     badge: api.is_featured ? 'DỰ ÁN BIỂU TƯỢNG' : 'DỰ ÁN CAO CẤP',
+    salesStatus: getSalesStatusLabel(api.sales_status),
     name: api.name,
     subtitle: api.description || 'Trung tâm mới của TP. Thủ Đức',
     description: api.content || api.description || '',

@@ -226,14 +226,21 @@ export default function ProjectDetailClient({ project = defaultProject }: { proj
 
           <div className="relative z-10 grid min-h-[610px] gap-8 px-6 py-10 sm:px-10 lg:min-h-[600px] lg:grid-cols-[minmax(0,1fr)_310px] lg:items-center lg:px-14 xl:px-16">
             <div className="max-w-[760px]">
-              <motion.span
+              <motion.div
                 initial={{ opacity: 0, y: 14 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.15, ease }}
-                className="inline-flex rounded-full border border-gold/35 bg-white/75 px-4 py-2 text-[10px] font-bold tracking-[0.14em] text-gold-dark backdrop-blur"
+                className="flex flex-wrap items-center gap-2"
               >
-                {project.badge}
-              </motion.span>
+                <span className="inline-flex rounded-full border border-gold/35 bg-white/75 px-4 py-2 text-[10px] font-bold tracking-[0.14em] text-gold-dark backdrop-blur">
+                  {project.badge}
+                </span>
+                {project.salesStatus && (
+                  <span className="inline-flex rounded-full bg-emerald-600/90 px-4 py-2 text-[10px] font-bold tracking-[0.14em] text-white shadow-sm">
+                    {project.salesStatus}
+                  </span>
+                )}
+              </motion.div>
               <motion.h1
                 initial={{ opacity: 0, y: 22 }}
                 animate={{ opacity: 1, y: 0 }}

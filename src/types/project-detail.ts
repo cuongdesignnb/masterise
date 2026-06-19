@@ -27,6 +27,7 @@ export type IconDetail = {
 export type ProjectDetail = {
   slug: string;
   badge: string;
+  salesStatus?: string;
   name: string;
   subtitle: string;
   description: string;

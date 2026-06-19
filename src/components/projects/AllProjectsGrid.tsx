@@ -15,6 +15,7 @@ import Button from "@/components/Button";
 import LoadingState from "@/components/common/LoadingState";
 import EmptyState from "@/components/common/EmptyState";
 import ErrorState from "@/components/common/ErrorState";
+import { getSalesStatusLabel, getSalesStatusColor } from "@/lib/salesStatus";
 
 export default function AllProjectsGrid() {
   const searchParams = useSearchParams();
@@ -146,6 +147,12 @@ export default function AllProjectsGrid() {
                     {project.badge && (
                       <span className="absolute top-3 left-3 text-white text-[9px] font-bold uppercase px-2.5 py-1 rounded-full gold-gradient">
                         {project.badge}
+                      </span>
+                    )}
+                    {/* Sales Status Badge */}
+                    {(project as any).sales_status && (
+                      <span className={`absolute top-3 ${project.badge ? 'left-16' : 'left-3'} text-[9px] font-bold uppercase px-2.5 py-1 rounded-full ${getSalesStatusColor((project as any).sales_status).bg} ${getSalesStatusColor((project as any).sales_status).text}`}>
+                        {getSalesStatusLabel((project as any).sales_status)}
                       </span>
                     )}
                     {/* Heart */}
