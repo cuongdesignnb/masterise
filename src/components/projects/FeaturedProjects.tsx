@@ -13,6 +13,7 @@ import Button from "@/components/Button";
 import LoadingState from "@/components/common/LoadingState";
 import EmptyState from "@/components/common/EmptyState";
 import ErrorState from "@/components/common/ErrorState";
+import { getSalesStatusLabel, getSalesStatusColor } from "@/lib/salesStatus";
 
 export default function FeaturedProjects() {
   const { data: projects = [], isLoading, error, refetch } = useQuery({
@@ -85,10 +86,14 @@ export default function FeaturedProjects() {
                       />
                     </Link>
 
-                    {/* Badge */}
                     {project.badge && (
                       <span className="absolute top-3 left-3 gold-gradient text-white text-[9px] font-bold uppercase px-2.5 py-1 rounded-full tracking-wide">
                         {project.badge}
+                      </span>
+                    )}
+                    {project.sales_status && (
+                      <span className={`absolute top-3 ${project.badge ? 'left-[4.5rem]' : 'left-3'} text-[9px] font-bold uppercase px-2.5 py-1 rounded-full tracking-wide ${getSalesStatusColor(project.sales_status).bg} ${getSalesStatusColor(project.sales_status).text}`}>
+                        {getSalesStatusLabel(project.sales_status)}
                       </span>
                     )}
 

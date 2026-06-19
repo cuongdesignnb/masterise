@@ -33,6 +33,7 @@ export type Project = {
   image: string;
   badge?: string;
   status?: "hot" | "best-seller" | "upcoming" | "selling" | "done";
+  sales_status?: string;
   type?: string;
   description?: string;
   slug?: string;

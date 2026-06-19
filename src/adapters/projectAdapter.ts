@@ -20,6 +20,7 @@ export function mapApiProjectToProjectCard(api: ApiProject): FrontendProject {
     type,
     description: api.description || '',
     slug: api.slug,
+    sales_status: api.sales_status,
   };
 }
 
