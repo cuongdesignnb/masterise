@@ -18,7 +18,9 @@ import {
   Link as LinkIcon, 
   HelpCircle, 
   Calendar, 
-  Briefcase 
+  Briefcase,
+  Building2,
+  Newspaper
 } from 'lucide-react';
 import MediaSelectModal from '@/components/admin/MediaSelectModal';
 
@@ -49,8 +51,8 @@ interface DepartmentItem {
 
 export default function AdminSettings() {
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<'general' | 'homepage' | 'about' | 'contact'>('general');
-  const [mediaTarget, setMediaTarget] = useState<{ type: 'logo' | 'slide'; index?: number } | null>(null);
+  const [activeTab, setActiveTab] = useState<'general' | 'homepage' | 'about' | 'contact' | 'projects_page' | 'news_page'>('general');
+  const [mediaTarget, setMediaTarget] = useState<{ type: 'logo' | 'slide' | 'projects_hero_image' | 'projects_cta_image' | 'news_hero_image'; index?: number } | null>(null);
 
   // Form States
   const [companyName, setCompanyName] = useState('');
@@ -73,6 +75,42 @@ export default function AdminSettings() {
   const [timeline, setTimeline] = useState<TimelineItem[]>([]);
 
   const [departments, setDepartments] = useState<DepartmentItem[]>([]);
+
+  // Projects Page states
+  const [projectsHeroBadge, setProjectsHeroBadge] = useState('');
+  const [projectsHeroTitle, setProjectsHeroTitle] = useState('');
+  const [projectsHeroDesc, setProjectsHeroDesc] = useState('');
+  const [projectsHeroPrimaryCta, setProjectsHeroPrimaryCta] = useState('');
+  const [projectsHeroSecondaryCta, setProjectsHeroSecondaryCta] = useState('');
+  const [projectsHeroImage, setProjectsHeroImage] = useState('');
+  const [projectsStats, setProjectsStats] = useState<{ value: string; label: string }[]>([
+    { value: '', label: '' },
+    { value: '', label: '' },
+    { value: '', label: '' },
+    { value: '', label: '' },
+  ]);
+
+  const [projectsCtaLabel, setProjectsCtaLabel] = useState('');
+  const [projectsCtaTitle, setProjectsCtaTitle] = useState('');
+  const [projectsCtaPrimaryBtn, setProjectsCtaPrimaryBtn] = useState('');
+  const [projectsCtaSecondaryBtn, setProjectsCtaSecondaryBtn] = useState('');
+  const [projectsCtaImage, setProjectsCtaImage] = useState('');
+
+  // News Page states
+  const [newsHeroBadge, setNewsHeroBadge] = useState('');
+  const [newsHeroTitle, setNewsHeroTitle] = useState('');
+  const [newsHeroDesc, setNewsHeroDesc] = useState('');
+  const [newsHeroPrimaryCta, setNewsHeroPrimaryCta] = useState('');
+  const [newsHeroSecondaryCta, setNewsHeroSecondaryCta] = useState('');
+  const [newsHeroImage, setNewsHeroImage] = useState('');
+  
+  const [newsHeroHighlightLabel, setNewsHeroHighlightLabel] = useState('');
+  const [newsHeroHighlightTitle, setNewsHeroHighlightTitle] = useState('');
+  const [newsHeroHighlightCta, setNewsHeroHighlightCta] = useState('');
+
+  const [newsCtaTitle, setNewsCtaTitle] = useState('');
+  const [newsCtaDesc, setNewsCtaDesc] = useState('');
+  const [newsCtaButton, setNewsCtaButton] = useState('');
 
   // Fetch settings list
   const { data: settingsList = [], isLoading } = useQuery({
@@ -120,6 +158,47 @@ export default function AdminSettings() {
       setTimeline(getVal('about_timeline', 'json') || []);
 
       setDepartments(getVal('contact_departments', 'json') || []);
+
+      // Projects Page Hero
+      const projHero = getVal('projects_page_hero', 'json');
+      setProjectsHeroBadge(projHero?.badge || 'DANH MỤC DỰ ÁN');
+      setProjectsHeroTitle(projHero?.title || 'Khám phá bộ sưu tập dự án Masterise Homes');
+      setProjectsHeroDesc(projHero?.description || 'Tuyển chọn những dự án bất động sản hàng hiệu tại các vị trí chiến lược, kiến tạo chuẩn sống quốc tế và giá trị bền vững cho tương lai.');
+      setProjectsHeroPrimaryCta(projHero?.primaryCta || 'Khám phá dự án');
+      setProjectsHeroSecondaryCta(projHero?.secondaryCta || 'Tải brochure tổng hợp');
+      setProjectsHeroImage(projHero?.image || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=1400&auto=format&fit=crop');
+      setProjectsStats(projHero?.overview || [
+        { value: '15+', label: 'Dự án đang triển khai' },
+        { value: '30.000+', label: 'Sản phẩm điển hình' },
+        { value: '8', label: 'Tỉnh & Thành phố' },
+        { value: '100+', label: 'Giải thưởng quốc tế' },
+      ]);
+
+      // Projects Page CTA
+      const projCta = getVal('projects_page_cta', 'json');
+      setProjectsCtaLabel(projCta?.label || 'TƯ VẤN DỰ ÁN MIỄN PHÍ');
+      setProjectsCtaTitle(projCta?.title || 'Nhận tư vấn lựa chọn dự án phù hợp và báo giá tốt nhất từ chuyên gia');
+      setProjectsCtaPrimaryBtn(projCta?.primaryButton || 'Nhận tư vấn ngay');
+      setProjectsCtaSecondaryBtn(projCta?.secondaryButton || 'Tải catalogue dự án');
+      setProjectsCtaImage(projCta?.image || 'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?q=80&w=1200&auto=format&fit=crop');
+
+      // News Page Hero
+      const nHero = getVal('news_page_hero', 'json');
+      setNewsHeroBadge(nHero?.badge || 'CẬP NHẬT MỚI NHẤT');
+      setNewsHeroTitle(nHero?.title || 'Tin tức & Góc nhìn thị trường');
+      setNewsHeroDesc(nHero?.description || 'Cập nhật những thông tin mới nhất về dự án, xu hướng thị trường, pháp lý, kiến trúc và phong cách sống từ Masterise Homes.');
+      setNewsHeroPrimaryCta(nHero?.primaryCta || 'Khám phá bài viết mới nhất');
+      setNewsHeroSecondaryCta(nHero?.secondaryCta || 'Nhận bản tin định kỳ');
+      setNewsHeroImage(nHero?.image || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=1600&auto=format&fit=crop');
+      setNewsHeroHighlightLabel(nHero?.highlight?.label || 'Điểm nhấn hôm nay');
+      setNewsHeroHighlightTitle(nHero?.highlight?.title || 'The Global City: Tiếp tục khẳng định vị thế trung tâm mới của TP. Thủ Đức');
+      setNewsHeroHighlightCta(nHero?.highlight?.cta || 'Đọc ngay');
+
+      // News Page CTA
+      const nCta = getVal('news_page_cta', 'json');
+      setNewsCtaTitle(nCta?.title || 'Đồng hành cùng Masterise Homes');
+      setNewsCtaDesc(nCta?.description || 'Khám phá các dự án biểu tượng và phong cách sống khác biệt được kiến tạo bởi Masterise Homes.');
+      setNewsCtaButton(nCta?.button || 'Khám phá dự án');
     }
   }, [settingsList]);
 
@@ -143,7 +222,59 @@ export default function AdminSettings() {
           { key: 'about_mission', value: aboutMission, type: 'string' },
           { key: 'about_vision', value: aboutVision, type: 'string' },
           { key: 'about_timeline', value: timeline, type: 'json' },
-          { key: 'contact_departments', value: departments, type: 'json' }
+          { key: 'contact_departments', value: departments, type: 'json' },
+          { 
+            key: 'projects_page_hero', 
+            value: { 
+              breadcrumb: ["Trang chủ", "Dự án"], 
+              badge: projectsHeroBadge, 
+              title: projectsHeroTitle, 
+              description: projectsHeroDesc, 
+              primaryCta: projectsHeroPrimaryCta, 
+              secondaryCta: projectsHeroSecondaryCta, 
+              image: projectsHeroImage,
+              overview: projectsStats
+            }, 
+            type: 'json' 
+          },
+          { 
+            key: 'projects_page_cta', 
+            value: { 
+              label: projectsCtaLabel, 
+              title: projectsCtaTitle, 
+              primaryButton: projectsCtaPrimaryBtn, 
+              secondaryButton: projectsCtaSecondaryBtn, 
+              image: projectsCtaImage 
+            }, 
+            type: 'json' 
+          },
+          { 
+            key: 'news_page_hero', 
+            value: { 
+              breadcrumb: ["Trang chủ", "Tin tức"], 
+              badge: newsHeroBadge, 
+              title: newsHeroTitle, 
+              description: newsHeroDesc, 
+              primaryCta: newsHeroPrimaryCta, 
+              secondaryCta: newsHeroSecondaryCta, 
+              image: newsHeroImage,
+              highlight: {
+                label: newsHeroHighlightLabel,
+                title: newsHeroHighlightTitle,
+                cta: newsHeroHighlightCta
+              }
+            }, 
+            type: 'json' 
+          },
+          { 
+            key: 'news_page_cta', 
+            value: { 
+              title: newsCtaTitle, 
+              description: newsCtaDesc, 
+              button: newsCtaButton 
+            }, 
+            type: 'json' 
+          }
         ]
       };
 
@@ -167,6 +298,12 @@ export default function AdminSettings() {
     } else if (mediaTarget.type === 'slide' && mediaTarget.index !== undefined) {
       const idx = mediaTarget.index;
       setSlides(prev => prev.map((s, i) => i === idx ? { ...s, image: url as string } : s));
+    } else if (mediaTarget.type === 'projects_hero_image') {
+      setProjectsHeroImage(url as string);
+    } else if (mediaTarget.type === 'projects_cta_image') {
+      setProjectsCtaImage(url as string);
+    } else if (mediaTarget.type === 'news_hero_image') {
+      setNewsHeroImage(url as string);
     }
   };
 
@@ -243,7 +380,9 @@ export default function AdminSettings() {
           { id: 'general', label: 'Thông tin chung & MXH', icon: Settings },
           { id: 'homepage', label: 'Cấu hình Trang chủ', icon: ImageIcon },
           { id: 'about', label: 'Cấu hình Giới thiệu', icon: Calendar },
-          { id: 'contact', label: 'Cấu hình Liên hệ', icon: Briefcase }
+          { id: 'contact', label: 'Cấu hình Liên hệ', icon: Briefcase },
+          { id: 'projects_page', label: 'Cấu hình trang Dự án', icon: Building2 },
+          { id: 'news_page', label: 'Cấu hình trang Tin tức', icon: Newspaper }
         ].map(tab => {
           const Icon = tab.icon;
           return (
@@ -757,6 +896,333 @@ export default function AdminSettings() {
                   ))}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* TAB 5: Projects Page Config */}
+          {activeTab === 'projects_page' && (
+            <div className="space-y-8">
+              <div>
+                <h3 className="text-lg font-heading font-medium text-[#1F1B16] border-b border-[#E8DCCB]/60 pb-2 flex items-center gap-2">
+                  <Building2 className="w-5 h-5 text-[#B88746]" />
+                  Cấu hình Trang Dự án - Phần Hero Banner (Đầu trang)
+                </h3>
+                <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Badge (Nhãn nhỏ phía trên)</label>
+                    <input
+                      type="text"
+                      value={projectsHeroBadge}
+                      onChange={(e) => setProjectsHeroBadge(e.target.value)}
+                      className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Ảnh Banner chính</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={projectsHeroImage}
+                        onChange={(e) => setProjectsHeroImage(e.target.value)}
+                        className="flex-1 px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setMediaTarget({ type: 'projects_hero_image' })}
+                        className="px-4 py-2 bg-[#1F1B16] hover:bg-[#B88746] text-white text-xs font-bold rounded-xl transition-all"
+                      >
+                        Chọn ảnh
+                      </button>
+                    </div>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Tiêu đề H1 chính</label>
+                    <input
+                      type="text"
+                      value={projectsHeroTitle}
+                      onChange={(e) => setProjectsHeroTitle(e.target.value)}
+                      className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Mô tả giới thiệu chung</label>
+                    <textarea
+                      value={projectsHeroDesc}
+                      onChange={(e) => setProjectsHeroDesc(e.target.value)}
+                      rows={3}
+                      className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none resize-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Text nút kêu gọi chính</label>
+                    <input
+                      type="text"
+                      value={projectsHeroPrimaryCta}
+                      onChange={(e) => setProjectsHeroPrimaryCta(e.target.value)}
+                      className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Text nút kêu gọi phụ</label>
+                    <input
+                      type="text"
+                      value={projectsHeroSecondaryCta}
+                      onChange={(e) => setProjectsHeroSecondaryCta(e.target.value)}
+                      className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-6">
+                  <h4 className="text-sm font-semibold text-[#1F1B16] mb-3">Thông số tổng quan dự án (Overview Stats)</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                    {projectsStats.map((stat, idx) => (
+                      <div key={idx} className="p-3 border border-[#E8DCCB]/60 rounded-xl bg-[#FBF8F2]/30">
+                        <span className="block text-[10px] font-bold text-gray-500 uppercase mb-2">Thông số {idx + 1}</span>
+                        <div className="space-y-2">
+                          <input
+                            type="text"
+                            value={stat.value}
+                            onChange={(e) => {
+                              const newStats = [...projectsStats];
+                              newStats[idx].value = e.target.value;
+                              setProjectsStats(newStats);
+                            }}
+                            placeholder="Số liệu (Ví dụ: 15+)"
+                            className="w-full px-2 py-1 border border-[#E8DCCB] rounded-lg text-xs bg-white focus:outline-none font-semibold"
+                          />
+                          <input
+                            type="text"
+                            value={stat.label}
+                            onChange={(e) => {
+                              const newStats = [...projectsStats];
+                              newStats[idx].label = e.target.value;
+                              setProjectsStats(newStats);
+                            }}
+                            placeholder="Nhãn (Ví dụ: Dự án)"
+                            className="w-full px-2 py-1 border border-[#E8DCCB] rounded-lg text-xs bg-white focus:outline-none text-[#8C7A6B]"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-heading font-medium text-[#1F1B16] border-b border-[#E8DCCB]/60 pb-2 flex items-center gap-2 mt-4">
+                  <Building2 className="w-5 h-5 text-[#B88746]" />
+                  Cấu hình Trang Dự án - Phần CTA Form Banner (Cuối trang)
+                </h3>
+                <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Nhãn tiêu đề nhỏ</label>
+                    <input
+                      type="text"
+                      value={projectsCtaLabel}
+                      onChange={(e) => setProjectsCtaLabel(e.target.value)}
+                      className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Ảnh nền CTA</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={projectsCtaImage}
+                        onChange={(e) => setProjectsCtaImage(e.target.value)}
+                        className="flex-1 px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setMediaTarget({ type: 'projects_cta_image' })}
+                        className="px-4 py-2 bg-[#1F1B16] hover:bg-[#B88746] text-white text-xs font-bold rounded-xl transition-all"
+                      >
+                        Chọn ảnh
+                      </button>
+                    </div>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Tiêu đề lớn kêu gọi</label>
+                    <input
+                      type="text"
+                      value={projectsCtaTitle}
+                      onChange={(e) => setProjectsCtaTitle(e.target.value)}
+                      className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Nút hành động chính</label>
+                    <input
+                      type="text"
+                      value={projectsCtaPrimaryBtn}
+                      onChange={(e) => setProjectsCtaPrimaryBtn(e.target.value)}
+                      className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Nút hành động phụ</label>
+                    <input
+                      type="text"
+                      value={projectsCtaSecondaryBtn}
+                      onChange={(e) => setProjectsCtaSecondaryBtn(e.target.value)}
+                      className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 6: News Page Config */}
+          {activeTab === 'news_page' && (
+            <div className="space-y-8">
+              <div>
+                <h3 className="text-lg font-heading font-medium text-[#1F1B16] border-b border-[#E8DCCB]/60 pb-2 flex items-center gap-2">
+                  <Newspaper className="w-5 h-5 text-[#B88746]" />
+                  Cấu hình Trang Tin tức - Phần Hero Banner (Đầu trang)
+                </h3>
+                <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Badge (Nhãn nhỏ phía trên)</label>
+                    <input
+                      type="text"
+                      value={newsHeroBadge}
+                      onChange={(e) => setNewsHeroBadge(e.target.value)}
+                      className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Ảnh Banner chính</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={newsHeroImage}
+                        onChange={(e) => setNewsHeroImage(e.target.value)}
+                        className="flex-1 px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setMediaTarget({ type: 'news_hero_image' })}
+                        className="px-4 py-2 bg-[#1F1B16] hover:bg-[#B88746] text-white text-xs font-bold rounded-xl transition-all"
+                      >
+                        Chọn ảnh
+                      </button>
+                    </div>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Tiêu đề H1 chính</label>
+                    <input
+                      type="text"
+                      value={newsHeroTitle}
+                      onChange={(e) => setNewsHeroTitle(e.target.value)}
+                      className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Mô tả giới thiệu chung</label>
+                    <textarea
+                      value={newsHeroDesc}
+                      onChange={(e) => setNewsHeroDesc(e.target.value)}
+                      rows={3}
+                      className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none resize-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Text nút kêu gọi chính</label>
+                    <input
+                      type="text"
+                      value={newsHeroPrimaryCta}
+                      onChange={(e) => setNewsHeroPrimaryCta(e.target.value)}
+                      className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Text nút kêu gọi phụ</label>
+                    <input
+                      type="text"
+                      value={newsHeroSecondaryCta}
+                      onChange={(e) => setNewsHeroSecondaryCta(e.target.value)}
+                      className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-6 border border-[#E8DCCB]/60 p-4 rounded-xl bg-[#FBF8F2]/30">
+                  <h4 className="text-sm font-semibold text-[#1F1B16] mb-3 flex items-center gap-1.5">
+                    <Settings className="w-4 h-4 text-[#B88746]" />
+                    Bài viết điểm nhấn nổi bật trên Hero (Highlight Card)
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Nhãn điểm nhấn</label>
+                      <input
+                        type="text"
+                        value={newsHeroHighlightLabel}
+                        onChange={(e) => setNewsHeroHighlightLabel(e.target.value)}
+                        className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-white text-sm focus:outline-none"
+                        placeholder="Ví dụ: Điểm nhấn hôm nay"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Tiêu đề bài viết nổi bật</label>
+                      <input
+                        type="text"
+                        value={newsHeroHighlightTitle}
+                        onChange={(e) => setNewsHeroHighlightTitle(e.target.value)}
+                        className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-white text-sm focus:outline-none"
+                        placeholder="Ví dụ: The Global City: Tiếp tục khẳng định vị thế..."
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Text link hành động</label>
+                      <input
+                        type="text"
+                        value={newsHeroHighlightCta}
+                        onChange={(e) => setNewsHeroHighlightCta(e.target.value)}
+                        className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-white text-sm focus:outline-none"
+                        placeholder="Ví dụ: Đọc ngay"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-heading font-medium text-[#1F1B16] border-b border-[#E8DCCB]/60 pb-2 flex items-center gap-2 mt-4">
+                  <Newspaper className="w-5 h-5 text-[#B88746]" />
+                  Cấu hình Trang Tin tức - Phần CTA Banner (Cuối trang)
+                </h3>
+                <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="md:col-span-2">
+                    <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Tiêu đề lớn kêu gọi</label>
+                    <input
+                      type="text"
+                      value={newsCtaTitle}
+                      onChange={(e) => setNewsCtaTitle(e.target.value)}
+                      className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Mô tả phụ</label>
+                    <textarea
+                      value={newsCtaDesc}
+                      onChange={(e) => setNewsCtaDesc(e.target.value)}
+                      rows={2}
+                      className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none resize-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Text nút bấm hành động</label>
+                    <input
+                      type="text"
+                      value={newsCtaButton}
+                      onChange={(e) => setNewsCtaButton(e.target.value)}
+                      className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 

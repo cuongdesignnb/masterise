@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { motion, type Variants } from "framer-motion";
 import { ChevronRight, ArrowRight, Download } from "lucide-react";
-import { projectsHero } from "@/data/projectsSeed";
+import { useSiteSettings } from "@/providers/SiteSettingsProvider";
 import Container from "@/components/Container";
 import Button from "@/components/Button";
 
@@ -27,6 +27,8 @@ const fadeUp: Variants = {
 };
 
 export default function ProjectsHero() {
+  const { projectsPageHero: hero } = useSiteSettings();
+
   return (
     <section className="relative w-full overflow-hidden bg-cream pt-[72px] pb-8">
       <Container>
@@ -43,7 +45,7 @@ export default function ProjectsHero() {
                 variants={fadeUp}
                 className="flex items-center gap-1.5 text-xs text-muted"
               >
-                {projectsHero.breadcrumb.map((label, idx) => (
+                {hero.breadcrumb.map((label, idx) => (
                   <React.Fragment key={label}>
                     {idx > 0 && (
                       <ChevronRight size={12} className="text-gold" />
@@ -51,7 +53,7 @@ export default function ProjectsHero() {
                     <Link
                       href={idx === 0 ? "/" : "/du-an"}
                       className={`hover:text-gold transition-colors ${
-                        idx === projectsHero.breadcrumb.length - 1
+                        idx === hero.breadcrumb.length - 1
                           ? "text-gold font-semibold"
                           : ""
                       }`}
@@ -67,7 +69,7 @@ export default function ProjectsHero() {
                 variants={fadeUp}
                 className="inline-block mt-4 text-[10px] sm:text-[11px] font-bold tracking-[0.18em] text-white uppercase gold-gradient px-4 py-1.5 rounded-full"
               >
-                {projectsHero.badge}
+                {hero.badge}
               </motion.span>
 
               {/* H1 */}
@@ -75,7 +77,7 @@ export default function ProjectsHero() {
                 variants={fadeUp}
                 className="mt-4 text-3xl md:text-4xl lg:text-[46px] heading-font font-bold text-ink leading-tight tracking-tight whitespace-pre-line"
               >
-                {projectsHero.title}
+                {hero.title}
               </motion.h1>
 
               {/* Description */}
@@ -83,7 +85,7 @@ export default function ProjectsHero() {
                 variants={fadeUp}
                 className="mt-3 text-sm text-muted max-w-xl leading-relaxed"
               >
-                {projectsHero.description}
+                {hero.description}
               </motion.p>
 
               {/* CTA Buttons */}
@@ -98,7 +100,7 @@ export default function ProjectsHero() {
                   icon={<ArrowRight size={14} />}
                   iconPosition="right"
                 >
-                  {projectsHero.primaryCta}
+                  {hero.primaryCta}
                 </Button>
                 <Button
                   variant="outline"
@@ -106,7 +108,7 @@ export default function ProjectsHero() {
                   icon={<Download size={14} />}
                   iconPosition="left"
                 >
-                  {projectsHero.secondaryCta}
+                  {hero.secondaryCta}
                 </Button>
               </motion.div>
             </motion.div>
@@ -123,7 +125,7 @@ export default function ProjectsHero() {
               {/* Hero Image */}
               <div className="relative aspect-[4/3]">
                 <Image
-                  src={projectsHero.image}
+                  src={hero.image}
                   alt="Tổng quan dự án Masterise Homes"
                   fill
                   className="object-cover"
@@ -139,7 +141,7 @@ export default function ProjectsHero() {
                     TỔNG QUAN DỰ ÁN
                   </p>
                   <div className="grid grid-cols-2 gap-x-5 gap-y-3">
-                    {projectsHero.overview.map((stat, idx) => (
+                    {hero.overview.map((stat, idx) => (
                       <div
                         key={idx}
                         className={`flex flex-col items-center text-center ${

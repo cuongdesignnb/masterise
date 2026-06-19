@@ -4,9 +4,11 @@ import { Building2, ArrowRight } from "lucide-react";
 import MotionWrapper from "@/components/MotionWrapper";
 import Container from "@/components/Container";
 import Button from "@/components/Button";
-import { newsCta } from "@/data/newsSeed";
+import { useSiteSettings } from "@/providers/SiteSettingsProvider";
 
 export default function NewsCTA() {
+  const { newsPageCta: cta } = useSiteSettings();
+
   return (
     <section className="py-8 lg:py-12">
       <Container>
@@ -23,10 +25,10 @@ export default function NewsCTA() {
               <div>
                 <Building2 size={28} className="text-gold mb-3" />
                 <h2 className="heading-font font-bold text-ink text-lg lg:text-xl">
-                  {newsCta.title}
+                  {cta.title}
                 </h2>
                 <p className="text-sm text-muted max-w-lg mt-2 leading-relaxed">
-                  {newsCta.description}
+                  {cta.description}
                 </p>
               </div>
 
@@ -38,7 +40,7 @@ export default function NewsCTA() {
                   icon={<ArrowRight size={16} />}
                   className="w-full lg:w-auto"
                 >
-                  {newsCta.button}
+                  {cta.button}
                 </Button>
               </div>
             </div>

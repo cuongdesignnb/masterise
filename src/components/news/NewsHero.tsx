@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { motion, type Variants } from "framer-motion";
 import { ChevronRight, Mail, ArrowRight } from "lucide-react";
-import { newsHero } from "@/data/newsSeed";
+import { useSiteSettings } from "@/providers/SiteSettingsProvider";
 import Container from "@/components/Container";
 import Button from "@/components/Button";
 
@@ -27,6 +27,8 @@ const fadeUp: Variants = {
 };
 
 export default function NewsHero() {
+  const { newsPageHero: hero } = useSiteSettings();
+
   return (
     <section className="relative w-full overflow-hidden bg-cream pt-[72px] min-h-[420px] lg:min-h-[460px]">
       {/* Decorative blurs */}
@@ -47,7 +49,7 @@ export default function NewsHero() {
                 variants={fadeUp}
                 className="flex items-center gap-1.5 text-xs text-muted mb-4"
               >
-                {newsHero.breadcrumb.map((label, idx) => (
+                {hero.breadcrumb.map((label, idx) => (
                   <React.Fragment key={label}>
                     {idx > 0 && (
                       <ChevronRight size={12} className="text-gold" />
@@ -55,7 +57,7 @@ export default function NewsHero() {
                     <Link
                       href={idx === 0 ? "/" : "/tin-tuc"}
                       className={`hover:text-gold transition-colors ${
-                        idx === newsHero.breadcrumb.length - 1
+                        idx === hero.breadcrumb.length - 1
                           ? "text-gold font-semibold"
                           : ""
                       }`}
@@ -71,7 +73,7 @@ export default function NewsHero() {
                 variants={fadeUp}
                 className="inline-block gold-gradient text-white text-[10px] sm:text-xs font-bold tracking-[0.14em] uppercase px-4 py-1.5 rounded-full mb-4"
               >
-                {newsHero.badge}
+                {hero.badge}
               </motion.span>
 
               {/* H1 */}
@@ -79,7 +81,7 @@ export default function NewsHero() {
                 variants={fadeUp}
                 className="text-3xl md:text-4xl lg:text-[46px] heading-font font-bold text-ink tracking-tight leading-tight"
               >
-                {newsHero.title}
+                {hero.title}
               </motion.h1>
 
               {/* Description */}
@@ -87,7 +89,7 @@ export default function NewsHero() {
                 variants={fadeUp}
                 className="mt-4 text-sm text-muted max-w-xl leading-relaxed font-light"
               >
-                {newsHero.description}
+                {hero.description}
               </motion.p>
 
               {/* CTA Buttons */}
@@ -102,7 +104,7 @@ export default function NewsHero() {
                   icon={<ArrowRight size={14} />}
                   iconPosition="right"
                 >
-                  {newsHero.primaryCta}
+                  {hero.primaryCta}
                 </Button>
                 <Button
                   variant="outline"
@@ -110,7 +112,7 @@ export default function NewsHero() {
                   icon={<Mail size={14} />}
                   iconPosition="left"
                 >
-                  {newsHero.secondaryCta}
+                  {hero.secondaryCta}
                 </Button>
               </motion.div>
             </motion.div>
@@ -127,8 +129,8 @@ export default function NewsHero() {
               {/* Main hero image */}
               <div className="relative rounded-[22px] overflow-hidden shadow-soft aspect-[4/3]">
                 <Image
-                  src={newsHero.image}
-                  alt={newsHero.title}
+                  src={hero.image}
+                  alt={hero.title}
                   fill
                   className="object-cover"
                   sizes="(max-width: 1024px) 100vw, 50vw"
@@ -137,21 +139,23 @@ export default function NewsHero() {
               </div>
 
               {/* Highlight overlay card */}
-              <div className="absolute bottom-4 right-4 left-4 sm:left-auto sm:w-72 bg-white/90 backdrop-blur-sm rounded-[16px] p-4 shadow-soft border border-line/30">
-                <span className="text-[10px] font-bold text-gold uppercase tracking-wider">
-                  {newsHero.highlight.label}
-                </span>
-                <h3 className="text-sm font-semibold text-ink mt-1 leading-snug line-clamp-2">
-                  {newsHero.highlight.title}
-                </h3>
-                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-gold mt-2 hover:text-gold-dark transition-colors group cursor-pointer">
-                  {newsHero.highlight.cta}
-                  <ArrowRight
-                    size={12}
-                    className="transition-transform group-hover:translate-x-1"
-                  />
-                </span>
-              </div>
+              {hero.highlight && (
+                <div className="absolute bottom-4 right-4 left-4 sm:left-auto sm:w-72 bg-white/90 backdrop-blur-sm rounded-[16px] p-4 shadow-soft border border-line/30">
+                  <span className="text-[10px] font-bold text-gold uppercase tracking-wider">
+                    {hero.highlight.label}
+                  </span>
+                  <h3 className="text-sm font-semibold text-ink mt-1 leading-snug line-clamp-2">
+                    {hero.highlight.title}
+                  </h3>
+                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-gold mt-2 hover:text-gold-dark transition-colors group cursor-pointer">
+                    {hero.highlight.cta}
+                    <ArrowRight
+                      size={12}
+                      className="transition-transform group-hover:translate-x-1"
+                    />
+                  </span>
+                </div>
+              )}
             </motion.div>
           </div>
         </div>

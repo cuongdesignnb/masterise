@@ -2,13 +2,15 @@
 
 import React from "react";
 import Image from "next/image";
-import { projectsCta } from "@/data/projectsSeed";
+import { useSiteSettings } from "@/providers/SiteSettingsProvider";
 import { ArrowRight, Download, Building2 } from "lucide-react";
 import Container from "@/components/Container";
 import MotionWrapper from "@/components/MotionWrapper";
 import Button from "@/components/Button";
 
 export default function ProjectsCTA() {
+  const { projectsPageCta: cta } = useSiteSettings();
+
   return (
     <section className="py-8 lg:py-12">
       <Container>
@@ -18,7 +20,7 @@ export default function ProjectsCTA() {
               {/* Left: Image */}
               <div className="relative aspect-[16/10] lg:aspect-auto lg:min-h-[280px] overflow-hidden">
                 <Image
-                  src={projectsCta.image}
+                  src={cta.image}
                   alt="Tư vấn dự án Masterise Homes"
                   fill
                   className="object-cover"
@@ -29,23 +31,23 @@ export default function ProjectsCTA() {
               {/* Right: Content */}
               <div className="p-8 lg:p-10 flex flex-col justify-center relative z-10">
                 <span className="uppercase text-[10px] font-bold tracking-wider text-gold">
-                  {projectsCta.label}
+                  {cta.label}
                 </span>
                 <h2 className="heading-font text-xl lg:text-2xl font-bold text-ink mt-2 leading-snug">
-                  {projectsCta.title}
+                  {cta.title}
                 </h2>
                 <div className="flex flex-col sm:flex-row gap-3 mt-5">
                   <Button
                     variant="solid"
                     icon={<ArrowRight size={14} />}
                   >
-                    {projectsCta.primaryButton}
+                    {cta.primaryButton}
                   </Button>
                   <Button
                     variant="outline"
                     icon={<Download size={14} />}
                   >
-                    {projectsCta.secondaryButton}
+                    {cta.secondaryButton}
                   </Button>
                 </div>
               </div>
