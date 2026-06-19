@@ -9,6 +9,8 @@ import GlobalContactForm from "@/components/lead/GlobalContactForm";
 import { fetchApi } from "@/lib/serverApi";
 import type { Post } from "@/types/api";
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://masterisehomes.com";
+
 type Props = {
   params: Promise<{ slug: string }>;
 };
@@ -58,7 +60,7 @@ export default async function NewsArticleDetailPage({ params }: Props) {
     dateModified: post.updated_at,
     author: { "@type": "Person", name: post.author?.name || "Masterise Homes" },
     publisher: { "@type": "Organization", name: "Masterise Homes" },
-    mainEntityOfPage: `https://masterisehomes.com/tin-tuc/${post.slug}`,
+    mainEntityOfPage: `${siteUrl}/tin-tuc/${post.slug}`,
   };
 
   return (

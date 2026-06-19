@@ -41,6 +41,7 @@ export default function LienHePage() {
           "Nhà phát triển bất động sản hàng hiệu hàng đầu Việt Nam",
         contactPoint: {
           "@type": "ContactPoint",
+          // TODO: Replace hardcoded phone number with dynamic value from site settings when possible
           telephone: "+84-1900-988-998",
           contactType: "customer service",
           areaServed: "VN",

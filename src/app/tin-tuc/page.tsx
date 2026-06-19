@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import NewsClient from "./NewsClient";
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://masterisehomes.com";
+
 export const metadata: Metadata = {
   title: "Tin tức & Góc nhìn thị trường | Masterise Homes",
   description:
@@ -33,14 +35,14 @@ export default function NewsPage() {
       {
         "@type": "Organization",
         name: "Masterise Homes",
-        url: "https://masterisehomes.com",
-        logo: "https://masterisehomes.com/logo.png",
+        url: siteUrl,
+        logo: `${siteUrl}/logo.png`,
       },
       {
         "@type": "BreadcrumbList",
         itemListElement: [
-          { "@type": "ListItem", position: 1, name: "Trang chủ", item: "https://masterisehomes.com" },
-          { "@type": "ListItem", position: 2, name: "Tin tức", item: "https://masterisehomes.com/tin-tuc" },
+          { "@type": "ListItem", position: 1, name: "Trang chủ", item: siteUrl },
+          { "@type": "ListItem", position: 2, name: "Tin tức", item: `${siteUrl}/tin-tuc` },
         ],
       },
       {

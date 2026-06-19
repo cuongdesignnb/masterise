@@ -9,6 +9,8 @@ import GlobalContactForm from '@/components/lead/GlobalContactForm';
 import { getProjectForSEO } from '@/services/projectServerService';
 import { mapApiProjectToProjectDetail } from '@/adapters/projectAdapter';
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://masterisehomes.com";
+
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
@@ -55,25 +57,25 @@ export default async function ProjectDetailPage({ params }: PageProps) {
     "@graph": [
       {
         "@type": "Organization",
-        "@id": "https://masterisehomes.com/#organization",
+        "@id": `${siteUrl}/#organization`,
         name: "Masterise Homes",
-        url: "https://masterisehomes.com",
+        url: siteUrl,
       },
       {
         "@type": "BreadcrumbList",
         itemListElement: [
-          { "@type": "ListItem", position: 1, name: "Trang chủ", item: "https://masterisehomes.com" },
+          { "@type": "ListItem", position: 1, name: "Trang chủ", item: siteUrl },
           {
             "@type": "ListItem",
             position: 2,
             name: "Dự án",
-            item: "https://masterisehomes.com/du-an",
+            item: `${siteUrl}/du-an`,
           },
           {
             "@type": "ListItem",
             position: 3,
             name: projectDetail.name,
-            item: `https://masterisehomes.com/du-an/${projectDetail.slug}`,
+            item: `${siteUrl}/du-an/${projectDetail.slug}`,
           },
         ],
       },
@@ -89,7 +91,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
           priceCurrency: "VND",
           price: "8900000000",
           availability: "https://schema.org/InStock",
-          url: `https://masterisehomes.com/du-an/${projectDetail.slug}`,
+          url: `${siteUrl}/du-an/${projectDetail.slug}`,
         },
       },
     ],
