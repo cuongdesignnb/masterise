@@ -647,7 +647,7 @@ export default function AdminSettings() {
 
     setTestEmailLoading(true);
     try {
-      const response = await api.post<any>('/settings/test-email', {
+      const response = await api.post('/settings/test-email', {
         mail_host: mailHost,
         mail_port: mailPort,
         mail_username: mailUsername,
@@ -658,10 +658,10 @@ export default function AdminSettings() {
         mail_receive_address: mailReceiveAddress
       });
 
-      if (response.data?.success) {
-        alert(response.data.message || 'Gửi email thử nghiệm thành công! Vui lòng kiểm tra hộp thư của bạn.');
+      if (response.success) {
+        alert(response.message || 'Gửi email thử nghiệm thành công! Vui lòng kiểm tra hộp thư của bạn.');
       } else {
-        alert('Gửi email thử nghiệm thất bại: ' + (response.data?.message || 'Lỗi không xác định'));
+        alert('Gửi email thử nghiệm thất bại: ' + (response.message || 'Lỗi không xác định'));
       }
     } catch (err: any) {
       alert('Lỗi thử nghiệm SMTP: ' + (err.response?.data?.message || err.message || 'Không thể kết nối đến máy chủ SMTP.'));
