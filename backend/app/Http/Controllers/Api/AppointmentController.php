@@ -20,12 +20,20 @@ class AppointmentController extends Controller
             'appointment_date' => 'required|date|after_or_equal:today',
             'appointment_time' => 'required|date_format:H:i',
             'notes' => 'nullable|string',
+        ], [
+            'project_id.required' => 'Vui lòng chọn dự án.',
+            'project_id.exists' => 'Dự án đã chọn không tồn tại.',
+            'appointment_date.required' => 'Vui lòng chọn ngày hẹn.',
+            'appointment_date.date' => 'Ngày hẹn không đúng định dạng.',
+            'appointment_date.after_or_equal' => 'Ngày hẹn phải từ ngày hôm nay trở đi.',
+            'appointment_time.required' => 'Vui lòng chọn giờ hẹn.',
+            'appointment_time.date_format' => 'Giờ hẹn không đúng định dạng H:i.',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Validation error',
+                'message' => $validator->errors()->first(),
                 'errors' => $validator->errors()
             ], 422);
         }

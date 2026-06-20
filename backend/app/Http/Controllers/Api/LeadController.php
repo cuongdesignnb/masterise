@@ -138,12 +138,17 @@ class LeadController extends Controller
             'vr_scene_title' => 'nullable|string|max:255',
             'vr_hotspot_id' => 'nullable|exists:project_vr_hotspots,id',
             'vr_hotspot_title' => 'nullable|string|max:255',
+        ], [
+            'name.required' => 'Vui lòng nhập Họ và tên.',
+            'phone.required' => 'Vui lòng nhập Số điện thoại.',
+            'email.email' => 'Địa chỉ email không chính xác.',
+            'project_id.exists' => 'Dự án đã chọn không hợp lệ.',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Lỗi nhập liệu',
+                'message' => $validator->errors()->first(),
                 'errors' => $validator->errors()
             ], 422);
         }
