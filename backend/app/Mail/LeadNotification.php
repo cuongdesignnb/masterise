@@ -28,7 +28,7 @@ class LeadNotification extends Mailable
      */
     public function envelope(): Envelope
     {
-        $projectTitle = $this->lead->project ? ' - Dự án: ' . $this->lead->project->title : '';
+        $projectTitle = $this->lead->project ? ' - Dự án: ' . $this->lead->project->name : '';
         return new Envelope(
             subject: 'Thông Báo Lead Mới: ' . $this->lead->name . $projectTitle,
         );

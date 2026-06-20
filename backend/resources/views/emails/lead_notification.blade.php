@@ -141,7 +141,7 @@
                 @if($lead->project)
                 <tr>
                     <th>Dự án quan tâm</th>
-                    <td><strong>{{ $lead->project->title }}</strong></td>
+                    <td><strong>{{ $lead->project->name }}</strong></td>
                 </tr>
                 @endif
                 @if($lead->demand_type)

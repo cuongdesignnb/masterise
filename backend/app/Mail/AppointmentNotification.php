@@ -29,7 +29,7 @@ class AppointmentNotification extends Mailable
     public function envelope(): Envelope
     {
         $customerName = $this->appointment->user ? $this->appointment->user->name : 'Khách vãng lai';
-        $projectTitle = $this->appointment->project ? ' - Dự án: ' . $this->appointment->project->title : '';
+        $projectTitle = $this->appointment->project ? ' - Dự án: ' . $this->appointment->project->name : '';
         return new Envelope(
             subject: 'Thông Báo Lịch Hẹn Mới: ' . $customerName . $projectTitle,
         );

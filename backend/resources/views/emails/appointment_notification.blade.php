@@ -129,7 +129,7 @@
                 @if($appointment->project)
                 <tr>
                     <th>Dự án tham quan</th>
-                    <td><strong>{{ $appointment->project->title }}</strong></td>
+                    <td><strong>{{ $appointment->project->name }}</strong></td>
                 </tr>
                 @endif
                 <tr>

@@ -89,15 +89,16 @@ class LeadController extends Controller
      */
     public function submit(Request $request)
     {
-        // 1. Anti-spam: Rate limit by IP
-        $ip = $request->ip();
-        if (RateLimiter::tooManyAttempts('submit-lead:' . $ip, 3)) {
+        // 1. Anti-spam: Rate limit by real client IP (resolving proxy IP)
+        $ip = $request->header('X-Real-IP') ?: ($request->header('X-Forwarded-For') ?: $request->ip());
+        $rateLimitKey = 'submit-lead:' . $ip;
+        if (RateLimiter::tooManyAttempts($rateLimitKey, 5)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Bạn đã gửi yêu cầu quá nhiều lần. Vui lòng thử lại sau 5 phút.'
             ], 429);
         }
-        RateLimiter::hit('submit-lead:' . $ip, 300);
+        RateLimiter::hit($rateLimitKey, 300);
 
         // 2. Anti-spam: Honeypot field check
         if ($request->has('website_url') && !empty($request->website_url)) {
