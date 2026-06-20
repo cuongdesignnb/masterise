@@ -9,6 +9,7 @@ export const postService = {
     post_type?: string;
     category?: string;
     status?: string;
+    q?: string;
   }) {
     const searchParams = new URLSearchParams();
     if (params?.limit) searchParams.append('limit', String(params.limit));
@@ -18,6 +19,7 @@ export const postService = {
     if (params?.post_type) searchParams.append('post_type', params.post_type);
     if (params?.category) searchParams.append('category', params.category);
     if (params?.status) searchParams.append('status', params.status);
+    if (params?.q) searchParams.append('q', params.q);
     const query = searchParams.toString();
     return api.get(`/posts${query ? `?${query}` : ''}`);
   },

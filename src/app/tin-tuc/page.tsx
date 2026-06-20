@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import NewsClient from "./NewsClient";
 
@@ -59,7 +60,9 @@ export default function NewsPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <NewsClient />
+      <Suspense fallback={<div className="text-center py-20 text-sm text-muted bg-cream">Đang tải trang tin tức...</div>}>
+        <NewsClient />
+      </Suspense>
     </>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import {
   Search,
   Building2,
@@ -11,7 +12,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { newsCategories } from "@/data/newsSeed";
+import { api } from "@/lib/api";
 import Container from "@/components/Container";
 import MotionWrapper from "@/components/MotionWrapper";
 
@@ -24,8 +25,68 @@ const categoryIconMap: Record<string, LucideIcon> = {
   "Kiến trúc": Compass,
 };
 
+interface CategoryItem {
+  id: number;
+  name: string;
+  slug: string;
+  posts_count?: number;
+}
+
 export default function NewsFilterBar() {
-  const [activeCategory, setActiveCategory] = useState("Tất cả");
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+
+  const [categories, setCategories] = useState<CategoryItem[]>([]);
+  const categoryQuery = searchParams.get("category") || "all";
+  const searchQuery = searchParams.get("q") || "";
+
+  const [searchTerm, setSearchTerm] = useState(searchQuery);
+
+  // Fetch categories from API
+  useEffect(() => {
+    api
+      .get<CategoryItem[]>("/post-categories")
+      .then((res) => {
+        if (res.success && Array.isArray(res.data)) {
+          setCategories(res.data);
+        }
+      })
+      .catch((err) => console.error("Failed to load categories:", err));
+  }, []);
+
+  // Sync state with URL parameter if it changes externally
+  useEffect(() => {
+    setSearchTerm(searchQuery);
+  }, [searchQuery]);
+
+  // Debounced search query update to URL
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      if (searchTerm === searchQuery) return;
+      const params = new URLSearchParams(searchParams.toString());
+      if (searchTerm.trim()) {
+        params.set("q", searchTerm.trim());
+      } else {
+        params.delete("q");
+      }
+      params.delete("page");
+      router.push(`${pathname}?${params.toString()}`);
+    }, 400);
+
+    return () => clearTimeout(handler);
+  }, [searchTerm, searchQuery, searchParams, pathname, router]);
+
+  const handleCategoryClick = (slug: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (slug === "all") {
+      params.delete("category");
+    } else {
+      params.set("category", slug);
+    }
+    params.delete("page");
+    router.push(`${pathname}?${params.toString()}`);
+  };
 
   return (
     <section className="py-6 bg-cream">
@@ -40,6 +101,8 @@ export default function NewsFilterBar() {
               />
               <input
                 type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Tìm kiếm bài viết, chủ đề, dự án..."
                 className="w-full bg-white border border-line/60 rounded-xl pl-10 pr-4 py-2.5 text-sm text-ink placeholder:text-muted/60 outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 transition"
               />
@@ -48,13 +111,26 @@ export default function NewsFilterBar() {
             {/* ── Category chips ── */}
             <div className="flex-1 overflow-x-auto hide-scrollbar">
               <div className="flex items-center gap-2 min-w-max">
-                {newsCategories.map((label) => {
-                  const isActive = activeCategory === label;
-                  const IconComponent = categoryIconMap[label];
+                {/* Chip: All */}
+                <button
+                  onClick={() => handleCategoryClick("all")}
+                  className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
+                    categoryQuery === "all"
+                      ? "gold-gradient text-white shadow-sm"
+                      : "bg-white border border-line/60 text-muted hover:border-gold hover:text-gold"
+                  }`}
+                >
+                  Tất cả
+                </button>
+
+                {/* Dynamic Category Chips */}
+                {categories.map((cat) => {
+                  const isActive = categoryQuery === cat.slug;
+                  const IconComponent = categoryIconMap[cat.name];
                   return (
                     <button
-                      key={label}
-                      onClick={() => setActiveCategory(label)}
+                      key={cat.id}
+                      onClick={() => handleCategoryClick(cat.slug)}
                       className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
                         isActive
                           ? "gold-gradient text-white shadow-sm"
@@ -62,7 +138,7 @@ export default function NewsFilterBar() {
                       }`}
                     >
                       {IconComponent && <IconComponent size={13} />}
-                      {label}
+                      {cat.name}
                     </button>
                   );
                 })}

@@ -1,13 +1,47 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Mail } from "lucide-react";
 import MotionWrapper from "@/components/MotionWrapper";
 import Button from "@/components/Button";
-import { popularPosts, topics } from "@/data/newsSeed";
+import { postService } from "@/services/postService";
+import { api } from "@/lib/api";
+import { unwrapData } from "@/adapters/apiResponseAdapter";
+import type { Post } from "@/types/api";
+
+interface CategoryItem {
+  id: number;
+  name: string;
+  slug: string;
+  posts_count?: number;
+}
 
 export default function NewsSidebar() {
+  const [featuredPosts, setFeaturedPosts] = useState<Post[]>([]);
+  const [categories, setCategories] = useState<CategoryItem[]>([]);
+  const [isLoadingFeatured, setIsLoadingFeatured] = useState(true);
+
+  useEffect(() => {
+    // Fetch featured posts
+    postService
+      .getFeaturedPosts({ limit: 5, post_type: "news" })
+      .then((res) => setFeaturedPosts(unwrapData<Post[]>(res) || []))
+      .catch((err) => console.error("Failed to load featured posts:", err))
+      .finally(() => setIsLoadingFeatured(false));
+
+    // Fetch categories
+    api
+      .get<CategoryItem[]>("/post-categories")
+      .then((res) => {
+        if (res.success && Array.isArray(res.data)) {
+          setCategories(res.data);
+        }
+      })
+      .catch((err) => console.error("Failed to load sidebar categories:", err));
+  }, []);
+
   return (
     <aside className="flex flex-col gap-5">
       {/* ── Card 1: Bài viết nổi bật ───────────────────────────── */}
@@ -17,45 +51,64 @@ export default function NewsSidebar() {
             Bài viết nổi bật
           </h3>
 
-          <ul>
-            {popularPosts.map((post, index) => (
-              <li
-                key={index}
-                className={`flex items-start gap-3 py-3 ${
-                  index < popularPosts.length - 1
-                    ? "border-b border-line/30"
-                    : ""
-                }`}
-              >
-                {/* Number */}
-                <span className="heading-font text-lg font-bold text-gold/30 flex-shrink-0 w-6 text-center leading-tight">
-                  {String(index + 1).padStart(2, "0")}
-                </span>
+          {isLoadingFeatured ? (
+            <div className="text-center py-6 text-xs text-muted">
+              Đang tải tin nổi bật...
+            </div>
+          ) : featuredPosts.length === 0 ? (
+            <div className="text-center py-6 text-xs text-muted">
+              Chưa có bài viết nổi bật.
+            </div>
+          ) : (
+            <ul className="space-y-3.5">
+              {featuredPosts.map((post, index) => (
+                <li
+                  key={post.id}
+                  className={`flex items-start gap-3 pb-3.5 ${
+                    index < featuredPosts.length - 1
+                      ? "border-b border-line/30"
+                      : ""
+                  }`}
+                >
+                  {/* Number */}
+                  <span className="heading-font text-lg font-bold text-gold/30 flex-shrink-0 w-6 text-center leading-tight">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
 
-                {/* Thumbnail */}
-                <div className="w-14 h-14 rounded-[10px] overflow-hidden flex-shrink-0">
-                  <Image
-                    src={post.image}
-                    alt={post.title}
-                    width={56}
-                    height={56}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
+                  {/* Thumbnail */}
+                  <div className="w-14 h-14 rounded-[10px] overflow-hidden flex-shrink-0 relative bg-cream">
+                    <Image
+                      src={
+                        post.thumbnail ||
+                        "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=200&auto=format&fit=crop"
+                      }
+                      alt={post.title}
+                      fill
+                      className="object-cover"
+                      sizes="56px"
+                    />
+                  </div>
 
-                {/* Text */}
-                <div className="flex-1 min-w-0">
-                  <Link
-                    href="#"
-                    className="text-xs font-semibold text-ink line-clamp-2 hover:text-gold transition-colors duration-200"
-                  >
-                    {post.title}
-                  </Link>
-                  <p className="text-[10px] text-muted mt-0.5">{post.date}</p>
-                </div>
-              </li>
-            ))}
-          </ul>
+                  {/* Text */}
+                  <div className="flex-1 min-w-0">
+                    <Link
+                      href={`/tin-tuc/${post.slug}`}
+                      className="text-xs font-semibold text-ink line-clamp-2 hover:text-gold transition-colors duration-200"
+                    >
+                      {post.title}
+                    </Link>
+                    <p className="text-[10px] text-muted mt-1">
+                      {post.published_at
+                        ? new Date(post.published_at).toLocaleDateString(
+                            "vi-VN"
+                          )
+                        : "Đang cập nhật"}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </MotionWrapper>
 
@@ -66,21 +119,27 @@ export default function NewsSidebar() {
             Chủ đề quan tâm
           </h3>
 
-          <div className="flex flex-wrap gap-2">
-            {topics.map((topic) => (
-              <Link
-                key={topic}
-                href="#"
-                className="bg-beige/60 text-muted text-[11px] rounded-full px-3 py-1.5 hover:bg-gold hover:text-white transition-all duration-200 cursor-pointer"
-              >
-                {topic}
-              </Link>
-            ))}
-          </div>
+          {categories.length === 0 ? (
+            <div className="text-center py-6 text-xs text-muted">
+              Đang tải danh mục...
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {categories.map((topic) => (
+                <Link
+                  key={topic.id}
+                  href={`/tin-tuc?category=${topic.slug}`}
+                  className="bg-beige/60 text-muted text-[11px] font-semibold rounded-full px-3.5 py-1.5 hover:bg-gold hover:text-white transition-all duration-200 cursor-pointer"
+                >
+                  {topic.name} ({topic.posts_count || 0})
+                </Link>
+              ))}
+            </div>
+          )}
 
           <Link
-            href="#"
-            className="inline-block text-gold text-xs font-semibold mt-3 hover:underline"
+            href="/tin-tuc"
+            className="inline-block text-gold text-xs font-semibold mt-4 hover:underline"
           >
             Xem tất cả chủ đề →
           </Link>
