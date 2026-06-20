@@ -20,7 +20,10 @@ import {
   Calendar, 
   Briefcase,
   Building2,
-  Newspaper
+  Newspaper,
+  Eye,
+  EyeOff,
+  Send
 } from 'lucide-react';
 import MediaSelectModal from '@/components/admin/MediaSelectModal';
 import { defaultCollections } from '@/data/collectionsSeed';
@@ -52,7 +55,7 @@ interface DepartmentItem {
 
 export default function AdminSettings() {
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<'general' | 'homepage' | 'about' | 'contact' | 'projects_page' | 'news_page'>('general');
+  const [activeTab, setActiveTab] = useState<'general' | 'homepage' | 'about' | 'contact' | 'projects_page' | 'news_page' | 'smtp'>('general');
   const [mediaTarget, setMediaTarget] = useState<{ type: 'logo' | 'slide' | 'projects_hero_image' | 'projects_cta_image' | 'news_hero_image' | 'about_hero_image' | 'about_intro_image_0' | 'about_intro_image_1' | 'about_intro_image_2' | 'about_sustainability_image' | 'about_brand_story_image' | 'about_contact_cta_image' | 'about_collection_image'; index?: number } | null>(null);
 
   // Form States
@@ -61,6 +64,18 @@ export default function AdminSettings() {
   const [hotline, setHotline] = useState('');
   const [email, setEmail] = useState('');
   const [logoUrl, setLogoUrl] = useState('');
+  
+  // SMTP settings states
+  const [mailHost, setMailHost] = useState('');
+  const [mailPort, setMailPort] = useState('587');
+  const [mailUsername, setMailUsername] = useState('');
+  const [mailPassword, setMailPassword] = useState('');
+  const [mailEncryption, setMailEncryption] = useState('tls');
+  const [mailFromAddress, setMailFromAddress] = useState('');
+  const [mailFromName, setMailFromName] = useState('');
+  const [mailReceiveAddress, setMailReceiveAddress] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [testEmailLoading, setTestEmailLoading] = useState(false);
   
   const [facebookUrl, setFacebookUrl] = useState('');
   const [youtubeUrl, setYoutubeUrl] = useState('');
@@ -237,6 +252,15 @@ export default function AdminSettings() {
       setHotline(getVal('hotline'));
       setEmail(getVal('email'));
       setLogoUrl(getVal('logo_url'));
+
+      setMailHost(getVal('mail_host'));
+      setMailPort(getVal('mail_port') || '587');
+      setMailUsername(getVal('mail_username'));
+      setMailPassword(getVal('mail_password'));
+      setMailEncryption(getVal('mail_encryption') || 'tls');
+      setMailFromAddress(getVal('mail_from_address'));
+      setMailFromName(getVal('mail_from_name'));
+      setMailReceiveAddress(getVal('mail_receive_address'));
 
       const social = getVal('social_links', 'json');
       setFacebookUrl(social?.facebook || '');
@@ -437,6 +461,14 @@ export default function AdminSettings() {
           { key: 'hotline', value: hotline, type: 'string' },
           { key: 'email', value: email, type: 'string' },
           { key: 'logo_url', value: logoUrl, type: 'string' },
+          { key: 'mail_host', value: mailHost, type: 'string' },
+          { key: 'mail_port', value: mailPort, type: 'string' },
+          { key: 'mail_username', value: mailUsername, type: 'string' },
+          { key: 'mail_password', value: mailPassword, type: 'string' },
+          { key: 'mail_encryption', value: mailEncryption, type: 'string' },
+          { key: 'mail_from_address', value: mailFromAddress, type: 'string' },
+          { key: 'mail_from_name', value: mailFromName, type: 'string' },
+          { key: 'mail_receive_address', value: mailReceiveAddress, type: 'string' },
           { 
             key: 'social_links', 
             value: { facebook: facebookUrl, youtube: youtubeUrl, zalo: zaloUrl, instagram: instagramUrl, linkedin: linkedinUrl }, 
@@ -607,6 +639,37 @@ export default function AdminSettings() {
     }
   });
 
+  const handleTestEmail = async () => {
+    if (!mailHost || !mailPort || !mailUsername || !mailPassword || !mailReceiveAddress) {
+      alert('Vui lòng điền đầy đủ các thông tin: Máy chủ, Cổng, Tài khoản, Mật khẩu và Email nhận để chạy thử nghiệm.');
+      return;
+    }
+
+    setTestEmailLoading(true);
+    try {
+      const response = await api.post('/settings/test-email', {
+        mail_host: mailHost,
+        mail_port: mailPort,
+        mail_username: mailUsername,
+        mail_password: mailPassword,
+        mail_encryption: mailEncryption,
+        mail_from_address: mailFromAddress,
+        mail_from_name: mailFromName,
+        mail_receive_address: mailReceiveAddress
+      });
+
+      if (response.data?.success) {
+        alert(response.data.message || 'Gửi email thử nghiệm thành công! Vui lòng kiểm tra hộp thư của bạn.');
+      } else {
+        alert('Gửi email thử nghiệm thất bại: ' + (response.data?.message || 'Lỗi không xác định'));
+      }
+    } catch (err: any) {
+      alert('Lỗi thử nghiệm SMTP: ' + (err.response?.data?.message || err.message || 'Không thể kết nối đến máy chủ SMTP.'));
+    } finally {
+      setTestEmailLoading(false);
+    }
+  };
+
   // Media selector callback
   const handleMediaSelected = (url: string | string[]) => {
     if (!mediaTarget) return;
@@ -716,7 +779,8 @@ export default function AdminSettings() {
           { id: 'about', label: 'Cấu hình Giới thiệu', icon: Calendar },
           { id: 'contact', label: 'Cấu hình Liên hệ', icon: Briefcase },
           { id: 'projects_page', label: 'Cấu hình trang Dự án', icon: Building2 },
-          { id: 'news_page', label: 'Cấu hình trang Tin tức', icon: Newspaper }
+          { id: 'news_page', label: 'Cấu hình trang Tin tức', icon: Newspaper },
+          { id: 'smtp', label: 'Cấu hình SMTP & Email', icon: Mail }
         ].map(tab => {
           const Icon = tab.icon;
           return (
@@ -2416,6 +2480,178 @@ export default function AdminSettings() {
                       onChange={(e) => setNewsCtaButton(e.target.value)}
                       className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
                     />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'smtp' && (
+            <div className="space-y-8 animate-fadeIn">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* SMTP Config Form */}
+                <div className="lg:col-span-2 space-y-6 bg-white border border-[#E8DCCB] rounded-2xl p-6 shadow-sm">
+                  <div>
+                    <h3 className="text-lg font-heading font-medium text-[#1F1B16] border-b border-[#E8DCCB]/60 pb-2 flex items-center gap-2">
+                      <Mail className="w-5 h-5 text-[#B88746]" />
+                      Thông tin Cấu hình SMTP
+                    </h3>
+                    <p className="text-xs text-[#8C7A6B] mt-1">Các thông số này dùng để kết nối với máy chủ gửi thư.</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="md:col-span-2">
+                      <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Máy chủ SMTP (SMTP Host) <span className="text-red-500">*</span></label>
+                      <input
+                        type="text"
+                        value={mailHost}
+                        onChange={(e) => setMailHost(e.target.value)}
+                        className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
+                        placeholder="Ví dụ: smtp.gmail.com"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Cổng SMTP (SMTP Port) <span className="text-red-500">*</span></label>
+                      <input
+                        type="text"
+                        value={mailPort}
+                        onChange={(e) => setMailPort(e.target.value)}
+                        className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
+                        placeholder="Ví dụ: 587 hoặc 465"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Giao thức mã hóa (Encryption)</label>
+                      <select
+                        value={mailEncryption}
+                        onChange={(e) => setMailEncryption(e.target.value)}
+                        className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
+                      >
+                        <option value="tls">TLS (Khuyên dùng cho Port 587)</option>
+                        <option value="ssl">SSL (Khuyên dùng cho Port 465)</option>
+                        <option value="none">None (Không mã hóa)</option>
+                      </select>
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Tài khoản SMTP (SMTP Username) <span className="text-red-500">*</span></label>
+                      <input
+                        type="text"
+                        value={mailUsername}
+                        onChange={(e) => setMailUsername(e.target.value)}
+                        className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
+                        placeholder="Ví dụ: email_cua_ban@gmail.com"
+                      />
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Mật khẩu SMTP (SMTP Password) <span className="text-red-500">*</span></label>
+                      <div className="relative">
+                        <input
+                          type={showPassword ? "text" : "password"}
+                          value={mailPassword}
+                          onChange={(e) => setMailPassword(e.target.value)}
+                          className="w-full px-3 py-2 pr-10 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
+                          placeholder="Mật khẩu ứng dụng (App Password)"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8C7A6B] hover:text-[#1F1B16]"
+                        >
+                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t border-[#E8DCCB]/60">
+                    <h3 className="text-lg font-heading font-medium text-[#1F1B16] border-b border-[#E8DCCB]/60 pb-2 flex items-center gap-2 mb-4">
+                      <Settings className="w-5 h-5 text-[#B88746]" />
+                      Thông tin Gửi & Nhận Thư
+                    </h3>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Tên người gửi hiển thị (From Name)</label>
+                        <input
+                          type="text"
+                          value={mailFromName}
+                          onChange={(e) => setMailFromName(e.target.value)}
+                          className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
+                          placeholder="Ví dụ: Masterise Homes"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Email gửi đi hiển thị (From Address)</label>
+                        <input
+                          type="email"
+                          value={mailFromAddress}
+                          onChange={(e) => setMailFromAddress(e.target.value)}
+                          className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
+                          placeholder="Ví dụ: no-reply@masterisehomes.com"
+                        />
+                      </div>
+
+                      <div className="md:col-span-2">
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Email nhận thông báo <span className="text-red-500">*</span></label>
+                        <input
+                          type="email"
+                          value={mailReceiveAddress}
+                          onChange={(e) => setMailReceiveAddress(e.target.value)}
+                          className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
+                          placeholder="Nhập địa chỉ nhận tất cả các mail thông báo từ các form khách hàng"
+                        />
+                        <p className="text-[10px] text-[#8C7A6B] mt-1">Khi có bất kỳ khách hàng nào đăng ký form tư vấn hoặc đặt lịch hẹn tham quan, thông tin sẽ được tự động gửi tới email này.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Connection Test Actions */}
+                  <div className="pt-4 border-t border-[#E8DCCB]/60 flex items-center justify-between gap-4">
+                    <span className="text-xs text-[#8C7A6B] italic">Lưu ý: Bấm lưu tất cả thay đổi sau khi chạy thử nghiệm thành công.</span>
+                    <button
+                      type="button"
+                      disabled={testEmailLoading}
+                      onClick={handleTestEmail}
+                      className="flex items-center gap-2 px-4 py-2 border border-[#B88746] hover:bg-[#B88746]/10 text-[#B88746] rounded-xl text-xs font-bold transition-all disabled:opacity-50"
+                    >
+                      <Send className="w-3.5 h-3.5" />
+                      {testEmailLoading ? 'Đang gửi thử...' : 'Gửi Thử Email'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* SMTP Guide Sidebar */}
+                <div className="space-y-6">
+                  <div className="bg-[#FBF8F2] border border-[#E8DCCB] rounded-2xl p-6">
+                    <h4 className="text-sm font-semibold text-[#1F1B16] flex items-center gap-2 mb-3">
+                      <HelpCircle className="w-4 h-4 text-[#B88746]" />
+                      Hướng dẫn Cài đặt SMTP Gmail
+                    </h4>
+                    
+                    <div className="text-xs text-[#4A453F] space-y-3.5 leading-relaxed">
+                      <p>Để hệ thống có thể tự động gửi email thông báo, bạn cần sử dụng một tài khoản email (khuyên dùng Gmail) làm cổng gửi thư.</p>
+                      
+                      <ol className="list-decimal list-inside space-y-2">
+                        <li>Truy cập <a href="https://myaccount.google.com" target="_blank" rel="noreferrer" className="text-[#B88746] hover:underline font-semibold">Tài khoản Google</a> của bạn.</li>
+                        <li>Đi tới mục <strong>Bảo mật (Security)</strong> và bật <strong>Xác minh 2 bước (2-Step Verification)</strong>.</li>
+                        <li>Sau khi bật, nhấp vào mục <strong>Mật khẩu ứng dụng (App passwords)</strong> ở phía cuối trang cấu hình Xác minh 2 bước.</li>
+                        <li>Chọn ứng dụng là <i>Khác (Tự điền tên)</i>, đặt tên bất kỳ (Ví dụ: <code>Website BDS</code>) và bấm <strong>Tạo</strong>.</li>
+                        <li>Google sẽ cung cấp một dãy mật khẩu gồm <strong>16 chữ cái</strong> (màu vàng). Copy mật khẩu này và dán vào ô <strong>Mật khẩu SMTP</strong> bên cạnh.</li>
+                      </ol>
+
+                      <div className="bg-white/80 p-3 rounded-lg border border-[#E8DCCB] text-[11px] space-y-1">
+                        <strong className="text-[#1F1B16]">Thông số chuẩn cho Gmail:</strong><br/>
+                        • Máy chủ: <code className="bg-amber-50 px-1 py-0.5 rounded text-amber-800">smtp.gmail.com</code><br/>
+                        • Cổng: <code className="bg-amber-50 px-1 py-0.5 rounded text-amber-800">587</code><br/>
+                        • Mã hóa: <code className="bg-amber-50 px-1 py-0.5 rounded text-amber-800">TLS</code><br/>
+                        • Tài khoản: Địa chỉ Gmail của bạn
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

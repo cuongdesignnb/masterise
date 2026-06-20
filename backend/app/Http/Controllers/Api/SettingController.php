@@ -69,4 +69,87 @@ class SettingController extends Controller
             'message' => 'Settings updated successfully'
         ], 200);
     }
+
+    /**
+     * Send a test email to verify SMTP configuration (Admin only).
+     */
+    public function testEmail(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'mail_host' => 'required|string',
+            'mail_port' => 'required|string',
+            'mail_username' => 'required|string',
+            'mail_password' => 'required|string',
+            'mail_encryption' => 'nullable|string',
+            'mail_from_address' => 'nullable|string',
+            'mail_from_name' => 'nullable|string',
+            'mail_receive_address' => 'required|email',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Dữ liệu không hợp lệ',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        // Apply temporary mail config
+        config([
+            'mail.default' => 'smtp',
+            'mail.mailers.smtp.host' => $request->mail_host,
+            'mail.mailers.smtp.port' => (int)$request->mail_port,
+            'mail.mailers.smtp.username' => $request->mail_username,
+            'mail.mailers.smtp.password' => $request->mail_password,
+            'mail.mailers.smtp.encryption' => $request->mail_encryption ?: null,
+            'mail.from.address' => $request->mail_from_address ?: 'no-reply@masterisehomes.com',
+            'mail.from.name' => $request->mail_from_name ?: 'Masterise Homes Test',
+        ]);
+
+        \Illuminate\Support\Facades\Mail::purge();
+
+        try {
+            \Illuminate\Support\Facades\Mail::html('
+                <div style="font-family: \'Segoe UI\', sans-serif; background-color: #F6F4F0; padding: 40px; color: #1F1B16;">
+                    <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; border: 1px solid #E8DCCB; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+                        <div style="background: #1F1B16; padding: 20px; text-align: center; border-bottom: 3px solid #B88746;">
+                            <h2 style="color: #B88746; margin: 0;">MASTERISE HOMES</h2>
+                        </div>
+                        <div style="padding: 30px; line-height: 1.6;">
+                            <h3 style="color: #1F1B16; margin-top: 0;">Thử Nghiệm Kết Nối SMTP Thành Công!</h3>
+                            <p>Chào bạn,</p>
+                            <p>Đây là email thử nghiệm gửi từ hệ thống cấu hình SMTP của website <strong>Masterise Homes</strong>.</p>
+                            <p>Nếu bạn nhận được email này, có nghĩa là các thông số SMTP của bạn đã được cấu hình hoàn toàn chính xác.</p>
+                            <div style="background: #FBF8F2; padding: 15px; border-radius: 8px; font-size: 13px; margin: 20px 0; border: 1px solid #E8DCCB;">
+                                <strong>Thông số thử nghiệm:</strong><br>
+                                • SMTP Host: ' . htmlspecialchars($request->mail_host) . '<br>
+                                • SMTP Port: ' . htmlspecialchars($request->mail_port) . '<br>
+                                • SMTP User: ' . htmlspecialchars($request->mail_username) . '<br>
+                                • Encryption: ' . htmlspecialchars($request->mail_encryption ?: 'None') . '
+                            </div>
+                            <p>Chúc bạn một ngày làm việc hiệu quả!</p>
+                        </div>
+                        <div style="background: #FBF8F2; padding: 15px; text-align: center; font-size: 11px; color: #8C7A6B; border-top: 1px solid #E8DCCB;">
+                            Hệ thống website bất động sản Masterise Homes
+                        </div>
+                    </div>
+                </div>
+            ', function ($message) use ($request) {
+                $message->to($request->mail_receive_address)
+                    ->subject('Thử Nghiệm Kết Nối SMTP Masterise Homes - Thành Công!');
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Gửi email thử nghiệm thành công! Vui lòng kiểm tra hộp thư của bạn.'
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi kết nối SMTP: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }
+

@@ -45,4 +45,33 @@ class Setting extends Model
             ['value' => (string)$val, 'type' => $type]
         );
     }
+
+    public static function configureMail(): bool
+    {
+        $host = self::get('mail_host');
+        $port = self::get('mail_port');
+        $username = self::get('mail_username');
+        $password = self::get('mail_password');
+        $encryption = self::get('mail_encryption');
+        $fromAddress = self::get('mail_from_address');
+        $fromName = self::get('mail_from_name');
+
+        if ($host && $username && $password) {
+            config([
+                'mail.default' => 'smtp',
+                'mail.mailers.smtp.host' => $host,
+                'mail.mailers.smtp.port' => (int)($port ?: 587),
+                'mail.mailers.smtp.username' => $username,
+                'mail.mailers.smtp.password' => $password,
+                'mail.mailers.smtp.encryption' => $encryption ?: null,
+                'mail.from.address' => $fromAddress ?: self::get('email', 'sales@masterisehomes.com'),
+                'mail.from.name' => $fromName ?: self::get('company_name', 'Masterise Homes'),
+            ]);
+
+            \Illuminate\Support\Facades\Mail::purge();
+            return true;
+        }
+
+        return false;
+    }
 }

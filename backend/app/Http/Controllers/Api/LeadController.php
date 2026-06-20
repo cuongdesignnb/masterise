@@ -335,6 +335,23 @@ class LeadController extends Controller
             return $lead;
         });
 
+        // Send email notification to Admin
+        try {
+            if (\App\Models\Setting::configureMail()) {
+                $receiveEmail = \App\Models\Setting::get('mail_receive_address');
+                if (!$receiveEmail) {
+                    $receiveEmail = \App\Models\Setting::get('email', 'sales@masterisehomes.com');
+                }
+
+                if ($receiveEmail) {
+                    \Illuminate\Support\Facades\Mail::to($receiveEmail)
+                        ->send(new \App\Mail\LeadNotification($lead->load('project')));
+                }
+            }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('SMTP Mail error on lead submit: ' . $e->getMessage());
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Đã gửi thông tin thành công!',

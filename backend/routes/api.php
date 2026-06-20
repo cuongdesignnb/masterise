@@ -179,6 +179,7 @@ Route::group(['prefix' => 'v1'], function() {
             // Bulk settings update
             Route::get('/settings', [SettingController::class, 'index']);
             Route::put('/settings', [SettingController::class, 'update']);
+            Route::post('/settings/test-email', [SettingController::class, 'testEmail']);
 
             // User management
             Route::apiResource('/users', UserController::class);
