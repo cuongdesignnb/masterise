@@ -647,7 +647,7 @@ export default function AdminSettings() {
 
     setTestEmailLoading(true);
     try {
-      const response = await api.post('/settings/test-email', {
+      const response = await api.post<any>('/settings/test-email', {
         mail_host: mailHost,
         mail_port: mailPort,
         mail_username: mailUsername,
