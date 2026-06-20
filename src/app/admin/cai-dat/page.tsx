@@ -23,6 +23,7 @@ import {
   Newspaper
 } from 'lucide-react';
 import MediaSelectModal from '@/components/admin/MediaSelectModal';
+import { defaultCollections } from '@/data/collectionsSeed';
 
 // Interfaces for structured settings
 interface SlideItem {
@@ -52,7 +53,7 @@ interface DepartmentItem {
 export default function AdminSettings() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<'general' | 'homepage' | 'about' | 'contact' | 'projects_page' | 'news_page'>('general');
-  const [mediaTarget, setMediaTarget] = useState<{ type: 'logo' | 'slide' | 'projects_hero_image' | 'projects_cta_image' | 'news_hero_image'; index?: number } | null>(null);
+  const [mediaTarget, setMediaTarget] = useState<{ type: 'logo' | 'slide' | 'projects_hero_image' | 'projects_cta_image' | 'news_hero_image' | 'about_hero_image' | 'about_intro_image_0' | 'about_intro_image_1' | 'about_intro_image_2' | 'about_sustainability_image' | 'about_brand_story_image' | 'about_contact_cta_image' | 'about_collection_image'; index?: number } | null>(null);
 
   // Form States
   const [companyName, setCompanyName] = useState('');
@@ -112,6 +113,100 @@ export default function AdminSettings() {
   const [newsCtaDesc, setNewsCtaDesc] = useState('');
   const [newsCtaButton, setNewsCtaButton] = useState('');
 
+  // About Page states
+  const [aboutHeroBadge, setAboutHeroBadge] = useState('');
+  const [aboutHeroTitle, setAboutHeroTitle] = useState('');
+  const [aboutHeroDesc, setAboutHeroDesc] = useState('');
+  const [aboutHeroPrimaryCta, setAboutHeroPrimaryCta] = useState('');
+  const [aboutHeroSecondaryCta, setAboutHeroSecondaryCta] = useState('');
+  const [aboutHeroImage, setAboutHeroImage] = useState('');
+  const [aboutHeroStats, setAboutHeroStats] = useState<{ value: string; label: string; icon: string }[]>([
+    { value: '', label: '', icon: '' },
+    { value: '', label: '', icon: '' },
+    { value: '', label: '', icon: '' },
+    { value: '', label: '', icon: '' },
+  ]);
+
+  const [aboutIntroLabel, setAboutIntroLabel] = useState('');
+  const [aboutIntroTitle, setAboutIntroTitle] = useState('');
+  const [aboutIntroParagraphs, setAboutIntroParagraphs] = useState<string[]>(['', '']);
+  const [aboutIntroButton, setAboutIntroButton] = useState('');
+  const [aboutIntroImages, setAboutIntroImages] = useState<string[]>(['', '', '']);
+
+  const [aboutMetricsList, setAboutMetricsList] = useState<{ value: string; label: string; icon: string }[]>([
+    { value: '', label: '', icon: '' },
+    { value: '', label: '', icon: '' },
+    { value: '', label: '', icon: '' },
+    { value: '', label: '', icon: '' },
+  ]);
+
+  const [aboutValuesList, setAboutValuesList] = useState<{ title: string; description: string; icon: string }[]>([
+    { title: '', description: '', icon: '' },
+    { title: '', description: '', icon: '' },
+    { title: '', description: '', icon: '' },
+    { title: '', description: '', icon: '' },
+    { title: '', description: '', icon: '' },
+    { title: '', description: '', icon: '' },
+  ]);
+
+  const [aboutAwardsList, setAboutAwardsList] = useState<{ title: string; description: string }[]>([
+    { title: '', description: '' },
+    { title: '', description: '' },
+    { title: '', description: '' },
+    { title: '', description: '' },
+    { title: '', description: '' },
+  ]);
+
+  const [aboutEcoList, setAboutEcoList] = useState<{ title: string; description: string; image: string }[]>([
+    { title: '', description: '', image: '' },
+    { title: '', description: '', image: '' },
+    { title: '', description: '', image: '' },
+    { title: '', description: '', image: '' },
+    { title: '', description: '', image: '' },
+  ]);
+  const [aboutPartnersList, setAboutPartnersList] = useState<string>('');
+
+  const [aboutSustTitle, setAboutSustTitle] = useState('');
+  const [aboutSustImage, setAboutSustImage] = useState('');
+  const [aboutSustPillars, setAboutSustPillars] = useState<{ title: string; description: string; icon: string }[]>([
+    { title: '', description: '', icon: '' },
+    { title: '', description: '', icon: '' },
+    { title: '', description: '', icon: '' },
+  ]);
+
+  const [aboutWhyChooseList, setAboutWhyChooseList] = useState<{ title: string; description: string; icon: string }[]>([
+    { title: '', description: '', icon: '' },
+    { title: '', description: '', icon: '' },
+    { title: '', description: '', icon: '' },
+    { title: '', description: '', icon: '' },
+    { title: '', description: '', icon: '' },
+    { title: '', description: '', icon: '' },
+  ]);
+
+  const [aboutBrandTitle, setAboutBrandTitle] = useState('');
+  const [aboutBrandDesc, setAboutBrandDesc] = useState('');
+  const [aboutBrandBtn, setAboutBrandBtn] = useState('');
+  const [aboutBrandImage, setAboutBrandImage] = useState('');
+
+  const [aboutFaqsList, setAboutFaqsList] = useState<{ question: string; answer: string }[]>([]);
+
+  const [aboutContactCtaLabel, setAboutContactCtaLabel] = useState('');
+  const [aboutContactCtaTitle, setAboutContactCtaTitle] = useState('');
+  const [aboutContactCtaDesc, setAboutContactCtaDesc] = useState('');
+  const [aboutContactCtaImage, setAboutContactCtaImage] = useState('');
+
+  const [aboutCollectionsList, setAboutCollectionsList] = useState<{
+    id: string;
+    title: string;
+    subtitle: string;
+    description: string;
+    image: string;
+    features: string[];
+    link: string;
+  }[]>([]);
+
+  const [aboutSubTab, setAboutSubTab] = useState<'hero' | 'intro' | 'vision_mission' | 'values_awards' | 'eco_sustainability' | 'brand_faq' | 'contact_cta' | 'collections'>('hero');
+
   // Fetch settings list
   const { data: settingsList = [], isLoading } = useQuery({
     queryKey: ['admin-settings'],
@@ -153,9 +248,22 @@ export default function AdminSettings() {
       setSlides(getVal('homepage_slides', 'json') || []);
       setFaqs(getVal('homepage_faq', 'json') || []);
 
-      setAboutMission(getVal('about_mission'));
-      setAboutVision(getVal('about_vision'));
-      setTimeline(getVal('about_timeline', 'json') || []);
+      setAboutMission(getVal('about_mission') || 'Masterise Homes cam kết mang đến những trải nghiệm sống khác biệt thông qua sản phẩm chất lượng, dịch vụ tận tâm và những giá trị bền vững cho khách hàng, đối tác và cộng đồng.');
+      setAboutVision(getVal('about_vision') || 'Chúng tôi hướng đến việc kiến tạo những công trình biểu tượng, nâng tầm chất lượng sống và góp phần xây dựng các đô thị hiện đại, bền vững cho tương lai.');
+      
+      const dbTimeline = getVal('about_timeline', 'json');
+      setTimeline(
+        dbTimeline && dbTimeline.length > 0
+          ? dbTimeline
+          : [
+              { year: '2014', title: 'Thành lập Masterise Group', description: '' },
+              { year: '2016', title: 'Bước chân vào lĩnh vực bất động sản', description: '' },
+              { year: '2018', title: 'Ra mắt thương hiệu Masterise Homes', description: '' },
+              { year: '2020', title: 'Mở rộng quy mô với nhiều dự án biểu tượng', description: '' },
+              { year: '2022', title: 'Khẳng định vị thế nhà phát triển BĐS hàng hiệu hàng đầu', description: '' },
+              { year: '2024+', title: 'Tiếp tục kiến tạo giá trị sống chuẩn quốc tế', description: '' },
+            ]
+      );
 
       setDepartments(getVal('contact_departments', 'json') || []);
 
@@ -199,6 +307,123 @@ export default function AdminSettings() {
       setNewsCtaTitle(nCta?.title || 'Đồng hành cùng Masterise Homes');
       setNewsCtaDesc(nCta?.description || 'Khám phá các dự án biểu tượng và phong cách sống khác biệt được kiến tạo bởi Masterise Homes.');
       setNewsCtaButton(nCta?.button || 'Khám phá dự án');
+
+      // About Page Hero
+      const aHero = getVal('about_page_hero', 'json');
+      setAboutHeroBadge(aHero?.badge || 'KIẾN TẠO CHUẨN SỐNG QUỐC TẾ');
+      setAboutHeroTitle(aHero?.title || 'Về Masterise Homes');
+      setAboutHeroDesc(aHero?.description || 'Kiến tạo những không gian sống hàng hiệu, nâng tầm trải nghiệm và giá trị sống của người Việt, góp phần định hình diện mạo đô thị hiện đại và bền vững.');
+      setAboutHeroPrimaryCta(aHero?.primaryCta || 'Khám phá hành trình');
+      setAboutHeroSecondaryCta(aHero?.secondaryCta || 'Khám phá dự án');
+      setAboutHeroImage(aHero?.image || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1400&auto=format&fit=crop');
+      setAboutHeroStats(aHero?.statsCard || [
+        { value: '10+', label: 'Năm kinh nghiệm phát triển BĐS', icon: 'BadgeCheck' },
+        { value: '60+', label: 'Dự án đã triển khai trên toàn quốc', icon: 'Building2' },
+        { value: '50.000+', label: 'Khách hàng tin tưởng và lựa chọn', icon: 'UsersRound' },
+        { value: '20+', label: 'Tỉnh & Thành phố hiện diện', icon: 'Map' },
+      ]);
+
+      // About Page Intro & Metrics
+      const aIntro = getVal('about_page_intro', 'json');
+      setAboutIntroLabel(aIntro?.label || 'VỀ MASTERISE HOMES');
+      setAboutIntroTitle(aIntro?.title || 'Kiến tạo chuẩn sống quốc tế tại Việt Nam');
+      setAboutIntroParagraphs(aIntro?.paragraphs || [
+        'Masterise Homes là nhà phát triển bất động sản hàng hiệu tiên phong tại Việt Nam, thuộc Masterise Group. Chúng tôi không ngừng kiến tạo những sản phẩm và dịch vụ xuất sắc, mang trải nghiệm sống xứng tầm quốc tế đến với khách hàng.',
+        'Với triết lý Customer Centricity và năng lực quốc tế, Masterise Homes hợp tác cùng các đối tác danh tiếng thế giới để phát triển những công trình biểu tượng, bền vững theo thời gian, góp phần nâng tầm chất lượng sống và giá trị cộng đồng.'
+      ]);
+      setAboutIntroButton(aIntro?.button || 'Tìm hiểu thêm về chúng tôi');
+      setAboutIntroImages(aIntro?.images || [
+        'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?q=80&w=1200&auto=format&fit=crop',
+        'https://images.unsplash.com/photo-1572331165267-854da2b10ccc?q=80&w=900&auto=format&fit=crop',
+        'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=900&auto=format&fit=crop'
+      ]);
+
+      const aMetrics = getVal('about_page_metrics', 'json');
+      setAboutMetricsList(aMetrics.length > 0 ? aMetrics : [
+        { value: "10+", label: "Năm kinh nghiệm", icon: "CalendarCheck" },
+        { value: "60+", label: "Dự án đã triển khai", icon: "Building2" },
+        { value: "50.000+", label: "Khách hàng tin tưởng", icon: "UsersRound" },
+        { value: "20+", label: "Tỉnh & Thành phố", icon: "MapPinned" },
+      ]);
+
+      // About Page Values & Awards
+      const aValues = getVal('about_page_values', 'json');
+      setAboutValuesList(aValues.length > 0 ? aValues : [
+        { title: "Khách hàng là trung tâm", description: "Thấu hiểu và đặt lợi ích khách hàng lên hàng đầu.", icon: "HeartHandshake" },
+        { title: "Chất lượng xuất sắc", description: "Cam kết chất lượng trong từng sản phẩm và dịch vụ.", icon: "Gem" },
+        { title: "Đổi mới sáng tạo", description: "Không ngừng đổi mới để kiến tạo giá trị khác biệt.", icon: "Sparkles" },
+        { title: "Tinh thần hợp tác", description: "Hợp tác bền vững cùng đối tác và cộng đồng.", icon: "Handshake" },
+        { title: "Phát triển bền vững", description: "Hài hòa giữa phát triển kinh tế, môi trường và xã hội.", icon: "Leaf" },
+        { title: "Chính trực minh bạch", description: "Hành động minh bạch, trung thực và trách nhiệm.", icon: "ShieldCheck" },
+      ]);
+
+      const aAwards = getVal('about_page_awards', 'json');
+      setAboutAwardsList(aAwards.length > 0 ? aAwards : [
+        { title: "Top 10", description: "Nhà phát triển bất động sản hàng đầu Việt Nam giai đoạn 2019–2022." },
+        { title: "Vietnam Property Awards", description: "Nhà phát triển BĐS hạng sang tốt nhất Việt Nam." },
+        { title: "DOT Property Vietnam Awards", description: "Best Luxury Developer Vietnam." },
+        { title: "Asia Pacific Property Awards", description: "Nhiều giải thưởng danh giá khu vực Châu Á – Thái Bình Dương." },
+        { title: "Forbes Vietnam Top 50", description: "Ghi nhận năng lực thương hiệu và tăng trưởng bền vững." }
+      ]);
+
+      // About Page Ecosystem & Partners
+      const aEco = getVal('about_page_ecosystem', 'json');
+      setAboutEcoList(aEco?.ecosystem || [
+        { title: "Căn hộ hạng sang", description: "Không gian sống đẳng cấp, tiện ích chuẩn quốc tế.", image: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=900&auto=format&fit=crop" },
+        { title: "Biệt thự cao cấp", description: "Kiến trúc tinh tế, không gian sống riêng tư và sang trọng.", image: "https://images.unsplash.com/photo-1613977257363-707ba9348227?q=80&w=900&auto=format&fit=crop" },
+        { title: "Shophouse", description: "Vị trí đắc địa, gia tăng giá trị đầu tư bền vững.", image: "https://images.unsplash.com/photo-1518005020951-eccb494ad742?q=80&w=900&auto=format&fit=crop" },
+        { title: "Branded Residences", description: "Bất động sản hàng hiệu, xứng tầm quốc tế.", image: "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?q=80&w=900&auto=format&fit=crop" },
+        { title: "Bất động sản nghỉ dưỡng", description: "Trải nghiệm nghỉ dưỡng đẳng cấp, hòa mình thiên nhiên.", image: "https://images.unsplash.com/photo-1572331165267-854da2b10ccc?q=80&w=900&auto=format&fit=crop" }
+      ]);
+      const partnersList = aEco?.partners || ["Marriott International", "Techcombank", "Samsung", "Mace", "KONE", "AkzoNobel"];
+      setAboutPartnersList(partnersList.join(', '));
+
+      // About Page Project Collections
+      const aCol = getVal('about_page_collections', 'json');
+      setAboutCollectionsList(aCol && aCol.length > 0 ? aCol : defaultCollections);
+
+      // About Page Sustainability & Why Choose
+      const aSust = getVal('about_page_sustainability', 'json');
+      setAboutSustTitle(aSust?.title || 'Phát triển bền vững – Cam kết vì tương lai');
+      setAboutSustImage(aSust?.image || 'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?q=80&w=1200&auto=format&fit=crop');
+      setAboutSustPillars(aSust?.pillars || [
+        { title: "Môi trường xanh", description: "Ứng dụng giải pháp xanh, tiết kiệm năng lượng và vật liệu thân thiện môi trường trong tất cả dự án.", icon: "Leaf" },
+        { title: "Trách nhiệm cộng đồng", description: "Đồng hành cùng cộng đồng qua các hoạt động giáo dục, y tế, an sinh và phát triển bền vững.", icon: "UsersRound" },
+        { title: "Quản trị minh bạch", description: "Quản trị doanh nghiệp minh bạch, tuân thủ chuẩn mực quốc tế và pháp luật.", icon: "SearchCheck" }
+      ]);
+
+      const aWhyChoose = getVal('about_page_why_choose', 'json');
+      setAboutWhyChooseList(aWhyChoose.length > 0 ? aWhyChoose : [
+        { title: "Thương hiệu uy tín", description: "Thuộc Masterise Group", icon: "BadgeCheck" },
+        { title: "Sản phẩm hàng hiệu", description: "Chất lượng vượt trội", icon: "Gem" },
+        { title: "Vị trí đắc địa", description: "Kết nối thuận tiện", icon: "MapPin" },
+        { title: "Tiện ích đẳng cấp", description: "Trải nghiệm khác biệt", icon: "Sparkles" },
+        { title: "Tiềm năng tăng giá", description: "Bền vững", icon: "TrendingUp" },
+        { title: "Dịch vụ tận tâm", description: "Đồng hành dài lâu", icon: "Handshake" }
+      ]);
+
+      // About Page Brand Story & FAQs
+      const aBrand = getVal('about_page_brand_story', 'json');
+      setAboutBrandTitle(aBrand?.title || 'Câu chuyện thương hiệu');
+      setAboutBrandDesc(aBrand?.description || 'Mỗi công trình của Masterise Homes là kết tinh của tầm nhìn, đam mê và khát vọng nâng tầm chuẩn sống của người Việt. Chúng tôi không chỉ xây dựng nhà, mà kiến tạo phong cách sống, những cộng đồng thịnh vượng và di sản bền vững cho tương lai.');
+      setAboutBrandBtn(aBrand?.button || 'Khám phá thêm');
+      setAboutBrandImage(aBrand?.image || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=900&auto=format&fit=crop');
+
+      const aFaqs = getVal('about_page_faqs', 'json');
+      setAboutFaqsList(aFaqs.length > 0 ? aFaqs : [
+        { question: "Masterise Homes là ai?", answer: "Masterise Homes là nhà phát triển bất động sản hàng hiệu tại Việt Nam, tập trung kiến tạo các không gian sống cao cấp, bền vững và chuẩn quốc tế." },
+        { question: "Masterise Homes phát triển những loại hình bất động sản nào?", answer: "Masterise Homes phát triển căn hộ hạng sang, biệt thự, shophouse, branded residences và bất động sản nghỉ dưỡng." },
+        { question: "Các dự án của Masterise Homes có gì khác biệt?", answer: "Các dự án chú trọng vị trí chiến lược, thiết kế cao cấp, tiện ích toàn diện, vận hành chuyên nghiệp và giá trị bền vững." },
+        { question: "Quy trình mua nhà tại Masterise Homes như thế nào?", answer: "Khách hàng được tư vấn sản phẩm, tham quan dự án, nhận chính sách bán hàng và thực hiện giao dịch theo quy trình minh bạch." },
+        { question: "Chính sách bảo hành và dịch vụ hậu mãi ra sao?", answer: "Masterise Homes chú trọng dịch vụ hậu mãi, bảo hành and chăm sóc khách hàng theo từng dự án và chính sách công bố." }
+      ]);
+
+      // About Page Contact CTA
+      const aContactCta = getVal('about_page_contact_cta', 'json');
+      setAboutContactCtaLabel(aContactCta?.label || 'LIÊN HỆ TƯ VẤN');
+      setAboutContactCtaTitle(aContactCta?.title || 'Đồng hành cùng bạn kiến tạo chuẩn sống');
+      setAboutContactCtaDesc(aContactCta?.description || 'Đội ngũ chuyên viên của chúng tôi luôn sẵn sàng giải đáp và tư vấn giải pháp phù hợp nhất.');
+      setAboutContactCtaImage(aContactCta?.image || 'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?q=80&w=1200&auto=format&fit=crop');
     }
   }, [settingsList]);
 
@@ -274,6 +499,98 @@ export default function AdminSettings() {
               button: newsCtaButton 
             }, 
             type: 'json' 
+          },
+          {
+            key: 'about_page_hero',
+            value: {
+              breadcrumb: ["Trang chủ", "Giới thiệu"],
+              badge: aboutHeroBadge,
+              title: aboutHeroTitle,
+              description: aboutHeroDesc,
+              primaryCta: aboutHeroPrimaryCta,
+              secondaryCta: aboutHeroSecondaryCta,
+              image: aboutHeroImage,
+              statsCard: aboutHeroStats
+            },
+            type: 'json'
+          },
+          {
+            key: 'about_page_intro',
+            value: {
+              label: aboutIntroLabel,
+              title: aboutIntroTitle,
+              paragraphs: aboutIntroParagraphs,
+              button: aboutIntroButton,
+              images: aboutIntroImages
+            },
+            type: 'json'
+          },
+          {
+            key: 'about_page_metrics',
+            value: aboutMetricsList,
+            type: 'json'
+          },
+          {
+            key: 'about_page_values',
+            value: aboutValuesList,
+            type: 'json'
+          },
+          {
+            key: 'about_page_awards',
+            value: aboutAwardsList,
+            type: 'json'
+          },
+          {
+            key: 'about_page_ecosystem',
+            value: {
+              ecosystem: aboutEcoList,
+              partners: aboutPartnersList.split(',').map(s => s.trim()).filter(Boolean)
+            },
+            type: 'json'
+          },
+          {
+            key: 'about_page_collections',
+            value: aboutCollectionsList,
+            type: 'json'
+          },
+          {
+            key: 'about_page_sustainability',
+            value: {
+              title: aboutSustTitle,
+              image: aboutSustImage,
+              pillars: aboutSustPillars
+            },
+            type: 'json'
+          },
+          {
+            key: 'about_page_why_choose',
+            value: aboutWhyChooseList,
+            type: 'json'
+          },
+          {
+            key: 'about_page_brand_story',
+            value: {
+              title: aboutBrandTitle,
+              description: aboutBrandDesc,
+              button: aboutBrandBtn,
+              image: aboutBrandImage
+            },
+            type: 'json'
+          },
+          {
+            key: 'about_page_faqs',
+            value: aboutFaqsList,
+            type: 'json'
+          },
+          {
+            key: 'about_page_contact_cta',
+            value: {
+              label: aboutContactCtaLabel,
+              title: aboutContactCtaTitle,
+              description: aboutContactCtaDesc,
+              image: aboutContactCtaImage
+            },
+            type: 'json'
           }
         ]
       };
@@ -304,6 +621,23 @@ export default function AdminSettings() {
       setProjectsCtaImage(url as string);
     } else if (mediaTarget.type === 'news_hero_image') {
       setNewsHeroImage(url as string);
+    } else if (mediaTarget.type === 'about_hero_image') {
+      setAboutHeroImage(url as string);
+    } else if (mediaTarget.type === 'about_intro_image_0') {
+      setAboutIntroImages(prev => prev.map((img, i) => i === 0 ? (url as string) : img));
+    } else if (mediaTarget.type === 'about_intro_image_1') {
+      setAboutIntroImages(prev => prev.map((img, i) => i === 1 ? (url as string) : img));
+    } else if (mediaTarget.type === 'about_intro_image_2') {
+      setAboutIntroImages(prev => prev.map((img, i) => i === 2 ? (url as string) : img));
+    } else if (mediaTarget.type === 'about_sustainability_image') {
+      setAboutSustImage(url as string);
+    } else if (mediaTarget.type === 'about_brand_story_image') {
+      setAboutBrandImage(url as string);
+    } else if (mediaTarget.type === 'about_contact_cta_image') {
+      setAboutContactCtaImage(url as string);
+    } else if (mediaTarget.type === 'about_collection_image' && mediaTarget.index !== undefined) {
+      const idx = mediaTarget.index;
+      setAboutCollectionsList(prev => prev.map((col, i) => i === idx ? { ...col, image: url as string } : col));
     }
   };
 
@@ -726,104 +1060,966 @@ export default function AdminSettings() {
           {/* TAB 3: About Us Config */}
           {activeTab === 'about' && (
             <div className="space-y-6">
-              <h3 className="text-lg font-heading font-medium text-[#1F1B16] border-b border-[#E8DCCB]/60 pb-2 flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-[#B88746]" />
-                Tầm nhìn & Sứ mệnh (Vision & Mission)
-              </h3>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Sứ mệnh (Mission)</label>
-                  <textarea
-                    value={aboutMission}
-                    onChange={(e) => setAboutMission(e.target.value)}
-                    rows={4}
-                    className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
-                    placeholder="Nhập sứ mệnh của công ty..."
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Tầm nhìn (Vision)</label>
-                  <textarea
-                    value={aboutVision}
-                    onChange={(e) => setAboutVision(e.target.value)}
-                    rows={4}
-                    className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
-                    placeholder="Nhập tầm nhìn dài hạn..."
-                  />
-                </div>
+              {/* Sub-tabs selector for About page */}
+              <div className="flex bg-[#FBF8F2] border border-[#E8DCCB] rounded-xl p-1 text-xs overflow-x-auto select-none gap-1 shrink-0">
+                {[
+                  { id: 'hero', label: '1. Banner & Stats', icon: ImageIcon },
+                  { id: 'intro', label: '2. Giới thiệu & Số liệu', icon: Settings },
+                  { id: 'vision_mission', label: '3. Tầm nhìn & Cột mốc', icon: Calendar },
+                  { id: 'values_awards', label: '4. Giá trị & Giải thưởng', icon: HelpCircle },
+                  { id: 'eco_sustainability', label: '5. Hệ sinh thái & Bền vững', icon: Briefcase },
+                  { id: 'brand_faq', label: '6. Câu chuyện & FAQs', icon: HelpCircle },
+                  { id: 'contact_cta', label: '7. Banner liên hệ', icon: Mail },
+                  { id: 'collections', label: '8. Dòng sản phẩm', icon: Building2 },
+                ].map(sub => {
+                  const Icon = sub.icon;
+                  return (
+                    <button
+                      key={sub.id}
+                      type="button"
+                      onClick={() => setAboutSubTab(sub.id as any)}
+                      className={`flex items-center gap-1.5 px-3 py-2 rounded-lg font-semibold transition-all whitespace-nowrap ${
+                        aboutSubTab === sub.id
+                          ? 'bg-white text-[#B88746] shadow-sm'
+                          : 'text-[#8C7A6B] hover:text-[#1F1B16] hover:bg-white/40'
+                      }`}
+                    >
+                      <Icon className="w-3.5 h-3.5 shrink-0" />
+                      {sub.label}
+                    </button>
+                  );
+                })}
               </div>
 
-              {/* About Timeline list builder */}
-              <div className="space-y-4 pt-4">
-                <div className="flex justify-between items-center border-b border-[#E8DCCB]/60 pb-2">
-                  <h3 className="text-lg font-heading font-medium text-[#1F1B16] flex items-center gap-2">
-                    <Calendar className="w-5 h-5 text-[#B88746]" />
-                    Dòng lịch sử cột mốc (Timeline)
-                  </h3>
-                  <button
-                    type="button"
-                    onClick={addTimeline}
-                    className="flex items-center gap-1 px-3 py-1.5 bg-[#B88746] hover:bg-[#1F1B16] text-white text-xs font-bold rounded-xl transition-all"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    Thêm Cột mốc
-                  </button>
-                </div>
-
-                {timeline.length === 0 ? (
-                  <div className="p-8 text-center border border-dashed border-[#E8DCCB] rounded-xl text-xs text-[#8C7A6B]">
-                    Chưa có cột mốc thời gian nào.
+              {/* Sub-tab 1: Hero */}
+              {aboutSubTab === 'hero' && (
+                <div className="space-y-6">
+                  <h4 className="text-sm font-bold text-[#1F1B16] border-b border-[#E8DCCB]/60 pb-2">1. Banner đầu trang & Stats</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Badge (Nhãn nhỏ)</label>
+                      <input
+                        type="text"
+                        value={aboutHeroBadge}
+                        onChange={(e) => setAboutHeroBadge(e.target.value)}
+                        className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Ảnh nền Banner</label>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={aboutHeroImage}
+                          onChange={(e) => setAboutHeroImage(e.target.value)}
+                          className="flex-1 px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setMediaTarget({ type: 'about_hero_image' })}
+                          className="px-4 py-2 bg-[#1F1B16] hover:bg-[#B88746] text-white text-xs font-bold rounded-xl transition-all"
+                        >
+                          Chọn ảnh
+                        </button>
+                      </div>
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Tiêu đề Banner chính</label>
+                      <input
+                        type="text"
+                        value={aboutHeroTitle}
+                        onChange={(e) => setAboutHeroTitle(e.target.value)}
+                        className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Mô tả chi tiết</label>
+                      <textarea
+                        value={aboutHeroDesc}
+                        onChange={(e) => setAboutHeroDesc(e.target.value)}
+                        rows={3}
+                        className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none resize-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Nút hành động chính</label>
+                      <input
+                        type="text"
+                        value={aboutHeroPrimaryCta}
+                        onChange={(e) => setAboutHeroPrimaryCta(e.target.value)}
+                        className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Nút hành động phụ</label>
+                      <input
+                        type="text"
+                        value={aboutHeroSecondaryCta}
+                        onChange={(e) => setAboutHeroSecondaryCta(e.target.value)}
+                        className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                      />
+                    </div>
                   </div>
-                ) : (
-                  <div className="space-y-3">
-                    {timeline.map((time, idx) => (
-                      <div key={idx} className="p-4 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2]/30 flex gap-4 relative">
-                        <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-3">
-                          <div className="md:col-span-1">
-                            <label className="block text-[9px] font-bold text-gray-500 uppercase mb-0.5">Năm</label>
+
+                  <div className="mt-6">
+                    <h5 className="text-xs font-bold text-[#1F1B16] mb-3">Thông số nổi bật trên banner (4 stats card)</h5>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                      {aboutHeroStats.map((stat, idx) => (
+                        <div key={idx} className="p-3 border border-[#E8DCCB]/60 rounded-xl bg-[#FBF8F2]/30 space-y-2">
+                          <div>
+                            <label className="block text-[9px] font-bold text-gray-500 uppercase">Số liệu</label>
                             <input
                               type="text"
-                              value={time.year}
-                              onChange={(e) => handleTimelineChange(idx, 'year', e.target.value)}
-                              className="w-full px-3 py-1.5 border border-[#E8DCCB] rounded-lg text-xs bg-white focus:outline-none font-bold"
-                              placeholder="Ví dụ: 2020"
+                              value={stat.value}
+                              onChange={(e) => {
+                                const newStats = [...aboutHeroStats];
+                                newStats[idx].value = e.target.value;
+                                setAboutHeroStats(newStats);
+                              }}
+                              className="w-full px-2 py-1 border border-[#E8DCCB] rounded-lg text-xs bg-white focus:outline-none font-bold"
                             />
                           </div>
-                          <div className="md:col-span-3">
-                            <label className="block text-[9px] font-bold text-gray-500 uppercase mb-0.5">Tiêu đề cột mốc</label>
+                          <div>
+                            <label className="block text-[9px] font-bold text-gray-500 uppercase">Nhãn mô tả</label>
                             <input
                               type="text"
-                              value={time.title}
-                              onChange={(e) => handleTimelineChange(idx, 'title', e.target.value)}
-                              className="w-full px-3 py-1.5 border border-[#E8DCCB] rounded-lg text-xs bg-white focus:outline-none font-semibold"
-                              placeholder="Ví dụ: Thành lập Masterise Homes..."
+                              value={stat.label}
+                              onChange={(e) => {
+                                const newStats = [...aboutHeroStats];
+                                newStats[idx].label = e.target.value;
+                                setAboutHeroStats(newStats);
+                              }}
+                              className="w-full px-2 py-1 border border-[#E8DCCB] rounded-lg text-xs bg-white focus:outline-none"
                             />
                           </div>
-                          <div className="md:col-span-4">
-                            <label className="block text-[9px] font-bold text-gray-500 uppercase mb-0.5">Chi tiết mô tả</label>
-                            <textarea
-                              value={time.description}
-                              onChange={(e) => handleTimelineChange(idx, 'description', e.target.value)}
-                              rows={2}
-                              className="w-full px-3 py-1.5 border border-[#E8DCCB] rounded-lg text-xs bg-white focus:outline-none"
-                              placeholder="Nội dung cụ thể cột mốc lịch sử..."
+                          <div>
+                            <label className="block text-[9px] font-bold text-gray-500 uppercase">Icon (tên lucide-react)</label>
+                            <input
+                              type="text"
+                              value={stat.icon}
+                              onChange={(e) => {
+                                const newStats = [...aboutHeroStats];
+                                newStats[idx].icon = e.target.value;
+                                setAboutHeroStats(newStats);
+                              }}
+                              className="w-full px-2 py-1 border border-[#E8DCCB] rounded-lg text-xs bg-white focus:outline-none font-mono"
                             />
                           </div>
                         </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Sub-tab 2: Intro & Metrics */}
+              {aboutSubTab === 'intro' && (
+                <div className="space-y-6">
+                  <h4 className="text-sm font-bold text-[#1F1B16] border-b border-[#E8DCCB]/60 pb-2">2. Giới thiệu chung & Số liệu</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Nhãn tiêu đề nhỏ</label>
+                      <input
+                        type="text"
+                        value={aboutIntroLabel}
+                        onChange={(e) => setAboutIntroLabel(e.target.value)}
+                        className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Text nút hành động</label>
+                      <input
+                        type="text"
+                        value={aboutIntroButton}
+                        onChange={(e) => setAboutIntroButton(e.target.value)}
+                        className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Tiêu đề chính phần giới thiệu</label>
+                      <input
+                        type="text"
+                        value={aboutIntroTitle}
+                        onChange={(e) => setAboutIntroTitle(e.target.value)}
+                        className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                      />
+                    </div>
+                    <div className="md:col-span-2 space-y-3">
+                      <label className="block text-xs font-semibold text-[#8C7A6B] -mb-1">Các đoạn văn bản giới thiệu</label>
+                      {aboutIntroParagraphs.map((para, idx) => (
+                        <textarea
+                          key={idx}
+                          value={para}
+                          onChange={(e) => {
+                            const newParas = [...aboutIntroParagraphs];
+                            newParas[idx] = e.target.value;
+                            setAboutIntroParagraphs(newParas);
+                          }}
+                          rows={3}
+                          placeholder={`Đoạn văn ${idx + 1}...`}
+                          className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none resize-none"
+                        />
+                      ))}
+                    </div>
+
+                    {/* Intro collage images */}
+                    <div className="md:col-span-2 space-y-3">
+                      <label className="block text-xs font-semibold text-[#8C7A6B]">Bộ 3 ảnh Collage</label>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {aboutIntroImages.map((img, idx) => (
+                          <div key={idx} className="p-3 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2]/30 space-y-2">
+                            <span className="block text-[10px] font-bold text-gray-500 uppercase">Ảnh {idx + 1}</span>
+                            <div className="aspect-video w-full rounded border border-[#E8DCCB] overflow-hidden bg-white mb-2 relative">
+                              {img ? (
+                                <img src={img} alt={`Collage ${idx}`} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-xs text-[#8C7A6B]/50">Trống</div>
+                              )}
+                            </div>
+                            <div className="flex gap-1.5">
+                              <input
+                                type="text"
+                                value={img}
+                                onChange={(e) => {
+                                  const newImgs = [...aboutIntroImages];
+                                  newImgs[idx] = e.target.value;
+                                  setAboutIntroImages(newImgs);
+                                }}
+                                className="flex-1 px-2 py-1 border border-[#E8DCCB] rounded text-xs bg-white focus:outline-none"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setMediaTarget({ type: `about_intro_image_${idx}` as any })}
+                                className="px-2 py-1 bg-[#1F1B16] hover:bg-[#B88746] text-white text-[10px] font-bold rounded transition-all"
+                              >
+                                Chọn
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-6 border-t border-[#E8DCCB]/60 pt-6">
+                    <h5 className="text-xs font-bold text-[#1F1B16] mb-3">Thông số Metrics chung (Dải strip số liệu dưới phần giới thiệu)</h5>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                      {aboutMetricsList.map((metric, idx) => (
+                        <div key={idx} className="p-3 border border-[#E8DCCB]/60 rounded-xl bg-[#FBF8F2]/30 space-y-2">
+                          <div>
+                            <label className="block text-[9px] font-bold text-gray-500 uppercase">Số liệu</label>
+                            <input
+                              type="text"
+                              value={metric.value}
+                              onChange={(e) => {
+                                const newMetrics = [...aboutMetricsList];
+                                newMetrics[idx].value = e.target.value;
+                                setAboutMetricsList(newMetrics);
+                              }}
+                              className="w-full px-2 py-1 border border-[#E8DCCB] rounded-lg text-xs bg-white focus:outline-none font-bold"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[9px] font-bold text-gray-500 uppercase">Nhãn mô tả</label>
+                            <input
+                              type="text"
+                              value={metric.label}
+                              onChange={(e) => {
+                                const newMetrics = [...aboutMetricsList];
+                                newMetrics[idx].label = e.target.value;
+                                setAboutMetricsList(newMetrics);
+                              }}
+                              className="w-full px-2 py-1 border border-[#E8DCCB] rounded-lg text-xs bg-white focus:outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[9px] font-bold text-gray-500 uppercase">Icon (tên lucide-react)</label>
+                            <input
+                              type="text"
+                              value={metric.icon}
+                              onChange={(e) => {
+                                const newMetrics = [...aboutMetricsList];
+                                newMetrics[idx].icon = e.target.value;
+                                setAboutMetricsList(newMetrics);
+                              }}
+                              className="w-full px-2 py-1 border border-[#E8DCCB] rounded-lg text-xs bg-white focus:outline-none font-mono"
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Sub-tab 3: Vision & Mission (keep existing) */}
+              {aboutSubTab === 'vision_mission' && (
+                <div className="space-y-6">
+                  <h4 className="text-sm font-bold text-[#1F1B16] border-b border-[#E8DCCB]/60 pb-2">3. Tầm nhìn, Sứ mệnh & Cột mốc Timeline</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Sứ mệnh (Mission)</label>
+                      <textarea
+                        value={aboutMission}
+                        onChange={(e) => setAboutMission(e.target.value)}
+                        rows={4}
+                        className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                        placeholder="Nhập sứ mệnh của công ty..."
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Tầm nhìn (Vision)</label>
+                      <textarea
+                        value={aboutVision}
+                        onChange={(e) => setAboutVision(e.target.value)}
+                        rows={4}
+                        className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                        placeholder="Nhập tầm nhìn dài hạn..."
+                      />
+                    </div>
+                  </div>
+
+                  {/* Timeline list builder */}
+                  <div className="space-y-4 pt-4">
+                    <div className="flex justify-between items-center border-b border-[#E8DCCB]/60 pb-2">
+                      <h5 className="text-xs font-bold text-[#1F1B16] flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-[#B88746]" />
+                        Dòng lịch sử cột mốc (Timeline)
+                      </h5>
+                      <button
+                        type="button"
+                        onClick={addTimeline}
+                        className="flex items-center gap-1 px-3 py-1.5 bg-[#B88746] hover:bg-[#1F1B16] text-white text-xs font-bold rounded-xl transition-all"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        Thêm Cột mốc
+                      </button>
+                    </div>
+
+                    {timeline.length === 0 ? (
+                      <div className="p-8 text-center border border-dashed border-[#E8DCCB] rounded-xl text-xs text-[#8C7A6B]">
+                        Chưa có cột mốc thời gian nào.
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {timeline.map((time, idx) => (
+                          <div key={idx} className="p-4 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2]/30 flex gap-4 relative">
+                            <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-3">
+                              <div className="md:col-span-1">
+                                <label className="block text-[9px] font-bold text-gray-500 uppercase mb-0.5">Năm</label>
+                                <input
+                                  type="text"
+                                  value={time.year}
+                                  onChange={(e) => handleTimelineChange(idx, 'year', e.target.value)}
+                                  className="w-full px-3 py-1.5 border border-[#E8DCCB] rounded-lg text-xs bg-white focus:outline-none font-bold"
+                                  placeholder="Ví dụ: 2020"
+                                />
+                              </div>
+                              <div className="md:col-span-3">
+                                <label className="block text-[9px] font-bold text-gray-500 uppercase mb-0.5">Tiêu đề cột mốc</label>
+                                <input
+                                  type="text"
+                                  value={time.title}
+                                  onChange={(e) => handleTimelineChange(idx, 'title', e.target.value)}
+                                  className="w-full px-3 py-1.5 border border-[#E8DCCB] rounded-lg text-xs bg-white focus:outline-none font-semibold"
+                                  placeholder="Ví dụ: Thành lập Masterise Homes..."
+                                />
+                              </div>
+                              <div className="md:col-span-4">
+                                <label className="block text-[9px] font-bold text-gray-500 uppercase mb-0.5">Chi tiết mô tả</label>
+                                <textarea
+                                  value={time.description || ''}
+                                  onChange={(e) => handleTimelineChange(idx, 'description', e.target.value)}
+                                  rows={2}
+                                  className="w-full px-3 py-1.5 border border-[#E8DCCB] rounded-lg text-xs bg-white focus:outline-none"
+                                  placeholder="Nội dung cụ thể cột mốc lịch sử..."
+                                />
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => removeTimeline(idx)}
+                              className="self-center p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Sub-tab 4: Values & Awards */}
+              {aboutSubTab === 'values_awards' && (
+                <div className="space-y-6">
+                  <h4 className="text-sm font-bold text-[#1F1B16] border-b border-[#E8DCCB]/60 pb-2">4. Giá trị cốt lõi & Giải thưởng</h4>
+                  
+                  {/* Core values list */}
+                  <div className="space-y-4">
+                    <h5 className="text-xs font-bold text-[#1F1B16]">Giá trị cốt lõi (6 giá trị chính)</h5>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {aboutValuesList.map((val, idx) => (
+                        <div key={idx} className="p-3 border border-[#E8DCCB]/60 rounded-xl bg-[#FBF8F2]/30 space-y-2">
+                          <span className="block text-[9px] font-bold text-gray-500 uppercase">Giá trị {idx + 1}</span>
+                          <div className="grid grid-cols-3 gap-2">
+                            <div className="col-span-2">
+                              <label className="block text-[8px] font-semibold text-[#8C7A6B]">Tiêu đề</label>
+                              <input
+                                type="text"
+                                value={val.title}
+                                onChange={(e) => {
+                                  const newList = [...aboutValuesList];
+                                  newList[idx].title = e.target.value;
+                                  setAboutValuesList(newList);
+                                }}
+                                className="w-full px-2 py-1 border border-[#E8DCCB] rounded text-xs bg-white focus:outline-none font-semibold"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[8px] font-semibold text-[#8C7A6B]">Icon</label>
+                              <input
+                                type="text"
+                                value={val.icon}
+                                onChange={(e) => {
+                                  const newList = [...aboutValuesList];
+                                  newList[idx].icon = e.target.value;
+                                  setAboutValuesList(newList);
+                                }}
+                                className="w-full px-2 py-1 border border-[#E8DCCB] rounded text-xs bg-white focus:outline-none font-mono"
+                              />
+                            </div>
+                            <div className="col-span-3">
+                              <label className="block text-[8px] font-semibold text-[#8C7A6B]">Mô tả</label>
+                              <textarea
+                                value={val.description}
+                                onChange={(e) => {
+                                  const newList = [...aboutValuesList];
+                                  newList[idx].description = e.target.value;
+                                  setAboutValuesList(newList);
+                                }}
+                                rows={2}
+                                className="w-full px-2 py-1 border border-[#E8DCCB] rounded text-xs bg-white focus:outline-none resize-none"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Awards list */}
+                  <div className="space-y-4 border-t border-[#E8DCCB]/60 pt-6">
+                    <h5 className="text-xs font-bold text-[#1F1B16]">Giải thưởng & Thành tựu tiêu biểu</h5>
+                    <div className="space-y-3">
+                      {aboutAwardsList.map((award, idx) => (
+                        <div key={idx} className="p-3 border border-[#E8DCCB]/60 rounded-xl bg-[#FBF8F2]/30 flex gap-3">
+                          <span className="self-center text-xs font-bold text-[#B88746]"># {idx + 1}</span>
+                          <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-3">
+                            <div className="md:col-span-1">
+                              <label className="block text-[9px] font-bold text-gray-500 uppercase">Tên giải thưởng/Tổ chức</label>
+                              <input
+                                type="text"
+                                value={award.title}
+                                onChange={(e) => {
+                                  const newList = [...aboutAwardsList];
+                                  newList[idx].title = e.target.value;
+                                  setAboutAwardsList(newList);
+                                }}
+                                className="w-full px-2.5 py-1 border border-[#E8DCCB] rounded-lg text-xs bg-white focus:outline-none font-bold"
+                              />
+                            </div>
+                            <div className="md:col-span-3">
+                              <label className="block text-[9px] font-bold text-gray-500 uppercase">Nội dung chi tiết giải thưởng</label>
+                              <input
+                                type="text"
+                                value={award.description}
+                                onChange={(e) => {
+                                  const newList = [...aboutAwardsList];
+                                  newList[idx].description = e.target.value;
+                                  setAboutAwardsList(newList);
+                                }}
+                                className="w-full px-2.5 py-1 border border-[#E8DCCB] rounded-lg text-xs bg-white focus:outline-none"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Sub-tab 5: Eco & Sustainability */}
+              {aboutSubTab === 'eco_sustainability' && (
+                <div className="space-y-6">
+                  <h4 className="text-sm font-bold text-[#1F1B16] border-b border-[#E8DCCB]/60 pb-2">5. Hệ sinh thái & Phát triển bền vững</h4>
+                  
+                  {/* Ecosystem */}
+                  <div className="space-y-4">
+                    <h5 className="text-xs font-bold text-[#1F1B16]">Hệ sinh thái sản phẩm (Ecosystem - 5 mục)</h5>
+                    <div className="space-y-3">
+                      {aboutEcoList.map((eco, idx) => (
+                        <div key={idx} className="p-3 border border-[#E8DCCB]/60 rounded-xl bg-[#FBF8F2]/30 flex flex-col md:flex-row gap-4">
+                          <div className="w-full md:w-32 aspect-video md:aspect-[4/3] rounded border border-[#E8DCCB] bg-white overflow-hidden flex-shrink-0 relative">
+                            {eco.image ? (
+                              <img src={eco.image} alt={eco.title} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-[10px] text-[#8C7A6B]/50">Không có ảnh</div>
+                            )}
+                          </div>
+                          <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-[9px] font-bold text-gray-500 uppercase">Tên phân khúc/Loại hình</label>
+                              <input
+                                type="text"
+                                value={eco.title}
+                                onChange={(e) => {
+                                  const newList = [...aboutEcoList];
+                                  newList[idx].title = e.target.value;
+                                  setAboutEcoList(newList);
+                                }}
+                                className="w-full px-2.5 py-1 border border-[#E8DCCB] rounded-lg text-xs bg-white focus:outline-none font-bold"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[9px] font-bold text-gray-500 uppercase">Đường dẫn ảnh</label>
+                              <input
+                                type="text"
+                                value={eco.image}
+                                onChange={(e) => {
+                                  const newList = [...aboutEcoList];
+                                  newList[idx].image = e.target.value;
+                                  setAboutEcoList(newList);
+                                }}
+                                className="w-full px-2.5 py-1 border border-[#E8DCCB] rounded-lg text-xs bg-white focus:outline-none"
+                              />
+                            </div>
+                            <div className="md:col-span-2">
+                              <label className="block text-[9px] font-bold text-gray-500 uppercase">Mô tả phân khúc</label>
+                              <textarea
+                                value={eco.description}
+                                onChange={(e) => {
+                                  const newList = [...aboutEcoList];
+                                  newList[idx].description = e.target.value;
+                                  setAboutEcoList(newList);
+                                }}
+                                rows={2}
+                                className="w-full px-2.5 py-1 border border-[#E8DCCB] rounded-lg text-xs bg-white focus:outline-none resize-none"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Partners list */}
+                  <div className="space-y-4 border-t border-[#E8DCCB]/60 pt-6">
+                    <h5 className="text-xs font-bold text-[#1F1B16]">Đối tác chiến lược (Danh sách các đối tác, phân cách bằng dấu phẩy)</h5>
+                    <div>
+                      <input
+                        type="text"
+                        value={aboutPartnersList}
+                        onChange={(e) => setAboutPartnersList(e.target.value)}
+                        placeholder="Ví dụ: Techcombank, Marriott International, Samsung, Mace"
+                        className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Sustainability */}
+                  <div className="space-y-4 border-t border-[#E8DCCB]/60 pt-6">
+                    <h5 className="text-xs font-bold text-[#1F1B16]">Phát triển bền vững (Sustainability)</h5>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Tiêu đề mục phát triển bền vững</label>
+                        <input
+                          type="text"
+                          value={aboutSustTitle}
+                          onChange={(e) => setAboutSustTitle(e.target.value)}
+                          className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Ảnh minh họa phát triển bền vững</label>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={aboutSustImage}
+                            onChange={(e) => setAboutSustImage(e.target.value)}
+                            className="flex-1 px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setMediaTarget({ type: 'about_sustainability_image' })}
+                            className="px-4 py-2 bg-[#1F1B16] hover:bg-[#B88746] text-white text-xs font-bold rounded-xl transition-all"
+                          >
+                            Chọn ảnh
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 space-y-3">
+                      <label className="block text-xs font-semibold text-[#8C7A6B]">3 Trụ cột bền vững</label>
+                      {aboutSustPillars.map((pillar, idx) => (
+                        <div key={idx} className="p-3 border border-[#E8DCCB]/60 rounded-xl bg-[#FBF8F2]/30 space-y-2">
+                          <span className="block text-[9px] font-bold text-gray-500 uppercase">Trụ cột {idx + 1}</span>
+                          <div className="grid grid-cols-3 gap-2">
+                            <div className="col-span-2">
+                              <label className="block text-[8px] font-semibold text-[#8C7A6B]">Tiêu đề</label>
+                              <input
+                                type="text"
+                                value={pillar.title}
+                                onChange={(e) => {
+                                  const newList = [...aboutSustPillars];
+                                  newList[idx].title = e.target.value;
+                                  setAboutSustPillars(newList);
+                                }}
+                                className="w-full px-2 py-1 border border-[#E8DCCB] rounded text-xs bg-white focus:outline-none font-semibold"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[8px] font-semibold text-[#8C7A6B]">Icon</label>
+                              <input
+                                type="text"
+                                value={pillar.icon}
+                                onChange={(e) => {
+                                  const newList = [...aboutSustPillars];
+                                  newList[idx].icon = e.target.value;
+                                  setAboutSustPillars(newList);
+                                }}
+                                className="w-full px-2 py-1 border border-[#E8DCCB] rounded text-xs bg-white focus:outline-none font-mono"
+                              />
+                            </div>
+                            <div className="col-span-3">
+                              <label className="block text-[8px] font-semibold text-[#8C7A6B]">Nội dung mô tả</label>
+                              <textarea
+                                value={pillar.description}
+                                onChange={(e) => {
+                                  const newList = [...aboutSustPillars];
+                                  newList[idx].description = e.target.value;
+                                  setAboutSustPillars(newList);
+                                }}
+                                rows={2}
+                                className="w-full px-2 py-1 border border-[#E8DCCB] rounded text-xs bg-white focus:outline-none resize-none"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Sub-tab 6: Brand & FAQ */}
+              {aboutSubTab === 'brand_faq' && (
+                <div className="space-y-6">
+                  <h4 className="text-sm font-bold text-[#1F1B16] border-b border-[#E8DCCB]/60 pb-2">6. Câu chuyện & FAQs trang Giới thiệu</h4>
+                  
+                  {/* Brand story */}
+                  <div className="space-y-4">
+                    <h5 className="text-xs font-bold text-[#1F1B16]">Câu chuyện thương hiệu</h5>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Tiêu đề</label>
+                        <input
+                          type="text"
+                          value={aboutBrandTitle}
+                          onChange={(e) => setAboutBrandTitle(e.target.value)}
+                          className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none font-semibold"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Ảnh minh họa câu chuyện</label>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={aboutBrandImage}
+                            onChange={(e) => setAboutBrandImage(e.target.value)}
+                            className="flex-1 px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setMediaTarget({ type: 'about_brand_story_image' })}
+                            className="px-4 py-2 bg-[#1F1B16] hover:bg-[#B88746] text-white text-xs font-bold rounded-xl transition-all"
+                          >
+                            Chọn ảnh
+                          </button>
+                        </div>
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Nội dung câu chuyện</label>
+                        <textarea
+                          value={aboutBrandDesc}
+                          onChange={(e) => setAboutBrandDesc(e.target.value)}
+                          rows={3}
+                          className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none resize-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Text nút hành động</label>
+                        <input
+                          type="text"
+                          value={aboutBrandBtn}
+                          onChange={(e) => setAboutBrandBtn(e.target.value)}
+                          className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* FAQs list builder */}
+                  <div className="space-y-4 border-t border-[#E8DCCB]/60 pt-6">
+                    <div className="flex justify-between items-center border-b border-[#E8DCCB]/60 pb-2">
+                      <h5 className="text-xs font-bold text-[#1F1B16] flex items-center gap-2">
+                        <HelpCircle className="w-4 h-4 text-[#B88746]" />
+                        Câu hỏi thường gặp FAQ (Trang Giới thiệu)
+                      </h5>
+                      <button
+                        type="button"
+                        onClick={() => setAboutFaqsList([...aboutFaqsList, { question: '', answer: '' }])}
+                        className="flex items-center gap-1 px-3 py-1.5 bg-[#B88746] hover:bg-[#1F1B16] text-white text-xs font-bold rounded-xl transition-all"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        Thêm Câu hỏi
+                      </button>
+                    </div>
+
+                    {aboutFaqsList.length === 0 ? (
+                      <div className="p-8 text-center border border-dashed border-[#E8DCCB] rounded-xl text-xs text-[#8C7A6B]">
+                        Chưa có câu hỏi nào được tạo.
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {aboutFaqsList.map((faq, idx) => (
+                          <div key={idx} className="p-4 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2]/30 flex gap-4 relative">
+                            <div className="flex-1 grid grid-cols-1 gap-2">
+                              <div>
+                                <input
+                                  type="text"
+                                  value={faq.question}
+                                  onChange={(e) => {
+                                    const newList = [...aboutFaqsList];
+                                    newList[idx].question = e.target.value;
+                                    setAboutFaqsList(newList);
+                                  }}
+                                  className="w-full px-3 py-1.5 border border-[#E8DCCB] rounded-lg text-xs bg-white font-semibold focus:outline-none"
+                                  placeholder="Câu hỏi..."
+                                />
+                              </div>
+                              <div>
+                                <textarea
+                                  value={faq.answer}
+                                  onChange={(e) => {
+                                    const newList = [...aboutFaqsList];
+                                    newList[idx].answer = e.target.value;
+                                    setAboutFaqsList(newList);
+                                  }}
+                                  rows={2}
+                                  className="w-full px-3 py-1.5 border border-[#E8DCCB] rounded-lg text-xs bg-white focus:outline-none"
+                                  placeholder="Câu trả lời..."
+                                />
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setAboutFaqsList(aboutFaqsList.filter((_, i) => i !== idx))}
+                              className="self-center p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Sub-tab 7: Contact CTA */}
+              {aboutSubTab === 'contact_cta' && (
+                <div className="space-y-6">
+                  <h4 className="text-sm font-bold text-[#1F1B16] border-b border-[#E8DCCB]/60 pb-2">7. Banner liên hệ tư vấn cuối trang</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Badge (Nhãn nhỏ)</label>
+                      <input
+                        type="text"
+                        value={aboutContactCtaLabel}
+                        onChange={(e) => setAboutContactCtaLabel(e.target.value)}
+                        className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Ảnh nền Banner</label>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={aboutContactCtaImage}
+                          onChange={(e) => setAboutContactCtaImage(e.target.value)}
+                          className="flex-1 px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                        />
                         <button
                           type="button"
-                          onClick={() => removeTimeline(idx)}
-                          className="self-center p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                          onClick={() => setMediaTarget({ type: 'about_contact_cta_image' })}
+                          className="px-4 py-2 bg-[#1F1B16] hover:bg-[#B88746] text-white text-xs font-bold rounded-xl transition-all"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          Chọn ảnh
                         </button>
+                      </div>
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Tiêu đề lớn kêu gọi</label>
+                      <input
+                        type="text"
+                        value={aboutContactCtaTitle}
+                        onChange={(e) => setAboutContactCtaTitle(e.target.value)}
+                        className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Mô tả ngắn</label>
+                      <textarea
+                        value={aboutContactCtaDesc}
+                        onChange={(e) => setAboutContactCtaDesc(e.target.value)}
+                        rows={2}
+                        className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none resize-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Sub-tab 8: Collections */}
+              {aboutSubTab === 'collections' && (
+                <div className="space-y-6">
+                  <h4 className="text-sm font-bold text-[#1F1B16] border-b border-[#E8DCCB]/60 pb-2">8. Các dòng sản phẩm chủ chốt (Brand Residence, Lumiere, Masteri)</h4>
+                  
+                  <div className="space-y-6">
+                    {aboutCollectionsList.map((col, idx) => (
+                      <div key={col.id} className="p-4 border border-[#E8DCCB]/60 rounded-xl bg-[#FBF8F2]/30 space-y-4">
+                        <div className="flex justify-between items-center border-b border-[#E8DCCB]/40 pb-2">
+                          <h5 className="text-xs font-bold text-[#B88746]">
+                            {idx + 1}. {col.id === 'brand-residence' ? 'Brand Residence' : col.id === 'lumiere-series' ? 'Lumiere Series' : 'Masteri Collection'}
+                          </h5>
+                          <span className="text-[10px] text-gray-500 uppercase font-mono">{col.id}</span>
+                        </div>
+
+                        <div className="flex flex-col md:flex-row gap-4">
+                          <div className="w-full md:w-40 aspect-video md:aspect-[4/3] rounded border border-[#E8DCCB] bg-white overflow-hidden flex-shrink-0 relative">
+                            {col.image ? (
+                              <img src={col.image} alt={col.title} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-[10px] text-[#8C7A6B]/50">Không có ảnh</div>
+                            )}
+                          </div>
+                          
+                          <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-[9px] font-bold text-gray-500 uppercase mb-1">Tiêu đề hiển thị</label>
+                              <input
+                                type="text"
+                                value={col.title}
+                                onChange={(e) => {
+                                  const newList = [...aboutCollectionsList];
+                                  newList[idx].title = e.target.value;
+                                  setAboutCollectionsList(newList);
+                                }}
+                                className="w-full px-2.5 py-1.5 border border-[#E8DCCB] rounded-lg text-xs bg-white focus:outline-none font-bold"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-[9px] font-bold text-gray-500 uppercase mb-1">Khẩu hiệu / Subtitle</label>
+                              <input
+                                type="text"
+                                value={col.subtitle}
+                                onChange={(e) => {
+                                  const newList = [...aboutCollectionsList];
+                                  newList[idx].subtitle = e.target.value;
+                                  setAboutCollectionsList(newList);
+                                }}
+                                className="w-full px-2.5 py-1.5 border border-[#E8DCCB] rounded-lg text-xs bg-white focus:outline-none"
+                              />
+                            </div>
+
+                            <div className="md:col-span-2">
+                              <label className="block text-[9px] font-bold text-gray-500 uppercase mb-1">Đường dẫn ảnh bìa</label>
+                              <div className="flex gap-2">
+                                <input
+                                  type="text"
+                                  value={col.image}
+                                  onChange={(e) => {
+                                    const newList = [...aboutCollectionsList];
+                                    newList[idx].image = e.target.value;
+                                    setAboutCollectionsList(newList);
+                                  }}
+                                  className="flex-1 px-2.5 py-1.5 border border-[#E8DCCB] rounded-lg text-xs bg-white focus:outline-none"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => setMediaTarget({ type: 'about_collection_image', index: idx })}
+                                  className="px-3 py-1 bg-[#1F1B16] hover:bg-[#B88746] text-white text-[10px] font-bold rounded-lg transition-all"
+                                >
+                                  Chọn ảnh
+                                </button>
+                              </div>
+                            </div>
+
+                            <div className="md:col-span-2">
+                              <label className="block text-[9px] font-bold text-gray-500 uppercase mb-1">Mô tả dòng sản phẩm</label>
+                              <textarea
+                                value={col.description}
+                                onChange={(e) => {
+                                  const newList = [...aboutCollectionsList];
+                                  newList[idx].description = e.target.value;
+                                  setAboutCollectionsList(newList);
+                                }}
+                                rows={3}
+                                className="w-full px-2.5 py-1.5 border border-[#E8DCCB] rounded-lg text-xs bg-white focus:outline-none resize-none leading-relaxed"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-[9px] font-bold text-gray-500 uppercase mb-1">Đặc điểm nổi bật (Phân cách bằng dấu phẩy)</label>
+                              <input
+                                type="text"
+                                value={col.features ? col.features.join(', ') : ''}
+                                onChange={(e) => {
+                                  const newList = [...aboutCollectionsList];
+                                  newList[idx].features = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
+                                  setAboutCollectionsList(newList);
+                                }}
+                                className="w-full px-2.5 py-1.5 border border-[#E8DCCB] rounded-lg text-xs bg-white focus:outline-none"
+                                placeholder="Ví dụ: Vị trí độc bản, Quản lý chuẩn quốc tế"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-[9px] font-bold text-gray-500 uppercase mb-1">Đường dẫn liên kết (Link)</label>
+                              <input
+                                type="text"
+                                value={col.link || ''}
+                                onChange={(e) => {
+                                  const newList = [...aboutCollectionsList];
+                                  newList[idx].link = e.target.value;
+                                  setAboutCollectionsList(newList);
+                                }}
+                                className="w-full px-2.5 py-1.5 border border-[#E8DCCB] rounded-lg text-xs bg-white focus:outline-none"
+                                placeholder="Ví dụ: /du-an?q=lumiere"
+                              />
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     ))}
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           )}
 

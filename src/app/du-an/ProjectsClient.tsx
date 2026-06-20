@@ -1,6 +1,7 @@
 "use client";
 
 import React, { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import MobileTabBar from "@/components/MobileTabBar";
@@ -15,6 +16,16 @@ import ProjectsCTA from "@/components/projects/ProjectsCTA";
 import GlobalContactForm from "@/components/lead/GlobalContactForm";
 
 export default function ProjectsClient() {
+  const searchParams = useSearchParams();
+  const hasActiveFilters = 
+    (searchParams.get("q") !== null && searchParams.get("q") !== "") || 
+    (searchParams.get("region") !== null && searchParams.get("region") !== "") || 
+    (searchParams.get("category") !== null && searchParams.get("category") !== "") || 
+    (searchParams.get("status") !== null && searchParams.get("status") !== "") || 
+    (searchParams.get("sales_status") !== null && searchParams.get("sales_status") !== "") || 
+    (searchParams.get("price_min") !== null && searchParams.get("price_min") !== "") || 
+    (searchParams.get("price_max") !== null && searchParams.get("price_max") !== "");
+
   return (
     <>
       <Header />
@@ -22,17 +33,18 @@ export default function ProjectsClient() {
       <main className="relative z-10 pb-16 lg:pb-0">
         <ProjectsHero />
         <ProjectsSearchBar />
-        <FeaturedProjects />
 
-        <ProjectsByRegion />
-        <WhyChooseProjects />
-        <Suspense fallback={
-          <div className="py-20 flex justify-center items-center">
-            <div className="w-10 h-10 border-4 border-gold border-t-transparent rounded-full animate-spin" />
-          </div>
-        }>
+        {!hasActiveFilters ? (
+          <>
+            <FeaturedProjects />
+            <ProjectsByRegion />
+            <WhyChooseProjects />
+            <AllProjectsGrid />
+          </>
+        ) : (
           <AllProjectsGrid />
-        </Suspense>
+        )}
+        
         <ProjectsCTA />
         <GlobalContactForm leadSourcePosition="projects_listing_footer_form" />
       </main>

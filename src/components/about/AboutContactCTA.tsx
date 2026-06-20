@@ -4,9 +4,10 @@ import { useState, type FormEvent } from "react";
 import Image from "next/image";
 import Container from "@/components/Container";
 import MotionWrapper from "@/components/MotionWrapper";
-import { contactCta } from "@/data/aboutSeed";
+import { useSiteSettings } from "@/providers/SiteSettingsProvider";
 
 export default function AboutContactCTA() {
+  const { aboutPageContactCta } = useSiteSettings();
   const [form, setForm] = useState({
     name: "",
     phone: "",
@@ -38,7 +39,7 @@ export default function AboutContactCTA() {
           <div className="rounded-[22px] overflow-hidden relative">
             {/* Background image + overlay */}
             <Image
-              src={contactCta.image}
+              src={aboutPageContactCta.image}
               alt="Liên hệ tư vấn Masterise Homes"
               fill
               sizes="100vw"
@@ -52,19 +53,19 @@ export default function AboutContactCTA() {
               <div className="flex flex-col justify-center">
                 <MotionWrapper delay={0.1}>
                   <span className="text-gold text-xs font-bold uppercase tracking-widest mb-3 block">
-                    {contactCta.label}
+                    {aboutPageContactCta.label}
                   </span>
                 </MotionWrapper>
 
                 <MotionWrapper delay={0.2}>
                   <h2 className="heading-font text-2xl md:text-3xl lg:text-4xl font-bold text-white leading-tight mb-4">
-                    {contactCta.title}
+                    {aboutPageContactCta.title}
                   </h2>
                 </MotionWrapper>
 
                 <MotionWrapper delay={0.3}>
                   <p className="text-white/80 text-sm md:text-base leading-relaxed max-w-md">
-                    {contactCta.description}
+                    {aboutPageContactCta.description}
                   </p>
                 </MotionWrapper>
               </div>

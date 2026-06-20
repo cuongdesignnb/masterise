@@ -52,30 +52,7 @@ export default function Header() {
       <Container>
         <div className="flex items-center justify-between">
           {/* Left: Logo */}
-          <Link href="/" className="flex items-center gap-2 group">
-            <svg
-              width="28"
-              height="28"
-              viewBox="0 0 100 100"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              className="text-gold transition-transform duration-500 group-hover:rotate-12 flex-shrink-0"
-            >
-              <path
-                d="M15 80V20L35 45L50 30L65 45L85 20V80"
-                stroke="currentColor"
-                strokeWidth="8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path d="M50 30V80" stroke="currentColor" strokeWidth="8" strokeLinecap="round" />
-              <path
-                d="M15 80H25M75 80H85"
-                stroke="currentColor"
-                strokeWidth="8"
-                strokeLinecap="round"
-              />
-            </svg>
+          <Link href="/" className="flex items-center group">
             <span className="text-sm sm:text-base font-bold tracking-[0.12em] text-ink uppercase heading-font leading-none transition-colors group-hover:text-gold">
               MASTERISE HOMES
             </span>

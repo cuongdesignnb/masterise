@@ -2,7 +2,7 @@
 
 import Container from "@/components/Container";
 import MotionWrapper from "@/components/MotionWrapper";
-import { whyChoose } from "@/data/aboutSeed";
+import { useSiteSettings } from "@/providers/SiteSettingsProvider";
 import {
   BadgeCheck,
   Gem,
@@ -23,6 +23,8 @@ const iconMap: Record<string, LucideIcon> = {
 };
 
 export default function AboutWhyChoose() {
+  const { aboutPageWhyChoose } = useSiteSettings();
+
   return (
     <section className="py-16 md:py-24 soft-section-bg">
       <Container>
@@ -35,7 +37,7 @@ export default function AboutWhyChoose() {
 
         {/* Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-5">
-          {whyChoose.map((item, idx) => {
+          {aboutPageWhyChoose.map((item, idx) => {
             const Icon = iconMap[item.icon];
             return (
               <MotionWrapper key={idx} delay={idx * 0.07}>

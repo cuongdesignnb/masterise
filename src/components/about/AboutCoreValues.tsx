@@ -9,7 +9,7 @@ import {
   Leaf,
   ShieldCheck,
 } from "lucide-react";
-import { coreValues } from "@/data/aboutSeed";
+import { useSiteSettings } from "@/providers/SiteSettingsProvider";
 import Container from "@/components/Container";
 import MotionWrapper from "@/components/MotionWrapper";
 
@@ -23,6 +23,8 @@ const iconMap: Record<string, React.ComponentType<{ size?: number; className?: s
 };
 
 export default function AboutCoreValues() {
+  const { aboutPageValues } = useSiteSettings();
+
   return (
     <section className="py-16 sm:py-20 bg-cream">
       <Container>
@@ -39,7 +41,7 @@ export default function AboutCoreValues() {
 
         {/* Cards grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-5">
-          {coreValues.map((value, idx) => {
+          {aboutPageValues.map((value, idx) => {
             const Icon = iconMap[value.icon];
             return (
               <MotionWrapper key={idx} delay={idx * 0.06}>

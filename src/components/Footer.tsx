@@ -25,30 +25,7 @@ export default function Footer() {
           
           {/* Column 1: Brand Logo & Description */}
           <div className="lg:col-span-4 flex flex-col justify-start text-left">
-            <Link href="#" className="flex items-center gap-2.5 group self-start">
-              <svg
-                width="36"
-                height="36"
-                viewBox="0 0 100 100"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                className="text-gold transition-transform duration-500 group-hover:rotate-12"
-              >
-                <path
-                  d="M15 80V20L35 45L50 30L65 45L85 20V80"
-                  stroke="currentColor"
-                  strokeWidth="7"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path d="M50 30V80" stroke="currentColor" strokeWidth="7" strokeLinecap="round" />
-                <path
-                  d="M15 80H25M75 80H85"
-                  stroke="currentColor"
-                  strokeWidth="7"
-                  strokeLinecap="round"
-                />
-              </svg>
+            <Link href="#" className="flex items-center group self-start">
               <div className="flex flex-col">
                 <span className="text-lg font-bold tracking-[0.15em] text-white uppercase heading-font leading-none">
                   Masterise

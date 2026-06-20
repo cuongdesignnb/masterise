@@ -2,11 +2,13 @@
 
 import React from "react";
 import { Award } from "lucide-react";
-import { awards } from "@/data/aboutSeed";
+import { useSiteSettings } from "@/providers/SiteSettingsProvider";
 import Container from "@/components/Container";
 import MotionWrapper from "@/components/MotionWrapper";
 
 export default function AboutAwards() {
+  const { aboutPageAwards } = useSiteSettings();
+
   return (
     <section className="py-16 sm:py-20 soft-section-bg">
       <Container>
@@ -23,7 +25,7 @@ export default function AboutAwards() {
 
         {/* Award cards */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-5">
-          {awards.map((award, idx) => (
+          {aboutPageAwards.map((award, idx) => (
             <MotionWrapper key={idx} delay={idx * 0.08}>
               <div className="bg-white rounded-[18px] border border-line/50 p-4 sm:p-5 text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-soft cursor-default h-full flex flex-col items-center">
                 {/* Icon */}

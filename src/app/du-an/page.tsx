@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import ProjectsClient from "./ProjectsClient";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://masterisehomes.com";
@@ -72,7 +73,13 @@ export default function ProjectsPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <ProjectsClient />
+      <Suspense fallback={
+        <div className="py-20 flex justify-center items-center">
+          <div className="w-10 h-10 border-4 border-gold border-t-transparent rounded-full animate-spin" />
+        </div>
+      }>
+        <ProjectsClient />
+      </Suspense>
     </>
   );
 }

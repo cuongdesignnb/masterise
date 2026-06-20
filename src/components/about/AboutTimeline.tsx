@@ -1,11 +1,13 @@
 "use client";
 
 import React from "react";
-import { timeline } from "@/data/aboutSeed";
+import { useSiteSettings } from "@/providers/SiteSettingsProvider";
 import Container from "@/components/Container";
 import MotionWrapper from "@/components/MotionWrapper";
 
 export default function AboutTimeline() {
+  const { aboutTimeline } = useSiteSettings();
+
   return (
     <section className="py-16 sm:py-20 bg-cream">
       <Container>
@@ -28,9 +30,9 @@ export default function AboutTimeline() {
 
             <div
               className="grid"
-              style={{ gridTemplateColumns: `repeat(${timeline.length}, 1fr)` }}
+              style={{ gridTemplateColumns: `repeat(${aboutTimeline.length}, 1fr)` }}
             >
-              {timeline.map((item, idx) => (
+              {aboutTimeline.map((item, idx) => (
                 <MotionWrapper key={idx} delay={idx * 0.1} className="flex flex-col items-center">
                   {/* Dot */}
                   <div className="relative z-10 w-[10px] h-[10px] rounded-full bg-gold ring-4 ring-cream" />
@@ -56,7 +58,7 @@ export default function AboutTimeline() {
           <div className="absolute left-3 top-0 bottom-0 w-[2px] bg-gradient-to-b from-gold/20 via-gold to-gold/20" />
 
           <div className="flex flex-col gap-8">
-            {timeline.map((item, idx) => (
+            {aboutTimeline.map((item, idx) => (
               <MotionWrapper key={idx} delay={idx * 0.08} className="relative">
                 {/* Dot */}
                 <div className="absolute -left-[23px] top-1 w-[10px] h-[10px] rounded-full bg-gold ring-4 ring-cream z-10" />

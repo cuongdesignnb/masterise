@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { motion, type Variants } from "framer-motion";
 import { ChevronRight, Phone, ChevronDown } from "lucide-react";
-import { aboutHero } from "@/data/aboutSeed";
+import { useSiteSettings } from "@/providers/SiteSettingsProvider";
 import Container from "@/components/Container";
 import Button from "@/components/Button";
 
@@ -22,12 +22,14 @@ const fadeUp: Variants = {
 };
 
 export default function AboutHero() {
+  const { aboutPageHero } = useSiteSettings();
+
   return (
     <section className="relative h-[500px] sm:h-[520px] lg:h-[540px] w-full overflow-hidden bg-cream pt-[72px]">
       {/* Background image */}
       <div
         className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: `url(${aboutHero.image})` }}
+        style={{ backgroundImage: `url(${aboutPageHero.image})` }}
       >
         {/* Cream overlay left-to-right */}
         <div className="absolute inset-0 bg-gradient-to-r from-cream via-cream/80 to-transparent lg:from-cream lg:via-cream/60 lg:to-transparent" />
@@ -48,12 +50,12 @@ export default function AboutHero() {
             >
               {/* Breadcrumb */}
               <motion.nav variants={fadeUp} className="flex items-center gap-1.5 text-xs text-muted mb-4">
-                {aboutHero.breadcrumb.map((label, idx) => (
+                {aboutPageHero.breadcrumb.map((label, idx) => (
                   <React.Fragment key={label}>
                     {idx > 0 && <ChevronRight size={12} className="text-gold" />}
                     <Link
                       href={idx === 0 ? "/" : "/gioi-thieu"}
-                      className={`hover:text-gold transition-colors ${idx === aboutHero.breadcrumb.length - 1 ? "text-gold font-semibold" : ""}`}
+                      className={`hover:text-gold transition-colors ${idx === aboutPageHero.breadcrumb.length - 1 ? "text-gold font-semibold" : ""}`}
                     >
                       {label}
                     </Link>
@@ -66,7 +68,7 @@ export default function AboutHero() {
                 variants={fadeUp}
                 className="inline-block text-[10px] sm:text-xs font-bold tracking-[0.18em] text-gold uppercase mb-3"
               >
-                {aboutHero.badge}
+                {aboutPageHero.badge}
               </motion.span>
 
               {/* H1 */}
@@ -74,7 +76,7 @@ export default function AboutHero() {
                 variants={fadeUp}
                 className="text-3xl sm:text-4xl lg:text-[48px] heading-font font-bold text-ink tracking-tight leading-[1.15]"
               >
-                {aboutHero.title}
+                {aboutPageHero.title}
               </motion.h1>
 
               {/* Description */}
@@ -82,7 +84,7 @@ export default function AboutHero() {
                 variants={fadeUp}
                 className="mt-4 text-sm text-muted max-w-xl leading-relaxed font-light"
               >
-                {aboutHero.description}
+                {aboutPageHero.description}
               </motion.p>
 
               {/* CTA Buttons */}
@@ -94,7 +96,7 @@ export default function AboutHero() {
                   icon={<ChevronDown size={14} />}
                   iconPosition="right"
                 >
-                  {aboutHero.primaryCta}
+                  {aboutPageHero.primaryCta}
                 </Button>
                 <Button
                   href="/#du-an-hot"
@@ -104,7 +106,7 @@ export default function AboutHero() {
                   icon={<Phone size={14} className="text-gold" />}
                   iconPosition="left"
                 >
-                  {aboutHero.secondaryCta}
+                  {aboutPageHero.secondaryCta}
                 </Button>
               </motion.div>
             </motion.div>
@@ -118,7 +120,7 @@ export default function AboutHero() {
               transition={{ delay: 0.5, duration: 0.8, ease: "easeOut" }}
               className="luxury-card px-5 py-5 sm:px-7 sm:py-6 grid grid-cols-2 gap-x-6 gap-y-4 w-full max-w-xs sm:max-w-sm"
             >
-              {aboutHero.statsCard.map((stat, idx) => (
+              {aboutPageHero.statsCard.map((stat, idx) => (
                 <div
                   key={idx}
                   className={`flex flex-col items-center text-center ${

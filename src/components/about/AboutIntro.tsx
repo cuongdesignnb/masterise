@@ -2,13 +2,15 @@
 
 import React from "react";
 import Image from "next/image";
-import { aboutIntro } from "@/data/aboutSeed";
+import { useSiteSettings } from "@/providers/SiteSettingsProvider";
 import Container from "@/components/Container";
 import MotionWrapper from "@/components/MotionWrapper";
 import Button from "@/components/Button";
 import { ArrowRight } from "lucide-react";
 
 export default function AboutIntro() {
+  const { aboutPageIntro } = useSiteSettings();
+
   return (
     <section className="py-16 sm:py-20 lg:py-24 bg-cream">
       <Container>
@@ -18,17 +20,17 @@ export default function AboutIntro() {
             <MotionWrapper>
               <span className="inline-flex items-center gap-2 text-[11px] sm:text-xs font-bold tracking-[0.18em] text-gold uppercase">
                 <span>🌿</span>
-                {aboutIntro.label}
+                {aboutPageIntro.label}
               </span>
             </MotionWrapper>
 
             <MotionWrapper delay={0.1}>
               <h2 className="mt-4 text-2xl sm:text-3xl lg:text-[38px] heading-font font-bold text-ink leading-snug tracking-tight">
-                {aboutIntro.title}
+                {aboutPageIntro.title}
               </h2>
             </MotionWrapper>
 
-            {aboutIntro.paragraphs.map((p, idx) => (
+            {aboutPageIntro.paragraphs.map((p, idx) => (
               <MotionWrapper key={idx} delay={0.15 + idx * 0.08}>
                 <p className="mt-4 text-sm text-muted leading-relaxed font-light">
                   {p}
@@ -45,7 +47,7 @@ export default function AboutIntro() {
                   icon={<ArrowRight size={14} />}
                   iconPosition="right"
                 >
-                  {aboutIntro.button}
+                  {aboutPageIntro.button}
                 </Button>
               </div>
             </MotionWrapper>
@@ -58,7 +60,7 @@ export default function AboutIntro() {
                 {/* Large image spanning 2 cols */}
                 <div className="col-span-2 relative aspect-[16/10] rounded-[22px] overflow-hidden shadow-soft">
                   <Image
-                    src={aboutIntro.images[0]}
+                    src={aboutPageIntro.images[0]}
                     alt="Dự án tiêu biểu Masterise Homes"
                     fill
                     className="object-cover"
@@ -67,7 +69,7 @@ export default function AboutIntro() {
                 </div>
 
                 {/* Two smaller images */}
-                {aboutIntro.images.slice(1).map((src, idx) => (
+                {aboutPageIntro.images.slice(1).map((src, idx) => (
                   <div
                     key={idx}
                     className="relative aspect-[4/3] rounded-[22px] overflow-hidden shadow-soft"

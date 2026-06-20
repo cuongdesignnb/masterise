@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Container from "@/components/Container";
 import MotionWrapper from "@/components/MotionWrapper";
-import { sustainability } from "@/data/aboutSeed";
+import { useSiteSettings } from "@/providers/SiteSettingsProvider";
 import { Leaf, UsersRound, SearchCheck } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -14,13 +14,15 @@ const iconMap: Record<string, LucideIcon> = {
 };
 
 export default function AboutSustainability() {
+  const { aboutPageSustainability } = useSiteSettings();
+
   return (
     <section className="py-16 md:py-24">
       <Container>
         {/* Section title */}
         <MotionWrapper>
           <h2 className="heading-font text-xl md:text-2xl font-bold text-gold mb-10 md:mb-14 text-center uppercase">
-            🌿 {sustainability.title}
+            🌿 {aboutPageSustainability.title}
           </h2>
         </MotionWrapper>
 
@@ -29,7 +31,7 @@ export default function AboutSustainability() {
           <MotionWrapper className="lg:col-span-5">
             <div className="rounded-[22px] overflow-hidden shadow-soft relative aspect-[4/5]">
               <Image
-                src={sustainability.image}
+                src={aboutPageSustainability.image}
                 alt="Phát triển bền vững Masterise Homes"
                 fill
                 sizes="(max-width: 1024px) 100vw, 42vw"
@@ -40,7 +42,7 @@ export default function AboutSustainability() {
 
           {/* ── Right: Pillars ───────────────────────── */}
           <div className="lg:col-span-7 flex flex-col gap-5">
-            {sustainability.pillars.map((pillar, idx) => {
+            {aboutPageSustainability.pillars.map((pillar, idx) => {
               const Icon = iconMap[pillar.icon];
               return (
                 <MotionWrapper key={idx} delay={idx * 0.12}>

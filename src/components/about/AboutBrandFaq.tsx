@@ -5,12 +5,13 @@ import Image from "next/image";
 import Container from "@/components/Container";
 import MotionWrapper from "@/components/MotionWrapper";
 import Button from "@/components/Button";
-import { brandStory, aboutFaqs } from "@/data/aboutSeed";
+import { useSiteSettings } from "@/providers/SiteSettingsProvider";
 import { ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function AboutBrandFaq() {
   const [openIdx, setOpenIdx] = useState<number | null>(null);
+  const { aboutPageBrandStory, aboutPageFaqs } = useSiteSettings();
 
   const toggle = (idx: number) => {
     setOpenIdx((prev) => (prev === idx ? null : idx));
@@ -24,15 +25,15 @@ export default function AboutBrandFaq() {
           <div className="lg:col-span-5 relative">
             <MotionWrapper>
               <h2 className="heading-font text-xl md:text-2xl font-bold text-gold mb-4">
-                🌿 {brandStory.title.toUpperCase()}
+                🌿 {aboutPageBrandStory.title.toUpperCase()}
               </h2>
 
-              <p className="text-sm text-muted leading-relaxed mb-6">
-                {brandStory.description}
+              <p className="text-sm text-muted leading-relaxed mb-6 font-sans">
+                {aboutPageBrandStory.description}
               </p>
 
               <Button variant="outline" href="#">
-                {brandStory.button}
+                {aboutPageBrandStory.button}
               </Button>
             </MotionWrapper>
 
@@ -40,7 +41,7 @@ export default function AboutBrandFaq() {
             <MotionWrapper delay={0.2} className="mt-8">
               <div className="relative w-full h-48 md:h-64 rounded-[18px] overflow-hidden opacity-30">
                 <Image
-                  src={brandStory.image}
+                  src={aboutPageBrandStory.image}
                   alt="Masterise Homes brand story"
                   fill
                   sizes="(max-width: 1024px) 100vw, 42vw"
@@ -59,7 +60,7 @@ export default function AboutBrandFaq() {
             </MotionWrapper>
 
             <div className="space-y-0">
-              {aboutFaqs.map((faq, idx) => {
+              {aboutPageFaqs.map((faq, idx) => {
                 const isOpen = openIdx === idx;
                 return (
                   <MotionWrapper key={idx} delay={0.12 + idx * 0.06}>
@@ -93,12 +94,12 @@ export default function AboutBrandFaq() {
                             animate={{ height: "auto", opacity: 1 }}
                             exit={{ height: 0, opacity: 0 }}
                             transition={{
-                              height: { duration: 0.3, ease: "easeInOut" },
-                              opacity: { duration: 0.2, ease: "easeInOut" },
+                                height: { duration: 0.3, ease: "easeInOut" },
+                                opacity: { duration: 0.2, ease: "easeInOut" },
                             }}
                             className="overflow-hidden"
                           >
-                            <p className="text-xs text-muted leading-relaxed pb-4">
+                            <p className="text-xs text-muted leading-relaxed pb-4 font-sans">
                               {faq.answer}
                             </p>
                           </motion.div>

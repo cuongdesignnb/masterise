@@ -167,18 +167,18 @@ export default function SearchBar() {
                 if (selectedValues.price) {
                   const pr = selectedValues.price;
                   if (pr === "Dưới 5 tỷ") {
-                    queryParams.push("price_max=5000000000");
+                    queryParams.push("price_max=75000000");
                   } else if (pr === "Từ 5 - 10 tỷ") {
-                    queryParams.push("price_min=5000000000");
-                    queryParams.push("price_max=10000000000");
+                    queryParams.push("price_min=60000000");
+                    queryParams.push("price_max=120000000");
                   } else if (pr === "Từ 10 - 20 tỷ") {
-                    queryParams.push("price_min=10000000000");
-                    queryParams.push("price_max=20000000000");
+                    queryParams.push("price_min=100000000");
+                    queryParams.push("price_max=200000000");
                   } else if (pr === "Từ 20 - 50 tỷ") {
-                    queryParams.push("price_min=20000000000");
-                    queryParams.push("price_max=50000000000");
+                    queryParams.push("price_min=200000000");
+                    queryParams.push("price_max=400000000");
                   } else if (pr === "Trên 50 tỷ") {
-                    queryParams.push("price_min=50000000000");
+                    queryParams.push("price_min=300000000");
                   }
                 }
                 

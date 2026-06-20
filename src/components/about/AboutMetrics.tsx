@@ -2,7 +2,7 @@
 
 import React from "react";
 import { CalendarCheck, Building2, UsersRound, MapPinned } from "lucide-react";
-import { aboutMetrics } from "@/data/aboutSeed";
+import { useSiteSettings } from "@/providers/SiteSettingsProvider";
 import Container from "@/components/Container";
 import MotionWrapper from "@/components/MotionWrapper";
 
@@ -14,17 +14,19 @@ const iconMap: Record<string, React.ComponentType<{ size?: number; className?: s
 };
 
 export default function AboutMetrics() {
+  const { aboutPageMetrics } = useSiteSettings();
+
   return (
     <section className="py-12 sm:py-14 soft-section-bg">
       <Container>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-          {aboutMetrics.map((metric, idx) => {
+          {aboutPageMetrics.map((metric, idx) => {
             const Icon = iconMap[metric.icon];
             return (
               <MotionWrapper key={idx} delay={idx * 0.08}>
                 <div
                   className={`luxury-card flex flex-col items-center text-center px-4 py-6 sm:px-5 sm:py-7 transition-transform duration-300 hover:-translate-y-1 ${
-                    idx < aboutMetrics.length - 1
+                    idx < aboutPageMetrics.length - 1
                       ? "lg:border-r lg:border-line/40 lg:rounded-none lg:shadow-none lg:bg-transparent lg:border-t-0 lg:border-b-0 lg:border-l-0"
                       : ""
                   }`}
