@@ -127,7 +127,22 @@ function SectionTitle({
   );
 }
 
-function LocationMap({ projectName }: { projectName: string }) {
+function LocationMap({ projectName, mapImageUrl }: { projectName: string; mapImageUrl?: string | null }) {
+  if (mapImageUrl) {
+    return (
+      <div className="relative h-[330px] overflow-hidden rounded-[18px] border border-gold/35 bg-[#faf7f0] lg:h-[410px] flex items-center justify-center">
+        <img
+          src={mapImageUrl}
+          alt={`Bản đồ dự án ${projectName}`}
+          className={`h-full w-full ${mapImageUrl.toLowerCase().includes('.svg') ? 'object-contain' : 'object-cover'}`}
+        />
+        <div className="absolute bottom-3 right-3 rounded-full border border-line bg-white/90 px-3 py-1.5 text-[10px] font-semibold text-muted shadow-sm backdrop-blur">
+          Bản đồ dự án
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative h-[330px] overflow-hidden rounded-[18px] border border-gold/35 bg-[#f8f4ec] lg:h-[410px]">
       <svg
@@ -412,7 +427,7 @@ export default function ProjectDetailClient({ project = defaultProject }: { proj
                 ))}
               </div>
             </div>
-            <LocationMap projectName={project.name} />
+            <LocationMap projectName={project.name} mapImageUrl={project.mapImageUrl} />
           </section>
         </Reveal>
 

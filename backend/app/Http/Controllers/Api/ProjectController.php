@@ -247,6 +247,7 @@ class ProjectController extends Controller
             'brochure_url' => 'nullable|string',
             'video_url' => 'nullable|string',
             'virtual_tour_url' => 'nullable|string',
+            'map_image_url' => 'nullable|string|max:255',
             'lat' => 'nullable|numeric',
             'lng' => 'nullable|numeric',
             'area_size' => 'nullable|string',
@@ -279,7 +280,7 @@ class ProjectController extends Controller
             'total_blocks', 'total_floors', 'highlight_points', 'nearby_places', 
             'payment_policy', 'sales_policy', 'booking_policy', 'is_featured', 'is_hot',
             'is_published', 'sort_order', 'thumbnail', 'banner_image', 'gallery', 
-            'brochure_url', 'video_url', 'virtual_tour_url', 'lat', 'lng',
+            'brochure_url', 'video_url', 'virtual_tour_url', 'map_image_url', 'lat', 'lng',
             'area_size', 'developer', 'scale', 'amenities'
         ]));
 
@@ -363,6 +364,7 @@ class ProjectController extends Controller
             'brochure_url' => 'nullable|string',
             'video_url' => 'nullable|string',
             'virtual_tour_url' => 'nullable|string',
+            'map_image_url' => 'nullable|string|max:255',
             'lat' => 'nullable|numeric',
             'lng' => 'nullable|numeric',
             'area_size' => 'nullable|string',
@@ -394,7 +396,7 @@ class ProjectController extends Controller
             'total_blocks', 'total_floors', 'highlight_points', 'nearby_places', 
             'payment_policy', 'sales_policy', 'booking_policy', 'is_featured', 'is_hot',
             'is_published', 'sort_order', 'thumbnail', 'banner_image', 'gallery', 
-            'brochure_url', 'video_url', 'virtual_tour_url', 'lat', 'lng',
+            'brochure_url', 'video_url', 'virtual_tour_url', 'map_image_url', 'lat', 'lng',
             'area_size', 'developer', 'scale', 'amenities'
         ]));
 

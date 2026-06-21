@@ -74,5 +74,6 @@ export type ProjectDetail = {
   faqs: { question: string; answer: string }[];
   id?: number;
   virtualTourUrl?: string | null;
+  mapImageUrl?: string | null;
 };
 

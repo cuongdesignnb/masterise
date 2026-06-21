@@ -268,5 +268,6 @@ export function mapApiProjectToProjectDetail(api: ApiProject): ProjectDetail {
     testimonials: defaultSeed.testimonials,
     faqs: projectFaqs,
     virtualTourUrl: api.virtual_tour_url,
+    mapImageUrl: api.map_image_url,
   };
 }

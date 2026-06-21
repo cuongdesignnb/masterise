@@ -60,6 +60,7 @@ class Project extends Model
         'developer',
         'scale',
         'amenities',
+        'map_image_url',
     ];
 
     protected function casts(): array

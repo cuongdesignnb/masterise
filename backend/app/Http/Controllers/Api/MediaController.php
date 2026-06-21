@@ -73,7 +73,7 @@ class MediaController extends Controller
         $disk = 'public';
 
         // Check if file is image and try to convert to WebP
-        $isImage = str_contains($mimeType, 'image') && !in_array($extension, ['gif', 'svg']);
+        $isImage = str_contains($mimeType, 'image') && !in_array(strtolower($extension), ['gif', 'svg', 'webp']);
         $savedPath = '';
         $fileName = '';
 

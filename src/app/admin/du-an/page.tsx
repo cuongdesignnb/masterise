@@ -49,7 +49,7 @@ export default function AdminProjects() {
   const [editingCategory, setEditingCategory] = useState<ProjectCategory | null>(null);
   
   // Media Selector state
-  const [mediaSelectorTarget, setMediaSelectorTarget] = useState<'thumbnail' | 'banner' | 'gallery' | 'brochure' | null>(null);
+  const [mediaSelectorTarget, setMediaSelectorTarget] = useState<'thumbnail' | 'banner' | 'gallery' | 'brochure' | 'map' | null>(null);
 
   // Form states
   const [formName, setFormName] = useState('');
@@ -110,6 +110,7 @@ export default function AdminProjects() {
   const [formBrochureUrl, setFormBrochureUrl] = useState('');
   const [formVideoUrl, setFormVideoUrl] = useState('');
   const [formVirtualTourUrl, setFormVirtualTourUrl] = useState('');
+  const [formMapImageUrl, setFormMapImageUrl] = useState('');
   
   const [formSeoTitle, setFormSeoTitle] = useState('');
   const [formSeoDescription, setFormSeoDescription] = useState('');
@@ -233,6 +234,7 @@ export default function AdminProjects() {
     setFormBrochureUrl('');
     setFormVideoUrl('');
     setFormVirtualTourUrl('');
+    setFormMapImageUrl('');
     setFormSeoTitle('');
     setFormSeoDescription('');
     setFormSeoKeywords('');
@@ -299,6 +301,7 @@ export default function AdminProjects() {
     setFormBrochureUrl(project.brochure_url || '');
     setFormVideoUrl(project.video_url || '');
     setFormVirtualTourUrl(project.virtual_tour_url || '');
+    setFormMapImageUrl(project.map_image_url || '');
     
     setFormSeoTitle(project.seo_meta?.title || '');
     setFormSeoDescription(project.seo_meta?.description || '');
@@ -384,6 +387,7 @@ export default function AdminProjects() {
         brochure_url: formBrochureUrl,
         video_url: formVideoUrl || null,
         virtual_tour_url: formVirtualTourUrl || null,
+        map_image_url: formMapImageUrl || null,
         
         seo_title: formSeoTitle || formName,
         seo_description: formSeoDescription || formDescription,
@@ -443,6 +447,8 @@ export default function AdminProjects() {
       setFormBannerImage(url as string);
     } else if (mediaSelectorTarget === 'brochure') {
       setFormBrochureUrl(url as string);
+    } else if (mediaSelectorTarget === 'map') {
+      setFormMapImageUrl(url as string);
     } else if (mediaSelectorTarget === 'gallery') {
       const selectedArr = url as string[];
       // Merge unique
@@ -1439,6 +1445,42 @@ export default function AdminProjects() {
                           <button
                             type="button"
                             onClick={() => setMediaSelectorTarget('banner')}
+                            className="px-3 py-1.5 bg-[#1F1B16] hover:bg-[#B88746] text-white text-xs font-semibold rounded-lg transition-colors"
+                          >
+                            Chọn từ Media Library
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Project Map Image Selection */}
+                    <div className="space-y-2">
+                      <label className="block text-xs font-semibold text-[#8C7A6B]">Bản đồ dự án (SVG động hoặc Ảnh phẳng - WebP/PNG/JPG)</label>
+                      <div className="flex gap-4 items-center">
+                        <div className="w-24 h-16 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] overflow-hidden flex items-center justify-center shrink-0">
+                          {formMapImageUrl ? (
+                            formMapImageUrl.endsWith('.svg') ? (
+                              <div className="w-full h-full p-1 bg-white">
+                                <img src={formMapImageUrl} alt="Map Preview" className="w-full h-full object-contain" />
+                              </div>
+                            ) : (
+                              <img src={formMapImageUrl} alt="Map Preview" className="w-full h-full object-cover" />
+                            )
+                          ) : (
+                            <ImageIcon className="w-6 h-6 text-[#B88746]/40" />
+                          )}
+                        </div>
+                        <div className="flex-1 space-y-2">
+                          <input
+                            type="text"
+                            value={formMapImageUrl}
+                            onChange={(e) => setFormMapImageUrl(e.target.value)}
+                            className="w-full px-3 py-1.5 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-xs focus:outline-none"
+                            placeholder="URL hình ảnh bản đồ"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setMediaSelectorTarget('map')}
                             className="px-3 py-1.5 bg-[#1F1B16] hover:bg-[#B88746] text-white text-xs font-semibold rounded-lg transition-colors"
                           >
                             Chọn từ Media Library

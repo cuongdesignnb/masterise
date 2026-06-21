@@ -84,6 +84,7 @@ export interface Project {
   brochure_url: string | null;
   video_url: string | null;
   virtual_tour_url: string | null;
+  map_image_url: string | null;
   lat: number | null;
   lng: number | null;
   area_size: string | null;
