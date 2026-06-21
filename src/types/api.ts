@@ -45,6 +45,7 @@ export interface Project {
   description: string | null;
   content: string | null;
   location: string | null;
+  location_description: string | null;
   region: string | null;
   address: string | null;
   province: string | null;

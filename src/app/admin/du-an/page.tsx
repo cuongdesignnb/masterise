@@ -70,6 +70,7 @@ export default function AdminProjects() {
   const [formHandoverTime, setFormHandoverTime] = useState('');
   
   const [formLocation, setFormLocation] = useState('');
+  const [formLocationDescription, setFormLocationDescription] = useState('');
   const [formRegion, setFormRegion] = useState('Miền Nam');
   const [formAddress, setFormAddress] = useState('');
   const [formProvince, setFormProvince] = useState('');
@@ -198,6 +199,7 @@ export default function AdminProjects() {
     setFormHandoverYear('');
     setFormHandoverTime('');
     setFormLocation('');
+    setFormLocationDescription('');
     setFormRegion('Miền Nam');
     setFormAddress('');
     setFormProvince('');
@@ -265,6 +267,7 @@ export default function AdminProjects() {
     setFormHandoverYear(project.handover_year || '');
     setFormHandoverTime(project.handover_time || '');
     setFormLocation(project.location || '');
+    setFormLocationDescription(project.location_description || '');
     setFormRegion(project.region || 'Miền Nam');
     setFormAddress(project.address || '');
     setFormProvince(project.province || '');
@@ -347,6 +350,7 @@ export default function AdminProjects() {
         handover_time: formHandoverTime || null,
         
         location: formLocation,
+        location_description: formLocationDescription || null,
         region: formRegion,
         address: formAddress || null,
         province: formProvince || null,
@@ -1158,6 +1162,18 @@ export default function AdminProjects() {
                           <option value="Miền Nam">Miền Nam</option>
                         </select>
                       </div>
+                    </div>
+
+                    {/* Location Description */}
+                    <div>
+                      <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Mô tả vị trí chiến lược (Hiển thị ở cột bên trái bản đồ dự án)</label>
+                      <textarea
+                        value={formLocationDescription}
+                        onChange={(e) => setFormLocationDescription(e.target.value)}
+                        rows={2}
+                        className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
+                        placeholder="Ví dụ: Tọa lạc tại trung tâm TP. Thủ Đức, kết nối nhanh đến trung tâm và các khu vực trọng điểm..."
+                      />
                     </div>
 
                     {/* Address components */}

@@ -411,7 +411,7 @@ export default function ProjectDetailClient({ project = defaultProject }: { proj
             <div>
               <SectionTitle eyebrow="VỊ TRÍ CHIẾN LƯỢC">KẾT NỐI TOÀN DIỆN</SectionTitle>
               <p className="mb-6 text-[13px] leading-6 text-muted">
-                Tọa lạc tại trung tâm TP. Thủ Đức, kết nối nhanh đến trung tâm và các khu vực trọng điểm.
+                {project.locationDescription || "Tọa lạc tại vị trí trung tâm, kết nối nhanh chóng đến các khu vực trọng điểm."}
               </p>
               <div className="space-y-4">
                 {project.connectivity.map((item) => (

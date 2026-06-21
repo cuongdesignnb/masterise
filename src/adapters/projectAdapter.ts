@@ -269,5 +269,6 @@ export function mapApiProjectToProjectDetail(api: ApiProject): ProjectDetail {
     faqs: projectFaqs,
     virtualTourUrl: api.virtual_tour_url,
     mapImageUrl: api.map_image_url,
+    locationDescription: api.location_description,
   };
 }

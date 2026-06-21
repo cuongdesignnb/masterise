@@ -75,5 +75,6 @@ export type ProjectDetail = {
   id?: number;
   virtualTourUrl?: string | null;
   mapImageUrl?: string | null;
+  locationDescription?: string | null;
 };
 

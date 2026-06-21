@@ -61,6 +61,7 @@ class Project extends Model
         'scale',
         'amenities',
         'map_image_url',
+        'location_description',
     ];
 
     protected function casts(): array
