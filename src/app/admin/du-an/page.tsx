@@ -28,6 +28,15 @@ import MediaSelectModal from '@/components/admin/MediaSelectModal';
 import RichTextEditor from '@/components/admin/RichTextEditor';
 import VR360Tab from '@/components/admin/vr360/VR360Tab';
 
+type SelectOption = {
+  id: number;
+  name: string;
+  address?: string | null;
+  province?: string | null;
+  district?: string | null;
+  ward?: string | null;
+};
+
 export default function AdminProjects() {
   const queryClient = useQueryClient();
   const { hasRole } = useAuth();
@@ -41,7 +50,7 @@ export default function AdminProjects() {
   // Modal states
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
-  const [activeTab, setActiveTab] = useState<'general' | 'location' | 'content' | 'media' | 'seo' | 'vr360'>('general');
+  const [activeTab, setActiveTab] = useState<'general' | 'location' | 'content' | 'detail' | 'pricing' | 'media' | 'seo' | 'vr360'>('general');
   
   // Category manager modal state
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
@@ -116,6 +125,38 @@ export default function AdminProjects() {
   const [formSeoTitle, setFormSeoTitle] = useState('');
   const [formSeoDescription, setFormSeoDescription] = useState('');
   const [formSeoKeywords, setFormSeoKeywords] = useState('');
+  const [formHeroSubtitle, setFormHeroSubtitle] = useState('');
+  const [formBadgeText, setFormBadgeText] = useState('');
+  const [formGalleryLabel, setFormGalleryLabel] = useState('');
+  const [formGalleryTitle, setFormGalleryTitle] = useState('');
+  const [formGalleryDescription, setFormGalleryDescription] = useState('');
+  const [formSchemaPrice, setFormSchemaPrice] = useState('');
+  const [formSchemaPriceCurrency, setFormSchemaPriceCurrency] = useState('VND');
+  const [formSchemaAvailability, setFormSchemaAvailability] = useState('');
+  const [formQuickCardsJson, setFormQuickCardsJson] = useState('');
+  const [formProjectFactsJson, setFormProjectFactsJson] = useState('');
+  const [formProjectStatsJson, setFormProjectStatsJson] = useState('');
+  const [formConnectivityJson, setFormConnectivityJson] = useState('');
+  const [formAmenityDetailsJson, setFormAmenityDetailsJson] = useState('');
+  const [formInvestmentReasonsJson, setFormInvestmentReasonsJson] = useState('');
+  const [formProjectTestimonialsJson, setFormProjectTestimonialsJson] = useState('');
+  const [formProjectFaqsJson, setFormProjectFaqsJson] = useState('');
+  const [formFloorTabsJson, setFormFloorTabsJson] = useState('');
+  const [formFloorPlansJson, setFormFloorPlansJson] = useState('');
+  const [formPriceRowsJson, setFormPriceRowsJson] = useState('');
+  const [formPolicyCardsJson, setFormPolicyCardsJson] = useState('');
+  const [formProjectTimelineJson, setFormProjectTimelineJson] = useState('');
+
+  const formatJsonField = (value: unknown) => value ? JSON.stringify(value, null, 2) : '';
+  const parseJsonField = (label: string, value: string) => {
+    if (!value.trim()) return null;
+    try {
+      return JSON.parse(value);
+    } catch {
+      throw new Error(`${label}: JSON khong hop le`);
+    }
+  };
+  const getErrorMessage = (error: unknown) => error instanceof Error ? error.message : 'Loi khi xu ly yeu cau.';
 
   // Queries
   const { data: projectsData, isLoading: isProjectsLoading } = useQuery({
@@ -140,7 +181,7 @@ export default function AdminProjects() {
   const { data: developersData } = useQuery({
     queryKey: ['admin-developers-select'],
     queryFn: async () => {
-      const response = await api.get<any>('/developers?all=true');
+      const response = await api.get<SelectOption[]>('/developers?all=true');
       return response.data || [];
     }
   });
@@ -148,7 +189,7 @@ export default function AdminProjects() {
   const { data: locationsData } = useQuery({
     queryKey: ['admin-locations-select'],
     queryFn: async () => {
-      const response = await api.get<any>('/locations?all=true');
+      const response = await api.get<SelectOption[]>('/locations?all=true');
       return response.data || [];
     }
   });
@@ -240,6 +281,27 @@ export default function AdminProjects() {
     setFormSeoTitle('');
     setFormSeoDescription('');
     setFormSeoKeywords('');
+    setFormHeroSubtitle('');
+    setFormBadgeText('');
+    setFormGalleryLabel('');
+    setFormGalleryTitle('');
+    setFormGalleryDescription('');
+    setFormSchemaPrice('');
+    setFormSchemaPriceCurrency('VND');
+    setFormSchemaAvailability('');
+    setFormQuickCardsJson('');
+    setFormProjectFactsJson('');
+    setFormProjectStatsJson('');
+    setFormConnectivityJson('');
+    setFormAmenityDetailsJson('');
+    setFormInvestmentReasonsJson('');
+    setFormProjectTestimonialsJson('');
+    setFormProjectFaqsJson('');
+    setFormFloorTabsJson('');
+    setFormFloorPlansJson('');
+    setFormPriceRowsJson('');
+    setFormPolicyCardsJson('');
+    setFormProjectTimelineJson('');
     
     setIsFormOpen(true);
   };
@@ -309,6 +371,27 @@ export default function AdminProjects() {
     setFormSeoTitle(project.seo_meta?.title || '');
     setFormSeoDescription(project.seo_meta?.description || '');
     setFormSeoKeywords(project.seo_meta?.keywords || '');
+    setFormHeroSubtitle(project.hero_subtitle || '');
+    setFormBadgeText(project.badge_text || '');
+    setFormGalleryLabel(project.gallery_label || '');
+    setFormGalleryTitle(project.gallery_title || '');
+    setFormGalleryDescription(project.gallery_description || '');
+    setFormSchemaPrice(project.schema_price || '');
+    setFormSchemaPriceCurrency(project.schema_price_currency || 'VND');
+    setFormSchemaAvailability(project.schema_availability || '');
+    setFormQuickCardsJson(formatJsonField(project.quick_cards));
+    setFormProjectFactsJson(formatJsonField(project.project_facts));
+    setFormProjectStatsJson(formatJsonField(project.project_stats));
+    setFormConnectivityJson(formatJsonField(project.connectivity));
+    setFormAmenityDetailsJson(formatJsonField(project.amenity_details));
+    setFormInvestmentReasonsJson(formatJsonField(project.investment_reasons));
+    setFormProjectTestimonialsJson(formatJsonField(project.project_testimonials));
+    setFormProjectFaqsJson(formatJsonField(project.project_faqs));
+    setFormFloorTabsJson(formatJsonField(project.floor_tabs));
+    setFormFloorPlansJson(formatJsonField(project.floor_plans));
+    setFormPriceRowsJson(formatJsonField(project.price_rows));
+    setFormPolicyCardsJson(formatJsonField(project.policy_cards));
+    setFormProjectTimelineJson(formatJsonField(project.project_timeline));
     
     setIsFormOpen(true);
   };
@@ -330,6 +413,20 @@ export default function AdminProjects() {
         .split('\n')
         .map(n => n.trim())
         .filter(n => n.length > 0);
+
+      const quickCards = parseJsonField('Quick cards', formQuickCardsJson);
+      const projectFacts = parseJsonField('Project facts', formProjectFactsJson);
+      const projectStats = parseJsonField('Project stats', formProjectStatsJson);
+      const connectivity = parseJsonField('Connectivity', formConnectivityJson);
+      const amenityDetails = parseJsonField('Amenity details', formAmenityDetailsJson);
+      const investmentReasons = parseJsonField('Investment reasons', formInvestmentReasonsJson);
+      const projectTestimonials = parseJsonField('Testimonials', formProjectTestimonialsJson);
+      const projectFaqs = parseJsonField('Project FAQs', formProjectFaqsJson);
+      const floorTabs = parseJsonField('Floor tabs', formFloorTabsJson);
+      const floorPlans = parseJsonField('Floor plans', formFloorPlansJson);
+      const priceRows = parseJsonField('Price rows', formPriceRowsJson);
+      const policyCards = parseJsonField('Policy cards', formPolicyCardsJson);
+      const projectTimeline = parseJsonField('Project timeline', formProjectTimelineJson);
 
       const payload = {
         name: formName,
@@ -377,7 +474,22 @@ export default function AdminProjects() {
         
         description: formDescription,
         content: formContent,
+        hero_subtitle: formHeroSubtitle || null,
+        badge_text: formBadgeText || null,
         amenities: amenitiesArr,
+        quick_cards: quickCards,
+        project_facts: projectFacts,
+        project_stats: projectStats,
+        connectivity,
+        amenity_details: amenityDetails,
+        investment_reasons: investmentReasons,
+        project_testimonials: projectTestimonials,
+        project_faqs: projectFaqs,
+        floor_tabs: floorTabs,
+        floor_plans: floorPlans,
+        price_rows: priceRows,
+        policy_cards: policyCards,
+        project_timeline: projectTimeline,
         category_ids: formCategoryIds,
         highlight_points: highlightsArr,
         nearby_places: nearbyArr,
@@ -388,6 +500,9 @@ export default function AdminProjects() {
         thumbnail: formThumbnail,
         banner_image: formBannerImage || null,
         gallery: formGallery,
+        gallery_label: formGalleryLabel || null,
+        gallery_title: formGalleryTitle || null,
+        gallery_description: formGalleryDescription || null,
         brochure_url: formBrochureUrl,
         video_url: formVideoUrl || null,
         virtual_tour_url: formVirtualTourUrl || null,
@@ -396,6 +511,9 @@ export default function AdminProjects() {
         seo_title: formSeoTitle || formName,
         seo_description: formSeoDescription || formDescription,
         seo_keywords: formSeoKeywords,
+        schema_price: formSchemaPrice || null,
+        schema_price_currency: formSchemaPriceCurrency || 'VND',
+        schema_availability: formSchemaAvailability || null,
       };
 
       if (editingProject) {
@@ -409,8 +527,8 @@ export default function AdminProjects() {
       setIsFormOpen(false);
       alert(editingProject ? 'Đã cập nhật dự án thành công!' : 'Đã tạo dự án mới thành công!');
     },
-    onError: (err: any) => {
-      alert(err.message || 'Lỗi khi lưu dự án. Vui lòng kiểm tra lại dữ liệu.');
+    onError: (err: unknown) => {
+      alert(getErrorMessage(err));
     }
   });
 
@@ -423,8 +541,8 @@ export default function AdminProjects() {
       queryClient.invalidateQueries({ queryKey: ['admin-projects'] });
       alert('Đã xóa dự án thành công.');
     },
-    onError: (err: any) => {
-      alert(err.message || 'Lỗi khi xóa dự án.');
+    onError: (err: unknown) => {
+      alert(getErrorMessage(err));
     }
   });
 
@@ -479,8 +597,8 @@ export default function AdminProjects() {
       queryClient.invalidateQueries({ queryKey: ['admin-project-categories'] });
       setNewCategoryName('');
     },
-    onError: (err: any) => {
-      alert(err.message || 'Lỗi khi tạo danh mục.');
+    onError: (err: unknown) => {
+      alert(getErrorMessage(err));
     }
   });
 
@@ -492,8 +610,8 @@ export default function AdminProjects() {
       queryClient.invalidateQueries({ queryKey: ['admin-project-categories'] });
       queryClient.invalidateQueries({ queryKey: ['admin-projects'] });
     },
-    onError: (err: any) => {
-      alert(err.message || 'Không thể xóa danh mục này. Hãy chuyển các dự án sang danh mục khác trước.');
+    onError: (err: unknown) => {
+      alert(getErrorMessage(err));
     }
   });
 
@@ -773,12 +891,14 @@ export default function AdminProjects() {
                   { id: 'location', label: 'Vị trí & Giá' },
                   { id: 'content', label: 'Mô tả & Tiện ích' },
                   { id: 'media', label: 'Ảnh & Tài liệu' },
+                  { id: 'detail', label: 'Chi tiet hien thi' },
+                  { id: 'pricing', label: 'Bang gia & Tien do' },
                   { id: 'seo', label: 'Cấu hình SEO' },
                   { id: 'vr360', label: 'VR 360' }
                 ].map(tab => (
                   <button
                     key={tab.id}
-                    onClick={() => setActiveTab(tab.id as any)}
+                    onClick={() => setActiveTab(tab.id as typeof activeTab)}
                     className={`px-4 py-3 font-semibold border-b-2 transition-colors whitespace-nowrap ${
                       activeTab === tab.id
                         ? 'border-[#B88746] text-[#B88746]'
@@ -1030,7 +1150,7 @@ export default function AdminProjects() {
                         <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Trạng thái thi công/bàn giao *</label>
                         <select
                           value={formStatus}
-                          onChange={(e: any) => setFormStatus(e.target.value)}
+                          onChange={(e) => setFormStatus(e.target.value as typeof formStatus)}
                           className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
                         >
                           <option value="upcoming">Chưa khởi công / Sắp mở bán</option>
@@ -1403,6 +1523,87 @@ export default function AdminProjects() {
                         placeholder="Số tiền booking/căn, hoàn tiền booking có điều kiện..."
                       />
                     </div>
+                  </div>
+                )}
+
+                {activeTab === 'detail' && (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Hero subtitle</label>
+                        <input value={formHeroSubtitle} onChange={(e) => setFormHeroSubtitle(e.target.value)} className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Badge text</label>
+                        <input value={formBadgeText} onChange={(e) => setFormBadgeText(e.target.value)} className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none" />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Gallery label</label>
+                        <input value={formGalleryLabel} onChange={(e) => setFormGalleryLabel(e.target.value)} className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Gallery title</label>
+                        <input value={formGalleryTitle} onChange={(e) => setFormGalleryTitle(e.target.value)} className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Schema availability</label>
+                        <input value={formSchemaAvailability} onChange={(e) => setFormSchemaAvailability(e.target.value)} className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none" placeholder="https://schema.org/InStock" />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Gallery description</label>
+                      <textarea value={formGalleryDescription} onChange={(e) => setFormGalleryDescription(e.target.value)} rows={3} className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none" />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Schema price</label>
+                        <input value={formSchemaPrice} onChange={(e) => setFormSchemaPrice(e.target.value)} className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Schema currency</label>
+                        <input value={formSchemaPriceCurrency} onChange={(e) => setFormSchemaPriceCurrency(e.target.value)} className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none" />
+                      </div>
+                    </div>
+                    {[
+                      ['Quick cards JSON', formQuickCardsJson, setFormQuickCardsJson, '[{"label":"Quy mo","value":"3.5 ha","icon":"LandPlot"}]'],
+                      ['Project facts JSON', formProjectFactsJson, setFormProjectFactsJson, '[{"label":"Vi tri","value":"TP. HCM","icon":"MapPin"}]'],
+                      ['Project stats JSON', formProjectStatsJson, setFormProjectStatsJson, '[{"value":"3.5 ha","label":"Quy mo du an"}]'],
+                      ['Connectivity JSON', formConnectivityJson, setFormConnectivityJson, '[{"time":"5 phut","label":"Den trung tam thuong mai"}]'],
+                      ['Amenity details JSON', formAmenityDetailsJson, setFormAmenityDetailsJson, '[{"title":"Ho boi","description":"Khong gian thu gian","image":"/uploads/projects/pool.jpg","icon":"Waves"}]'],
+                      ['Investment reasons JSON', formInvestmentReasonsJson, setFormInvestmentReasonsJson, '[{"title":"Vi tri chien luoc","description":"Ket noi thuan tien","icon":"MapPin"}]'],
+                      ['Testimonials JSON', formProjectTestimonialsJson, setFormProjectTestimonialsJson, '[{"name":"Khach hang","role":"Nha dau tu","content":"Danh gia thuc te","avatar":""}]'],
+                      ['Project FAQs JSON', formProjectFaqsJson, setFormProjectFaqsJson, '[{"question":"Du an nam o dau?","answer":"Nhap cau tra loi tu admin."}]'],
+                    ].map(([label, value, setter, sample]) => (
+                      <div key={label as string}>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="block text-xs font-semibold text-[#8C7A6B]">{label as string}</label>
+                          <button type="button" onClick={() => (setter as React.Dispatch<React.SetStateAction<string>>)(sample as string)} className="text-[10px] font-semibold text-[#B88746]">Dung mau cau truc</button>
+                        </div>
+                        <textarea value={value as string} onChange={(e) => (setter as React.Dispatch<React.SetStateAction<string>>)(e.target.value)} rows={4} className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] font-mono text-xs focus:outline-none" placeholder={sample as string} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {activeTab === 'pricing' && (
+                  <div className="space-y-4">
+                    {[
+                      ['Floor tabs JSON', formFloorTabsJson, setFormFloorTabsJson, '["Can ho","Penthouse","Shophouse"]'],
+                      ['Floor plans JSON', formFloorPlansJson, setFormFloorPlansJson, '[{"name":"Can ho 2 phong ngu","area":"68 - 75 m2","totalArea":"75 m2","image":"/uploads/projects/floor-plan.jpg"}]'],
+                      ['Price rows JSON', formPriceRowsJson, setFormPriceRowsJson, '[["Can ho 1 phong ngu","45 - 55 m2","Lien he"]]'],
+                      ['Policy cards JSON', formPolicyCardsJson, setFormPolicyCardsJson, '[{"title":"Chinh sach thanh toan","description":"Thanh toan theo tien do.","icon":"CalendarDays"}]'],
+                      ['Project timeline JSON', formProjectTimelineJson, setFormProjectTimelineJson, '[{"date":"Q1/2026","title":"Mo ban phan khu dau tien"}]'],
+                    ].map(([label, value, setter, sample]) => (
+                      <div key={label as string}>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="block text-xs font-semibold text-[#8C7A6B]">{label as string}</label>
+                          <button type="button" onClick={() => (setter as React.Dispatch<React.SetStateAction<string>>)(sample as string)} className="text-[10px] font-semibold text-[#B88746]">Dung mau cau truc</button>
+                        </div>
+                        <textarea value={value as string} onChange={(e) => (setter as React.Dispatch<React.SetStateAction<string>>)(e.target.value)} rows={5} className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] font-mono text-xs focus:outline-none" placeholder={sample as string} />
+                      </div>
+                    ))}
                   </div>
                 )}
 

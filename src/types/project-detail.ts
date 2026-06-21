@@ -25,14 +25,17 @@ export type IconDetail = {
 };
 
 export type ProjectDetail = {
+  id?: number;
   slug: string;
-  badge: string;
+  badge?: string;
   salesStatus?: string;
   name: string;
   subtitle: string;
   description: string;
+  content?: string;
   address: string;
   heroImage: string;
+  thumbnail?: string | null;
   priceFrom: string;
   quickCard: IconDetail[];
   facts: IconDetail[];
@@ -72,9 +75,13 @@ export type ProjectDetail = {
     avatar: string;
   }[];
   faqs: { question: string; answer: string }[];
-  id?: number;
+  brochureUrl?: string | null;
+  videoUrl?: string | null;
   virtualTourUrl?: string | null;
   mapImageUrl?: string | null;
   locationDescription?: string | null;
+  seo?: unknown;
+  schemaPrice?: string | number | null;
+  schemaPriceCurrency?: string | null;
+  schemaAvailability?: string | null;
 };
-

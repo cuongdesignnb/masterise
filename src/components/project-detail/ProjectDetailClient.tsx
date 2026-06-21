@@ -30,7 +30,6 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useState } from "react";
-import { projectDetail as defaultProject } from "@/data/projectDetailSeed";
 import type { ProjectIconName, ProjectDetail } from "@/types/project-detail";
 import VR360Section from "@/components/vr360/VR360Section";
 
@@ -216,9 +215,21 @@ function FloorPlanSketch() {
   );
 }
 
-export default function ProjectDetailClient({ project = defaultProject }: { project?: ProjectDetail }) {
-  const [activeTab, setActiveTab] = useState(project.floorTabs[0]);
+export default function ProjectDetailClient({ project }: { project: ProjectDetail }) {
+  const [activeTab, setActiveTab] = useState(project.floorTabs?.[0] ?? "");
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const hasFacts = project.facts.length > 0;
+  const hasStats = project.stats.length > 0;
+  const hasGallery = project.gallery.images.length > 0;
+  const hasConnectivity = project.connectivity.length > 0 || Boolean(project.mapImageUrl);
+  const hasAmenities = project.amenities.length > 0;
+  const hasFloorPlans = project.floorPlans.length > 0;
+  const hasPriceRows = project.priceRows.length > 0;
+  const hasPolicies = project.policies.length > 0;
+  const hasTimeline = project.timeline.length > 0;
+  const hasInvestmentReasons = project.investmentReasons.length > 0;
+  const hasTestimonials = project.testimonials.length > 0;
+  const hasFaqs = project.faqs.length > 0;
 
   return (
     <main className="overflow-hidden bg-ivory pb-0 pt-[76px] text-ink">
@@ -247,9 +258,11 @@ export default function ProjectDetailClient({ project = defaultProject }: { proj
                 transition={{ duration: 0.5, delay: 0.15, ease }}
                 className="flex flex-wrap items-center gap-2"
               >
-                <span className="inline-flex rounded-full border border-gold/35 bg-white/75 px-4 py-2 text-[10px] font-bold tracking-[0.14em] text-gold-dark backdrop-blur">
-                  {project.badge}
-                </span>
+                {project.badge ? (
+                  <span className="inline-flex rounded-full border border-gold/35 bg-white/75 px-4 py-2 text-[10px] font-bold tracking-[0.14em] text-gold-dark backdrop-blur">
+                    {project.badge}
+                  </span>
+                ) : null}
                 {project.salesStatus && (
                   <span className="inline-flex rounded-full bg-emerald-600/90 px-4 py-2 text-[10px] font-bold tracking-[0.14em] text-white shadow-sm">
                     {project.salesStatus}
@@ -292,15 +305,15 @@ export default function ProjectDetailClient({ project = defaultProject }: { proj
                 >
                   ĐĂNG KÝ NHẬN THÔNG TIN
                 </Link>
-                <Link
-                  href="#khong-gian-song"
+                {project.videoUrl ? <Link
+                  href={project.videoUrl}
                   className="flex items-center gap-2 rounded-[6px] border border-gold/50 bg-white/85 px-5 py-3 text-[11px] font-bold text-gold-dark shadow-sm backdrop-blur transition hover:border-gold hover:bg-white"
                 >
                   <span className="flex h-6 w-6 items-center justify-center rounded-full border border-gold/45">
                     <Play size={10} fill="currentColor" />
                   </span>
                   XEM VIDEO DỰ ÁN
-                </Link>
+                </Link> : null}
               </motion.div>
             </div>
 
@@ -327,7 +340,7 @@ export default function ProjectDetailClient({ project = defaultProject }: { proj
           </div>
         </motion.section>
 
-        <Reveal className="-mt-1 rounded-[18px] border border-line/80 bg-white/90 px-4 py-4 shadow-soft">
+        {hasFacts ? <Reveal className="-mt-1 rounded-[18px] border border-line/80 bg-white/90 px-4 py-4 shadow-soft">
           <div className="grid grid-cols-2 gap-y-5 sm:grid-cols-3 lg:grid-cols-6 lg:gap-0">
             {project.facts.map((fact, index) => (
               <div
@@ -344,9 +357,9 @@ export default function ProjectDetailClient({ project = defaultProject }: { proj
               </div>
             ))}
           </div>
-        </Reveal>
+        </Reveal> : null}
 
-        <Reveal className="rounded-[18px] border border-line/80 bg-[#fcfaf6] px-5 py-6 shadow-sm">
+        {hasStats ? <Reveal className="rounded-[18px] border border-line/80 bg-[#fcfaf6] px-5 py-6 shadow-sm">
           <div className="grid grid-cols-2 gap-y-6 sm:grid-cols-3 lg:grid-cols-5 lg:gap-0">
             {project.stats.map((stat, index) => (
               <div
@@ -358,7 +371,7 @@ export default function ProjectDetailClient({ project = defaultProject }: { proj
               </div>
             ))}
           </div>
-        </Reveal>
+        </Reveal> : null}
 
         <VR360Section
           projectId={project.id || 1}
@@ -367,7 +380,7 @@ export default function ProjectDetailClient({ project = defaultProject }: { proj
           fallbackUrl={project.virtualTourUrl}
         />
 
-        <Reveal
+        {hasGallery ? <Reveal
           className="rounded-[22px] border border-line/80 bg-white p-4 shadow-soft sm:p-5"
           delay={0.04}
         >
@@ -404,9 +417,9 @@ export default function ProjectDetailClient({ project = defaultProject }: { proj
               ))}
             </div>
           </section>
-        </Reveal>
+        </Reveal> : null}
 
-        <Reveal className="rounded-[22px] border border-line/80 bg-white p-5 shadow-soft sm:p-7">
+        {hasConnectivity ? <Reveal className="rounded-[22px] border border-line/80 bg-white p-5 shadow-soft sm:p-7">
           <section className="grid items-center gap-8 lg:grid-cols-[310px_minmax(0,1fr)]">
             <div>
               <SectionTitle eyebrow="VỊ TRÍ CHIẾN LƯỢC">KẾT NỐI TOÀN DIỆN</SectionTitle>
@@ -429,9 +442,9 @@ export default function ProjectDetailClient({ project = defaultProject }: { proj
             </div>
             <LocationMap projectName={project.name} mapImageUrl={project.mapImageUrl} />
           </section>
-        </Reveal>
+        </Reveal> : null}
 
-        <Reveal className="rounded-[22px] border border-line/80 bg-white p-5 shadow-soft sm:p-7">
+        {hasAmenities ? <Reveal className="rounded-[22px] border border-line/80 bg-white p-5 shadow-soft sm:p-7">
           <section id="tien-ich">
             <SectionTitle>TIỆN ÍCH NỔI BẬT</SectionTitle>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
@@ -457,9 +470,9 @@ export default function ProjectDetailClient({ project = defaultProject }: { proj
               ))}
             </div>
           </section>
-        </Reveal>
+        </Reveal> : null}
 
-        <Reveal>
+        {hasFloorPlans ? <Reveal>
           <section>
             <SectionTitle>MẶT BẰNG &amp; LOẠI HÌNH SẢN PHẨM</SectionTitle>
             <div className="mb-4 grid overflow-hidden rounded-[6px] border border-line bg-white sm:grid-cols-4">
@@ -520,11 +533,11 @@ export default function ProjectDetailClient({ project = defaultProject }: { proj
               ))}
             </div>
           </section>
-        </Reveal>
+        </Reveal> : null}
 
-        <Reveal>
+        {hasPriceRows || hasPolicies ? <Reveal>
           <section className="grid gap-5 lg:grid-cols-[1.85fr_1fr]">
-            <div className="rounded-[18px] border border-line/80 bg-white p-5 shadow-soft">
+            {hasPriceRows ? <div className="rounded-[18px] border border-line/80 bg-white p-5 shadow-soft">
               <h2 className="mb-4 text-sm font-bold uppercase tracking-[0.06em] text-gold-dark">
                 BẢNG GIÁ DỰ KIẾN
               </h2>
@@ -557,8 +570,8 @@ export default function ProjectDetailClient({ project = defaultProject }: { proj
               <p className="mt-3 text-[9px] italic text-muted">
                 * Giá dự kiến chưa bao gồm VAT và phí. Thông tin chỉ mang tính chất tham khảo.
               </p>
-            </div>
-            <div className="rounded-[18px] border border-gold/35 bg-[#fffaf2] p-5 shadow-soft">
+            </div> : null}
+            {hasPolicies ? <div className="rounded-[18px] border border-gold/35 bg-[#fffaf2] p-5 shadow-soft">
               <h2 className="mb-5 text-sm font-bold uppercase tracking-[0.06em] text-gold-dark">
                 CHÍNH SÁCH BÁN HÀNG
               </h2>
@@ -581,11 +594,11 @@ export default function ProjectDetailClient({ project = defaultProject }: { proj
               >
                 NHẬN CHÍNH SÁCH CHI TIẾT
               </Link>
-            </div>
+            </div> : null}
           </section>
-        </Reveal>
+        </Reveal> : null}
 
-        <Reveal>
+        {hasTimeline ? <Reveal>
           <section className="py-2">
             <SectionTitle>TIẾN ĐỘ THI CÔNG</SectionTitle>
             <div className="relative grid gap-5 md:grid-cols-5 md:gap-0">
@@ -617,9 +630,9 @@ export default function ProjectDetailClient({ project = defaultProject }: { proj
               })}
             </div>
           </section>
-        </Reveal>
+        </Reveal> : null}
 
-        <Reveal>
+        {hasInvestmentReasons ? <Reveal>
           <section>
             <SectionTitle>VÌ SAO NÊN ĐẦU TƯ {project.name}?</SectionTitle>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
@@ -636,9 +649,9 @@ export default function ProjectDetailClient({ project = defaultProject }: { proj
               ))}
             </div>
           </section>
-        </Reveal>
+        </Reveal> : null}
 
-        <Reveal>
+        {hasTestimonials ? <Reveal>
           <section>
             <SectionTitle>KHÁCH HÀNG NÓI GÌ?</SectionTitle>
             <div className="grid gap-4 lg:grid-cols-3">
@@ -682,9 +695,9 @@ export default function ProjectDetailClient({ project = defaultProject }: { proj
               <span className="h-1.5 w-1.5 rounded-full border border-gold/50" />
             </div>
           </section>
-        </Reveal>
+        </Reveal> : null}
 
-        <Reveal>
+        {hasFaqs ? <Reveal>
           <section>
             <SectionTitle>CÂU HỎI THƯỜNG GẶP</SectionTitle>
             <div className="grid gap-2 lg:grid-cols-2 xl:grid-cols-3">
@@ -723,7 +736,7 @@ export default function ProjectDetailClient({ project = defaultProject }: { proj
               })}
             </div>
           </section>
-        </Reveal>
+        </Reveal> : null}
 
         <Reveal>
           <section
@@ -731,7 +744,7 @@ export default function ProjectDetailClient({ project = defaultProject }: { proj
             className="relative overflow-hidden rounded-[20px] border border-gold/30 bg-white shadow-soft"
           >
             <Image
-              src="https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?q=88&w=1600&auto=format&fit=crop"
+              src={project.heroImage}
               alt={`Không gian nội thất cao cấp tại ${project.name}`}
               fill
               sizes="1500px"
