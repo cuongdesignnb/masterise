@@ -48,6 +48,12 @@ type FloorPlanItem = { name: string; area: string; totalArea: string; image: str
 type PriceRowItem = { productType: string; area: string; price: string };
 type PolicyItem = { title: string; description: string; icon: string };
 type TimelineItem = { date: string; title: string };
+type BaseMediaTarget = 'thumbnail' | 'banner' | 'gallery' | 'brochure' | 'map';
+type RepeaterMediaTarget =
+  | { group: 'amenityDetails'; index: number; field: 'image' }
+  | { group: 'projectTestimonials'; index: number; field: 'avatar' }
+  | { group: 'floorPlans'; index: number; field: 'image' };
+type MediaSelectorTarget = BaseMediaTarget | RepeaterMediaTarget | null;
 
 export default function AdminProjects() {
   const queryClient = useQueryClient();
@@ -70,7 +76,7 @@ export default function AdminProjects() {
   const [editingCategory, setEditingCategory] = useState<ProjectCategory | null>(null);
   
   // Media Selector state
-  const [mediaSelectorTarget, setMediaSelectorTarget] = useState<'thumbnail' | 'banner' | 'gallery' | 'brochure' | 'map' | null>(null);
+  const [mediaSelectorTarget, setMediaSelectorTarget] = useState<MediaSelectorTarget>(null);
 
   // Form states
   const [formName, setFormName] = useState('');
@@ -629,6 +635,25 @@ export default function AdminProjects() {
 
   // Handle Media Select Modal callback
   const handleMediaSelected = (url: string | string[]) => {
+    if (mediaSelectorTarget && typeof mediaSelectorTarget === 'object') {
+      const selectedUrl = Array.isArray(url) ? url[0] : url;
+      if (!selectedUrl) return;
+      if (mediaSelectorTarget.group === 'amenityDetails') {
+        setFormAmenityDetails(items => items.map((item, index) =>
+          index === mediaSelectorTarget.index ? { ...item, [mediaSelectorTarget.field]: selectedUrl } : item
+        ));
+      } else if (mediaSelectorTarget.group === 'projectTestimonials') {
+        setFormProjectTestimonials(items => items.map((item, index) =>
+          index === mediaSelectorTarget.index ? { ...item, [mediaSelectorTarget.field]: selectedUrl } : item
+        ));
+      } else if (mediaSelectorTarget.group === 'floorPlans') {
+        setFormFloorPlans(items => items.map((item, index) =>
+          index === mediaSelectorTarget.index ? { ...item, [mediaSelectorTarget.field]: selectedUrl } : item
+        ));
+      }
+      setMediaSelectorTarget(null);
+      return;
+    }
     if (mediaSelectorTarget === 'thumbnail') {
       setFormThumbnail(url as string);
     } else if (mediaSelectorTarget === 'banner') {
@@ -643,6 +668,7 @@ export default function AdminProjects() {
       const merged = Array.from(new Set([...formGallery, ...selectedArr]));
       setFormGallery(merged);
     }
+    setMediaSelectorTarget(null);
   };
 
   // Project Category CRUD Mutations
@@ -728,7 +754,7 @@ export default function AdminProjects() {
     items: T[],
     setter: React.Dispatch<React.SetStateAction<T[]>>,
     emptyItem: T,
-    fields: { key: keyof T; label: string; wide?: boolean }[]
+    fields: { key: keyof T; label: string; wide?: boolean; mediaTarget?: RepeaterMediaTarget['group'] }[]
   ) => (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
@@ -739,11 +765,35 @@ export default function AdminProjects() {
       {items.map((item, index) => (
         <div key={index} className={repeaterCardClass}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            {fields.map(field => field.wide ? (
-              <textarea key={String(field.key)} value={item[field.key]} onChange={(e) => updateListItem(items, setter, index, { [field.key]: e.target.value } as Partial<T>)} rows={3} className={`${inputClass} md:col-span-2`} placeholder={field.label} />
-            ) : (
-              <input key={String(field.key)} value={item[field.key]} onChange={(e) => updateListItem(items, setter, index, { [field.key]: e.target.value } as Partial<T>)} className={inputClass} placeholder={field.label} />
-            ))}
+            {fields.map(field => {
+              const fieldName = String(field.key);
+              const mediaGroup = field.mediaTarget ?? null;
+
+              if (field.wide) {
+                return (
+                  <textarea key={fieldName} value={item[field.key]} onChange={(e) => updateListItem(items, setter, index, { [field.key]: e.target.value } as Partial<T>)} rows={3} className={`${inputClass} md:col-span-2`} placeholder={field.label} />
+                );
+              }
+
+              if (mediaGroup) {
+                return (
+                  <div key={fieldName} className="flex gap-2">
+                    <input value={item[field.key]} onChange={(e) => updateListItem(items, setter, index, { [field.key]: e.target.value } as Partial<T>)} className={inputClass} placeholder={field.label} readOnly />
+                    <button
+                      type="button"
+                      onClick={() => setMediaSelectorTarget({ group: mediaGroup, index, field: fieldName as 'image' | 'avatar' } as RepeaterMediaTarget)}
+                      className="shrink-0 px-3 py-2 bg-[#1F1B16] hover:bg-[#B88746] text-white text-xs font-semibold rounded-xl transition-colors"
+                    >
+                      Chọn ảnh
+                    </button>
+                  </div>
+                );
+              }
+
+              return (
+                <input key={fieldName} value={item[field.key]} onChange={(e) => updateListItem(items, setter, index, { [field.key]: e.target.value } as Partial<T>)} className={inputClass} placeholder={field.label} />
+              );
+            })}
           </div>
           <button type="button" onClick={() => removeListItem(items, setter, index)} className={removeButtonClass}>Xóa dòng này</button>
         </div>
@@ -1711,7 +1761,7 @@ export default function AdminProjects() {
                     {renderTextPairRepeater('Tiện ích chi tiết', formAmenityDetails, setFormAmenityDetails, { title: '', description: '', image: '', icon: 'Sparkles' }, [
                       { key: 'title', label: 'Tên tiện ích' },
                       { key: 'icon', label: 'Icon' },
-                      { key: 'image', label: 'URL hình ảnh' },
+                      { key: 'image', label: 'Ảnh tiện ích', mediaTarget: 'amenityDetails' },
                       { key: 'description', label: 'Mô tả tiện ích', wide: true },
                     ])}
                     {renderTextPairRepeater('Lý do nên đầu tư', formInvestmentReasons, setFormInvestmentReasons, { title: '', description: '', icon: 'TrendingUp' }, [
@@ -1722,7 +1772,7 @@ export default function AdminProjects() {
                     {renderTextPairRepeater('Đánh giá khách hàng', formProjectTestimonials, setFormProjectTestimonials, { name: '', role: '', content: '', avatar: '' }, [
                       { key: 'name', label: 'Tên khách hàng' },
                       { key: 'role', label: 'Vai trò, ví dụ: Nhà đầu tư' },
-                      { key: 'avatar', label: 'URL ảnh đại diện' },
+                      { key: 'avatar', label: 'Ảnh đại diện khách hàng', mediaTarget: 'projectTestimonials' },
                       { key: 'content', label: 'Nội dung đánh giá', wide: true },
                     ])}
                     {renderTextPairRepeater('Câu hỏi thường gặp của dự án', formProjectFaqs, setFormProjectFaqs, { question: '', answer: '' }, [
@@ -1751,7 +1801,7 @@ export default function AdminProjects() {
                       { key: 'name', label: 'Tên mặt bằng, ví dụ: Căn hộ 2 phòng ngủ' },
                       { key: 'area', label: 'Diện tích, ví dụ: 68 - 75 m²' },
                       { key: 'totalArea', label: 'Tổng diện tích sàn' },
-                      { key: 'image', label: 'URL ảnh mặt bằng' },
+                      { key: 'image', label: 'Ảnh mặt bằng', mediaTarget: 'floorPlans' },
                     ])}
                     {renderTextPairRepeater('Dòng bảng giá', formPriceRows, setFormPriceRows, { productType: '', area: '', price: '' }, [
                       { key: 'productType', label: 'Loại sản phẩm' },
