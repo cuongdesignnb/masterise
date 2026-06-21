@@ -88,6 +88,7 @@ export default function AdminLayout({
     { name: 'Chủ đầu tư', href: '/admin/developers', icon: Award, roles: ['super_admin', 'admin', 'marketing'] },
     { name: 'Vị trí địa lý', href: '/admin/locations', icon: MapPin, roles: ['super_admin', 'admin', 'marketing'] },
     { name: 'Quản lý Tin tức', href: '/admin/tin-tuc', icon: Newspaper, roles: ['super_admin', 'admin', 'marketing'] },
+    { name: 'Quản lý Chuyên trang', href: '/admin/pages', icon: FileText, roles: ['super_admin', 'admin', 'marketing'] },
     { name: 'Thư viện Media', href: '/admin/media', icon: ImageIcon, roles: ['super_admin', 'admin', 'marketing'] },
 
     // Homepage Content Section

@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\PartnerController;
 use App\Http\Controllers\Api\Admin\AiSettingsController;
 use App\Http\Controllers\Api\Admin\AiContentController;
 use App\Http\Controllers\Api\Admin\AiBatchController;
+use App\Http\Controllers\Api\PageController;
 use Illuminate\Support\Facades\Route;
 
 Route::group(['prefix' => 'v1'], function() {
@@ -43,6 +44,9 @@ Route::group(['prefix' => 'v1'], function() {
     Route::get('/posts/featured', [PostController::class, 'featured']);
     Route::get('/posts/{slug}', [PostController::class, 'show']);
     Route::get('/post-categories', [PostController::class, 'categories']);
+
+    // Static Pages Public Route
+    Route::get('/pages/{slug}', [PageController::class, 'show']);
 
     // Developers
     Route::get('/developers', [DeveloperController::class, 'index']);
@@ -126,6 +130,12 @@ Route::group(['prefix' => 'v1'], function() {
             Route::post('/posts', [PostController::class, 'store']);
             Route::put('/posts/{id}', [PostController::class, 'update']);
             Route::delete('/posts/{id}', [PostController::class, 'destroy']);
+
+            // Static Pages Admin CRUD
+            Route::get('/pages', [PageController::class, 'index']);
+            Route::post('/pages', [PageController::class, 'store']);
+            Route::put('/pages/{id}', [PageController::class, 'update']);
+            Route::delete('/pages/{id}', [PageController::class, 'destroy']);
 
             Route::post('/post-categories', [PostController::class, 'storeCategory']);
             Route::put('/post-categories/{id}', [PostController::class, 'updateCategory']);
