@@ -14,7 +14,7 @@ class SettingController extends Controller
      */
     public function publicSettings()
     {
-        $keys = ['company_name', 'company_address', 'hotline', 'email', 'social_links', 'homepage_meta', 'logo_url', 'about_mission', 'about_vision', 'about_timeline', 'contact_departments', 'projects_page_hero', 'projects_page_cta', 'news_page_hero', 'news_page_cta', 'about_page_hero', 'about_page_intro', 'about_page_metrics', 'about_page_values', 'about_page_awards', 'about_page_ecosystem', 'about_page_sustainability', 'about_page_why_choose', 'about_page_brand_story', 'about_page_faqs', 'about_page_contact_cta', 'about_page_collections'];
+        $keys = ['company_name', 'company_address', 'hotline', 'email', 'social_links', 'homepage_meta', 'logo_url', 'about_mission', 'about_vision', 'about_timeline', 'contact_departments', 'projects_page_hero', 'projects_page_cta', 'news_page_hero', 'news_page_cta', 'about_page_hero', 'about_page_intro', 'about_page_metrics', 'about_page_values', 'about_page_awards', 'about_page_ecosystem', 'about_page_sustainability', 'about_page_why_choose', 'about_page_brand_story', 'about_page_faqs', 'about_page_contact_cta', 'about_page_collections', 'footer_navigation'];
         $settings = [];
 
         foreach ($keys as $key) {

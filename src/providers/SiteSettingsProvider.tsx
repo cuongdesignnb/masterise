@@ -21,6 +21,8 @@ import {
   timeline
 } from "@/data/aboutSeed";
 import { defaultCollections, AboutPageCollectionItem } from "@/data/collectionsSeed";
+import { publicFooterColumns } from "@/data/publicNavigation";
+import { FooterColumn } from "@/types";
 
 export interface SocialLinks {
   facebook: string;
@@ -178,6 +180,7 @@ export interface SiteSettings {
   aboutMission: string;
   aboutVision: string;
   aboutTimeline: { year: string; title: string }[];
+  footerNavigation: FooterColumn[];
   isLoaded: boolean;
 }
 
@@ -217,6 +220,7 @@ const defaultSettings: SiteSettings = {
   aboutMission: visionMission[1]?.description || "",
   aboutVision: visionMission[0]?.description || "",
   aboutTimeline: timeline,
+  footerNavigation: publicFooterColumns,
   isLoaded: false,
 };
 
@@ -603,6 +607,21 @@ export default function SiteSettingsProvider({
           }
         }
 
+        let footerNavigation = publicFooterColumns;
+        if (data.footer_navigation) {
+          try {
+            const parsed =
+              typeof data.footer_navigation === "string"
+                ? JSON.parse(data.footer_navigation)
+                : data.footer_navigation;
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              footerNavigation = parsed;
+            }
+          } catch {
+            // keep default
+          }
+        }
+
         setSettings({
           companyName:
             (data.company_name as string) || defaultSettings.companyName,
@@ -631,6 +650,7 @@ export default function SiteSettingsProvider({
           aboutMission,
           aboutVision,
           aboutTimeline,
+          footerNavigation,
           isLoaded: true,
         });
       } catch {

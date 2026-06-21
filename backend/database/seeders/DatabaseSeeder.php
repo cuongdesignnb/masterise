@@ -97,6 +97,38 @@ class DatabaseSeeder extends Seeder
             ]
         ], 'json');
 
+        Setting::set('footer_navigation', [
+            [
+                'title' => 'MASTERISE HOMES',
+                'links' => [
+                    ['label' => 'Trang chủ', 'href' => '/'],
+                    ['label' => 'Giới thiệu', 'href' => '/gioi-thieu'],
+                    ['label' => 'Dự án', 'href' => '/du-an'],
+                    ['label' => 'Tin tức', 'href' => '/tin-tuc'],
+                    ['label' => 'Đầu tư', 'href' => '/dau-tu'],
+                    ['label' => 'Liên hệ', 'href' => '/lien-he']
+                ]
+            ],
+            [
+                'title' => 'DỰ ÁN',
+                'links' => [
+                    ['label' => 'Masterise Collection', 'href' => '/du-an?category=masterise-colletion'],
+                    ['label' => 'Lumiere Series', 'href' => '/du-an?category=lumiere-series'],
+                    ['label' => 'Sắp mở bán', 'href' => '/du-an?sales_status=coming_soon'],
+                    ['label' => 'Đang mở bán', 'href' => '/du-an?sales_status=selling']
+                ]
+            ],
+            [
+                'title' => 'THÔNG TIN',
+                'links' => [
+                    ['label' => 'Tin tức', 'href' => '/tin-tuc'],
+                    ['label' => 'Đầu tư', 'href' => '/dau-tu'],
+                    ['label' => 'Chính sách bảo mật', 'href' => '#privacy'],
+                    ['label' => 'Điều khoản sử dụng', 'href' => '#terms']
+                ]
+            ]
+        ], 'json');
+
 
         // 10. Seed SEO Meta for Static pages (Idempotent)
         SeoMeta::updateOrCreate(

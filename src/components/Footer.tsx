@@ -4,11 +4,10 @@ import React from "react";
 import Link from "next/link";
 import { Phone, Mail, MapPin, ArrowUp } from "lucide-react";
 import { useSiteSettings } from "@/providers/SiteSettingsProvider";
-import { publicFooterColumns } from "@/data/publicNavigation";
 import Container from "./Container";
 
 export default function Footer() {
-  const { hotline, email, companyAddress, companyName, socialLinks } = useSiteSettings();
+  const { hotline, email, companyAddress, companyName, socialLinks, footerNavigation } = useSiteSettings();
 
   const handleBackToTop = () => {
     window.scrollTo({
@@ -106,7 +105,7 @@ export default function Footer() {
           </div>
 
           {/* Columns 2-4: Navigation links */}
-          {publicFooterColumns.map((col) => (
+          {footerNavigation.map((col) => (
             <div key={col.title} className="lg:col-span-2 flex flex-col text-left">
               <h3 className="text-xs font-bold text-gold tracking-widest uppercase mb-6">
                 {col.title}
