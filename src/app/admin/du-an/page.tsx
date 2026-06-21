@@ -37,6 +37,18 @@ type SelectOption = {
   ward?: string | null;
 };
 
+type IconValueItem = { label: string; value: string; icon: string };
+type StatItem = { value: string; label: string };
+type ConnectivityItem = { time: string; label: string };
+type AmenityItem = { title: string; description: string; image: string; icon: string };
+type ReasonItem = { title: string; description: string; icon: string };
+type TestimonialItem = { name: string; role: string; content: string; avatar: string };
+type FaqItem = { question: string; answer: string };
+type FloorPlanItem = { name: string; area: string; totalArea: string; image: string };
+type PriceRowItem = { productType: string; area: string; price: string };
+type PolicyItem = { title: string; description: string; icon: string };
+type TimelineItem = { date: string; title: string };
+
 export default function AdminProjects() {
   const queryClient = useQueryClient();
   const { hasRole } = useAuth();
@@ -133,30 +145,83 @@ export default function AdminProjects() {
   const [formSchemaPrice, setFormSchemaPrice] = useState('');
   const [formSchemaPriceCurrency, setFormSchemaPriceCurrency] = useState('VND');
   const [formSchemaAvailability, setFormSchemaAvailability] = useState('');
-  const [formQuickCardsJson, setFormQuickCardsJson] = useState('');
-  const [formProjectFactsJson, setFormProjectFactsJson] = useState('');
-  const [formProjectStatsJson, setFormProjectStatsJson] = useState('');
-  const [formConnectivityJson, setFormConnectivityJson] = useState('');
-  const [formAmenityDetailsJson, setFormAmenityDetailsJson] = useState('');
-  const [formInvestmentReasonsJson, setFormInvestmentReasonsJson] = useState('');
-  const [formProjectTestimonialsJson, setFormProjectTestimonialsJson] = useState('');
-  const [formProjectFaqsJson, setFormProjectFaqsJson] = useState('');
-  const [formFloorTabsJson, setFormFloorTabsJson] = useState('');
-  const [formFloorPlansJson, setFormFloorPlansJson] = useState('');
-  const [formPriceRowsJson, setFormPriceRowsJson] = useState('');
-  const [formPolicyCardsJson, setFormPolicyCardsJson] = useState('');
-  const [formProjectTimelineJson, setFormProjectTimelineJson] = useState('');
+  const [formQuickCards, setFormQuickCards] = useState<IconValueItem[]>([]);
+  const [formProjectFacts, setFormProjectFacts] = useState<IconValueItem[]>([]);
+  const [formProjectStats, setFormProjectStats] = useState<StatItem[]>([]);
+  const [formConnectivity, setFormConnectivity] = useState<ConnectivityItem[]>([]);
+  const [formAmenityDetails, setFormAmenityDetails] = useState<AmenityItem[]>([]);
+  const [formInvestmentReasons, setFormInvestmentReasons] = useState<ReasonItem[]>([]);
+  const [formProjectTestimonials, setFormProjectTestimonials] = useState<TestimonialItem[]>([]);
+  const [formProjectFaqs, setFormProjectFaqs] = useState<FaqItem[]>([]);
+  const [formFloorTabs, setFormFloorTabs] = useState<string[]>([]);
+  const [formFloorPlans, setFormFloorPlans] = useState<FloorPlanItem[]>([]);
+  const [formPriceRows, setFormPriceRows] = useState<PriceRowItem[]>([]);
+  const [formPolicyCards, setFormPolicyCards] = useState<PolicyItem[]>([]);
+  const [formProjectTimeline, setFormProjectTimeline] = useState<TimelineItem[]>([]);
 
-  const formatJsonField = (value: unknown) => value ? JSON.stringify(value, null, 2) : '';
-  const parseJsonField = (label: string, value: string) => {
-    if (!value.trim()) return null;
-    try {
-      return JSON.parse(value);
-    } catch {
-      throw new Error(`${label}: JSON khong hop le`);
-    }
-  };
-  const getErrorMessage = (error: unknown) => error instanceof Error ? error.message : 'Loi khi xu ly yeu cau.';
+  const getErrorMessage = (error: unknown) => error instanceof Error ? error.message : 'Lỗi khi xử lý yêu cầu.';
+  const asRecords = (value: unknown): Record<string, unknown>[] => Array.isArray(value)
+    ? value.filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === 'object' && !Array.isArray(item))
+    : [];
+  const asStrings = (value: unknown): string[] => Array.isArray(value)
+    ? value.map((item) => String(item || '').trim()).filter(Boolean)
+    : [];
+  const textValue = (value: unknown) => String(value || '');
+  const loadIconValueItems = (value: unknown, icon = 'LandPlot'): IconValueItem[] => asRecords(value).map((item) => ({
+    label: textValue(item.label),
+    value: textValue(item.value),
+    icon: textValue(item.icon || icon),
+  }));
+  const loadStatItems = (value: unknown): StatItem[] => asRecords(value).map((item) => ({
+    value: textValue(item.value),
+    label: textValue(item.label),
+  }));
+  const loadConnectivityItems = (value: unknown): ConnectivityItem[] => asRecords(value).map((item) => ({
+    time: textValue(item.time),
+    label: textValue(item.label),
+  }));
+  const loadAmenityItems = (value: unknown): AmenityItem[] => asRecords(value).map((item) => ({
+    title: textValue(item.title),
+    description: textValue(item.description),
+    image: textValue(item.image),
+    icon: textValue(item.icon || 'Sparkles'),
+  }));
+  const loadReasonItems = (value: unknown): ReasonItem[] => asRecords(value).map((item) => ({
+    title: textValue(item.title),
+    description: textValue(item.description),
+    icon: textValue(item.icon || 'TrendingUp'),
+  }));
+  const loadTestimonialItems = (value: unknown): TestimonialItem[] => asRecords(value).map((item) => ({
+    name: textValue(item.name),
+    role: textValue(item.role),
+    content: textValue(item.content),
+    avatar: textValue(item.avatar),
+  }));
+  const loadFaqItems = (value: unknown): FaqItem[] => asRecords(value).map((item) => ({
+    question: textValue(item.question),
+    answer: textValue(item.answer),
+  }));
+  const loadFloorPlanItems = (value: unknown): FloorPlanItem[] => asRecords(value).map((item) => ({
+    name: textValue(item.name),
+    area: textValue(item.area),
+    totalArea: textValue(item.totalArea || item.total_area),
+    image: textValue(item.image),
+  }));
+  const loadPriceRowItems = (value: unknown): PriceRowItem[] => Array.isArray(value)
+    ? value.map((row) => Array.isArray(row)
+      ? { productType: textValue(row[0]), area: textValue(row[1]), price: textValue(row[2]) }
+      : { productType: '', area: '', price: '' })
+    : [];
+  const loadPolicyItems = (value: unknown): PolicyItem[] => asRecords(value).map((item) => ({
+    title: textValue(item.title),
+    description: textValue(item.description),
+    icon: textValue(item.icon || 'CalendarDays'),
+  }));
+  const loadTimelineItems = (value: unknown): TimelineItem[] => asRecords(value).map((item) => ({
+    date: textValue(item.date),
+    title: textValue(item.title),
+  }));
+  const cleanArray = <T,>(items: T[], isFilled: (item: T) => boolean) => items.filter(isFilled);
 
   // Queries
   const { data: projectsData, isLoading: isProjectsLoading } = useQuery({
@@ -289,19 +354,19 @@ export default function AdminProjects() {
     setFormSchemaPrice('');
     setFormSchemaPriceCurrency('VND');
     setFormSchemaAvailability('');
-    setFormQuickCardsJson('');
-    setFormProjectFactsJson('');
-    setFormProjectStatsJson('');
-    setFormConnectivityJson('');
-    setFormAmenityDetailsJson('');
-    setFormInvestmentReasonsJson('');
-    setFormProjectTestimonialsJson('');
-    setFormProjectFaqsJson('');
-    setFormFloorTabsJson('');
-    setFormFloorPlansJson('');
-    setFormPriceRowsJson('');
-    setFormPolicyCardsJson('');
-    setFormProjectTimelineJson('');
+    setFormQuickCards([]);
+    setFormProjectFacts([]);
+    setFormProjectStats([]);
+    setFormConnectivity([]);
+    setFormAmenityDetails([]);
+    setFormInvestmentReasons([]);
+    setFormProjectTestimonials([]);
+    setFormProjectFaqs([]);
+    setFormFloorTabs([]);
+    setFormFloorPlans([]);
+    setFormPriceRows([]);
+    setFormPolicyCards([]);
+    setFormProjectTimeline([]);
     
     setIsFormOpen(true);
   };
@@ -379,19 +444,19 @@ export default function AdminProjects() {
     setFormSchemaPrice(project.schema_price || '');
     setFormSchemaPriceCurrency(project.schema_price_currency || 'VND');
     setFormSchemaAvailability(project.schema_availability || '');
-    setFormQuickCardsJson(formatJsonField(project.quick_cards));
-    setFormProjectFactsJson(formatJsonField(project.project_facts));
-    setFormProjectStatsJson(formatJsonField(project.project_stats));
-    setFormConnectivityJson(formatJsonField(project.connectivity));
-    setFormAmenityDetailsJson(formatJsonField(project.amenity_details));
-    setFormInvestmentReasonsJson(formatJsonField(project.investment_reasons));
-    setFormProjectTestimonialsJson(formatJsonField(project.project_testimonials));
-    setFormProjectFaqsJson(formatJsonField(project.project_faqs));
-    setFormFloorTabsJson(formatJsonField(project.floor_tabs));
-    setFormFloorPlansJson(formatJsonField(project.floor_plans));
-    setFormPriceRowsJson(formatJsonField(project.price_rows));
-    setFormPolicyCardsJson(formatJsonField(project.policy_cards));
-    setFormProjectTimelineJson(formatJsonField(project.project_timeline));
+    setFormQuickCards(loadIconValueItems(project.quick_cards));
+    setFormProjectFacts(loadIconValueItems(project.project_facts, 'MapPin'));
+    setFormProjectStats(loadStatItems(project.project_stats));
+    setFormConnectivity(loadConnectivityItems(project.connectivity));
+    setFormAmenityDetails(loadAmenityItems(project.amenity_details));
+    setFormInvestmentReasons(loadReasonItems(project.investment_reasons));
+    setFormProjectTestimonials(loadTestimonialItems(project.project_testimonials));
+    setFormProjectFaqs(loadFaqItems(project.project_faqs));
+    setFormFloorTabs(asStrings(project.floor_tabs));
+    setFormFloorPlans(loadFloorPlanItems(project.floor_plans));
+    setFormPriceRows(loadPriceRowItems(project.price_rows));
+    setFormPolicyCards(loadPolicyItems(project.policy_cards));
+    setFormProjectTimeline(loadTimelineItems(project.project_timeline));
     
     setIsFormOpen(true);
   };
@@ -414,19 +479,20 @@ export default function AdminProjects() {
         .map(n => n.trim())
         .filter(n => n.length > 0);
 
-      const quickCards = parseJsonField('Quick cards', formQuickCardsJson);
-      const projectFacts = parseJsonField('Project facts', formProjectFactsJson);
-      const projectStats = parseJsonField('Project stats', formProjectStatsJson);
-      const connectivity = parseJsonField('Connectivity', formConnectivityJson);
-      const amenityDetails = parseJsonField('Amenity details', formAmenityDetailsJson);
-      const investmentReasons = parseJsonField('Investment reasons', formInvestmentReasonsJson);
-      const projectTestimonials = parseJsonField('Testimonials', formProjectTestimonialsJson);
-      const projectFaqs = parseJsonField('Project FAQs', formProjectFaqsJson);
-      const floorTabs = parseJsonField('Floor tabs', formFloorTabsJson);
-      const floorPlans = parseJsonField('Floor plans', formFloorPlansJson);
-      const priceRows = parseJsonField('Price rows', formPriceRowsJson);
-      const policyCards = parseJsonField('Policy cards', formPolicyCardsJson);
-      const projectTimeline = parseJsonField('Project timeline', formProjectTimelineJson);
+      const quickCards = cleanArray(formQuickCards, item => Boolean(item.label || item.value));
+      const projectFacts = cleanArray(formProjectFacts, item => Boolean(item.label || item.value));
+      const projectStats = cleanArray(formProjectStats, item => Boolean(item.value || item.label));
+      const connectivity = cleanArray(formConnectivity, item => Boolean(item.time || item.label));
+      const amenityDetails = cleanArray(formAmenityDetails, item => Boolean(item.title || item.description || item.image));
+      const investmentReasons = cleanArray(formInvestmentReasons, item => Boolean(item.title || item.description));
+      const projectTestimonials = cleanArray(formProjectTestimonials, item => Boolean(item.name || item.content));
+      const projectFaqs = cleanArray(formProjectFaqs, item => Boolean(item.question || item.answer));
+      const floorTabs = formFloorTabs.map(tab => tab.trim()).filter(Boolean);
+      const floorPlans = cleanArray(formFloorPlans, item => Boolean(item.name || item.area || item.image));
+      const priceRows = cleanArray(formPriceRows, item => Boolean(item.productType || item.area || item.price))
+        .map(item => [item.productType, item.area, item.price]);
+      const policyCards = cleanArray(formPolicyCards, item => Boolean(item.title || item.description));
+      const projectTimeline = cleanArray(formProjectTimeline, item => Boolean(item.date || item.title));
 
       const payload = {
         name: formName,
@@ -618,6 +684,72 @@ export default function AdminProjects() {
   const projects = projectsData?.data || [];
   const meta = projectsData?.meta;
   const categories = categoriesData || [];
+
+  const inputClass = 'w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-white text-xs focus:outline-none focus:ring-1 focus:ring-[#B88746]';
+  const repeaterCardClass = 'rounded-xl border border-[#E8DCCB] bg-[#FBF8F2]/60 p-3 space-y-3';
+  const removeButtonClass = 'px-2 py-1 text-[10px] font-semibold text-red-600 hover:bg-red-50 rounded-lg';
+  const addButtonClass = 'px-3 py-1.5 bg-[#1F1B16] hover:bg-[#B88746] text-white text-xs font-semibold rounded-lg transition-colors';
+
+  const updateListItem = <T,>(items: T[], setter: React.Dispatch<React.SetStateAction<T[]>>, index: number, patch: Partial<T>) => {
+    setter(items.map((item, itemIndex) => itemIndex === index ? { ...item, ...patch } : item));
+  };
+
+  const removeListItem = <T,>(items: T[], setter: React.Dispatch<React.SetStateAction<T[]>>, index: number) => {
+    setter(items.filter((_, itemIndex) => itemIndex !== index));
+  };
+
+  const renderIconValueRepeater = (
+    title: string,
+    items: IconValueItem[],
+    setter: React.Dispatch<React.SetStateAction<IconValueItem[]>>,
+    emptyItem: IconValueItem
+  ) => (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <label className="text-xs font-semibold text-[#8C7A6B]">{title}</label>
+        <button type="button" onClick={() => setter([...items, emptyItem])} className={addButtonClass}>Thêm dòng</button>
+      </div>
+      {items.length === 0 ? <p className="text-xs text-[#8C7A6B]">Chưa có dữ liệu. Bấm “Thêm dòng” để nhập.</p> : null}
+      {items.map((item, index) => (
+        <div key={index} className={repeaterCardClass}>
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_140px_auto] gap-2">
+            <input value={item.label} onChange={(e) => updateListItem(items, setter, index, { label: e.target.value })} className={inputClass} placeholder="Tên hiển thị, ví dụ: Quy mô" />
+            <input value={item.value} onChange={(e) => updateListItem(items, setter, index, { value: e.target.value })} className={inputClass} placeholder="Giá trị, ví dụ: 3,5 ha" />
+            <input value={item.icon} onChange={(e) => updateListItem(items, setter, index, { icon: e.target.value })} className={inputClass} placeholder="Icon" />
+            <button type="button" onClick={() => removeListItem(items, setter, index)} className={removeButtonClass}>Xóa</button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  const renderTextPairRepeater = <T extends Record<string, string>>(
+    title: string,
+    items: T[],
+    setter: React.Dispatch<React.SetStateAction<T[]>>,
+    emptyItem: T,
+    fields: { key: keyof T; label: string; wide?: boolean }[]
+  ) => (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <label className="text-xs font-semibold text-[#8C7A6B]">{title}</label>
+        <button type="button" onClick={() => setter([...items, emptyItem])} className={addButtonClass}>Thêm dòng</button>
+      </div>
+      {items.length === 0 ? <p className="text-xs text-[#8C7A6B]">Chưa có dữ liệu. Bấm “Thêm dòng” để nhập.</p> : null}
+      {items.map((item, index) => (
+        <div key={index} className={repeaterCardClass}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            {fields.map(field => field.wide ? (
+              <textarea key={String(field.key)} value={item[field.key]} onChange={(e) => updateListItem(items, setter, index, { [field.key]: e.target.value } as Partial<T>)} rows={3} className={`${inputClass} md:col-span-2`} placeholder={field.label} />
+            ) : (
+              <input key={String(field.key)} value={item[field.key]} onChange={(e) => updateListItem(items, setter, index, { [field.key]: e.target.value } as Partial<T>)} className={inputClass} placeholder={field.label} />
+            ))}
+          </div>
+          <button type="button" onClick={() => removeListItem(items, setter, index)} className={removeButtonClass}>Xóa dòng này</button>
+        </div>
+      ))}
+    </div>
+  );
 
   return (
     <div className="space-y-6">
@@ -891,8 +1023,8 @@ export default function AdminProjects() {
                   { id: 'location', label: 'Vị trí & Giá' },
                   { id: 'content', label: 'Mô tả & Tiện ích' },
                   { id: 'media', label: 'Ảnh & Tài liệu' },
-                  { id: 'detail', label: 'Chi tiet hien thi' },
-                  { id: 'pricing', label: 'Bang gia & Tien do' },
+                  { id: 'detail', label: 'Chi tiết hiển thị' },
+                  { id: 'pricing', label: 'Bảng giá & Tiến độ' },
                   { id: 'seo', label: 'Cấu hình SEO' },
                   { id: 'vr360', label: 'VR 360' }
                 ].map(tab => (
@@ -1530,80 +1662,111 @@ export default function AdminProjects() {
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Hero subtitle</label>
-                        <input value={formHeroSubtitle} onChange={(e) => setFormHeroSubtitle(e.target.value)} className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none" />
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Dòng mô tả dưới tên dự án</label>
+                        <input value={formHeroSubtitle} onChange={(e) => setFormHeroSubtitle(e.target.value)} className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none" placeholder="Ví dụ: Biểu tượng sống mới tại trung tâm thành phố" />
                       </div>
                       <div>
-                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Badge text</label>
-                        <input value={formBadgeText} onChange={(e) => setFormBadgeText(e.target.value)} className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none" />
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Nhãn nổi bật trên hero</label>
+                        <input value={formBadgeText} onChange={(e) => setFormBadgeText(e.target.value)} className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none" placeholder="Ví dụ: Dự án hạng sang" />
                       </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
-                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Gallery label</label>
-                        <input value={formGalleryLabel} onChange={(e) => setFormGalleryLabel(e.target.value)} className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none" />
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Nhãn nhỏ của thư viện ảnh</label>
+                        <input value={formGalleryLabel} onChange={(e) => setFormGalleryLabel(e.target.value)} className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none" placeholder="Ví dụ: Không gian sống" />
                       </div>
                       <div>
-                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Gallery title</label>
-                        <input value={formGalleryTitle} onChange={(e) => setFormGalleryTitle(e.target.value)} className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none" />
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Tiêu đề thư viện ảnh</label>
+                        <input value={formGalleryTitle} onChange={(e) => setFormGalleryTitle(e.target.value)} className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none" placeholder="Ví dụ: Bộ sưu tập hình ảnh dự án" />
                       </div>
                       <div>
-                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Schema availability</label>
-                        <input value={formSchemaAvailability} onChange={(e) => setFormSchemaAvailability(e.target.value)} className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none" placeholder="https://schema.org/InStock" />
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Tình trạng schema Google</label>
+                        <input value={formSchemaAvailability} onChange={(e) => setFormSchemaAvailability(e.target.value)} className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none" placeholder="Ví dụ: https://schema.org/InStock" />
                       </div>
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Gallery description</label>
+                      <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Mô tả thư viện ảnh</label>
                       <textarea value={formGalleryDescription} onChange={(e) => setFormGalleryDescription(e.target.value)} rows={3} className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none" />
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Schema price</label>
-                        <input value={formSchemaPrice} onChange={(e) => setFormSchemaPrice(e.target.value)} className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none" />
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Giá schema Google</label>
+                        <input value={formSchemaPrice} onChange={(e) => setFormSchemaPrice(e.target.value)} className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none" placeholder="Ví dụ: 8900000000" />
                       </div>
                       <div>
-                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Schema currency</label>
-                        <input value={formSchemaPriceCurrency} onChange={(e) => setFormSchemaPriceCurrency(e.target.value)} className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none" />
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Đơn vị tiền tệ schema</label>
+                        <input value={formSchemaPriceCurrency} onChange={(e) => setFormSchemaPriceCurrency(e.target.value)} className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none" placeholder="VND" />
                       </div>
                     </div>
-                    {[
-                      ['Quick cards JSON', formQuickCardsJson, setFormQuickCardsJson, '[{"label":"Quy mo","value":"3.5 ha","icon":"LandPlot"}]'],
-                      ['Project facts JSON', formProjectFactsJson, setFormProjectFactsJson, '[{"label":"Vi tri","value":"TP. HCM","icon":"MapPin"}]'],
-                      ['Project stats JSON', formProjectStatsJson, setFormProjectStatsJson, '[{"value":"3.5 ha","label":"Quy mo du an"}]'],
-                      ['Connectivity JSON', formConnectivityJson, setFormConnectivityJson, '[{"time":"5 phut","label":"Den trung tam thuong mai"}]'],
-                      ['Amenity details JSON', formAmenityDetailsJson, setFormAmenityDetailsJson, '[{"title":"Ho boi","description":"Khong gian thu gian","image":"/uploads/projects/pool.jpg","icon":"Waves"}]'],
-                      ['Investment reasons JSON', formInvestmentReasonsJson, setFormInvestmentReasonsJson, '[{"title":"Vi tri chien luoc","description":"Ket noi thuan tien","icon":"MapPin"}]'],
-                      ['Testimonials JSON', formProjectTestimonialsJson, setFormProjectTestimonialsJson, '[{"name":"Khach hang","role":"Nha dau tu","content":"Danh gia thuc te","avatar":""}]'],
-                      ['Project FAQs JSON', formProjectFaqsJson, setFormProjectFaqsJson, '[{"question":"Du an nam o dau?","answer":"Nhap cau tra loi tu admin."}]'],
-                    ].map(([label, value, setter, sample]) => (
-                      <div key={label as string}>
-                        <div className="flex items-center justify-between mb-1">
-                          <label className="block text-xs font-semibold text-[#8C7A6B]">{label as string}</label>
-                          <button type="button" onClick={() => (setter as React.Dispatch<React.SetStateAction<string>>)(sample as string)} className="text-[10px] font-semibold text-[#B88746]">Dung mau cau truc</button>
-                        </div>
-                        <textarea value={value as string} onChange={(e) => (setter as React.Dispatch<React.SetStateAction<string>>)(e.target.value)} rows={4} className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] font-mono text-xs focus:outline-none" placeholder={sample as string} />
-                      </div>
-                    ))}
+                    {renderIconValueRepeater('Thẻ thông tin nhanh', formQuickCards, setFormQuickCards, { label: '', value: '', icon: 'LandPlot' })}
+                    {renderIconValueRepeater('Thông tin tổng quan dự án', formProjectFacts, setFormProjectFacts, { label: '', value: '', icon: 'MapPin' })}
+                    {renderTextPairRepeater('Chỉ số nổi bật', formProjectStats, setFormProjectStats, { value: '', label: '' }, [
+                      { key: 'value', label: 'Giá trị, ví dụ: 3,5 ha' },
+                      { key: 'label', label: 'Nhãn, ví dụ: Quy mô dự án' },
+                    ])}
+                    {renderTextPairRepeater('Kết nối vị trí', formConnectivity, setFormConnectivity, { time: '', label: '' }, [
+                      { key: 'time', label: 'Thời gian, ví dụ: 5 phút' },
+                      { key: 'label', label: 'Địa điểm, ví dụ: Đến trung tâm thương mại' },
+                    ])}
+                    {renderTextPairRepeater('Tiện ích chi tiết', formAmenityDetails, setFormAmenityDetails, { title: '', description: '', image: '', icon: 'Sparkles' }, [
+                      { key: 'title', label: 'Tên tiện ích' },
+                      { key: 'icon', label: 'Icon' },
+                      { key: 'image', label: 'URL hình ảnh' },
+                      { key: 'description', label: 'Mô tả tiện ích', wide: true },
+                    ])}
+                    {renderTextPairRepeater('Lý do nên đầu tư', formInvestmentReasons, setFormInvestmentReasons, { title: '', description: '', icon: 'TrendingUp' }, [
+                      { key: 'title', label: 'Tiêu đề' },
+                      { key: 'icon', label: 'Icon' },
+                      { key: 'description', label: 'Mô tả lý do', wide: true },
+                    ])}
+                    {renderTextPairRepeater('Đánh giá khách hàng', formProjectTestimonials, setFormProjectTestimonials, { name: '', role: '', content: '', avatar: '' }, [
+                      { key: 'name', label: 'Tên khách hàng' },
+                      { key: 'role', label: 'Vai trò, ví dụ: Nhà đầu tư' },
+                      { key: 'avatar', label: 'URL ảnh đại diện' },
+                      { key: 'content', label: 'Nội dung đánh giá', wide: true },
+                    ])}
+                    {renderTextPairRepeater('Câu hỏi thường gặp của dự án', formProjectFaqs, setFormProjectFaqs, { question: '', answer: '' }, [
+                      { key: 'question', label: 'Câu hỏi' },
+                      { key: 'answer', label: 'Câu trả lời', wide: true },
+                    ])}
                   </div>
                 )}
 
                 {activeTab === 'pricing' && (
                   <div className="space-y-4">
-                    {[
-                      ['Floor tabs JSON', formFloorTabsJson, setFormFloorTabsJson, '["Can ho","Penthouse","Shophouse"]'],
-                      ['Floor plans JSON', formFloorPlansJson, setFormFloorPlansJson, '[{"name":"Can ho 2 phong ngu","area":"68 - 75 m2","totalArea":"75 m2","image":"/uploads/projects/floor-plan.jpg"}]'],
-                      ['Price rows JSON', formPriceRowsJson, setFormPriceRowsJson, '[["Can ho 1 phong ngu","45 - 55 m2","Lien he"]]'],
-                      ['Policy cards JSON', formPolicyCardsJson, setFormPolicyCardsJson, '[{"title":"Chinh sach thanh toan","description":"Thanh toan theo tien do.","icon":"CalendarDays"}]'],
-                      ['Project timeline JSON', formProjectTimelineJson, setFormProjectTimelineJson, '[{"date":"Q1/2026","title":"Mo ban phan khu dau tien"}]'],
-                    ].map(([label, value, setter, sample]) => (
-                      <div key={label as string}>
-                        <div className="flex items-center justify-between mb-1">
-                          <label className="block text-xs font-semibold text-[#8C7A6B]">{label as string}</label>
-                          <button type="button" onClick={() => (setter as React.Dispatch<React.SetStateAction<string>>)(sample as string)} className="text-[10px] font-semibold text-[#B88746]">Dung mau cau truc</button>
-                        </div>
-                        <textarea value={value as string} onChange={(e) => (setter as React.Dispatch<React.SetStateAction<string>>)(e.target.value)} rows={5} className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] font-mono text-xs focus:outline-none" placeholder={sample as string} />
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-semibold text-[#8C7A6B]">Tab loại sản phẩm</label>
+                        <button type="button" onClick={() => setFormFloorTabs([...formFloorTabs, ''])} className={addButtonClass}>Thêm tab</button>
                       </div>
-                    ))}
+                      {formFloorTabs.length === 0 ? <p className="text-xs text-[#8C7A6B]">Chưa có tab sản phẩm.</p> : null}
+                      {formFloorTabs.map((tab, index) => (
+                        <div key={index} className="flex gap-2">
+                          <input value={tab} onChange={(e) => setFormFloorTabs(formFloorTabs.map((item, itemIndex) => itemIndex === index ? e.target.value : item))} className={inputClass} placeholder="Ví dụ: Căn hộ" />
+                          <button type="button" onClick={() => setFormFloorTabs(formFloorTabs.filter((_, itemIndex) => itemIndex !== index))} className={removeButtonClass}>Xóa</button>
+                        </div>
+                      ))}
+                    </div>
+                    {renderTextPairRepeater('Danh sách mặt bằng', formFloorPlans, setFormFloorPlans, { name: '', area: '', totalArea: '', image: '' }, [
+                      { key: 'name', label: 'Tên mặt bằng, ví dụ: Căn hộ 2 phòng ngủ' },
+                      { key: 'area', label: 'Diện tích, ví dụ: 68 - 75 m²' },
+                      { key: 'totalArea', label: 'Tổng diện tích sàn' },
+                      { key: 'image', label: 'URL ảnh mặt bằng' },
+                    ])}
+                    {renderTextPairRepeater('Dòng bảng giá', formPriceRows, setFormPriceRows, { productType: '', area: '', price: '' }, [
+                      { key: 'productType', label: 'Loại sản phẩm' },
+                      { key: 'area', label: 'Diện tích' },
+                      { key: 'price', label: 'Giá bán, ví dụ: Liên hệ' },
+                    ])}
+                    {renderTextPairRepeater('Chính sách bán hàng', formPolicyCards, setFormPolicyCards, { title: '', description: '', icon: 'CalendarDays' }, [
+                      { key: 'title', label: 'Tên chính sách' },
+                      { key: 'icon', label: 'Icon' },
+                      { key: 'description', label: 'Mô tả chính sách', wide: true },
+                    ])}
+                    {renderTextPairRepeater('Tiến độ dự án', formProjectTimeline, setFormProjectTimeline, { date: '', title: '' }, [
+                      { key: 'date', label: 'Mốc thời gian, ví dụ: Quý 1/2026' },
+                      { key: 'title', label: 'Nội dung tiến độ' },
+                    ])}
                   </div>
                 )}
 

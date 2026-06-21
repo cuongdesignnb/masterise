@@ -4,7 +4,7 @@ import { ProjectDetail, IconDetail, ProjectIconName } from '@/types/project-deta
 import { getSalesStatusLabel } from '@/lib/salesStatus';
 
 const INTERNAL_IMAGE_PLACEHOLDER = '/file.svg';
-const UPDATING = 'Dang cap nhat';
+const UPDATING = 'Đang cập nhật';
 
 function asArray<T>(value: T[] | null | undefined): T[] {
   return Array.isArray(value) ? value.filter(Boolean) : [];
@@ -63,16 +63,16 @@ function normalizeIconDetails(value: unknown, fallbackIcon: ProjectIconName): Ic
 function buildQuickCardsFromRealFields(api: ApiProject): IconDetail[] {
   return [
     api.area_size || api.area_text
-      ? { label: 'Quy mo', value: api.area_size || api.area_text || '', icon: 'LandPlot' as const }
+      ? { label: 'Quy mô', value: api.area_size || api.area_text || '', icon: 'LandPlot' as const }
       : null,
     api.price_text
-      ? { label: 'Gia tham khao', value: api.price_text, icon: 'BadgeDollarSign' as const }
+      ? { label: 'Giá tham khảo', value: api.price_text, icon: 'BadgeDollarSign' as const }
       : null,
     api.handover_time
-      ? { label: 'Ban giao', value: api.handover_time, icon: 'CalendarDays' as const }
+      ? { label: 'Bàn giao', value: api.handover_time, icon: 'CalendarDays' as const }
       : null,
     api.sales_status
-      ? { label: 'Tinh trang', value: getSalesStatusLabel(api.sales_status), icon: 'Building2' as const }
+      ? { label: 'Tình trạng', value: getSalesStatusLabel(api.sales_status), icon: 'Building2' as const }
       : null,
   ].filter(notNull);
 }
@@ -80,22 +80,22 @@ function buildQuickCardsFromRealFields(api: ApiProject): IconDetail[] {
 function buildFactsFromRealFields(api: ApiProject): IconDetail[] {
   return [
     api.location || api.address
-      ? { label: 'Vi tri', value: api.location || api.address || '', icon: 'MapPin' as const }
+      ? { label: 'Vị trí', value: api.location || api.address || '', icon: 'MapPin' as const }
       : null,
     api.developer
-      ? { label: 'Chu dau tu', value: api.developer, icon: 'Building2' as const }
+      ? { label: 'Chủ đầu tư', value: api.developer, icon: 'Building2' as const }
       : null,
     api.area_size || api.area_text || api.total_area
-      ? { label: 'Tong quy mo', value: api.area_size || api.area_text || api.total_area || '', icon: 'LandPlot' as const }
+      ? { label: 'Tổng quy mô', value: api.area_size || api.area_text || api.total_area || '', icon: 'LandPlot' as const }
       : null,
     api.scale
-      ? { label: 'Loai hinh', value: api.scale, icon: 'PanelsTopLeft' as const }
+      ? { label: 'Loại hình', value: api.scale, icon: 'PanelsTopLeft' as const }
       : null,
     api.ownership_type
-      ? { label: 'So huu', value: api.ownership_type, icon: 'ClipboardCheck' as const }
+      ? { label: 'Sở hữu', value: api.ownership_type, icon: 'ClipboardCheck' as const }
       : null,
     api.legal_status
-      ? { label: 'Phap ly', value: api.legal_status, icon: 'FileCheck2' as const }
+      ? { label: 'Pháp lý', value: api.legal_status, icon: 'FileCheck2' as const }
       : null,
   ].filter(notNull);
 }

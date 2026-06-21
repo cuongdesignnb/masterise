@@ -21,13 +21,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   if (!project) {
     return {
-      title: 'Khong tim thay du an | Masterise Homes',
-      description: 'Du an khong ton tai hoac da bi go xuong.',
+      title: 'Không tìm thấy dự án | Masterise Homes',
+      description: 'Dự án không tồn tại hoặc đã bị gỡ xuống.',
     };
   }
 
   const seoTitle = project.seo_meta?.title || project.name;
-  const seoDescription = project.seo_meta?.description || project.description || `Thong tin chi tiet du an ${project.name}.`;
+  const seoDescription = project.seo_meta?.description || project.description || `Thông tin chi tiết dự án ${project.name}.`;
   const seoImage = project.seo_meta?.og_image || project.banner_image || project.thumbnail || undefined;
 
   return {
@@ -72,8 +72,8 @@ export default async function ProjectDetailPage({ params }: PageProps) {
       {
         '@type': 'BreadcrumbList',
         itemListElement: [
-          { '@type': 'ListItem', position: 1, name: 'Trang chu', item: siteUrl },
-          { '@type': 'ListItem', position: 2, name: 'Du an', item: `${siteUrl}/du-an` },
+          { '@type': 'ListItem', position: 1, name: 'Trang chủ', item: siteUrl },
+          { '@type': 'ListItem', position: 2, name: 'Dự án', item: `${siteUrl}/du-an` },
           {
             '@type': 'ListItem',
             position: 3,
