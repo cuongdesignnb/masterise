@@ -126,9 +126,15 @@ class DatabaseSeeder extends Seeder
                     ['label' => 'Chính sách bảo mật', 'href' => '#privacy'],
                     ['label' => 'Điều khoản sử dụng', 'href' => '#terms']
                 ]
-            ]
         ], 'json');
 
+        // Seed default AI settings if not exist or if they are invalid defaults
+        if (!Setting::get('ai_text_model') || Setting::get('ai_text_model') === 'gpt-5.4-mini') {
+            Setting::set('ai_text_model', 'gpt-4o-mini');
+        }
+        if (!Setting::get('ai_image_model') || Setting::get('ai_image_model') === 'gpt-image-2') {
+            Setting::set('ai_image_model', 'dall-e-2');
+        }
 
         // 10. Seed SEO Meta for Static pages (Idempotent)
         SeoMeta::updateOrCreate(
