@@ -23,10 +23,16 @@ import {
   Newspaper,
   Eye,
   EyeOff,
-  Send
+  Send,
+  Search,
+  FileText,
+  BookOpen
 } from 'lucide-react';
 import MediaSelectModal from '@/components/admin/MediaSelectModal';
 import { defaultCollections } from '@/data/collectionsSeed';
+import { pageService } from '@/services/pageService';
+import { postService } from '@/services/postService';
+import { projectService } from '@/services/projectService';
 
 // Interfaces for structured settings
 interface SlideItem {
@@ -60,6 +66,8 @@ export default function AdminSettings() {
 
   const [footerNavigation, setFooterNavigation] = useState<{ title: string; links: { label: string; href: string }[] }[]>([]);
   const [suggestTarget, setSuggestTarget] = useState<{ colIdx: number; linkIdx: number } | null>(null);
+  const [suggestActiveTab, setSuggestActiveTab] = useState<'pages' | 'filters' | 'projects' | 'posts'>('pages');
+  const [suggestSearch, setSuggestSearch] = useState('');
 
   // Fetch project categories for suggestions
   const { data: projectCategoriesData = [] } = useQuery({
@@ -69,6 +77,51 @@ export default function AdminSettings() {
       return response.data || [];
     }
   });
+
+  // Fetch static pages for suggestions
+  const { data: staticPagesData = [] } = useQuery({
+    queryKey: ['admin-static-pages-select'],
+    queryFn: async () => {
+      const response = await pageService.getPages({ per_page: 100, status: 'published' });
+      return response.data || [];
+    }
+  });
+
+  // Fetch project regions for suggestions
+  const { data: projectRegionsData = [] } = useQuery({
+    queryKey: ['admin-project-regions-select'],
+    queryFn: async () => {
+      const response = await api.get<{ region: string; total: number }[]>('/project-regions');
+      return response.data || [];
+    }
+  });
+
+  // Fetch projects for suggestions
+  const { data: projectsData = [] } = useQuery({
+    queryKey: ['admin-projects-select'],
+    queryFn: async () => {
+      return await projectService.getProjects({ per_page: '100' });
+    }
+  });
+
+  // Fetch post categories for suggestions
+  const { data: postCategoriesData = [] } = useQuery({
+    queryKey: ['admin-post-categories-select'],
+    queryFn: async () => {
+      const response = await api.get<{ id: number; name: string; slug: string }[]>('/post-categories');
+      return response.data || [];
+    }
+  });
+
+  // Fetch posts for suggestions
+  const { data: postsResponse } = useQuery({
+    queryKey: ['admin-posts-select'],
+    queryFn: async () => {
+      const response = await postService.getPosts({ per_page: 100, status: 'published' });
+      return response;
+    }
+  });
+  const postsData = (postsResponse?.data || []) as any[];
 
   // Form States
   const [companyName, setCompanyName] = useState('');
@@ -2822,108 +2875,325 @@ export default function AdminSettings() {
                                 </div>
 
                                 {/* Suggestion Popover */}
-                                {suggestTarget?.colIdx === colIdx && suggestTarget?.linkIdx === linkIdx && (
-                                  <div className="absolute left-0 right-0 top-12 bg-white border border-[#E8DCCB] rounded-xl shadow-xl z-20 max-h-64 overflow-y-auto p-2.5 text-xs text-left animate-fadeIn">
-                                    <div className="flex justify-between items-center pb-2 mb-2 border-b border-[#E8DCCB]/60">
-                                      <span className="font-bold text-[#B88746]">Đề xuất liên kết</span>
-                                      <button type="button" onClick={() => setSuggestTarget(null)} className="text-[#8C7A6B] hover:text-[#1F1B16]">
-                                        <X className="w-3.5 h-3.5" />
-                                      </button>
-                                    </div>
+                                {suggestTarget?.colIdx === colIdx && suggestTarget?.linkIdx === linkIdx && (() => {
+                                  const searchLower = suggestSearch.toLowerCase();
 
-                                    <div className="space-y-3">
-                                      {/* Trang tĩnh */}
-                                      <div>
-                                        <span className="font-bold text-gray-400 block mb-1 text-[9px] uppercase tracking-wider">Trang chính</span>
-                                        <div className="grid grid-cols-2 gap-1 bg-[#FBF8F2] p-1.5 rounded-lg border border-[#E8DCCB]/40">
-                                          {[
-                                            { label: 'Trang chủ', href: '/' },
-                                            { label: 'Giới thiệu', href: '/gioi-thieu' },
-                                            { label: 'Dự án', href: '/du-an' },
-                                            { label: 'Tin tức', href: '/tin-tuc' },
-                                            { label: 'Đầu tư', href: '/dau-tu' },
-                                            { label: 'Liên hệ', href: '/lien-he' }
-                                          ].map(item => (
-                                            <button
-                                              key={item.href}
-                                              type="button"
-                                              onClick={() => {
-                                                const newCols = [...footerNavigation];
-                                                newCols[colIdx].links[linkIdx].label = item.label;
-                                                newCols[colIdx].links[linkIdx].href = item.href;
-                                                setFooterNavigation(newCols);
-                                                setSuggestTarget(null);
-                                              }}
-                                              className="p-1 hover:bg-[#B88746]/10 text-left rounded text-[11px] truncate hover:text-[#B88746] transition-all font-medium"
-                                            >
-                                              {item.label}
-                                            </button>
-                                          ))}
-                                        </div>
+                                  const filteredPages = [
+                                    { label: 'Trang chủ', href: '/' },
+                                    { label: 'Giới thiệu', href: '/gioi-thieu' },
+                                    { label: 'Dự án', href: '/du-an' },
+                                    { label: 'Tin tức', href: '/tin-tuc' },
+                                    { label: 'Đầu tư', href: '/dau-tu' },
+                                    { label: 'Liên hệ', href: '/lien-he' },
+                                    ...staticPagesData.map((p: any) => ({ label: p.title, href: `/chuyen-trang/${p.slug}` }))
+                                  ].filter((p: any) => p.label.toLowerCase().includes(searchLower) || p.href.toLowerCase().includes(searchLower));
+
+                                  const filteredStatuses = [
+                                    { label: 'Sắp mở bán', href: '/du-an?sales_status=coming_soon' },
+                                    { label: 'Đang mở bán', href: '/du-an?sales_status=selling' },
+                                    { label: 'Đang bàn giao', href: '/du-an?sales_status=handing_over' },
+                                    { label: 'Đã bàn giao', href: '/du-an?sales_status=handover' }
+                                  ].filter((p: any) => p.label.toLowerCase().includes(searchLower));
+
+                                  const filteredProjCats = projectCategoriesData.map((cat: any) => ({
+                                    label: `Dòng SP: ${cat.name}`,
+                                    href: `/du-an?category=${cat.slug}`
+                                  })).filter((p: any) => p.label.toLowerCase().includes(searchLower));
+
+                                  const filteredProjRegions = projectRegionsData.map((reg: any) => ({
+                                    label: `Khu vực: ${reg.region}`,
+                                    href: `/du-an?region=${reg.region}`
+                                  })).filter((p: any) => p.label.toLowerCase().includes(searchLower));
+
+                                  const filteredProjects = projectsData.map((p: any) => ({
+                                    label: p.name,
+                                    href: `/du-an/${p.slug}`
+                                  })).filter((p: any) => p.label.toLowerCase().includes(searchLower));
+
+                                  const filteredPostCats = postCategoriesData.map((cat: any) => ({
+                                    label: `Danh mục tin: ${cat.name}`,
+                                    href: `/tin-tuc?category=${cat.slug}`
+                                  })).filter((p: any) => p.label.toLowerCase().includes(searchLower));
+
+                                  const filteredPosts = postsData.map((p: any) => ({
+                                    label: p.title,
+                                    href: `/tin-tuc/${p.slug}`
+                                  })).filter((p: any) => p.label.toLowerCase().includes(searchLower));
+
+                                  return (
+                                    <div className="absolute left-0 md:left-auto md:right-0 top-12 bg-white border border-[#E8DCCB] rounded-xl shadow-xl z-20 w-[320px] sm:w-[400px] p-3 text-xs text-left animate-fadeIn">
+                                      <div className="flex justify-between items-center pb-2 mb-2 border-b border-[#E8DCCB]/60">
+                                        <span className="font-bold text-[#B88746]">Đề xuất liên kết</span>
+                                        <button type="button" onClick={() => { setSuggestTarget(null); setSuggestSearch(''); }} className="text-[#8C7A6B] hover:text-[#1F1B16]">
+                                          <X className="w-3.5 h-3.5" />
+                                        </button>
                                       </div>
 
-                                      {/* Bộ lọc trạng thái dự án */}
-                                      <div>
-                                        <span className="font-bold text-gray-400 block mb-1 text-[9px] uppercase tracking-wider">Bộ lọc trạng thái dự án</span>
-                                        <div className="space-y-1 bg-[#FBF8F2] p-1.5 rounded-lg border border-[#E8DCCB]/40">
-                                          {[
-                                            { label: 'Sắp mở bán', href: '/du-an?sales_status=coming_soon' },
-                                            { label: 'Đang mở bán', href: '/du-an?sales_status=selling' },
-                                            { label: 'Đã bàn giao', href: '/du-an?sales_status=handed_over' }
-                                          ].map(item => (
-                                            <button
-                                              key={item.href}
-                                              type="button"
-                                              onClick={() => {
-                                                const newCols = [...footerNavigation];
-                                                newCols[colIdx].links[linkIdx].label = item.label;
-                                                newCols[colIdx].links[linkIdx].href = item.href;
-                                                setFooterNavigation(newCols);
-                                                setSuggestTarget(null);
-                                              }}
-                                              className="w-full p-1 hover:bg-[#B88746]/10 text-left rounded text-[11px] hover:text-[#B88746] flex justify-between items-center transition-all"
-                                            >
-                                              <span className="font-medium">{item.label}</span>
-                                              <span className="text-[8px] text-gray-400 font-mono">?sales_status=...</span>
-                                            </button>
-                                          ))}
-                                        </div>
+                                      {/* Search input */}
+                                      <div className="relative mb-2">
+                                        <Search className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-[#8C7A6B]" />
+                                        <input
+                                          type="text"
+                                          placeholder="Tìm nhanh liên kết..."
+                                          value={suggestSearch}
+                                          onChange={(e) => setSuggestSearch(e.target.value)}
+                                          className="w-full pl-8 pr-6 py-1.5 border border-[#E8DCCB] rounded-lg text-xs bg-[#FBF8F2] focus:outline-none focus:border-[#B88746]"
+                                        />
+                                        {suggestSearch && (
+                                          <button
+                                            type="button"
+                                            onClick={() => setSuggestSearch('')}
+                                            className="absolute right-2 top-2 text-gray-400 hover:text-gray-600"
+                                          >
+                                            <X className="w-3.5 h-3.5" />
+                                          </button>
+                                        )}
                                       </div>
 
-                                      {/* Dòng sản phẩm (Project categories) */}
-                                      <div>
-                                        <span className="font-bold text-gray-400 block mb-1 text-[9px] uppercase tracking-wider">Bộ lọc dòng sản phẩm</span>
-                                        <div className="space-y-1 bg-[#FBF8F2] p-1.5 rounded-lg border border-[#E8DCCB]/40 max-h-32 overflow-y-auto">
-                                          {projectCategoriesData && projectCategoriesData.length > 0 ? (
-                                            projectCategoriesData.map(cat => {
-                                              const label = cat.name;
-                                              const href = `/du-an?category=${cat.slug}`;
-                                              return (
-                                                <button
-                                                  key={cat.id}
-                                                  type="button"
-                                                  onClick={() => {
-                                                    const newCols = [...footerNavigation];
-                                                    newCols[colIdx].links[linkIdx].label = label;
-                                                    newCols[colIdx].links[linkIdx].href = href;
-                                                    setFooterNavigation(newCols);
-                                                    setSuggestTarget(null);
-                                                  }}
-                                                  className="w-full p-1 hover:bg-[#B88746]/10 text-left rounded text-[11px] hover:text-[#B88746] flex justify-between items-center transition-all"
-                                                >
-                                                  <span className="font-medium truncate mr-1">{label}</span>
-                                                  <span className="text-[8px] text-gray-400 font-mono shrink-0">?category={cat.slug}</span>
-                                                </button>
-                                              );
-                                            })
+                                      {/* Tab navigation */}
+                                      <div className="grid grid-cols-4 gap-1 mb-2.5 border-b border-[#E8DCCB]/40 pb-2">
+                                        {(['pages', 'filters', 'projects', 'posts'] as const).map(tab => {
+                                          let tabLabel = '';
+                                          if (tab === 'pages') tabLabel = 'Trang';
+                                          if (tab === 'filters') tabLabel = 'Bộ lọc';
+                                          if (tab === 'projects') tabLabel = 'Dự án';
+                                          if (tab === 'posts') tabLabel = 'Bài viết';
+
+                                          const isActive = suggestActiveTab === tab;
+                                          return (
+                                            <button
+                                              key={tab}
+                                              type="button"
+                                              onClick={() => setSuggestActiveTab(tab)}
+                                              className={`py-1 text-[10px] font-bold rounded-md text-center transition-all ${
+                                                isActive 
+                                                  ? 'bg-[#B88746] text-white' 
+                                                  : 'bg-[#FBF8F2] text-[#8C7A6B] hover:bg-[#B88746]/10 hover:text-[#B88746]'
+                                              }`}
+                                            >
+                                              {tabLabel}
+                                            </button>
+                                          );
+                                        })}
+                                      </div>
+
+                                      {/* Tab content */}
+                                      {suggestActiveTab === 'pages' && (
+                                        <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                                          {filteredPages.length > 0 ? (
+                                            filteredPages.map((item: any) => (
+                                              <button
+                                                key={item.href}
+                                                type="button"
+                                                onClick={() => {
+                                                  const newCols = [...footerNavigation];
+                                                  newCols[colIdx].links[linkIdx].label = item.label;
+                                                  newCols[colIdx].links[linkIdx].href = item.href;
+                                                  setFooterNavigation(newCols);
+                                                  setSuggestTarget(null);
+                                                  setSuggestSearch('');
+                                                }}
+                                                className="w-full p-2 hover:bg-[#B88746]/10 text-left rounded-lg text-[11px] hover:text-[#B88746] flex justify-between items-center transition-all bg-[#FBF8F2]/60"
+                                              >
+                                                <span className="font-medium flex items-center gap-1.5 text-gray-700">
+                                                  <FileText className="w-3.5 h-3.5 text-[#B88746]" />
+                                                  {item.label}
+                                                </span>
+                                                <span className="text-[9px] text-gray-400 font-mono">{item.href}</span>
+                                              </button>
+                                            ))
                                           ) : (
-                                            <span className="text-gray-400 italic p-1.5 block text-[10px]">Không có dòng sản phẩm nào</span>
+                                            <div className="text-gray-400 italic text-center py-4 text-[11px]">Không tìm thấy trang nào</div>
                                           )}
                                         </div>
-                                      </div>
+                                      )}
+
+                                      {suggestActiveTab === 'filters' && (
+                                        <div className="space-y-3 max-h-48 overflow-y-auto pr-1">
+                                          {/* Trạng thái */}
+                                          {filteredStatuses.length > 0 && (
+                                            <div>
+                                              <div className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1">Trạng thái</div>
+                                              <div className="space-y-1">
+                                                {filteredStatuses.map((item: any) => (
+                                                  <button
+                                                    key={item.href}
+                                                    type="button"
+                                                    onClick={() => {
+                                                      const newCols = [...footerNavigation];
+                                                      newCols[colIdx].links[linkIdx].label = item.label;
+                                                      newCols[colIdx].links[linkIdx].href = item.href;
+                                                      setFooterNavigation(newCols);
+                                                      setSuggestTarget(null);
+                                                      setSuggestSearch('');
+                                                    }}
+                                                    className="w-full p-1.5 hover:bg-[#B88746]/10 text-left rounded text-[11px] hover:text-[#B88746] flex justify-between items-center transition-all bg-[#FBF8F2]/60"
+                                                  >
+                                                    <span className="font-medium text-gray-700">{item.label}</span>
+                                                    <span className="text-[9px] text-gray-400 font-mono">?sales_status=...</span>
+                                                  </button>
+                                                ))}
+                                              </div>
+                                            </div>
+                                          )}
+
+                                          {/* Dòng sản phẩm */}
+                                          {filteredProjCats.length > 0 && (
+                                            <div>
+                                              <div className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1">Dòng sản phẩm & Loại hình</div>
+                                              <div className="space-y-1">
+                                                {filteredProjCats.map((item: any) => (
+                                                  <button
+                                                    key={item.href}
+                                                    type="button"
+                                                    onClick={() => {
+                                                      const newCols = [...footerNavigation];
+                                                      newCols[colIdx].links[linkIdx].label = item.label.replace('Dòng SP: ', '');
+                                                      newCols[colIdx].links[linkIdx].href = item.href;
+                                                      setFooterNavigation(newCols);
+                                                      setSuggestTarget(null);
+                                                      setSuggestSearch('');
+                                                    }}
+                                                    className="w-full p-1.5 hover:bg-[#B88746]/10 text-left rounded text-[11px] hover:text-[#B88746] flex justify-between items-center transition-all bg-[#FBF8F2]/60"
+                                                  >
+                                                    <span className="font-medium text-gray-700">{item.label}</span>
+                                                    <span className="text-[9px] text-gray-400 font-mono truncate max-w-[120px]">{item.href}</span>
+                                                  </button>
+                                                ))}
+                                              </div>
+                                            </div>
+                                          )}
+
+                                          {/* Khu vực */}
+                                          {filteredProjRegions.length > 0 && (
+                                            <div>
+                                              <div className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1">Khu vực địa lý</div>
+                                              <div className="space-y-1">
+                                                {filteredProjRegions.map((item: any) => (
+                                                  <button
+                                                    key={item.href}
+                                                    type="button"
+                                                    onClick={() => {
+                                                      const newCols = [...footerNavigation];
+                                                      newCols[colIdx].links[linkIdx].label = item.label.replace('Khu vực: ', '');
+                                                      newCols[colIdx].links[linkIdx].href = item.href;
+                                                      setFooterNavigation(newCols);
+                                                      setSuggestTarget(null);
+                                                      setSuggestSearch('');
+                                                    }}
+                                                    className="w-full p-1.5 hover:bg-[#B88746]/10 text-left rounded text-[11px] hover:text-[#B88746] flex justify-between items-center transition-all bg-[#FBF8F2]/60"
+                                                  >
+                                                    <span className="font-medium text-gray-700">{item.label}</span>
+                                                    <span className="text-[9px] text-gray-400 font-mono truncate max-w-[120px]">{item.href}</span>
+                                                  </button>
+                                                ))}
+                                              </div>
+                                            </div>
+                                          )}
+
+                                          {filteredStatuses.length === 0 && filteredProjCats.length === 0 && filteredProjRegions.length === 0 && (
+                                            <div className="text-gray-400 italic text-center py-4 text-[11px]">Không tìm thấy bộ lọc nào</div>
+                                          )}
+                                        </div>
+                                      )}
+
+                                      {suggestActiveTab === 'projects' && (
+                                        <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                                          {filteredProjects.length > 0 ? (
+                                            filteredProjects.map((item: any) => (
+                                              <button
+                                                key={item.href}
+                                                type="button"
+                                                onClick={() => {
+                                                  const newCols = [...footerNavigation];
+                                                  newCols[colIdx].links[linkIdx].label = item.label;
+                                                  newCols[colIdx].links[linkIdx].href = item.href;
+                                                  setFooterNavigation(newCols);
+                                                  setSuggestTarget(null);
+                                                  setSuggestSearch('');
+                                                }}
+                                                className="w-full p-2 hover:bg-[#B88746]/10 text-left rounded-lg text-[11px] hover:text-[#B88746] flex justify-between items-center transition-all bg-[#FBF8F2]/60"
+                                              >
+                                                <span className="font-medium flex items-center gap-1.5 text-gray-700">
+                                                  <Building2 className="w-3.5 h-3.5 text-[#B88746]" />
+                                                  {item.label}
+                                                </span>
+                                                <span className="text-[9px] text-gray-400 font-mono">{item.href}</span>
+                                              </button>
+                                            ))
+                                          ) : (
+                                            <div className="text-gray-400 italic text-center py-4 text-[11px]">Không tìm thấy dự án nào</div>
+                                          )}
+                                        </div>
+                                      )}
+
+                                      {suggestActiveTab === 'posts' && (
+                                        <div className="space-y-3 max-h-48 overflow-y-auto pr-1">
+                                          {/* Danh mục tin */}
+                                          {filteredPostCats.length > 0 && (
+                                            <div>
+                                              <div className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1">Danh mục tin tức</div>
+                                              <div className="space-y-1">
+                                                {filteredPostCats.map((item: any) => (
+                                                  <button
+                                                    key={item.href}
+                                                    type="button"
+                                                    onClick={() => {
+                                                      const newCols = [...footerNavigation];
+                                                      newCols[colIdx].links[linkIdx].label = item.label.replace('Danh mục tin: ', '');
+                                                      newCols[colIdx].links[linkIdx].href = item.href;
+                                                      setFooterNavigation(newCols);
+                                                      setSuggestTarget(null);
+                                                      setSuggestSearch('');
+                                                    }}
+                                                    className="w-full p-1.5 hover:bg-[#B88746]/10 text-left rounded text-[11px] hover:text-[#B88746] flex justify-between items-center transition-all bg-[#FBF8F2]/60"
+                                                  >
+                                                    <span className="font-medium text-gray-700">{item.label}</span>
+                                                    <span className="text-[9px] text-gray-400 font-mono truncate max-w-[120px]">{item.href}</span>
+                                                  </button>
+                                                ))}
+                                              </div>
+                                            </div>
+                                          )}
+
+                                          {/* Bài viết */}
+                                          {filteredPosts.length > 0 && (
+                                            <div>
+                                              <div className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1">Bài viết</div>
+                                              <div className="space-y-1">
+                                                {filteredPosts.map((item: any) => (
+                                                  <button
+                                                    key={item.href}
+                                                    type="button"
+                                                    onClick={() => {
+                                                      const newCols = [...footerNavigation];
+                                                      newCols[colIdx].links[linkIdx].label = item.label;
+                                                      newCols[colIdx].links[linkIdx].href = item.href;
+                                                      setFooterNavigation(newCols);
+                                                      setSuggestTarget(null);
+                                                      setSuggestSearch('');
+                                                    }}
+                                                    className="w-full p-2 hover:bg-[#B88746]/10 text-left rounded-lg text-[11px] hover:text-[#B88746] flex justify-between items-center transition-all bg-[#FBF8F2]/60"
+                                                  >
+                                                    <span className="font-medium flex items-center gap-1.5 text-gray-700 truncate mr-2">
+                                                      <Newspaper className="w-3.5 h-3.5 text-[#B88746] shrink-0" />
+                                                      <span className="truncate">{item.label}</span>
+                                                    </span>
+                                                    <span className="text-[9px] text-gray-400 font-mono shrink-0">{item.href}</span>
+                                                  </button>
+                                                ))}
+                                              </div>
+                                            </div>
+                                          )}
+
+                                          {filteredPostCats.length === 0 && filteredPosts.length === 0 && (
+                                            <div className="text-gray-400 italic text-center py-4 text-[11px]">Không tìm thấy bài viết nào</div>
+                                          )}
+                                        </div>
+                                      )}
                                     </div>
-                                  </div>
-                                )}
+                                  );
+                                })()}
                               </div>
                             </div>
                           </div>
