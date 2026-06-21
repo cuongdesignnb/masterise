@@ -294,10 +294,10 @@ export default function AiSettingsPage() {
                   value={formData.ai_text_model || ''} 
                   onChange={handleInputChange}
                   disabled={!isWritable}
-                  placeholder="gpt-5.4-mini"
+                  placeholder="gpt-4o-mini"
                   className="w-full px-4 py-3 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] text-[#1F1B16] focus:outline-none focus:border-[#B88746] transition-all"
                 />
-                <span className="text-[10px] text-[#8C7A6B] mt-1 block">Gợi ý: <code>gpt-5.4-mini</code> (Mặc định), <code>gpt-4o-mini</code>, <code>gpt-4o</code></span>
+                <span className="text-[10px] text-[#8C7A6B] mt-1 block">Gợi ý: <code>gpt-4o-mini</code> (Mặc định), <code>gpt-4o</code></span>
               </div>
 
               <div>
@@ -308,10 +308,10 @@ export default function AiSettingsPage() {
                   value={formData.ai_image_model || ''} 
                   onChange={handleInputChange}
                   disabled={!isWritable}
-                  placeholder="gpt-image-2"
+                  placeholder="dall-e-2"
                   className="w-full px-4 py-3 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] text-[#1F1B16] focus:outline-none focus:border-[#B88746] transition-all"
                 />
-                <span className="text-[10px] text-[#8C7A6B] mt-1 block">Gợi ý: <code>gpt-image-2</code> (Mặc định), <code>dall-e-3</code>, <code>dall-e-2</code></span>
+                <span className="text-[10px] text-[#8C7A6B] mt-1 block">Gợi ý: <code>dall-e-2</code> (Mặc định), <code>dall-e-3</code></span>
               </div>
             </div>
 

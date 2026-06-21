@@ -171,7 +171,7 @@ class AiContentController extends Controller
             'type' => 'regenerate_image',
             'status' => 'processing',
             'provider' => 'openai',
-            'image_model' => Setting::get('ai_image_model', 'gpt-image-2'),
+            'image_model' => Setting::get('ai_image_model', 'dall-e-2'),
             'post_id' => $post->id,
             'created_by' => $user->id,
             'started_at' => now(),

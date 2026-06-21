@@ -55,7 +55,7 @@ class OpenAIService
             ];
         }
 
-        $model = $this->getSetting('ai_text_model', 'gpt-5.4-mini');
+        $model = $this->getSetting('ai_text_model', 'gpt-4o-mini');
 
         try {
             // Call chat completion with max_tokens = 1 to test key validity cheaply
@@ -92,7 +92,7 @@ class OpenAIService
 
             return [
                 'success' => false,
-                'message' => 'API returned error status ' . $response->status(),
+                'message' => 'API returned error status ' . $response->status() . ($errorMessage ? ': ' . $errorMessage : ''),
                 'details' => $errorMessage
             ];
 
@@ -114,7 +114,7 @@ class OpenAIService
             throw new \Exception('OpenAI API Key is not configured.');
         }
 
-        $model = $this->getSetting('ai_text_model', 'gpt-5.4-mini');
+        $model = $this->getSetting('ai_text_model', 'gpt-4o-mini');
         $enableFallback = filter_var($this->getSetting('ai_enable_model_fallback', false), FILTER_VALIDATE_BOOLEAN);
         $fallbackModel = $this->getSetting('ai_fallback_text_model', 'gpt-4o-mini');
 
@@ -194,7 +194,7 @@ class OpenAIService
             throw new \Exception('OpenAI API Key is not configured.');
         }
 
-        $model = $this->getSetting('ai_image_model', 'gpt-image-2');
+        $model = $this->getSetting('ai_image_model', 'dall-e-2');
         $imgSize = $size ?: $this->getSetting('ai_default_image_size', '1024x1024');
         $imgQuality = $quality ?: $this->getSetting('ai_default_image_quality', 'standard');
         
