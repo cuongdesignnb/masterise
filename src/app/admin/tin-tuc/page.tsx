@@ -4,6 +4,7 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'next/navigation';
 import { api } from '@/lib/api';
+import { useToast } from '@/components/admin/Toast';
 import { Post, PostCategory } from '@/types/api';
 import { useAuth } from '@/context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -28,6 +29,7 @@ import RichTextEditor from '@/components/admin/RichTextEditor';
 function AdminNews() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const toast = useToast();
 
   const searchParams = useSearchParams();
   const editId = searchParams.get('edit');
@@ -205,10 +207,10 @@ function AdminNews() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-posts'] });
       setIsFormOpen(false);
-      alert(editingPost ? 'Đã cập nhật bài viết thành công!' : 'Đã đăng bài viết mới thành công!');
+      toast.success(editingPost ? 'Đã cập nhật bài viết thành công!' : 'Đã đăng bài viết mới thành công!');
     },
     onError: (err: any) => {
-      alert(err.message || 'Lỗi khi lưu bài viết. Vui lòng kiểm tra lại dữ liệu.');
+      toast.error(err.message || 'Lỗi khi lưu bài viết. Vui lòng kiểm tra lại dữ liệu.');
     }
   });
 
@@ -219,10 +221,10 @@ function AdminNews() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-posts'] });
-      alert('Đã xóa bài viết thành công.');
+      toast.success('Đã xóa bài viết thành công.');
     },
     onError: (err: any) => {
-      alert(err.message || 'Lỗi khi xóa bài viết.');
+      toast.error(err.message || 'Lỗi khi xóa bài viết.');
     }
   });
 
@@ -251,7 +253,7 @@ function AdminNews() {
       setNewCategoryName('');
     },
     onError: (err: any) => {
-      alert(err.message || 'Lỗi khi tạo danh mục.');
+      toast.error(err.message || 'Lỗi khi tạo danh mục.');
     }
   });
 
@@ -264,7 +266,7 @@ function AdminNews() {
       queryClient.invalidateQueries({ queryKey: ['admin-posts'] });
     },
     onError: (err: any) => {
-      alert(err.message || 'Không thể xóa danh mục chứa bài viết.');
+      toast.error(err.message || 'Không thể xóa danh mục chứa bài viết.');
     }
   });
 

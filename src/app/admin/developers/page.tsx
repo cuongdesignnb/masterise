@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
+import { useToast } from '@/components/admin/Toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Award, 
@@ -38,6 +39,7 @@ interface Developer {
 
 export default function AdminDevelopers() {
   const queryClient = useQueryClient();
+  const toast = useToast();
 
   // Search & Filter state
   const [search, setSearch] = useState('');
@@ -129,10 +131,10 @@ export default function AdminDevelopers() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-developers'] });
       setIsFormOpen(false);
-      alert(editingDeveloper ? 'Đã cập nhật thông tin chủ đầu tư!' : 'Đã thêm chủ đầu tư mới!');
+      toast.success(editingDeveloper ? 'Đã cập nhật thông tin chủ đầu tư!' : 'Đã thêm chủ đầu tư mới!');
     },
     onError: (err: any) => {
-      alert(err.message || 'Lỗi khi lưu thông tin chủ đầu tư.');
+      toast.error(err.message || 'Lỗi khi lưu thông tin chủ đầu tư.');
     }
   });
 
@@ -143,10 +145,10 @@ export default function AdminDevelopers() {
     },
     onSuccess: (response: any) => {
       queryClient.invalidateQueries({ queryKey: ['admin-developers'] });
-      alert(response.message || 'Đã xóa chủ đầu tư thành công.');
+      toast.success(response.message || 'Đã xóa chủ đầu tư thành công.');
     },
     onError: (err: any) => {
-      alert(err.message || 'Không thể xóa chủ đầu tư (có thể do đang liên kết với dự án).');
+      toast.error(err.message || 'Không thể xóa chủ đầu tư (có thể do đang liên kết với dự án).');
     }
   });
 
@@ -159,7 +161,7 @@ export default function AdminDevelopers() {
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formName.trim()) {
-      alert('Vui lòng nhập tên chủ đầu tư.');
+      toast.warning('Vui lòng nhập tên chủ đầu tư.');
       return;
     }
     saveDeveloperMutation.mutate();

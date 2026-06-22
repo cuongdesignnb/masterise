@@ -6,6 +6,7 @@ import { api } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { aiContentService } from '@/services/aiContentService';
 import { AiContentBatch, AiJob } from '@/types/aiContent';
+import { useToast } from '@/components/admin/Toast';
 import { PostCategory, User } from '@/types/api';
 import Link from 'next/link';
 import { 
@@ -30,6 +31,7 @@ import {
 export default function AiBulkPage() {
   const queryClient = useQueryClient();
   const { user, hasRole } = useAuth();
+  const toast = useToast();
   const isWritable = hasRole(['super_admin', 'admin', 'marketing']);
 
   // UI States
@@ -165,7 +167,7 @@ export default function AiBulkPage() {
       });
     },
     onSuccess: (res) => {
-      alert('Đã khởi tạo chiến dịch viết bài hàng loạt thành công! Tiến trình đang được xử lý ngầm.');
+      toast.success('Đã khởi tạo chiến dịch viết bài hàng loạt thành công! Tiến trình đang được xử lý ngầm.');
       // Switch view to detail
       if (res.data?.id) {
         setSelectedBatchId(res.data.id);
@@ -178,7 +180,7 @@ export default function AiBulkPage() {
       queryClient.invalidateQueries({ queryKey: ['admin-ai-batches'] });
     },
     onError: (err: any) => {
-      alert(err.message || 'Lỗi khi tạo chiến dịch hàng loạt. Vui lòng kiểm tra lại quota hoặc API.');
+      toast.error(err.message || 'Lỗi khi tạo chiến dịch hàng loạt. Vui lòng kiểm tra lại quota hoặc API.');
     }
   });
 
@@ -186,12 +188,12 @@ export default function AiBulkPage() {
   const cancelBatchMutation = useMutation({
     mutationFn: (id: number) => aiContentService.cancelBatch(id),
     onSuccess: (res, id) => {
-      alert(res.message || 'Đã gửi yêu cầu hủy chiến dịch.');
+      toast.success(res.message || 'Đã gửi yêu cầu hủy chiến dịch.');
       fetchBatchDetail(id);
       queryClient.invalidateQueries({ queryKey: ['admin-ai-batches'] });
     },
     onError: (err: any) => {
-      alert(err.message || 'Lỗi khi hủy chiến dịch.');
+      toast.error(err.message || 'Lỗi khi hủy chiến dịch.');
     }
   });
 
@@ -206,28 +208,28 @@ export default function AiBulkPage() {
       });
     },
     onSuccess: () => {
-      alert('Đã lên lịch đăng bài viết hàng loạt thành công!');
+      toast.success('Đã lên lịch đăng bài viết hàng loạt thành công!');
       setIsSchedulingOpen(false);
       if (selectedBatchId) fetchBatchDetail(selectedBatchId);
       queryClient.invalidateQueries({ queryKey: ['admin-ai-batches'] });
     },
     onError: (err: any) => {
-      alert(err.message || 'Lỗi khi đặt lịch đăng bài.');
+      toast.error(err.message || 'Lỗi khi đặt lịch đăng bài.');
     }
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!batchTitle) {
-      alert('Vui lòng nhập tên chiến dịch!');
+      toast.warning('Vui lòng nhập tên chiến dịch!');
       return;
     }
     if (!keywordsText.trim()) {
-      alert('Vui lòng nhập danh sách từ khóa!');
+      toast.warning('Vui lòng nhập danh sách từ khóa!');
       return;
     }
     if (!categoryId) {
-      alert('Vui lòng chọn chuyên mục mặc định!');
+      toast.warning('Vui lòng chọn chuyên mục mặc định!');
       return;
     }
     createBatchMutation.mutate();
@@ -236,7 +238,7 @@ export default function AiBulkPage() {
   const handleScheduleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!scheduleStart) {
-      alert('Vui lòng chọn thời gian bắt đầu đăng!');
+      toast.warning('Vui lòng chọn thời gian bắt đầu đăng!');
       return;
     }
     scheduleBatchMutation.mutate();

@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
+import { useToast } from '@/components/admin/Toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Handshake,
@@ -24,6 +25,7 @@ interface Partner {
 
 export default function AdminPartners() {
   const queryClient = useQueryClient();
+  const toast = useToast();
 
   // Modal states
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -87,10 +89,10 @@ export default function AdminPartners() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-partners'] });
       setIsFormOpen(false);
-      alert(editingItem ? 'Đã cập nhật đối tác thành công!' : 'Đã tạo đối tác thành công!');
+      toast.success(editingItem ? 'Đã cập nhật đối tác thành công!' : 'Đã tạo đối tác thành công!');
     },
     onError: (err: any) => {
-      alert(err.message || 'Lỗi khi lưu đối tác.');
+      toast.error(err.message || 'Lỗi khi lưu đối tác.');
     },
   });
 
@@ -101,10 +103,10 @@ export default function AdminPartners() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-partners'] });
-      alert('Đã xóa đối tác thành công.');
+      toast.success('Đã xóa đối tác thành công.');
     },
     onError: (err: any) => {
-      alert(err.message || 'Lỗi khi xóa đối tác.');
+      toast.error(err.message || 'Lỗi khi xóa đối tác.');
     },
   });
 

@@ -6,6 +6,7 @@ import { api } from '@/lib/api';
 import { User } from '@/types/api';
 import { useAuth } from '@/context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useToast } from '@/components/admin/Toast';
 import { 
   Users, 
   Plus, 
@@ -29,6 +30,7 @@ interface ExtendedUser extends User {
 export default function AdminUsers() {
   const queryClient = useQueryClient();
   const { user: currentUser } = useAuth();
+  const toast = useToast();
 
   // Search & Filter state
   const [search, setSearch] = useState('');
@@ -121,10 +123,10 @@ export default function AdminUsers() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
       setIsFormOpen(false);
-      alert(editingUser ? 'Đã cập nhật thông tin thành viên!' : 'Đã tạo tài khoản thành viên mới!');
+      toast.success(editingUser ? 'Đã cập nhật thông tin thành viên!' : 'Đã tạo tài khoản thành viên mới!');
     },
     onError: (err: any) => {
-      alert(err.message || 'Lỗi khi lưu thông tin người dùng.');
+      toast.error(err.message || 'Lỗi khi lưu thông tin người dùng.');
     }
   });
 
@@ -135,16 +137,16 @@ export default function AdminUsers() {
     },
     onSuccess: (response: any) => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
-      alert(response.message || 'Đã xóa thành viên thành công.');
+      toast.success(response.message || 'Đã xóa thành viên thành công.');
     },
     onError: (err: any) => {
-      alert(err.message || 'Lỗi khi xóa thành viên.');
+      toast.error(err.message || 'Lỗi khi xóa thành viên.');
     }
   });
 
   const handleDeleteUser = (id: number, name: string) => {
     if (id === currentUser?.id) {
-      alert('Bạn không thể tự xóa tài khoản của chính mình.');
+      toast.warning('Bạn không thể tự xóa tài khoản của chính mình.');
       return;
     }
     if (window.confirm(`Bạn có chắc chắn muốn xóa thành viên "${name}"? Nếu người dùng có lịch sử leads/lịch hẹn, tài khoản sẽ được Khóa thay vì xóa cứng.`)) {

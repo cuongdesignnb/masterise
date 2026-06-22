@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { ToastProvider } from '@/components/admin/Toast';
 import { 
   Building, 
   Newspaper, 
@@ -117,6 +118,7 @@ export default function AdminLayout({
   const filteredMenuItems = menuItems.filter(item => hasRole(item.roles));
 
   return (
+    <ToastProvider>
     <div className="min-h-screen bg-[#FBF8F2] flex font-body text-[#1F1B16]">
       {/* Desktop Admin Sidebar (Luxury Dark Theme) */}
       <aside className="hidden lg:flex flex-col w-64 bg-[#1F1B16] text-[#E8DCCB] shrink-0 border-r border-[#1F1B16]">
@@ -290,5 +292,6 @@ export default function AdminLayout({
         </main>
       </div>
     </div>
+    </ToastProvider>
   );
 }

@@ -6,6 +6,7 @@ import { api } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { aiContentService } from '@/services/aiContentService';
 import { AiSettingsPublic } from '@/types/aiContent';
+import { useToast } from '@/components/admin/Toast';
 import { PostCategory, User } from '@/types/api';
 import { 
   Wrench, 
@@ -27,6 +28,7 @@ import {
 export default function AiSettingsPage() {
   const queryClient = useQueryClient();
   const { user, hasRole } = useAuth();
+  const toast = useToast();
   
   const isWritable = hasRole(['super_admin', 'admin']);
   
@@ -89,10 +91,10 @@ export default function AiSettingsPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-ai-settings'] });
-      alert('Đã lưu cấu hình AI thành công!');
+      toast.success('Đã lưu cấu hình AI thành công!');
     },
     onError: (err: any) => {
-      alert(err.message || 'Lỗi khi lưu cấu hình. Vui lòng kiểm tra lại.');
+      toast.error(err.message || 'Lỗi khi lưu cấu hình. Vui lòng kiểm tra lại.');
     }
   });
 

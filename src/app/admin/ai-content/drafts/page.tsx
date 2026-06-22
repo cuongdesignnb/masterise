@@ -6,6 +6,7 @@ import { api } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { aiContentService } from '@/services/aiContentService';
 import { Post } from '@/types/api';
+import { useToast } from '@/components/admin/Toast';
 import Link from 'next/link';
 import { 
   FileText, 
@@ -28,6 +29,7 @@ import {
 export default function AiDraftsPage() {
   const queryClient = useQueryClient();
   const { user, hasRole } = useAuth();
+  const toast = useToast();
   const isWritable = hasRole(['super_admin', 'admin', 'marketing']);
 
   // Filters & Page state
@@ -60,10 +62,10 @@ export default function AiDraftsPage() {
     mutationFn: (id: number) => aiContentService.publishPostNow(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-ai-drafts'] });
-      alert('Đã xuất bản bài viết thành công!');
+      toast.success('Đã xuất bản bài viết thành công!');
     },
     onError: (err: any) => {
-      alert(err.message || 'Lỗi khi xuất bản bài viết.');
+      toast.error(err.message || 'Lỗi khi xuất bản bài viết.');
     }
   });
 
@@ -73,12 +75,12 @@ export default function AiDraftsPage() {
       aiContentService.schedulePost(payload.id, { scheduled_at: payload.scheduled_at }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-ai-drafts'] });
-      alert('Đã đặt lịch đăng bài viết thành công!');
+      toast.success('Đã đặt lịch đăng bài viết thành công!');
       setSchedulingPost(null);
       setScheduledAt('');
     },
     onError: (err: any) => {
-      alert(err.message || 'Lỗi khi đặt lịch đăng bài.');
+      toast.error(err.message || 'Lỗi khi đặt lịch đăng bài.');
     }
   });
 
@@ -87,10 +89,10 @@ export default function AiDraftsPage() {
     mutationFn: (id: number) => api.delete(`/posts/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-ai-drafts'] });
-      alert('Đã xóa bài viết thành công!');
+      toast.success('Đã xóa bài viết thành công!');
     },
     onError: (err: any) => {
-      alert(err.message || 'Lỗi khi xóa bài viết.');
+      toast.error(err.message || 'Lỗi khi xóa bài viết.');
     }
   });
 

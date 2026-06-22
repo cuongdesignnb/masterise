@@ -6,6 +6,7 @@ import { api } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { aiContentService } from '@/services/aiContentService';
 import { Post } from '@/types/api';
+import { useToast } from '@/components/admin/Toast';
 import { 
   Clock, 
   Calendar, 
@@ -25,6 +26,7 @@ import Link from 'next/link';
 export default function AiSchedulePage() {
   const queryClient = useQueryClient();
   const { user, hasRole } = useAuth();
+  const toast = useToast();
   const isWritable = hasRole(['super_admin', 'admin', 'marketing']);
 
   const [page, setPage] = useState(1);
@@ -75,12 +77,12 @@ export default function AiSchedulePage() {
   const triggerPublishDueMutation = useMutation({
     mutationFn: () => aiContentService.publishDuePosts(),
     onSuccess: (res) => {
-      alert(`Đã kích hoạt quét thủ công! Kết quả: ${res.message || 'Thành công.'}`);
+      toast.success(`Đã kích hoạt quét thủ công! Kết quả: ${res.message || 'Thành công.'}`);
       queryClient.invalidateQueries({ queryKey: ['admin-scheduled-posts'] });
       refetchSettings();
     },
     onError: (err: any) => {
-      alert(err.message || 'Lỗi khi chạy bộ quét đăng bài.');
+      toast.error(err.message || 'Lỗi khi chạy bộ quét đăng bài.');
     }
   });
 
@@ -89,10 +91,10 @@ export default function AiSchedulePage() {
     mutationFn: (id: number) => aiContentService.publishPostNow(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-scheduled-posts'] });
-      alert('Đã xuất bản bài viết thành công!');
+      toast.success('Đã xuất bản bài viết thành công!');
     },
     onError: (err: any) => {
-      alert(err.message || 'Lỗi khi xuất bản bài viết.');
+      toast.error(err.message || 'Lỗi khi xuất bản bài viết.');
     }
   });
 
@@ -102,12 +104,12 @@ export default function AiSchedulePage() {
       aiContentService.schedulePost(payload.id, { scheduled_at: payload.scheduled_at }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-scheduled-posts'] });
-      alert('Đã cập nhật lại lịch đăng bài viết thành công!');
+      toast.success('Đã cập nhật lại lịch đăng bài viết thành công!');
       setReschedulingPost(null);
       setNewScheduleTime('');
     },
     onError: (err: any) => {
-      alert(err.message || 'Lỗi khi đổi lịch đăng bài.');
+      toast.error(err.message || 'Lỗi khi đổi lịch đăng bài.');
     }
   });
 
@@ -129,10 +131,10 @@ export default function AiSchedulePage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-scheduled-posts'] });
-      alert('Đã hủy lịch đăng bài. Bài viết đã được trả lại trạng thái Bản nháp.');
+      toast.success('Đã hủy lịch đăng bài. Bài viết đã được trả lại trạng thái Bản nháp.');
     },
     onError: (err: any) => {
-      alert(err.message || 'Lỗi khi hủy lịch đăng.');
+      toast.error(err.message || 'Lỗi khi hủy lịch đăng.');
     }
   });
 

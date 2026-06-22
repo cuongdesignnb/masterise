@@ -6,6 +6,7 @@ import { api } from '@/lib/api';
 import { Lead, User } from '@/types/api';
 import { useAuth } from '@/context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useToast } from '@/components/admin/Toast';
 import { 
   Search, 
   Filter, 
@@ -91,6 +92,7 @@ const TEMP_LABELS: Record<string, string> = {
 export default function LeadManager() {
   const queryClient = useQueryClient();
   const { hasRole } = useAuth();
+  const toast = useToast();
   
   // Filter States
   const [search, setSearch] = useState('');
@@ -241,7 +243,7 @@ export default function LeadManager() {
       link.parentNode?.removeChild(link);
     } catch (error) {
       console.error('Error exporting leads:', error);
-      alert('Không thể xuất dữ liệu. Vui lòng kiểm tra lại quyền truy cập hoặc kết nối.');
+      toast.error('Không thể xuất dữ liệu. Vui lòng kiểm tra lại quyền truy cập hoặc kết nối.');
     }
   };
 

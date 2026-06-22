@@ -3,12 +3,14 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
+import { useToast } from '@/components/admin/Toast';
 import { Media } from '@/types/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, Copy, Trash2, Search, Check, FileText, Image as ImageIcon, Link as LinkIcon } from 'lucide-react';
 
 export default function MediaManager() {
   const queryClient = useQueryClient();
+  const toast = useToast();
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [uploading, setUploading] = useState(false);
@@ -34,7 +36,7 @@ export default function MediaManager() {
       setUploading(false);
     },
     onError: (err: any) => {
-      alert(err.message || 'Lỗi khi upload file.');
+      toast.error(err.message || 'Lỗi khi upload file.');
       setUploading(false);
     },
   });
@@ -48,7 +50,7 @@ export default function MediaManager() {
       queryClient.invalidateQueries({ queryKey: ['media'] });
     },
     onError: (err: any) => {
-      alert(err.message || 'Lỗi khi xóa file.');
+      toast.error(err.message || 'Lỗi khi xóa file.');
     },
   });
 

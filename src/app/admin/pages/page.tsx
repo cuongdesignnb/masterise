@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { pageService, StaticPage } from '@/services/pageService';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useToast } from '@/components/admin/Toast';
 import {
   FileText,
   Plus,
@@ -41,6 +42,7 @@ function slugify(text: string): string {
 
 export default function AdminPages() {
   const queryClient = useQueryClient();
+  const toast = useToast();
   const [q, setQ] = useState('');
   const [pageNumber, setPageNumber] = useState(1);
   const [statusFilter, setStatusFilter] = useState('all');
@@ -103,11 +105,11 @@ export default function AdminPages() {
     },
     onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: ['admin-pages-list'] });
-      alert(editingItem ? 'Cập nhật chuyên trang thành công!' : 'Tạo chuyên trang mới thành công!');
+      toast.success(editingItem ? 'Cập nhật chuyên trang thành công!' : 'Tạo chuyên trang mới thành công!');
       setIsFormOpen(false);
     },
     onError: (err: any) => {
-      alert(err.message || 'Có lỗi xảy ra khi lưu chuyên trang.');
+      toast.error(err.message || 'Có lỗi xảy ra khi lưu chuyên trang.');
     }
   });
 
@@ -116,10 +118,10 @@ export default function AdminPages() {
     mutationFn: (id: number) => pageService.deletePage(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-pages-list'] });
-      alert('Đã xóa chuyên trang thành công!');
+      toast.success('Đã xóa chuyên trang thành công!');
     },
     onError: (err: any) => {
-      alert(err.message || 'Lỗi khi xóa chuyên trang.');
+      toast.error(err.message || 'Lỗi khi xóa chuyên trang.');
     }
   });
 

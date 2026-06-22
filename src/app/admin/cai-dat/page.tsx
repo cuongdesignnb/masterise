@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
+import { useToast } from '@/components/admin/Toast';
 import { SystemSetting } from '@/types/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -61,6 +62,7 @@ interface DepartmentItem {
 
 export default function AdminSettings() {
   const queryClient = useQueryClient();
+  const toast = useToast();
   const [activeTab, setActiveTab] = useState<'general' | 'homepage' | 'about' | 'contact' | 'projects_page' | 'news_page' | 'smtp' | 'footer'>('general');
   const [mediaTarget, setMediaTarget] = useState<{ type: 'logo' | 'slide' | 'projects_hero_image' | 'projects_cta_image' | 'news_hero_image' | 'about_hero_image' | 'about_intro_image_0' | 'about_intro_image_1' | 'about_intro_image_2' | 'about_sustainability_image' | 'about_brand_story_image' | 'about_contact_cta_image' | 'about_collection_image'; index?: number } | null>(null);
 
@@ -739,16 +741,16 @@ export default function AdminSettings() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-settings'] });
       queryClient.invalidateQueries({ queryKey: ['public-settings'] });
-      alert('Đã lưu tất cả các cấu hình cài đặt thành công!');
+      toast.success('Đã lưu tất cả các cấu hình cài đặt thành công!');
     },
     onError: (err: any) => {
-      alert(err.message || 'Lỗi khi cập nhật cài đặt.');
+      toast.error(err.message || 'Lỗi khi cập nhật cài đặt.');
     }
   });
 
   const handleTestEmail = async () => {
     if (!mailHost || !mailPort || !mailUsername || !mailPassword || !mailReceiveAddress) {
-      alert('Vui lòng điền đầy đủ các thông tin: Máy chủ, Cổng, Tài khoản, Mật khẩu và Email nhận để chạy thử nghiệm.');
+      toast.warning('Vui lòng điền đầy đủ các thông tin: Máy chủ, Cổng, Tài khoản, Mật khẩu và Email nhận để chạy thử nghiệm.');
       return;
     }
 
@@ -766,12 +768,12 @@ export default function AdminSettings() {
       });
 
       if (response.success) {
-        alert(response.message || 'Gửi email thử nghiệm thành công! Vui lòng kiểm tra hộp thư của bạn.');
+        toast.success(response.message || 'Gửi email thử nghiệm thành công! Vui lòng kiểm tra hộp thư của bạn.');
       } else {
-        alert('Gửi email thử nghiệm thất bại: ' + (response.message || 'Lỗi không xác định'));
+        toast.error('Gửi email thử nghiệm thất bại: ' + (response.message || 'Lỗi không xác định'));
       }
     } catch (err: any) {
-      alert('Lỗi thử nghiệm SMTP: ' + (err.response?.data?.message || err.message || 'Không thể kết nối đến máy chủ SMTP.'));
+      toast.error('Lỗi thử nghiệm SMTP: ' + (err.response?.data?.message || err.message || 'Không thể kết nối đến máy chủ SMTP.'));
     } finally {
       setTestEmailLoading(false);
     }

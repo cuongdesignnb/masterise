@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
+import { useToast } from '@/components/admin/Toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Layout,
@@ -25,6 +26,7 @@ interface Banner {
 
 export default function AdminBanners() {
   const queryClient = useQueryClient();
+  const toast = useToast();
 
   // Modal states
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -92,10 +94,10 @@ export default function AdminBanners() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-banners'] });
       setIsFormOpen(false);
-      alert(editingItem ? 'Đã cập nhật banner thành công!' : 'Đã tạo banner thành công!');
+      toast.success(editingItem ? 'Đã cập nhật banner thành công!' : 'Đã tạo banner thành công!');
     },
     onError: (err: any) => {
-      alert(err.message || 'Lỗi khi lưu banner.');
+      toast.error(err.message || 'Lỗi khi lưu banner.');
     },
   });
 
@@ -106,10 +108,10 @@ export default function AdminBanners() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-banners'] });
-      alert('Đã xóa banner thành công.');
+      toast.success('Đã xóa banner thành công.');
     },
     onError: (err: any) => {
-      alert(err.message || 'Lỗi khi xóa banner.');
+      toast.error(err.message || 'Lỗi khi xóa banner.');
     },
   });
 

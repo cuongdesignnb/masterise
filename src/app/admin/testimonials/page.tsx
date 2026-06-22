@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
+import { useToast } from '@/components/admin/Toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   MessageSquare,
@@ -25,6 +26,7 @@ interface Testimonial {
 
 export default function AdminTestimonials() {
   const queryClient = useQueryClient();
+  const toast = useToast();
 
   // Modal states
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -92,10 +94,10 @@ export default function AdminTestimonials() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-testimonials'] });
       setIsFormOpen(false);
-      alert(editingItem ? 'Đã cập nhật nhận xét thành công!' : 'Đã tạo nhận xét thành công!');
+      toast.success(editingItem ? 'Đã cập nhật nhận xét thành công!' : 'Đã tạo nhận xét thành công!');
     },
     onError: (err: any) => {
-      alert(err.message || 'Lỗi khi lưu nhận xét.');
+      toast.error(err.message || 'Lỗi khi lưu nhận xét.');
     },
   });
 
@@ -106,10 +108,10 @@ export default function AdminTestimonials() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-testimonials'] });
-      alert('Đã xóa nhận xét thành công.');
+      toast.success('Đã xóa nhận xét thành công.');
     },
     onError: (err: any) => {
-      alert(err.message || 'Lỗi khi xóa nhận xét.');
+      toast.error(err.message || 'Lỗi khi xóa nhận xét.');
     },
   });
 

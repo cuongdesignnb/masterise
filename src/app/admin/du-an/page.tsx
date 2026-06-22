@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
+import { useToast } from '@/components/admin/Toast';
 import { Project, ProjectCategory } from '@/types/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -67,6 +68,7 @@ type ProjectSaveMode = 'draft' | 'save' | 'preview' | 'publish';
 
 export default function AdminProjects() {
   const queryClient = useQueryClient();
+  const toast = useToast();
   
   // States
   const [search, setSearch] = useState('');
@@ -663,7 +665,7 @@ export default function AdminProjects() {
         window.open(`/admin/du-an/xem-truoc/${slugValue}`, '_blank', 'noopener,noreferrer');
       } else {
         setIsFormOpen(false);
-        alert(mode === 'publish'
+        toast.success(mode === 'publish'
           ? 'Đã xuất bản dự án thành công.'
           : mode === 'draft' ? 'Đã lưu nháp dự án thành công.' : 'Đã lưu thay đổi thành công.'
         );
@@ -683,10 +685,10 @@ export default function AdminProjects() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-projects'] });
-      alert('Đã xóa dự án thành công.');
+      toast.success('Đã xóa dự án thành công.');
     },
     onError: (err: unknown) => {
-      alert(getErrorMessage(err));
+      toast.error(getErrorMessage(err));
     }
   });
 
@@ -762,7 +764,7 @@ export default function AdminProjects() {
       setNewCategoryName('');
     },
     onError: (err: unknown) => {
-      alert(getErrorMessage(err));
+      toast.error(getErrorMessage(err));
     }
   });
 
@@ -775,7 +777,7 @@ export default function AdminProjects() {
       queryClient.invalidateQueries({ queryKey: ['admin-projects'] });
     },
     onError: (err: unknown) => {
-      alert(getErrorMessage(err));
+      toast.error(getErrorMessage(err));
     }
   });
 

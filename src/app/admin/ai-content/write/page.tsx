@@ -6,6 +6,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { aiContentService } from '@/services/aiContentService';
+import { useToast } from '@/components/admin/Toast';
 import { PostCategory, User } from '@/types/api';
 import { 
   Sparkles, 
@@ -23,6 +24,7 @@ import {
 export default function AiWritePage() {
   const router = useRouter();
   const { user, hasRole } = useAuth();
+  const toast = useToast();
   const isWritable = hasRole(['super_admin', 'admin', 'marketing']);
 
   // Local Form States
@@ -142,11 +144,11 @@ export default function AiWritePage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title) {
-      alert('Vui lòng nhập tiêu đề hoặc từ khóa bài viết!');
+      toast.warning('Vui lòng nhập tiêu đề hoặc từ khóa bài viết!');
       return;
     }
     if (!categoryId) {
-      alert('Vui lòng chọn chuyên mục bài viết!');
+      toast.warning('Vui lòng chọn chuyên mục bài viết!');
       return;
     }
     generateMutation.mutate();

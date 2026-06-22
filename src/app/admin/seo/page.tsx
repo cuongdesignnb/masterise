@@ -16,9 +16,11 @@ import {
   Share2
 } from 'lucide-react';
 import MediaSelectModal from '@/components/admin/MediaSelectModal';
+import { useToast } from '@/components/admin/Toast';
 
 export default function AdminSeo() {
   const queryClient = useQueryClient();
+  const toast = useToast();
   const [activePath, setActivePath] = useState<string | null>(null);
   const [isMediaOpen, setIsMediaOpen] = useState(false);
 
@@ -86,10 +88,10 @@ export default function AdminSeo() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['seo-path-details', activePath] });
       setActivePath(null);
-      alert('Đã cập nhật cấu hình SEO URL thành công!');
+      toast.success('Đã cập nhật cấu hình SEO URL thành công!');
     },
     onError: (err: any) => {
-      alert(err.message || 'Lỗi khi lưu cấu hình SEO.');
+      toast.error(err.message || 'Lỗi khi lưu cấu hình SEO.');
     }
   });
 

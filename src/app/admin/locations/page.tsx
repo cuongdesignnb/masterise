@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
+import { useToast } from '@/components/admin/Toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   MapPin, 
@@ -34,6 +35,7 @@ interface LocationItem {
 
 export default function AdminLocations() {
   const queryClient = useQueryClient();
+  const toast = useToast();
 
   // Search & Filter state
   const [search, setSearch] = useState('');
@@ -125,10 +127,10 @@ export default function AdminLocations() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-locations'] });
       setIsFormOpen(false);
-      alert(editingLocation ? 'Đã cập nhật thông tin vị trí!' : 'Đã thêm vị trí khu vực mới!');
+      toast.success(editingLocation ? 'Đã cập nhật thông tin vị trí!' : 'Đã thêm vị trí khu vực mới!');
     },
     onError: (err: any) => {
-      alert(err.message || 'Lỗi khi lưu thông tin vị trí.');
+      toast.error(err.message || 'Lỗi khi lưu thông tin vị trí.');
     }
   });
 
@@ -139,10 +141,10 @@ export default function AdminLocations() {
     },
     onSuccess: (response: any) => {
       queryClient.invalidateQueries({ queryKey: ['admin-locations'] });
-      alert(response.message || 'Đã xóa vị trí thành công.');
+      toast.success(response.message || 'Đã xóa vị trí thành công.');
     },
     onError: (err: any) => {
-      alert(err.message || 'Không thể xóa vị trí khu vực (có thể do đang liên kết với dự án).');
+      toast.error(err.message || 'Không thể xóa vị trí khu vực (có thể do đang liên kết với dự án).');
     }
   });
 
@@ -155,7 +157,7 @@ export default function AdminLocations() {
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formName.trim()) {
-      alert('Vui lòng nhập tên vị trí/dự án khu vực.');
+      toast.warning('Vui lòng nhập tên vị trí/dự án khu vực.');
       return;
     }
     saveLocationMutation.mutate();

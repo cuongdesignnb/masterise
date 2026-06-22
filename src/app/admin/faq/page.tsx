@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
+import { useToast } from '@/components/admin/Toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   HelpCircle,
@@ -22,6 +23,7 @@ interface FAQ {
 
 export default function AdminFAQ() {
   const queryClient = useQueryClient();
+  const toast = useToast();
 
   // Modal states
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -81,10 +83,10 @@ export default function AdminFAQ() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-faqs'] });
       setIsFormOpen(false);
-      alert(editingItem ? 'Đã cập nhật câu hỏi thành công!' : 'Đã tạo câu hỏi thành công!');
+      toast.success(editingItem ? 'Đã cập nhật câu hỏi thành công!' : 'Đã tạo câu hỏi thành công!');
     },
     onError: (err: any) => {
-      alert(err.message || 'Lỗi khi lưu câu hỏi.');
+      toast.error(err.message || 'Lỗi khi lưu câu hỏi.');
     },
   });
 
@@ -95,10 +97,10 @@ export default function AdminFAQ() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-faqs'] });
-      alert('Đã xóa câu hỏi thành công.');
+      toast.success('Đã xóa câu hỏi thành công.');
     },
     onError: (err: any) => {
-      alert(err.message || 'Lỗi khi xóa câu hỏi.');
+      toast.error(err.message || 'Lỗi khi xóa câu hỏi.');
     },
   });
 

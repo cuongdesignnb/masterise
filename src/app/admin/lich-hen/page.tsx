@@ -6,6 +6,7 @@ import { api } from '@/lib/api';
 import { Appointment } from '@/types/api';
 import { useAuth } from '@/context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useToast } from '@/components/admin/Toast';
 import { 
   Calendar, 
   Clock, 
@@ -27,6 +28,7 @@ import {
 export default function AdminAppointments() {
   const queryClient = useQueryClient();
   const { hasRole, user: currentUser } = useAuth();
+  const toast = useToast();
   
   // Filters
   const [statusFilter, setStatusFilter] = useState('');
@@ -63,10 +65,10 @@ export default function AdminAppointments() {
         setSelectedAppt(prev => prev ? { ...prev, status: variables.status as any } : null);
       }
       
-      alert('Đã cập nhật trạng thái lịch hẹn thành công!');
+      toast.success('Đã cập nhật trạng thái lịch hẹn thành công!');
     },
     onError: (err: any) => {
-      alert(err.message || 'Lỗi khi cập nhật trạng thái.');
+      toast.error(err.message || 'Lỗi khi cập nhật trạng thái.');
     }
   });
 
