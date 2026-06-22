@@ -55,6 +55,7 @@ export type ProjectDetail = {
   }[];
   floorTabs: string[];
   floorPlans: {
+    productType?: string;
     name: string;
     area: string;
     totalArea: string;

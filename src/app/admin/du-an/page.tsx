@@ -44,7 +44,7 @@ type AmenityItem = { title: string; description: string; image: string; icon: st
 type ReasonItem = { title: string; description: string; icon: string };
 type TestimonialItem = { name: string; role: string; content: string; avatar: string };
 type FaqItem = { question: string; answer: string };
-type FloorPlanItem = { name: string; area: string; totalArea: string; image: string };
+type FloorPlanItem = { productType: string; name: string; area: string; totalArea: string; image: string };
 type PriceRowItem = { productType: string; area: string; price: string };
 type PolicyItem = { title: string; description: string; icon: string };
 type TimelineItem = { date: string; title: string };
@@ -54,6 +54,20 @@ type RepeaterMediaTarget =
   | { group: 'projectTestimonials'; index: number; field: 'avatar' }
   | { group: 'floorPlans'; index: number; field: 'image' };
 type MediaSelectorTarget = BaseMediaTarget | RepeaterMediaTarget | null;
+type ProjectAdminTab =
+  | 'overview'
+  | 'hero'
+  | 'gallery'
+  | 'location'
+  | 'amenities'
+  | 'floor'
+  | 'pricingPolicy'
+  | 'timeline'
+  | 'investment'
+  | 'faq'
+  | 'media'
+  | 'seo'
+  | 'vr360';
 
 export default function AdminProjects() {
   const queryClient = useQueryClient();
@@ -68,7 +82,7 @@ export default function AdminProjects() {
   // Modal states
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
-  const [activeTab, setActiveTab] = useState<'general' | 'location' | 'content' | 'detail' | 'pricing' | 'media' | 'seo' | 'vr360'>('general');
+  const [activeTab, setActiveTab] = useState<ProjectAdminTab>('overview');
   
   // Category manager modal state
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
@@ -208,6 +222,7 @@ export default function AdminProjects() {
     answer: textValue(item.answer),
   }));
   const loadFloorPlanItems = (value: unknown): FloorPlanItem[] => asRecords(value).map((item) => ({
+    productType: textValue(item.productType || item.product_type || item.type),
     name: textValue(item.name),
     area: textValue(item.area),
     totalArea: textValue(item.totalArea || item.total_area),
@@ -291,7 +306,7 @@ export default function AdminProjects() {
   // Open Form for Create
   const handleCreateOpen = () => {
     setEditingProject(null);
-    setActiveTab('general');
+    setActiveTab('overview');
     
     // Reset fields
     setFormName('');
@@ -380,7 +395,7 @@ export default function AdminProjects() {
   // Open Form for Edit
   const handleEditOpen = (project: Project) => {
     setEditingProject(project);
-    setActiveTab('general');
+    setActiveTab('overview');
     
     // Fill fields
     setFormName(project.name);
@@ -721,8 +736,66 @@ export default function AdminProjects() {
   };
 
   const removeListItem = <T,>(items: T[], setter: React.Dispatch<React.SetStateAction<T[]>>, index: number) => {
-    setter(items.filter((_, itemIndex) => itemIndex !== index));
+    if (window.confirm('Bạn có chắc chắn muốn xóa mục này không?')) {
+      setter(items.filter((_, itemIndex) => itemIndex !== index));
+    }
   };
+
+  const moveListItem = <T,>(items: T[], setter: React.Dispatch<React.SetStateAction<T[]>>, index: number, direction: -1 | 1) => {
+    const nextIndex = index + direction;
+    if (nextIndex < 0 || nextIndex >= items.length) return;
+    const nextItems = [...items];
+    [nextItems[index], nextItems[nextIndex]] = [nextItems[nextIndex], nextItems[index]];
+    setter(nextItems);
+  };
+
+  const sectionNote = (text: string) => (
+    <p className="rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] px-4 py-3 text-xs leading-5 text-[#8C7A6B]">
+      {text}
+    </p>
+  );
+
+  const completionItems = [
+    { label: 'Tổng quan', done: Boolean(formName && formSlug && formDescription), optional: false },
+    { label: 'Hero & Thông tin nhanh', done: Boolean(formBannerImage && (formHeroSubtitle || formDescription) && formQuickCards.length && formProjectFacts.length), optional: false },
+    { label: 'Không gian sống', done: Boolean(formGallery.length && formGalleryTitle), optional: false },
+    { label: 'Vị trí & Kết nối', done: Boolean((formLocation || formAddress) && (formConnectivity.length || formMapImageUrl)), optional: false },
+    { label: 'Tiện ích nổi bật', done: Boolean(formAmenityDetails.length), optional: false },
+    { label: 'Sản phẩm & Mặt bằng', done: Boolean(formFloorPlans.length), optional: false },
+    { label: 'Bảng giá & Chính sách', done: Boolean(formPriceRows.length || formPolicyCards.length), optional: false },
+    { label: 'Tiến độ thi công', done: Boolean(formProjectTimeline.length), optional: true },
+    { label: 'Đầu tư & Đánh giá', done: Boolean(formInvestmentReasons.length || formProjectTestimonials.length), optional: true },
+    { label: 'Câu hỏi thường gặp', done: Boolean(formProjectFaqs.length), optional: true },
+    { label: 'Ảnh, Video & Tài liệu', done: Boolean(formThumbnail && formBannerImage), optional: false },
+    { label: 'SEO & Schema', done: Boolean(formSeoTitle || formSeoDescription || formName), optional: false },
+    { label: 'VR 360', done: Boolean(formVirtualTourUrl), optional: true },
+  ];
+
+  const renderCompletionChecklist = () => (
+    <div className="rounded-2xl border border-[#E8DCCB] bg-white p-4">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <div>
+          <h4 className="text-sm font-bold text-[#1F1B16]">Checklist dữ liệu trước khi xuất bản</h4>
+          <p className="mt-0.5 text-[11px] text-[#8C7A6B]">Mỗi mục tương ứng với một section ngoài trang chi tiết dự án.</p>
+        </div>
+      </div>
+      <div className="grid gap-2 sm:grid-cols-2">
+        {completionItems.map((item) => (
+          <div key={item.label} className="flex items-center justify-between rounded-xl border border-[#E8DCCB]/80 bg-[#FBF8F2]/50 px-3 py-2">
+            <span className="text-[11px] font-semibold text-[#1F1B16]">{item.label}</span>
+            <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${item.done ? 'bg-emerald-50 text-emerald-700' : item.optional ? 'bg-gray-100 text-gray-600' : 'bg-amber-50 text-amber-700'}`}>
+              {item.done ? 'Đã đủ dữ liệu' : item.optional ? 'Không bắt buộc' : 'Còn thiếu dữ liệu'}
+            </span>
+          </div>
+        ))}
+      </div>
+      {formIsPublished && completionItems.some((item) => !item.optional && !item.done) ? (
+        <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] font-semibold text-amber-800">
+          Dự án còn thiếu một số thông tin quan trọng. Hãy bổ sung trước khi xuất bản để trang chi tiết hiển thị đầy đủ.
+        </p>
+      ) : null}
+    </div>
+  );
 
   const renderIconValueRepeater = (
     title: string,
@@ -742,7 +815,11 @@ export default function AdminProjects() {
             <input value={item.label} onChange={(e) => updateListItem(items, setter, index, { label: e.target.value })} className={inputClass} placeholder="Tên hiển thị, ví dụ: Quy mô" />
             <input value={item.value} onChange={(e) => updateListItem(items, setter, index, { value: e.target.value })} className={inputClass} placeholder="Giá trị, ví dụ: 3,5 ha" />
             <input value={item.icon} onChange={(e) => updateListItem(items, setter, index, { icon: e.target.value })} className={inputClass} placeholder="Icon" />
-            <button type="button" onClick={() => removeListItem(items, setter, index)} className={removeButtonClass}>Xóa</button>
+            <div className="flex gap-1">
+              <button type="button" onClick={() => moveListItem(items, setter, index, -1)} disabled={index === 0} className={removeButtonClass}>Lên</button>
+              <button type="button" onClick={() => moveListItem(items, setter, index, 1)} disabled={index === items.length - 1} className={removeButtonClass}>Xuống</button>
+              <button type="button" onClick={() => removeListItem(items, setter, index)} className={removeButtonClass}>Xóa</button>
+            </div>
           </div>
         </div>
       ))}
@@ -795,7 +872,11 @@ export default function AdminProjects() {
               );
             })}
           </div>
-          <button type="button" onClick={() => removeListItem(items, setter, index)} className={removeButtonClass}>Xóa dòng này</button>
+          <div className="flex flex-wrap gap-1">
+            <button type="button" onClick={() => moveListItem(items, setter, index, -1)} disabled={index === 0} className={removeButtonClass}>Đưa lên</button>
+            <button type="button" onClick={() => moveListItem(items, setter, index, 1)} disabled={index === items.length - 1} className={removeButtonClass}>Đưa xuống</button>
+            <button type="button" onClick={() => removeListItem(items, setter, index)} className={removeButtonClass}>Xóa dòng này</button>
+          </div>
         </div>
       ))}
     </div>
@@ -1069,18 +1150,23 @@ export default function AdminProjects() {
               {/* Tabs list */}
               <div className="flex bg-[#FBF8F2]/60 px-6 border-b border-[#E8DCCB]/60 text-xs overflow-x-auto shrink-0 select-none">
                 {[
-                  { id: 'general', label: 'Thông tin chung' },
-                  { id: 'location', label: 'Vị trí & Giá' },
-                  { id: 'content', label: 'Mô tả & Tiện ích' },
-                  { id: 'media', label: 'Ảnh & Tài liệu' },
-                  { id: 'detail', label: 'Chi tiết hiển thị' },
-                  { id: 'pricing', label: 'Bảng giá & Tiến độ' },
-                  { id: 'seo', label: 'Cấu hình SEO' },
+                  { id: 'overview', label: 'Tổng quan' },
+                  { id: 'hero', label: 'Hero & Thông tin nhanh' },
+                  { id: 'gallery', label: 'Không gian sống' },
+                  { id: 'location', label: 'Vị trí & Kết nối' },
+                  { id: 'amenities', label: 'Tiện ích nổi bật' },
+                  { id: 'floor', label: 'Sản phẩm & Mặt bằng' },
+                  { id: 'pricingPolicy', label: 'Bảng giá & Chính sách' },
+                  { id: 'timeline', label: 'Tiến độ thi công' },
+                  { id: 'investment', label: 'Đầu tư & Đánh giá' },
+                  { id: 'faq', label: 'Câu hỏi thường gặp' },
+                  { id: 'media', label: 'Ảnh, Video & Tài liệu' },
+                  { id: 'seo', label: 'SEO & Schema' },
                   { id: 'vr360', label: 'VR 360' }
                 ].map(tab => (
                   <button
                     key={tab.id}
-                    onClick={() => setActiveTab(tab.id as typeof activeTab)}
+                    onClick={() => setActiveTab(tab.id as ProjectAdminTab)}
                     className={`px-4 py-3 font-semibold border-b-2 transition-colors whitespace-nowrap ${
                       activeTab === tab.id
                         ? 'border-[#B88746] text-[#B88746]'
@@ -1096,8 +1182,10 @@ export default function AdminProjects() {
               <div className="flex-1 overflow-y-auto p-6 space-y-6">
                 
                 {/* TAB 1: General Info */}
-                {activeTab === 'general' && (
+                {activeTab === 'overview' && (
                   <div className="space-y-4">
+                    {sectionNote('Phần này quản lý thông tin cơ bản của dự án, mô tả dùng cho card và nội dung giới thiệu chi tiết trên trang dự án.')}
+                    {renderCompletionChecklist()}
                     {/* Name, Slug, Code */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
@@ -1440,6 +1528,7 @@ export default function AdminProjects() {
                 {/* TAB 2: Location & Price */}
                 {activeTab === 'location' && (
                   <div className="space-y-4">
+                    {sectionNote('Phần này hiển thị ở section “Vị trí chiến lược / Kết nối toàn diện”, bao gồm vị trí, mô tả, tọa độ, ảnh bản đồ và danh sách kết nối.')}
                     {/* Location and Region */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
@@ -1548,82 +1637,17 @@ export default function AdminProjects() {
                       </div>
                     </div>
 
-                    {/* Price Range and Text */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div>
-                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Giá tối thiểu (Triệu VND / USD)</label>
-                        <input
-                          type="number"
-                          value={formPriceMin}
-                          onChange={(e) => setFormPriceMin(e.target.value !== '' ? Number(e.target.value) : '')}
-                          className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
-                          placeholder="Ví dụ: 5000 (cho 5 tỷ)"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Giá tối đa (Triệu VND / USD)</label>
-                        <input
-                          type="number"
-                          value={formPriceMax}
-                          onChange={(e) => setFormPriceMax(e.target.value !== '' ? Number(e.target.value) : '')}
-                          className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
-                          placeholder="Ví dụ: 15000 (cho 15 tỷ)"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Text hiển thị giá *</label>
-                        <input
-                          type="text"
-                          required
-                          value={formPriceText}
-                          onChange={(e) => setFormPriceText(e.target.value)}
-                          className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
-                          placeholder="Ví dụ: Từ 5.5 tỷ / căn"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Area Size Range and Text */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div>
-                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Diện tích tối thiểu (m2)</label>
-                        <input
-                          type="number"
-                          step="any"
-                          value={formAreaMin}
-                          onChange={(e) => setFormAreaMin(e.target.value !== '' ? Number(e.target.value) : '')}
-                          className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
-                          placeholder="Ví dụ: 50"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Diện tích tối đa (m2)</label>
-                        <input
-                          type="number"
-                          step="any"
-                          value={formAreaMax}
-                          onChange={(e) => setFormAreaMax(e.target.value !== '' ? Number(e.target.value) : '')}
-                          className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
-                          placeholder="Ví dụ: 120"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Text hiển thị diện tích</label>
-                        <input
-                          type="text"
-                          value={formAreaText}
-                          onChange={(e) => setFormAreaText(e.target.value)}
-                          className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
-                          placeholder="Ví dụ: 50m2 - 120m2"
-                        />
-                      </div>
-                    </div>
+                    {renderTextPairRepeater('Danh sách kết nối', formConnectivity, setFormConnectivity, { time: '', label: '' }, [
+                      { key: 'time', label: 'Thời gian di chuyển, ví dụ: 5 phút' },
+                      { key: 'label', label: 'Điểm đến, ví dụ: Đến trung tâm Quận 1' },
+                    ])}
                   </div>
                 )}
 
                 {/* TAB 3: Description & Amenities */}
-                {activeTab === 'content' && (
+                {activeTab === 'overview' && (
                   <div className="space-y-4">
+                    {sectionNote('Nội dung ở đây chỉ dùng cho tổng quan dự án. Không nhập bảng giá, mặt bằng, tiện ích hoặc chính sách vào phần giới thiệu.')}
                     <div>
                       <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Mô tả ngắn (Description)</label>
                       <textarea
@@ -1644,71 +1668,10 @@ export default function AdminProjects() {
                       />
                     </div>
 
-                    <div>
-                      <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Tiện ích (Ngăn cách bởi dấu phẩy)</label>
-                      <input
-                        type="text"
-                        value={formAmenities}
-                        onChange={(e) => setFormAmenities(e.target.value)}
-                        className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
-                        placeholder="Ví dụ: Hồ bơi vô cực, Công viên trung tâm, Trung tâm thương mại"
-                      />
-                      <span className="text-[10px] text-[#8C7A6B] mt-1 block">Nhập danh sách tiện ích, mỗi tiện ích cách nhau bởi dấu phẩy (,)</span>
-                    </div>
-
-                    {/* Highlight points & Nearby places */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Đặc điểm nổi bật (Mỗi dòng một ý)</label>
-                        <textarea
-                          value={formHighlightPoints}
-                          onChange={(e) => setFormHighlightPoints(e.target.value)}
-                          rows={4}
-                          className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
-                          placeholder="Ví dụ:&#10;Vị trí kim cương trung tâm Thủ Đức&#10;Thiết kế bởi Foster + Partners&#10;Tiện ích chuẩn quốc tế 5 sao"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Liên kết vùng / Địa điểm lân cận (Mỗi dòng một ý)</label>
-                        <textarea
-                          value={formNearbyPlaces}
-                          onChange={(e) => setFormNearbyPlaces(e.target.value)}
-                          rows={4}
-                          className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
-                          placeholder="Ví dụ:&#10;Cách Chợ Bến Thành 15 phút di chuyển&#10;Liền kề Tuyến Metro số 1 Bến Thành - Suối Tiên&#10;Cách Sân bay Tân Sơn Nhất 20 phút"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Policies: Payment, Sales, Booking */}
-                    <div>
-                      <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Chính sách thanh toán (Rich Text)</label>
-                      <RichTextEditor
-                        value={formPaymentPolicy}
-                        onChange={setFormPaymentPolicy}
-                        placeholder="Tiến độ thanh toán, chiết khấu thanh toán sớm, hỗ trợ vay ngân hàng..."
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Chính sách ưu đãi bán hàng (Rich Text)</label>
-                      <RichTextEditor
-                        value={formSalesPolicy}
-                        onChange={setFormSalesPolicy}
-                        placeholder="Quà tặng tân gia, miễn phí dịch vụ quản lý, chiết khấu mua sỉ..."
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Quy định đặt giữ chỗ (Booking) (Rich Text)</label>
-                      <RichTextEditor
-                        value={formBookingPolicy}
-                        onChange={setFormBookingPolicy}
-                        placeholder="Số tiền booking/căn, hoàn tiền booking có điều kiện..."
-                      />
-                    </div>
                   </div>
                 )}
 
-                {activeTab === 'detail' && (
+                {false && (
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
@@ -1782,7 +1745,161 @@ export default function AdminProjects() {
                   </div>
                 )}
 
-                {activeTab === 'pricing' && (
+                {activeTab === 'hero' && (
+                  <div className="space-y-4">
+                    {sectionNote('Phần này hiển thị ở đầu trang chi tiết dự án, gồm ảnh Hero, nhãn nổi bật, mô tả ngắn, hộp thông tin nhanh, thanh tổng quan và dãy chỉ số nổi bật.')}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Dòng mô tả dưới tên dự án</label>
+                        <input value={formHeroSubtitle} onChange={(e) => setFormHeroSubtitle(e.target.value)} className={inputClass} placeholder="Ví dụ: Trung tâm mới của TP. Thủ Đức" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Nhãn nổi bật trên Hero</label>
+                        <input value={formBadgeText} onChange={(e) => setFormBadgeText(e.target.value)} className={inputClass} placeholder="Ví dụ: Dự án đô thị biểu tượng" />
+                      </div>
+                    </div>
+                    {renderIconValueRepeater('Thông tin nhanh trong hộp Hero', formQuickCards, setFormQuickCards, { label: '', value: '', icon: 'LandPlot' })}
+                    {renderIconValueRepeater('Thông tin tổng quan dưới Hero', formProjectFacts, setFormProjectFacts, { label: '', value: '', icon: 'MapPin' })}
+                    {renderTextPairRepeater('Chỉ số nổi bật', formProjectStats, setFormProjectStats, { value: '', label: '' }, [
+                      { key: 'value', label: 'Con số hiển thị, ví dụ: 117,4 ha' },
+                      { key: 'label', label: 'Nhãn mô tả, ví dụ: Quy mô đô thị' },
+                    ])}
+                  </div>
+                )}
+
+                {activeTab === 'gallery' && (
+                  <div className="space-y-4">
+                    {sectionNote('Phần này quản lý section “Không gian sống” và thư viện ảnh hiển thị ngay dưới dãy chỉ số nổi bật. Ảnh được chọn trong tab “Ảnh, Video & Tài liệu”.')}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Nhãn section</label>
+                        <input value={formGalleryLabel} onChange={(e) => setFormGalleryLabel(e.target.value)} className={inputClass} placeholder="Ví dụ: Kiến tạo chuẩn mực sống mới" />
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Tiêu đề section</label>
+                        <input value={formGalleryTitle} onChange={(e) => setFormGalleryTitle(e.target.value)} className={inputClass} placeholder="Ví dụ: Không gian sống đẳng cấp quốc tế" />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Mô tả section</label>
+                      <textarea value={formGalleryDescription} onChange={(e) => setFormGalleryDescription(e.target.value)} rows={3} className={inputClass} placeholder="Nhập mô tả ngắn cho section không gian sống" />
+                    </div>
+                    <div className="flex items-center justify-between rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] p-4">
+                      <div>
+                        <p className="text-xs font-bold text-[#1F1B16]">Danh sách ảnh không gian sống</p>
+                        <p className="mt-1 text-[11px] text-[#8C7A6B]">Hiện có {formGallery.length} ảnh. Bấm nút bên phải để chọn thêm từ Media Library.</p>
+                      </div>
+                      <button type="button" onClick={() => setMediaSelectorTarget('gallery')} className={addButtonClass}>Thêm ảnh</button>
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'amenities' && (
+                  <div className="space-y-4">
+                    {sectionNote('Phần này hiển thị ở section “Tiện ích nổi bật”. Không nhập thêm danh sách tiện ích dạng chữ ở nơi khác để tránh trùng lặp ngoài Client.')}
+                    {renderTextPairRepeater('Tiện ích nổi bật', formAmenityDetails, setFormAmenityDetails, { title: '', description: '', image: '', icon: 'Sparkles' }, [
+                      { key: 'title', label: 'Tên tiện ích' },
+                      { key: 'icon', label: 'Biểu tượng' },
+                      { key: 'image', label: 'Ảnh tiện ích', mediaTarget: 'amenityDetails' },
+                      { key: 'description', label: 'Mô tả tiện ích', wide: true },
+                    ])}
+                  </div>
+                )}
+
+                {activeTab === 'floor' && (
+                  <div className="space-y-4">
+                    {sectionNote('Phần này quản lý section “Mặt bằng & Loại hình sản phẩm”. Tab loại sản phẩm lấy từ Admin, không hardcode ngoài Client.')}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-semibold text-[#8C7A6B]">Nhóm loại sản phẩm</label>
+                        <button type="button" onClick={() => setFormFloorTabs([...formFloorTabs, ''])} className={addButtonClass}>Thêm loại sản phẩm</button>
+                      </div>
+                      {formFloorTabs.length === 0 ? <p className="text-xs text-[#8C7A6B]">Chưa có loại sản phẩm. Nếu có mặt bằng nhưng chưa có nhóm, Client sẽ gom vào “Sản phẩm”.</p> : null}
+                      {formFloorTabs.map((tab, index) => (
+                        <div key={index} className="flex gap-2">
+                          <input value={tab} onChange={(e) => setFormFloorTabs(formFloorTabs.map((item, itemIndex) => itemIndex === index ? e.target.value : item))} className={inputClass} placeholder="Ví dụ: Nhà phố" />
+                          <button type="button" onClick={() => removeListItem(formFloorTabs, setFormFloorTabs, index)} className={removeButtonClass}>Xóa</button>
+                        </div>
+                      ))}
+                    </div>
+                    {renderTextPairRepeater('Danh sách mặt bằng', formFloorPlans, setFormFloorPlans, { productType: '', name: '', area: '', totalArea: '', image: '' }, [
+                      { key: 'productType', label: 'Loại sản phẩm, ví dụ: Nhà phố' },
+                      { key: 'name', label: 'Tên mặt bằng, ví dụ: Căn hộ 2 phòng ngủ' },
+                      { key: 'area', label: 'Diện tích, ví dụ: 68 - 75 m²' },
+                      { key: 'totalArea', label: 'Tổng diện tích sàn' },
+                      { key: 'image', label: 'Ảnh mặt bằng', mediaTarget: 'floorPlans' },
+                    ])}
+                  </div>
+                )}
+
+                {activeTab === 'pricingPolicy' && (
+                  <div className="space-y-4">
+                    {sectionNote('Phần này quản lý riêng bảng giá dự kiến và chính sách bán hàng. Không nhập lẫn với mặt bằng để tránh trùng nội dung.')}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Giá tối thiểu</label>
+                        <input type="number" value={formPriceMin} onChange={(e) => setFormPriceMin(e.target.value !== '' ? Number(e.target.value) : '')} className={inputClass} placeholder="Ví dụ: 5000" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Giá tối đa</label>
+                        <input type="number" value={formPriceMax} onChange={(e) => setFormPriceMax(e.target.value !== '' ? Number(e.target.value) : '')} className={inputClass} placeholder="Ví dụ: 15000" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Giá hiển thị</label>
+                        <input value={formPriceText} onChange={(e) => setFormPriceText(e.target.value)} className={inputClass} placeholder="Ví dụ: Từ 8,9 tỷ/căn" />
+                      </div>
+                    </div>
+                    {renderTextPairRepeater('Dòng bảng giá', formPriceRows, setFormPriceRows, { productType: '', area: '', price: '' }, [
+                      { key: 'productType', label: 'Loại sản phẩm' },
+                      { key: 'area', label: 'Diện tích' },
+                      { key: 'price', label: 'Giá bán, ví dụ: Liên hệ' },
+                    ])}
+                    {renderTextPairRepeater('Chính sách bán hàng', formPolicyCards, setFormPolicyCards, { title: '', description: '', icon: 'CalendarDays' }, [
+                      { key: 'title', label: 'Tên chính sách' },
+                      { key: 'icon', label: 'Biểu tượng' },
+                      { key: 'description', label: 'Mô tả chính sách', wide: true },
+                    ])}
+                  </div>
+                )}
+
+                {activeTab === 'timeline' && (
+                  <div className="space-y-4">
+                    {sectionNote('Phần này hiển thị ở section “Tiến độ thi công”. Nếu chưa nhập dữ liệu, Client sẽ ẩn section này.')}
+                    {renderTextPairRepeater('Tiến độ thi công', formProjectTimeline, setFormProjectTimeline, { date: '', title: '' }, [
+                      { key: 'date', label: 'Mốc thời gian, ví dụ: Quý 1/2026' },
+                      { key: 'title', label: 'Nội dung tiến độ' },
+                    ])}
+                  </div>
+                )}
+
+                {activeTab === 'investment' && (
+                  <div className="space-y-4">
+                    {sectionNote('Phần này quản lý hai section “Vì sao nên đầu tư?” và “Khách hàng nói gì?”. Không có dữ liệu thì Client sẽ ẩn section tương ứng.')}
+                    {renderTextPairRepeater('Lý do nên đầu tư', formInvestmentReasons, setFormInvestmentReasons, { title: '', description: '', icon: 'TrendingUp' }, [
+                      { key: 'title', label: 'Tiêu đề' },
+                      { key: 'icon', label: 'Biểu tượng' },
+                      { key: 'description', label: 'Mô tả lý do', wide: true },
+                    ])}
+                    {renderTextPairRepeater('Đánh giá khách hàng', formProjectTestimonials, setFormProjectTestimonials, { name: '', role: '', content: '', avatar: '' }, [
+                      { key: 'name', label: 'Tên khách hàng' },
+                      { key: 'role', label: 'Vai trò, ví dụ: Nhà đầu tư' },
+                      { key: 'avatar', label: 'Ảnh đại diện khách hàng', mediaTarget: 'projectTestimonials' },
+                      { key: 'content', label: 'Nội dung đánh giá', wide: true },
+                    ])}
+                  </div>
+                )}
+
+                {activeTab === 'faq' && (
+                  <div className="space-y-4">
+                    {sectionNote('Phần này quản lý FAQ riêng của từng dự án. Nếu chưa có FAQ, Client sẽ ẩn section câu hỏi thường gặp.')}
+                    {renderTextPairRepeater('Câu hỏi thường gặp của dự án', formProjectFaqs, setFormProjectFaqs, { question: '', answer: '' }, [
+                      { key: 'question', label: 'Câu hỏi' },
+                      { key: 'answer', label: 'Câu trả lời', wide: true },
+                    ])}
+                  </div>
+                )}
+
+                {false && (
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
@@ -1797,7 +1914,8 @@ export default function AdminProjects() {
                         </div>
                       ))}
                     </div>
-                    {renderTextPairRepeater('Danh sách mặt bằng', formFloorPlans, setFormFloorPlans, { name: '', area: '', totalArea: '', image: '' }, [
+                    {renderTextPairRepeater('Danh sách mặt bằng', formFloorPlans, setFormFloorPlans, { productType: '', name: '', area: '', totalArea: '', image: '' }, [
+                      { key: 'productType', label: 'Loại sản phẩm, ví dụ: Nhà phố' },
                       { key: 'name', label: 'Tên mặt bằng, ví dụ: Căn hộ 2 phòng ngủ' },
                       { key: 'area', label: 'Diện tích, ví dụ: 68 - 75 m²' },
                       { key: 'totalArea', label: 'Tổng diện tích sàn' },
@@ -1838,9 +1956,9 @@ export default function AdminProjects() {
                           <input
                             type="text"
                             value={formThumbnail}
-                            onChange={(e) => setFormThumbnail(e.target.value)}
                             className="w-full px-3 py-1.5 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-xs focus:outline-none"
-                            placeholder="URL hình ảnh"
+                            placeholder="Chọn ảnh đại diện từ Media Library"
+                            readOnly
                           />
                           <button
                             type="button"
@@ -1868,9 +1986,9 @@ export default function AdminProjects() {
                           <input
                             type="text"
                             value={formBannerImage}
-                            onChange={(e) => setFormBannerImage(e.target.value)}
                             className="w-full px-3 py-1.5 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-xs focus:outline-none"
-                            placeholder="URL hình ảnh banner lớn"
+                            placeholder="Chọn ảnh Hero từ Media Library"
+                            readOnly
                           />
                           <button
                             type="button"
@@ -1904,9 +2022,9 @@ export default function AdminProjects() {
                           <input
                             type="text"
                             value={formMapImageUrl}
-                            onChange={(e) => setFormMapImageUrl(e.target.value)}
                             className="w-full px-3 py-1.5 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-xs focus:outline-none"
-                            placeholder="URL hình ảnh bản đồ"
+                            placeholder="Chọn ảnh bản đồ từ Media Library"
+                            readOnly
                           />
                           <button
                             type="button"
@@ -2004,6 +2122,7 @@ export default function AdminProjects() {
                 {/* TAB 5: SEO Configurations */}
                 {activeTab === 'seo' && (
                   <div className="space-y-4">
+                    {sectionNote('Phần này quản lý metadata và dữ liệu Schema cho trang chi tiết dự án. Nếu thiếu giá hợp lệ, Client không render giá giả trong Schema.')}
                     <div>
                       <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Tiêu đề SEO (SEO Title)</label>
                       <input
@@ -2036,6 +2155,26 @@ export default function AdminProjects() {
                         placeholder="Ví dụ: the global city, masterise quan 2, can ho cao cap hcm"
                       />
                       <span className="text-[10px] text-[#8C7A6B] mt-1 block">Các từ khóa cách nhau bằng dấu phẩy</span>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Giá Schema</label>
+                        <input value={formSchemaPrice} onChange={(e) => setFormSchemaPrice(e.target.value)} className={inputClass} placeholder="Ví dụ: 8900000000" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Đơn vị tiền tệ Schema</label>
+                        <input value={formSchemaPriceCurrency} onChange={(e) => setFormSchemaPriceCurrency(e.target.value)} className={inputClass} placeholder="Ví dụ: VND" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Trạng thái Schema</label>
+                        <select value={formSchemaAvailability} onChange={(e) => setFormSchemaAvailability(e.target.value)} className={inputClass}>
+                          <option value="">Không render trạng thái</option>
+                          <option value="https://schema.org/InStock">Còn hàng</option>
+                          <option value="https://schema.org/OutOfStock">Hết hàng</option>
+                          <option value="https://schema.org/PreOrder">Đang mở bán</option>
+                          <option value="https://schema.org/LimitedAvailability">Liên hệ để biết thêm</option>
+                        </select>
+                      </div>
                     </div>
                   </div>
                 )}

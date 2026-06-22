@@ -103,13 +103,13 @@ function buildFactsFromRealFields(api: ApiProject): IconDetail[] {
 function buildPoliciesFromRealFields(api: ApiProject) {
   return [
     api.payment_policy
-      ? { title: 'Chinh sach thanh toan', description: api.payment_policy, icon: 'CalendarDays' as const }
+      ? { title: 'Chính sách thanh toán', description: api.payment_policy, icon: 'CalendarDays' as const }
       : null,
     api.sales_policy
-      ? { title: 'Chinh sach ban hang', description: api.sales_policy, icon: 'BadgeDollarSign' as const }
+      ? { title: 'Chính sách bán hàng', description: api.sales_policy, icon: 'BadgeDollarSign' as const }
       : null,
     api.booking_policy
-      ? { title: 'Chinh sach giu cho', description: api.booking_policy, icon: 'ClipboardCheck' as const }
+      ? { title: 'Chính sách giữ chỗ', description: api.booking_policy, icon: 'ClipboardCheck' as const }
       : null,
   ].filter(notNull);
 }
@@ -141,11 +141,12 @@ function normalizeFloorPlans(value: unknown) {
       if (!item || typeof item !== 'object') return null;
       const record = item as Record<string, unknown>;
       const name = String(record.name || '').trim();
+      const productType = String(record.productType || record.product_type || record.type || '').trim();
       const area = String(record.area || '').trim();
       const totalArea = String(record.totalArea || record.total_area || '').trim();
       const image = String(record.image || '').trim();
       if (!name || !area || !image) return null;
-      return { name, area, totalArea: totalArea || area, image };
+      return { productType, name, area, totalArea: totalArea || area, image };
     })
     .filter(notNull);
 }
@@ -242,7 +243,7 @@ function normalizeConnectivity(value: unknown, nearbyPlaces: string[] | null | u
 }
 
 export function mapApiProjectToProjectCard(api: ApiProject): FrontendProject {
-  const price = api.price_text || (api.price_min ? `Tu ${api.price_min} ty` : UPDATING);
+  const price = api.price_text || (api.price_min ? `Từ ${api.price_min} tỷ` : UPDATING);
   const location = api.location || api.address || UPDATING;
   const type = api.categories && api.categories.length > 0 ? api.categories[0].name : UPDATING;
 

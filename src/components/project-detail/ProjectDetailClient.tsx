@@ -146,63 +146,7 @@ function LocationMap({ projectName, mapImageUrl }: { projectName: string; mapIma
     );
   }
 
-  return (
-    <div className="relative h-[330px] overflow-hidden rounded-[18px] border border-gold/35 bg-[#f8f4ec] lg:h-[410px]">
-      <svg
-        viewBox="0 0 900 520"
-        className="h-full w-full"
-        role="img"
-        aria-label={`Bản đồ kết nối ${projectName} với trung tâm Thành phố Hồ Chí Minh`}
-      >
-        <rect width="900" height="520" fill="#faf7f0" />
-        <g fill="none" stroke="#d8eaf1" strokeWidth="18" opacity=".95">
-          <path d="M-30 70 C120 25 155 145 260 130 S420 65 520 120 700 210 950 110" />
-          <path d="M40 530 C80 385 180 365 265 410 S430 505 560 430 735 295 940 380" />
-          <path d="M675 -30 C610 90 625 165 690 225 S755 370 710 550" />
-        </g>
-        <g fill="none" stroke="#e8dfd1" strokeWidth="2">
-          <path d="M0 185 L900 330" />
-          <path d="M40 300 L860 70" />
-          <path d="M120 0 L220 520" />
-          <path d="M360 0 L420 520" />
-          <path d="M535 0 L565 520" />
-          <path d="M795 0 L780 520" />
-          <path d="M0 390 L900 215" />
-          <path d="M40 110 L900 450" />
-        </g>
-        <g fill="#948a7e" fontFamily="Roboto, sans-serif" fontSize="14">
-          <text x="145" y="350">QUẬN 1</text>
-          <text x="335" y="245">THỦ THIÊM</text>
-          <text x="620" y="135">TP. THỦ ĐỨC</text>
-          <text x="700" y="350">ĐỒNG NAI</text>
-          <text x="515" y="405">CAO TỐC TP.HCM - LONG THÀNH</text>
-        </g>
-        <path
-          d="M170 335 C270 305 335 280 410 270 S565 250 685 195"
-          fill="none"
-          stroke="#b88746"
-          strokeWidth="8"
-          strokeLinecap="round"
-        />
-        <g fill="#fff" stroke="#b88746" strokeWidth="5">
-          <circle cx="170" cy="335" r="10" />
-          <circle cx="410" cy="270" r="10" />
-          <circle cx="685" cy="195" r="10" />
-        </g>
-        <g transform="translate(520 235)">
-          <circle r="47" fill="#b88746" />
-          <circle r="39" fill="none" stroke="#fff" strokeOpacity=".55" />
-          <path d="M-13 10V-13L0-2 13-13V10M0-2V15" fill="none" stroke="#fff" strokeWidth="4" strokeLinecap="round" />
-          <text x="0" y="30" textAnchor="middle" fill="#fff" fontFamily="Roboto, sans-serif" fontSize="9">
-            {projectName.toUpperCase()}
-          </text>
-        </g>
-      </svg>
-      <div className="absolute bottom-3 right-3 rounded-full border border-line bg-white/90 px-3 py-1.5 text-[10px] font-semibold text-muted shadow-sm backdrop-blur">
-        Bản đồ minh họa
-      </div>
-    </div>
-  );
+  return null;
 }
 
 function FloorPlanSketch() {
@@ -220,7 +164,8 @@ function FloorPlanSketch() {
 }
 
 export default function ProjectDetailClient({ project }: { project: ProjectDetail }) {
-  const [activeTab, setActiveTab] = useState(project.floorTabs?.[0] ?? "");
+  const floorTabs = project.floorTabs.length ? project.floorTabs : (project.floorPlans.length ? ["Sản phẩm"] : []);
+  const [activeTab, setActiveTab] = useState(floorTabs[0] ?? "");
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState<number | null>(null);
 
@@ -273,6 +218,9 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
   const hasInvestmentReasons = project.investmentReasons.length > 0;
   const hasTestimonials = project.testimonials.length > 0;
   const hasFaqs = project.faqs.length > 0;
+  const visibleFloorPlans = project.floorTabs.length && activeTab
+    ? project.floorPlans.filter((plan) => !plan.productType || plan.productType === activeTab)
+    : project.floorPlans;
 
   return (
     <main className="overflow-hidden bg-ivory pb-0 pt-[76px] text-ink">
@@ -400,13 +348,6 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
           </Reveal>
         ) : null}
 
-        <VR360Section
-          projectId={project.id || 1}
-          projectSlug={project.slug}
-          projectName={project.name}
-          fallbackUrl={project.virtualTourUrl}
-        />
-
         {hasGallery ? <Reveal
           className="rounded-[22px] border border-line/80 bg-white p-4 shadow-soft sm:p-5"
           delay={0.04}
@@ -447,12 +388,12 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
         </Reveal> : null}
 
         {hasConnectivity ? <Reveal className="rounded-[22px] border border-line/80 bg-white p-5 shadow-soft sm:p-7">
-          <section className="grid items-center gap-8 lg:grid-cols-[310px_minmax(0,1fr)]">
+          <section className={`grid items-center gap-8 ${project.mapImageUrl ? "lg:grid-cols-[310px_minmax(0,1fr)]" : ""}`}>
             <div>
               <SectionTitle eyebrow="VỊ TRÍ CHIẾN LƯỢC">KẾT NỐI TOÀN DIỆN</SectionTitle>
-              <p className="mb-6 text-[13px] leading-6 text-muted">
-                {project.locationDescription || "Tọa lạc tại vị trí trung tâm, kết nối nhanh chóng đến các khu vực trọng điểm."}
-              </p>
+              {project.locationDescription ? (
+                <p className="mb-6 text-[13px] leading-6 text-muted">{project.locationDescription}</p>
+              ) : null}
               <div className="space-y-4">
                 {project.connectivity.map((item) => (
                   <div key={item.time} className="flex items-center gap-3">
@@ -467,7 +408,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                 ))}
               </div>
             </div>
-            <LocationMap projectName={project.name} mapImageUrl={project.mapImageUrl} />
+            {project.mapImageUrl ? <LocationMap projectName={project.name} mapImageUrl={project.mapImageUrl} /> : null}
           </section>
         </Reveal> : null}
 
@@ -503,7 +444,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
           <section>
             <SectionTitle>MẶT BẰNG &amp; LOẠI HÌNH SẢN PHẨM</SectionTitle>
             <div className="mb-4 grid overflow-hidden rounded-[6px] border border-line bg-white sm:grid-cols-4">
-              {project.floorTabs.map((tab) => (
+              {floorTabs.map((tab) => (
                 <button
                   key={tab}
                   type="button"
@@ -517,7 +458,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
               ))}
             </div>
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              {project.floorPlans.map((plan, index) => (
+              {visibleFloorPlans.map((plan, index) => (
                 <motion.article
                   key={plan.name}
                   layout
@@ -528,7 +469,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                     <div className="relative overflow-hidden rounded-[10px]">
                       <Image
                         src={plan.image}
-                        alt={`${activeTab} - ${plan.name}`}
+                        alt={`${plan.productType || activeTab || "Sản phẩm"} - ${plan.name}`}
                         fill
                         sizes="(max-width: 640px) 50vw, 25vw"
                         className="object-cover"
@@ -540,7 +481,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                   </div>
                   <div className="p-4">
                     <p className="text-[9px] font-bold uppercase tracking-[0.08em] text-gold">
-                      Mẫu {String(index + 1).padStart(2, "0")}
+                      {plan.productType || activeTab || "Sản phẩm"} · Mẫu {String(index + 1).padStart(2, "0")}
                     </p>
                     <h3 className="mt-1 text-sm font-bold text-ink">{plan.name}</h3>
                     <p className="mt-2 text-[10px] text-muted">
@@ -765,6 +706,15 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
           </section>
         </Reveal> : null}
 
+        {project.virtualTourUrl ? (
+          <VR360Section
+            projectId={project.id || 1}
+            projectSlug={project.slug}
+            projectName={project.name}
+            fallbackUrl={project.virtualTourUrl}
+          />
+        ) : null}
+
         <Reveal>
           <section
             id="dang-ky-tu-van"
@@ -830,7 +780,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                     <option value="" disabled>
                       Chọn loại sản phẩm
                     </option>
-                    {project.floorTabs.map((tab) => (
+                    {floorTabs.map((tab) => (
                       <option key={tab}>{tab}</option>
                     ))}
                   </select>
