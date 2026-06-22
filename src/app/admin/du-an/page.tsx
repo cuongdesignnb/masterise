@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { Project, ProjectCategory } from '@/types/api';
-import { useAuth } from '@/context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Building, 
@@ -12,17 +11,13 @@ import {
   Search, 
   Edit, 
   Trash2, 
-  Globe, 
   MapPin, 
   Check, 
   Layers, 
   X, 
   Image as ImageIcon, 
-  DollarSign, 
-  FolderOpen,
   Eye,
-  Star,
-  Settings
+  Star
 } from 'lucide-react';
 import MediaSelectModal from '@/components/admin/MediaSelectModal';
 import RichTextEditor from '@/components/admin/RichTextEditor';
@@ -68,10 +63,10 @@ type ProjectAdminTab =
   | 'media'
   | 'seo'
   | 'vr360';
+type ProjectSaveMode = 'draft' | 'save' | 'preview' | 'publish';
 
 export default function AdminProjects() {
   const queryClient = useQueryClient();
-  const { hasRole } = useAuth();
   
   // States
   const [search, setSearch] = useState('');
@@ -83,11 +78,13 @@ export default function AdminProjects() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [activeTab, setActiveTab] = useState<ProjectAdminTab>('overview');
+  const [formError, setFormError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [lastSavedAt, setLastSavedAt] = useState('');
   
   // Category manager modal state
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
-  const [editingCategory, setEditingCategory] = useState<ProjectCategory | null>(null);
   
   // Media Selector state
   const [mediaSelectorTarget, setMediaSelectorTarget] = useState<MediaSelectorTarget>(null);
@@ -179,7 +176,57 @@ export default function AdminProjects() {
   const [formPolicyCards, setFormPolicyCards] = useState<PolicyItem[]>([]);
   const [formProjectTimeline, setFormProjectTimeline] = useState<TimelineItem[]>([]);
 
+  const slugifyProjectName = (value: string) => value
+    .toString()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[đĐ]/g, 'd')
+    .replace(/([^a-z0-9\s-]|_)+/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
+  const fieldLabelMap: Record<string, string> = {
+    name: 'Tên dự án',
+    slug: 'Đường dẫn tĩnh',
+    description: 'Mô tả ngắn',
+    thumbnail: 'Ảnh đại diện',
+    banner_image: 'Ảnh Hero',
+    sales_status: 'Trạng thái mở bán',
+    seo_title: 'Tiêu đề SEO',
+    seo_description: 'Mô tả SEO',
+    status: 'Trạng thái dự án',
+    floor_plans: 'Danh sách mặt bằng',
+    price_rows: 'Dòng bảng giá',
+  };
   const getErrorMessage = (error: unknown) => error instanceof Error ? error.message : 'Lỗi khi xử lý yêu cầu.';
+  const normalizeApiErrors = (error: unknown) => {
+    const maybeError = error as { status?: number; errors?: Record<string, string[]>; message?: string };
+    if (maybeError?.errors) {
+      const nextErrors = Object.fromEntries(
+        Object.entries(maybeError.errors).map(([field, messages]) => [
+          field,
+          `${fieldLabelMap[field] || field}: ${messages?.[0] || 'Dữ liệu chưa hợp lệ.'}`,
+        ])
+      );
+      return {
+        message: 'Chưa thể lưu dự án. Vui lòng kiểm tra lại các trường được đánh dấu.',
+        fieldErrors: nextErrors,
+      };
+    }
+    if (maybeError?.status === 401 || maybeError?.status === 403) {
+      return {
+        message: 'Phiên đăng nhập không còn hợp lệ hoặc bạn không có quyền lưu dự án này.',
+        fieldErrors: {},
+      };
+    }
+    return {
+      message: getErrorMessage(error) === 'Validation error'
+        ? 'Dữ liệu chưa hợp lệ. Vui lòng kiểm tra lại.'
+        : getErrorMessage(error),
+      fieldErrors: {},
+    };
+  };
   const asRecords = (value: unknown): Record<string, unknown>[] => Array.isArray(value)
     ? value.filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === 'object' && !Array.isArray(item))
     : [];
@@ -288,18 +335,7 @@ export default function AdminProjects() {
     const nameVal = e.target.value;
     setFormName(nameVal);
     if (!editingProject) {
-      // Slugify
-      const slugVal = nameVal
-        .toString()
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '') // Remove accents
-        .replace(/[đĐ]/g, 'd')
-        .replace(/([^a-z0-9\s-]|_)+/g, '') // Remove special chars
-        .trim()
-        .replace(/\s+/g, '-')
-        .replace(/-+/g, '-');
-      setFormSlug(slugVal);
+      setFormSlug(slugifyProjectName(nameVal));
     }
   };
 
@@ -307,6 +343,9 @@ export default function AdminProjects() {
   const handleCreateOpen = () => {
     setEditingProject(null);
     setActiveTab('overview');
+    setFormError('');
+    setFieldErrors({});
+    setLastSavedAt('');
     
     // Reset fields
     setFormName('');
@@ -396,6 +435,9 @@ export default function AdminProjects() {
   const handleEditOpen = (project: Project) => {
     setEditingProject(project);
     setActiveTab('overview');
+    setFormError('');
+    setFieldErrors({});
+    setLastSavedAt('');
     
     // Fill fields
     setFormName(project.name);
@@ -484,7 +526,7 @@ export default function AdminProjects() {
 
   // Create or Update Project Mutation
   const saveProjectMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (mode: ProjectSaveMode) => {
       const amenitiesArr = formAmenities
         .split(',')
         .map(a => a.trim())
@@ -514,10 +556,12 @@ export default function AdminProjects() {
         .map(item => [item.productType, item.area, item.price]);
       const policyCards = cleanArray(formPolicyCards, item => Boolean(item.title || item.description));
       const projectTimeline = cleanArray(formProjectTimeline, item => Boolean(item.date || item.title));
+      const slugValue = formSlug.trim() || slugifyProjectName(formName);
+      const shouldPublish = mode === 'publish' ? true : mode === 'draft' ? false : formIsPublished;
 
       const payload = {
         name: formName,
-        slug: formSlug,
+        slug: slugValue,
         code: formCode || null,
         developer_id: formDeveloperId !== '' ? Number(formDeveloperId) : null,
         location_id: formLocationId !== '' ? Number(formLocationId) : null,
@@ -526,7 +570,7 @@ export default function AdminProjects() {
         open_sale_at: formOpenSaleAt || null,
         is_featured: formIsFeatured,
         is_hot: formIsHot,
-        is_published: formIsPublished,
+        is_published: shouldPublish ? true : false,
         sort_order: Number(formSortOrder),
         developer: formDeveloper,
         scale: formScale,
@@ -609,13 +653,26 @@ export default function AdminProjects() {
         return api.post('/projects', payload);
       }
     },
-    onSuccess: () => {
+    onSuccess: (_data, mode) => {
       queryClient.invalidateQueries({ queryKey: ['admin-projects'] });
-      setIsFormOpen(false);
-      alert(editingProject ? 'Đã cập nhật dự án thành công!' : 'Đã tạo dự án mới thành công!');
+      setFormError('');
+      setFieldErrors({});
+      setLastSavedAt(new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }));
+      if (mode === 'preview') {
+        const slugValue = formSlug.trim() || slugifyProjectName(formName);
+        window.open(`/admin/du-an/xem-truoc/${slugValue}`, '_blank', 'noopener,noreferrer');
+      } else {
+        setIsFormOpen(false);
+        alert(mode === 'publish'
+          ? 'Đã xuất bản dự án thành công.'
+          : mode === 'draft' ? 'Đã lưu nháp dự án thành công.' : 'Đã lưu thay đổi thành công.'
+        );
+      }
     },
     onError: (err: unknown) => {
-      alert(getErrorMessage(err));
+      const normalized = normalizeApiErrors(err);
+      setFormError(normalized.message);
+      setFieldErrors(normalized.fieldErrors);
     }
   });
 
@@ -796,6 +853,49 @@ export default function AdminProjects() {
       ) : null}
     </div>
   );
+
+  const getPublishMissingFields = () => [
+    !formName.trim() ? 'Thiếu tên dự án' : null,
+    !(formSlug.trim() || slugifyProjectName(formName)) ? 'Thiếu đường dẫn tĩnh' : null,
+    !formDescription.trim() ? 'Thiếu mô tả ngắn' : null,
+    !formThumbnail ? 'Thiếu ảnh đại diện' : null,
+    !formBannerImage ? 'Thiếu ảnh Hero' : null,
+    !formSalesStatus ? 'Thiếu trạng thái mở bán' : null,
+    !formSeoTitle.trim() ? 'Thiếu tiêu đề SEO' : null,
+    !formSeoDescription.trim() ? 'Thiếu mô tả SEO' : null,
+  ].filter(Boolean) as string[];
+
+  const handleSaveProject = (mode: ProjectSaveMode) => {
+    setFormError('');
+    setFieldErrors({});
+
+    if (!formName.trim()) {
+      setFormError('Vui lòng nhập tên dự án trước khi lưu.');
+      setFieldErrors({ name: 'Tên dự án: Vui lòng nhập tên dự án.' });
+      setActiveTab('overview');
+      return;
+    }
+
+    if (!formSlug.trim()) {
+      setFormSlug(slugifyProjectName(formName));
+    }
+
+    if (mode === 'publish') {
+      const missingFields = getPublishMissingFields();
+      if (missingFields.length > 0) {
+        const confirmed = window.confirm(
+          `Dự án còn thiếu một số thông tin quan trọng:\n\n- ${missingFields.join('\n- ')}\n\nBạn vẫn muốn xuất bản dự án này?`
+        );
+        if (!confirmed) {
+          setFormError(`Dự án còn thiếu thông tin trước khi xuất bản: ${missingFields.join(', ')}.`);
+          return;
+        }
+      }
+      setFormIsPublished(true);
+    }
+
+    saveProjectMutation.mutate(mode);
+  };
 
   const renderIconValueRepeater = (
     title: string,
@@ -1111,7 +1211,7 @@ export default function AdminProjects() {
       {/* Projects Create/Edit Slide Drawer (Framer Motion) */}
       <AnimatePresence>
         {isFormOpen && (
-          <div className="fixed inset-0 z-40 flex justify-end">
+          <div className="fixed inset-0 z-40 flex items-center justify-center p-3">
             {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
@@ -1127,7 +1227,7 @@ export default function AdminProjects() {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-              className="relative w-full max-w-3xl bg-white h-full flex flex-col z-10 shadow-2xl border-l border-[#E8DCCB] text-[#1F1B16]"
+              className="relative z-10 flex h-[calc(100vh-24px)] w-full max-w-[1440px] flex-col overflow-hidden rounded-2xl border border-[#E8DCCB] bg-white text-[#1F1B16] shadow-2xl"
             >
               {/* Header */}
               <div className="px-6 py-5 border-b border-[#E8DCCB] flex justify-between items-center bg-[#FBF8F2]">
@@ -1147,8 +1247,9 @@ export default function AdminProjects() {
                 </button>
               </div>
 
-              {/* Tabs list */}
-              <div className="flex bg-[#FBF8F2]/60 px-6 border-b border-[#E8DCCB]/60 text-xs overflow-x-auto shrink-0 select-none">
+              <div className="flex min-h-0 flex-1">
+              {/* Section sidebar */}
+              <div className="flex w-64 shrink-0 flex-col gap-1 overflow-y-auto border-r border-[#E8DCCB]/70 bg-[#FBF8F2]/70 p-3 text-xs select-none">
                 {[
                   { id: 'overview', label: 'Tổng quan' },
                   { id: 'hero', label: 'Hero & Thông tin nhanh' },
@@ -1167,10 +1268,10 @@ export default function AdminProjects() {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id as ProjectAdminTab)}
-                    className={`px-4 py-3 font-semibold border-b-2 transition-colors whitespace-nowrap ${
+                    className={`rounded-xl px-3 py-2.5 text-left font-semibold transition-colors ${
                       activeTab === tab.id
-                        ? 'border-[#B88746] text-[#B88746]'
-                        : 'border-transparent text-[#8C7A6B] hover:text-[#1F1B16]'
+                        ? 'bg-white text-[#B88746] shadow-sm'
+                        : 'text-[#8C7A6B] hover:bg-white/70 hover:text-[#1F1B16]'
                     }`}
                   >
                     {tab.label}
@@ -1180,6 +1281,18 @@ export default function AdminProjects() {
 
               {/* Form Scrollable Fields */}
               <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                {formError ? (
+                  <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                    <p className="font-bold">{formError}</p>
+                    {Object.keys(fieldErrors).length > 0 ? (
+                      <ul className="mt-2 list-disc space-y-1 pl-5 text-xs">
+                        {Object.entries(fieldErrors).map(([field, message]) => (
+                          <li key={field}>{message}</li>
+                        ))}
+                      </ul>
+                    ) : null}
+                  </div>
+                ) : null}
                 
                 {/* TAB 1: General Info */}
                 {activeTab === 'overview' && (
@@ -1437,7 +1550,7 @@ export default function AdminProjects() {
                         >
                           <option value="coming_soon">Sắp mở bán</option>
                           <option value="selling">Đang mở bán</option>
-                          <option value="handing_over">Đang bàn giao</option>
+                          <option value="sold_out">Đã bán hết</option>
                           <option value="handover">Đã bàn giao</option>
                         </select>
                       </div>
@@ -2233,25 +2346,48 @@ export default function AdminProjects() {
                 )}
 
               </div>
+              </div>
 
               {/* Form Footer */}
-              <div className="px-6 py-4 border-t border-[#E8DCCB] flex justify-between items-center bg-[#FBF8F2]">
+              <div className="px-6 py-4 border-t border-[#E8DCCB] flex flex-col gap-3 bg-[#FBF8F2] sm:flex-row sm:items-center sm:justify-between">
                 <button
                   type="button"
                   onClick={() => setIsFormOpen(false)}
                   className="px-5 py-2.5 border border-[#E8DCCB] rounded-xl text-xs font-bold hover:bg-gray-100 transition-colors"
                 >
-                  Hủy bỏ
+                  Hủy
                 </button>
-                <button
-                  type="button"
-                  onClick={() => saveProjectMutation.mutate()}
-                  disabled={saveProjectMutation.isPending || !formName || !formSlug || !formPriceText}
-                  className="px-6 py-2.5 bg-[#B88746] hover:bg-[#1F1B16] text-white rounded-xl text-xs font-bold transition-all disabled:opacity-50 inline-flex items-center gap-1.5"
-                >
-                  {saveProjectMutation.isPending && <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />}
-                  Lưu dự án
-                </button>
+                <div className="flex flex-1 flex-wrap items-center justify-end gap-2">
+                  {lastSavedAt ? (
+                    <span className="mr-auto text-[11px] font-semibold text-emerald-700">Đã lưu lúc {lastSavedAt}</span>
+                  ) : null}
+                  <button
+                    type="button"
+                    onClick={() => handleSaveProject(editingProject && formIsPublished ? 'save' : 'draft')}
+                    disabled={saveProjectMutation.isPending || !formName.trim()}
+                    className="px-5 py-2.5 border border-[#B88746] bg-white text-[#B88746] hover:bg-[#B88746]/5 rounded-xl text-xs font-bold transition-all disabled:opacity-50 inline-flex items-center gap-1.5"
+                  >
+                    {saveProjectMutation.isPending && <span className="w-3.5 h-3.5 border-2 border-[#B88746] border-t-transparent rounded-full animate-spin" />}
+                    {editingProject && formIsPublished ? 'Lưu thay đổi' : 'Lưu nháp'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSaveProject('preview')}
+                    disabled={saveProjectMutation.isPending || !formName.trim()}
+                    className="px-5 py-2.5 border border-[#1F1B16] bg-white text-[#1F1B16] hover:bg-gray-100 rounded-xl text-xs font-bold transition-all disabled:opacity-50"
+                  >
+                    Lưu & xem trước
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSaveProject('publish')}
+                    disabled={saveProjectMutation.isPending || !formName.trim()}
+                    className="px-6 py-2.5 bg-[#B88746] hover:bg-[#1F1B16] text-white rounded-xl text-xs font-bold transition-all disabled:opacity-50 inline-flex items-center gap-1.5"
+                  >
+                    {saveProjectMutation.isPending && <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+                    {editingProject && formIsPublished ? 'Cập nhật xuất bản' : 'Xuất bản'}
+                  </button>
+                </div>
               </div>
             </motion.div>
           </div>

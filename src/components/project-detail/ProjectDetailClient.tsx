@@ -219,6 +219,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
   const hasInvestmentReasons = project.investmentReasons.length > 0;
   const hasTestimonials = project.testimonials.length > 0;
   const hasFaqs = project.faqs.length > 0;
+  const mobileHeroFacts = (project.quickCard.length ? project.quickCard : project.facts).slice(0, 4);
   const visibleFloorPlans = project.floorTabs.length && activeTab
     ? project.floorPlans.filter((plan) => !plan.productType || plan.productType === activeTab)
     : project.floorPlans;
@@ -227,10 +228,77 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
     <main className="overflow-hidden bg-ivory pb-0 pt-[76px] text-ink">
       <ProjectContainer className="space-y-5 pb-10 pt-4 sm:space-y-7 lg:pt-6">
         <motion.section
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.55, ease }}
+          className="space-y-4 md:hidden"
+        >
+          <div className="relative h-[320px] overflow-hidden rounded-[24px] border border-white/70 bg-beige shadow-luxury">
+            <Image
+              src={project.heroImage}
+              alt={`Toàn cảnh dự án ${project.name}`}
+              fill
+              priority
+              sizes="100vw"
+              className="object-cover object-center"
+            />
+            <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/35 to-transparent" />
+          </div>
+          <div className="rounded-[22px] border border-line/80 bg-white p-5 shadow-soft">
+            <div className="flex flex-wrap items-center gap-2">
+              {project.badge ? (
+                <span className="inline-flex rounded-full border border-gold/35 bg-[#fffaf2] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.08em] text-gold-dark">
+                  {project.badge}
+                </span>
+              ) : null}
+              {project.salesStatus ? (
+                <span className="inline-flex rounded-full bg-emerald-600 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.08em] text-white">
+                  {project.salesStatus}
+                </span>
+              ) : null}
+            </div>
+            <h1 className="heading-font mt-4 text-[38px] font-medium leading-[1.08] text-ink">
+              {project.name}
+            </h1>
+            <p className="mt-3 line-clamp-3 text-[14px] font-medium leading-6 text-muted">
+              {project.subtitle}
+            </p>
+            <div className="mt-5 grid gap-2">
+              <Link
+                href="#dang-ky-tu-van"
+                className="gold-gradient flex h-12 items-center justify-center rounded-[8px] text-[11px] font-bold uppercase tracking-[0.04em] text-white shadow-[0_12px_28px_rgba(143,99,47,.24)]"
+              >
+                Đăng ký tư vấn
+              </Link>
+              {project.videoUrl ? (
+                <Link
+                  href={project.videoUrl}
+                  className="flex h-12 items-center justify-center gap-2 rounded-[8px] border border-gold/45 bg-white text-[11px] font-bold uppercase tracking-[0.04em] text-gold-dark"
+                >
+                  <Play size={12} fill="currentColor" />
+                  Xem video dự án
+                </Link>
+              ) : null}
+            </div>
+            {mobileHeroFacts.length ? (
+              <div className="mt-5 grid grid-cols-2 gap-3">
+                {mobileHeroFacts.map((fact) => (
+                  <div key={`${fact.label}-${fact.value}`} className="rounded-[14px] border border-line/80 bg-[#fcfaf6] p-3">
+                    <ProjectIcon name={fact.icon} size={17} className="text-gold" />
+                    <p className="mt-2 text-[9px] text-muted">{fact.label}</p>
+                    <p className="mt-0.5 text-[11px] font-bold leading-4 text-ink">{fact.value}</p>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        </motion.section>
+
+        <motion.section
           initial={{ opacity: 0, scale: 0.985 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.75, ease }}
-          className="relative min-h-[610px] overflow-hidden rounded-[24px] border border-white/70 bg-beige shadow-luxury lg:min-h-[600px]"
+          className="relative hidden min-h-[610px] overflow-hidden rounded-[24px] border border-white/70 bg-beige shadow-luxury md:block lg:min-h-[600px]"
         >
           <Image
             src={project.heroImage}
@@ -303,7 +371,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
           </div>
         </motion.section>
 
-        {hasFacts ? <Reveal className="-mt-1 rounded-[18px] border border-line/80 bg-white/90 px-4 py-4 shadow-soft">
+        {hasFacts ? <Reveal className="-mt-1 hidden rounded-[18px] border border-line/80 bg-white/90 px-4 py-4 shadow-soft md:block">
           <div className="grid grid-cols-2 gap-y-5 sm:grid-cols-3 lg:grid-cols-6 lg:gap-0">
             {project.facts.map((fact, index) => (
               <div

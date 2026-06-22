@@ -287,7 +287,7 @@ class ProjectController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Validation error',
+                'message' => 'Dữ liệu chưa hợp lệ. Vui lòng kiểm tra lại.',
                 'errors' => $validator->errors()
             ], 422);
         }
@@ -324,7 +324,7 @@ class ProjectController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Project created successfully',
+            'message' => 'Đã tạo dự án thành công.',
             'data' => $project->load(['categories', 'seoMeta', 'developerRelation', 'locationRelation'])
         ], 201);
     }
@@ -339,7 +339,7 @@ class ProjectController extends Controller
         if (!$project) {
             return response()->json([
                 'success' => false,
-                'message' => 'Project not found'
+                'message' => 'Không tìm thấy dự án.'
             ], 404);
         }
 
@@ -430,7 +430,7 @@ class ProjectController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Validation error',
+                'message' => 'Dữ liệu chưa hợp lệ. Vui lòng kiểm tra lại.',
                 'errors' => $validator->errors()
             ], 422);
         }
@@ -469,7 +469,7 @@ class ProjectController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Project updated successfully',
+            'message' => 'Đã cập nhật dự án thành công.',
             'data' => $project->load(['categories', 'seoMeta', 'developerRelation', 'locationRelation'])
         ], 200);
     }
