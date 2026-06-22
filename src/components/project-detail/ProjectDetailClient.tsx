@@ -209,6 +209,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
   const hasFacts = project.facts.length > 0;
   const hasStats = project.stats.length > 0;
   const hasGallery = project.gallery.images.length > 0;
+  const hasGalleryCopy = Boolean(project.gallery.label || project.gallery.title || project.gallery.description);
   const hasConnectivity = project.connectivity.length > 0 || Boolean(project.mapImageUrl);
   const hasAmenities = project.amenities.length > 0;
   const hasFloorPlans = project.floorPlans.length > 0;
@@ -352,14 +353,22 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
           className="rounded-[22px] border border-line/80 bg-white p-4 shadow-soft sm:p-5"
           delay={0.04}
         >
-          <section id="khong-gian-song" className="grid gap-5 lg:grid-cols-[320px_minmax(0,1fr)]">
-            <div className="flex flex-col justify-center rounded-[18px] bg-[#fcfaf6] p-6 lg:p-8">
-              <p className="text-[10px] font-bold tracking-[0.12em] text-gold">{project.gallery.label}</p>
-              <h2 className="heading-font mt-2 text-[25px] font-semibold leading-tight text-ink">
-                {project.gallery.title}
-              </h2>
-              <p className="mt-4 text-[13px] leading-6 text-muted">{project.gallery.description}</p>
-            </div>
+          <section id="khong-gian-song" className={`grid gap-5 ${hasGalleryCopy ? "lg:grid-cols-[320px_minmax(0,1fr)]" : ""}`}>
+            {hasGalleryCopy ? (
+              <div className="flex flex-col justify-center rounded-[18px] bg-[#fcfaf6] p-6 lg:p-8">
+                {project.gallery.label ? (
+                  <p className="text-[10px] font-bold tracking-[0.12em] text-gold">{project.gallery.label}</p>
+                ) : null}
+                {project.gallery.title ? (
+                  <h2 className="heading-font mt-2 text-[25px] font-semibold leading-tight text-ink">
+                    {project.gallery.title}
+                  </h2>
+                ) : null}
+                {project.gallery.description ? (
+                  <p className="mt-4 text-[13px] leading-6 text-muted">{project.gallery.description}</p>
+                ) : null}
+              </div>
+            ) : null}
             <div className="grid h-[500px] grid-cols-2 grid-rows-4 gap-2 sm:grid-cols-4 sm:grid-rows-2 lg:h-[420px]">
               {project.gallery.images.map((image, index) => (
                 <div
