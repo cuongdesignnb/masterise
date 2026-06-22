@@ -1637,6 +1637,52 @@ export default function AdminProjects() {
                       </div>
                     </div>
 
+                    <div className="space-y-2 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2]/60 p-4">
+                      <label className="block text-xs font-semibold text-[#8C7A6B]">Ảnh bản đồ hiển thị ngoài trang chi tiết</label>
+                      <div className="flex gap-4 items-center">
+                        <div className="w-28 h-20 rounded-xl border border-[#E8DCCB] bg-white overflow-hidden flex items-center justify-center shrink-0">
+                          {formMapImageUrl ? (
+                            formMapImageUrl.endsWith('.svg') ? (
+                              <div className="w-full h-full p-1 bg-white">
+                                <img src={formMapImageUrl} alt="Xem trước ảnh bản đồ" className="w-full h-full object-contain" />
+                              </div>
+                            ) : (
+                              <img src={formMapImageUrl} alt="Xem trước ảnh bản đồ" className="w-full h-full object-cover" />
+                            )
+                          ) : (
+                            <ImageIcon className="w-6 h-6 text-[#B88746]/40" />
+                          )}
+                        </div>
+                        <div className="flex-1 space-y-2">
+                          <input
+                            type="text"
+                            value={formMapImageUrl}
+                            className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-white text-xs focus:outline-none"
+                            placeholder="Chọn ảnh bản đồ từ Media Library"
+                            readOnly
+                          />
+                          <div className="flex flex-wrap gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setMediaSelectorTarget('map')}
+                              className="px-3 py-1.5 bg-[#1F1B16] hover:bg-[#B88746] text-white text-xs font-semibold rounded-lg transition-colors"
+                            >
+                              Chọn ảnh bản đồ
+                            </button>
+                            {formMapImageUrl ? (
+                              <button
+                                type="button"
+                                onClick={() => setFormMapImageUrl('')}
+                                className={removeButtonClass}
+                              >
+                                Xóa ảnh bản đồ
+                              </button>
+                            ) : null}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
                     {renderTextPairRepeater('Danh sách kết nối', formConnectivity, setFormConnectivity, { time: '', label: '' }, [
                       { key: 'time', label: 'Thời gian di chuyển, ví dụ: 5 phút' },
                       { key: 'label', label: 'Điểm đến, ví dụ: Đến trung tâm Quận 1' },
