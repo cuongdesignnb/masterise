@@ -250,7 +250,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
           />
           <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,253,248,.97)_0%,rgba(255,253,248,.86)_31%,rgba(255,253,248,.28)_55%,rgba(15,20,22,.04)_100%)] max-lg:bg-[linear-gradient(180deg,rgba(255,253,248,.95)_0%,rgba(255,253,248,.68)_48%,rgba(24,27,27,.08)_100%)]" />
 
-          <div className="relative z-10 grid min-h-[610px] gap-8 px-6 py-10 sm:px-10 lg:min-h-[600px] lg:grid-cols-[minmax(0,1fr)_310px] lg:items-center lg:px-14 xl:px-16">
+          <div className="relative z-10 flex min-h-[610px] items-center px-6 py-10 sm:px-10 lg:min-h-[600px] lg:px-14 xl:px-16">
             <div className="max-w-[760px]">
               <motion.div
                 initial={{ opacity: 0, y: 14 }}
@@ -316,27 +316,6 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                 </Link> : null}
               </motion.div>
             </div>
-
-            <motion.aside
-              initial={{ opacity: 0, x: 34 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.7, delay: 0.42, ease }}
-              className="self-center rounded-[18px] border border-white/80 bg-white/90 p-5 shadow-[0_22px_60px_rgba(64,48,30,.16)] backdrop-blur-xl"
-            >
-              <div className="space-y-4">
-                {project.quickCard.map((item) => (
-                  <div key={item.label} className="flex gap-3">
-                    <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-beige text-gold">
-                      <ProjectIcon name={item.icon} size={19} />
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-medium text-muted">{item.label}</p>
-                      <p className="mt-0.5 text-[12px] font-bold leading-5 text-ink">{item.value}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </motion.aside>
           </div>
         </motion.section>
 
