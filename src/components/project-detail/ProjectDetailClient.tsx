@@ -27,9 +27,13 @@ import {
   Trees,
   TrendingUp,
   Waves,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  Maximize2,
   type LucideIcon,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { ProjectIconName, ProjectDetail } from "@/types/project-detail";
 import VR360Section from "@/components/vr360/VR360Section";
 
@@ -218,6 +222,45 @@ function FloorPlanSketch() {
 export default function ProjectDetailClient({ project }: { project: ProjectDetail }) {
   const [activeTab, setActiveTab] = useState(project.floorTabs?.[0] ?? "");
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [activeImageIndex, setActiveImageIndex] = useState<number | null>(null);
+
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (activeImageIndex !== null) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [activeImageIndex]);
+
+  // Keyboard navigation
+  useEffect(() => {
+    if (activeImageIndex === null) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setActiveImageIndex(null);
+      } else if (e.key === "ArrowRight") {
+        setActiveImageIndex((prev) => 
+          prev !== null ? (prev + 1) % project.gallery.images.length : null
+        );
+      } else if (e.key === "ArrowLeft") {
+        setActiveImageIndex((prev) => 
+          prev !== null 
+            ? (prev - 1 + project.gallery.images.length) % project.gallery.images.length 
+            : null
+        );
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [activeImageIndex, project.gallery.images.length]);
   const hasFacts = project.facts.length > 0;
   const hasStats = project.stats.length > 0;
   const hasGallery = project.gallery.images.length > 0;
@@ -370,18 +413,13 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                 {project.gallery.title}
               </h2>
               <p className="mt-4 text-[13px] leading-6 text-muted">{project.gallery.description}</p>
-              <Link
-                href="#tien-ich"
-                className="mt-6 self-start rounded-[5px] border border-gold/60 px-4 py-2.5 text-[10px] font-bold text-gold-dark transition hover:bg-gold hover:text-white"
-              >
-                KHÁM PHÁ BỘ SƯU TẬP
-              </Link>
             </div>
             <div className="grid h-[500px] grid-cols-2 grid-rows-4 gap-2 sm:grid-cols-4 sm:grid-rows-2 lg:h-[420px]">
               {project.gallery.images.map((image, index) => (
                 <div
                   key={image}
-                  className={`group relative overflow-hidden rounded-[13px] ${
+                  onClick={() => setActiveImageIndex(index)}
+                  className={`group relative overflow-hidden rounded-[13px] cursor-pointer ${
                     index === 0 ? "col-span-2 row-span-2" : ""
                   }`}
                 >
@@ -392,6 +430,11 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                     sizes={index === 0 ? "(max-width: 768px) 100vw, 55vw" : "25vw"}
                     className="object-cover transition duration-700 group-hover:scale-105"
                   />
+                  <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-md text-white border border-white/30 transform scale-90 group-hover:scale-100 transition-all duration-300">
+                      <Maximize2 size={16} />
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
@@ -799,6 +842,76 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
           </section>
         </Reveal>
       </ProjectContainer>
+
+      {/* Lightbox Modal */}
+      <AnimatePresence>
+        {activeImageIndex !== null && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black/95 p-4 backdrop-blur-md select-none"
+            onClick={() => setActiveImageIndex(null)}
+          >
+            {/* Top controls */}
+            <div className="absolute top-4 left-0 right-0 z-[10000] flex justify-between items-center px-6">
+              <span className="text-[12px] font-bold text-white/60 tracking-wider">
+                {activeImageIndex + 1} / {project.gallery.images.length}
+              </span>
+              <button
+                type="button"
+                onClick={() => setActiveImageIndex(null)}
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white/80 hover:bg-white/25 hover:text-white transition"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Main content */}
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ type: "spring", damping: 25, stiffness: 220 }}
+              className="relative flex items-center justify-center w-full max-w-5xl aspect-video max-h-[80vh] px-10"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Previous button */}
+              <button
+                type="button"
+                onClick={() => setActiveImageIndex((prev) => 
+                  prev !== null ? (prev - 1 + project.gallery.images.length) % project.gallery.images.length : null
+                )}
+                className="absolute left-0 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-white/5 border border-white/10 text-white/70 hover:bg-white/20 hover:text-white transition"
+              >
+                <ChevronLeft size={24} />
+              </button>
+
+              {/* Next button */}
+              <button
+                type="button"
+                onClick={() => setActiveImageIndex((prev) => 
+                  prev !== null ? (prev + 1) % project.gallery.images.length : null
+                )}
+                className="absolute right-0 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-white/5 border border-white/10 text-white/70 hover:bg-white/20 hover:text-white transition"
+              >
+                <ChevronRight size={24} />
+              </button>
+
+              {/* Active Image */}
+              <div className="relative w-full h-full rounded-[16px] overflow-hidden bg-zinc-900 border border-white/5">
+                <Image
+                  src={project.gallery.images[activeImageIndex]}
+                  alt={`${project.gallery.title} ${activeImageIndex + 1}`}
+                  fill
+                  priority
+                  className="object-contain"
+                />
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </main>
   );
 }
