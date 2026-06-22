@@ -328,14 +328,6 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
               >
                 {project.subtitle}
               </motion.p>
-              <motion.p
-                initial={{ opacity: 0, y: 18 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.37, ease }}
-                className="mt-4 max-w-[550px] text-sm leading-7 text-muted sm:text-[15px]"
-              >
-                {project.description}
-              </motion.p>
               <motion.div
                 initial={{ opacity: 0, y: 18 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -394,6 +386,19 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
             ))}
           </div>
         </Reveal> : null}
+
+        {/* TỔNG QUAN DỰ ÁN */}
+        {project.content ? (
+          <Reveal className="rounded-[22px] border border-line/80 bg-white p-5 shadow-soft sm:p-7">
+            <section id="tong-quan">
+              <SectionTitle eyebrow="TỔNG QUAN DỰ ÁN">GIỚI THIỆU CHI TIẾT</SectionTitle>
+              <div
+                className="prose prose-stone max-w-none mt-5 text-left text-sm leading-7 text-ink prose-headings:font-heading prose-headings:font-semibold prose-headings:text-[#1F1B16] prose-a:text-[#B88746] hover:prose-a:underline prose-img:rounded-2xl"
+                dangerouslySetInnerHTML={{ __html: project.content }}
+              />
+            </section>
+          </Reveal>
+        ) : null}
 
         <VR360Section
           projectId={project.id || 1}
