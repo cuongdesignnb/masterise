@@ -118,6 +118,8 @@ Route::group(['prefix' => 'v1'], function() {
             Route::delete('/locations/{id}', [LocationController::class, 'destroy']);
 
             // Projects CRUD
+            Route::get('/admin/projects', [ProjectController::class, 'adminIndex']);
+            Route::get('/admin/projects/{id}', [ProjectController::class, 'adminShow']);
             Route::post('/projects', [ProjectController::class, 'store']);
             Route::put('/projects/{id}', [ProjectController::class, 'update']);
             Route::delete('/projects/{id}', [ProjectController::class, 'destroy']);

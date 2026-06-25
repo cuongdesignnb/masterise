@@ -32,10 +32,6 @@ type SelectOption = {
   district?: string | null;
   ward?: string | null;
 };
-type ProjectShowResponse = {
-  project: Project;
-  related?: Project[];
-};
 
 type IconValueItem = { label: string; value: string; icon: string };
 type StatItem = { value: string; label: string };
@@ -358,7 +354,7 @@ export default function AdminProjects() {
   const { data: projectsData, isLoading: isProjectsLoading } = useQuery({
     queryKey: ['admin-projects', search, categoryFilter, statusFilter, page],
     queryFn: async () => {
-      let url = `/projects?q=${search}&page=${page}&per_page=10`;
+      let url = `/admin/projects?q=${search}&page=${page}&per_page=10`;
       if (categoryFilter) url += `&category=${categoryFilter}`;
       if (statusFilter) url += `&status=${statusFilter}`;
       const response = await api.get<Project[]>(url);
@@ -499,8 +495,8 @@ export default function AdminProjects() {
     setEditLoadingProjectId(listProject.id);
     let project = listProject;
     try {
-      const response = await api.get<ProjectShowResponse>(`/projects/${listProject.slug}`);
-      project = response.data?.project || listProject;
+      const response = await api.get<Project>(`/admin/projects/${listProject.id}`);
+      project = response.data || listProject;
     } catch (error) {
       toast.error('Chưa tải được dữ liệu mới nhất của dự án. Đang mở bản hiện có trong danh sách.');
       console.error('Unable to fetch fresh project before edit:', error);

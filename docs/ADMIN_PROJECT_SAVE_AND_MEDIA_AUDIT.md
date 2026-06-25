@@ -19,6 +19,8 @@ Frontend gọi qua `src/lib/api.ts`; nếu có token trong `localStorage.mh_toke
 5. Backend `Project` đã có phần lớn fillable/casts cần thiết cho gallery và các repeater chính; nhóm VR nâng cao không nằm trong bảng `projects`, đang thuộc module VR riêng.
 6. Form edit trước đây mở từ object trong danh sách dự án. Nếu list API hoặc proxy/cache trả dữ liệu cũ, admin sẽ thấy như “lưu không vào” dù PUT đã thành công.
 7. Request GET có token chưa chống cache đủ mạnh, dễ bị browser/proxy giữ bản cũ trong môi trường production có cache phía trước API.
+8. Admin trước đây đọc dữ liệu dự án qua endpoint public `/projects` và `/projects/{slug}`. Đây là URL public nên dễ bị cache/proxy hoặc public filter làm admin mở lại không đúng bản vừa lưu.
+9. Một số cột media URL ban đầu là `VARCHAR(255)`, có thể không đủ cho URL media dài.
 
 ## Bảng audit field trọng tâm
 
@@ -55,6 +57,9 @@ Frontend gọi qua `src/lib/api.ts`; nếu có token trong `localStorage.mh_toke
 - Sau khi lưu, React Query cache của `admin-projects` được cập nhật bằng project mới từ response rồi mới refetch.
 - API client thêm `Cache-Control`, `cache: no-store` và cache-busting `_ts` cho GET có token.
 - Backend trả `Cache-Control: no-store` cho response project khi request admin có quyền xem unpublished và cho response store/update.
+- Thêm endpoint admin riêng `GET /api/v1/admin/projects` và `GET /api/v1/admin/projects/{id}` để Admin đọc dữ liệu theo ID, không đi qua public slug endpoint.
+- Frontend Admin chuyển list/edit sang endpoint admin riêng.
+- Thêm migration mở rộng các cột URL media của dự án sang `TEXT`.
 - Checklist có field thiếu, click được, nhảy đúng tab và highlight field.
 - Lỗi validation backend trả về được map về tab/field tương ứng.
 

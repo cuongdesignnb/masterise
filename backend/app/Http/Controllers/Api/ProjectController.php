@@ -104,6 +104,68 @@ class ProjectController extends Controller
         return $canViewUnpublished ? $this->noStore($response) : $response;
     }
 
+    public function adminIndex(Request $request)
+    {
+        $query = Project::query()->with(['categories', 'seoMeta', 'developerRelation', 'locationRelation']);
+
+        if ($request->has('q') && !empty($request->q)) {
+            $search = $request->q;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('location', 'like', "%{$search}%")
+                  ->orWhere('developer', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->has('region') && !empty($request->region)) {
+            $query->where('region', $request->region);
+        }
+
+        if ($request->has('status') && !empty($request->status)) {
+            $statuses = is_array($request->status) ? $request->status : explode(',', $request->status);
+            $query->whereIn('status', $statuses);
+        }
+
+        if ($request->has('sales_status') && !empty($request->sales_status)) {
+            $salesStatuses = is_array($request->sales_status) ? $request->sales_status : explode(',', $request->sales_status);
+            $query->whereIn('sales_status', $salesStatuses);
+        }
+
+        if ($request->has('is_hot') && $request->is_hot !== '') {
+            $query->where('is_hot', filter_var($request->is_hot, FILTER_VALIDATE_BOOLEAN));
+        }
+
+        if ($request->has('category') && !empty($request->category)) {
+            $categorySlug = $request->category;
+            $query->whereHas('categories', function($q) use ($categorySlug) {
+                $q->where('slug', $categorySlug);
+            });
+        }
+
+        $sortBy = $request->get('sort_by', 'created_at');
+        $sortOrder = $request->get('sort_order', 'desc');
+
+        if (in_array($sortBy, ['price_min', 'handover_year', 'open_sale_at', 'created_at', 'name', 'sort_order'])) {
+            $query->orderBy($sortBy, $sortOrder);
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
+
+        $perPage = $request->get('per_page', 10);
+        $projects = $query->paginate($perPage);
+
+        return $this->noStore(response()->json([
+            'success' => true,
+            'data' => $projects->items(),
+            'meta' => [
+                'current_page' => $projects->currentPage(),
+                'last_page' => $projects->lastPage(),
+                'per_page' => $projects->perPage(),
+                'total' => $projects->total(),
+            ]
+        ], 200));
+    }
+
     /**
      * Get featured projects.
      */
@@ -174,6 +236,23 @@ class ProjectController extends Controller
         ], 200);
 
         return $canViewUnpublished ? $this->noStore($response) : $response;
+    }
+
+    public function adminShow($id)
+    {
+        $project = Project::with(['categories', 'seoMeta', 'developerRelation', 'locationRelation'])->find($id);
+
+        if (!$project) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Không tìm thấy dự án.'
+            ], 404);
+        }
+
+        return $this->noStore(response()->json([
+            'success' => true,
+            'data' => $project
+        ], 200));
     }
 
     /**
@@ -272,7 +351,7 @@ class ProjectController extends Controller
             'brochure_url' => 'nullable|string',
             'video_url' => 'nullable|string',
             'virtual_tour_url' => 'nullable|string',
-            'map_image_url' => 'nullable|string|max:255',
+            'map_image_url' => 'nullable|string',
             'location_description' => 'nullable|string',
             'lat' => 'nullable|numeric',
             'lng' => 'nullable|numeric',
@@ -415,7 +494,7 @@ class ProjectController extends Controller
             'brochure_url' => 'nullable|string',
             'video_url' => 'nullable|string',
             'virtual_tour_url' => 'nullable|string',
-            'map_image_url' => 'nullable|string|max:255',
+            'map_image_url' => 'nullable|string',
             'location_description' => 'nullable|string',
             'lat' => 'nullable|numeric',
             'lng' => 'nullable|numeric',
