@@ -32,6 +32,10 @@ type SelectOption = {
   district?: string | null;
   ward?: string | null;
 };
+type ProjectShowResponse = {
+  project: Project;
+  related?: Project[];
+};
 
 type IconValueItem = { label: string; value: string; icon: string };
 type StatItem = { value: string; label: string };
@@ -93,6 +97,7 @@ export default function AdminProjects() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [lastSavedAt, setLastSavedAt] = useState('');
   const [activeChecklistTarget, setActiveChecklistTarget] = useState<{ tab: ProjectAdminTab; field?: string } | null>(null);
+  const [editLoadingProjectId, setEditLoadingProjectId] = useState<number | null>(null);
   
   // Category manager modal state
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
@@ -490,7 +495,19 @@ export default function AdminProjects() {
   };
 
   // Open Form for Edit
-  const handleEditOpen = (project: Project) => {
+  const handleEditOpen = async (listProject: Project) => {
+    setEditLoadingProjectId(listProject.id);
+    let project = listProject;
+    try {
+      const response = await api.get<ProjectShowResponse>(`/projects/${listProject.slug}`);
+      project = response.data?.project || listProject;
+    } catch (error) {
+      toast.error('Chưa tải được dữ liệu mới nhất của dự án. Đang mở bản hiện có trong danh sách.');
+      console.error('Unable to fetch fresh project before edit:', error);
+    } finally {
+      setEditLoadingProjectId(null);
+    }
+
     setEditingProject(project);
     setActiveTab('overview');
     setFormError('');
@@ -707,13 +724,29 @@ export default function AdminProjects() {
       };
 
       if (editingProject) {
-        return api.put(`/projects/${editingProject.id}`, payload);
+        return api.put<Project>(`/projects/${editingProject.id}`, payload);
       } else {
-        return api.post('/projects', payload);
+        return api.post<Project>('/projects', payload);
       }
     },
-    onSuccess: (_data, mode) => {
+    onSuccess: async (response, mode) => {
+      const savedProject = response.data;
+      if (savedProject?.id) {
+        queryClient.setQueriesData({ queryKey: ['admin-projects'] }, (oldData: unknown) => {
+          const current = oldData as { data?: Project[] } | undefined;
+          if (!current?.data) return oldData;
+          const exists = current.data.some(project => project.id === savedProject.id);
+          return {
+            ...current,
+            data: exists
+              ? current.data.map(project => project.id === savedProject.id ? { ...project, ...savedProject } : project)
+              : [savedProject, ...current.data],
+          };
+        });
+        setEditingProject(savedProject);
+      }
       queryClient.invalidateQueries({ queryKey: ['admin-projects'] });
+      await queryClient.refetchQueries({ queryKey: ['admin-projects'], type: 'active' });
       setFormError('');
       setFieldErrors({});
       setLastSavedAt(new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }));
@@ -1409,10 +1442,15 @@ export default function AdminProjects() {
                       </a>
                       <button
                         onClick={() => handleEditOpen(project)}
-                        className="p-1.5 hover:bg-[#B88746]/10 text-[#B88746] rounded-lg transition-colors inline-flex items-center"
+                        disabled={editLoadingProjectId === project.id}
+                        className="p-1.5 hover:bg-[#B88746]/10 text-[#B88746] rounded-lg transition-colors inline-flex items-center disabled:opacity-50"
                         title="Sửa dự án"
                       >
-                        <Edit className="w-4 h-4" />
+                        {editLoadingProjectId === project.id ? (
+                          <span className="h-4 w-4 rounded-full border-2 border-[#B88746] border-t-transparent animate-spin" />
+                        ) : (
+                          <Edit className="w-4 h-4" />
+                        )}
                       </button>
                       <button
                         onClick={() => handleDeleteProject(project.id)}

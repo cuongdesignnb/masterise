@@ -10,6 +10,13 @@ use Illuminate\Support\Facades\DB;
 
 class ProjectController extends Controller
 {
+    private function noStore($response)
+    {
+        return $response
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->header('Pragma', 'no-cache');
+    }
+
     /**
      * Get list of projects with filtering and pagination.
      */
@@ -83,7 +90,7 @@ class ProjectController extends Controller
         $perPage = $request->get('per_page', 9);
         $projects = $query->paginate($perPage);
 
-        return response()->json([
+        $response = response()->json([
             'success' => true,
             'data' => $projects->items(),
             'meta' => [
@@ -93,6 +100,8 @@ class ProjectController extends Controller
                 'total' => $projects->total(),
             ]
         ], 200);
+
+        return $canViewUnpublished ? $this->noStore($response) : $response;
     }
 
     /**
@@ -156,13 +165,15 @@ class ProjectController extends Controller
             ->limit(3)
             ->get();
 
-        return response()->json([
+        $response = response()->json([
             'success' => true,
             'data' => [
                 'project' => $project,
                 'related' => $relatedProjects
             ]
         ], 200);
+
+        return $canViewUnpublished ? $this->noStore($response) : $response;
     }
 
     /**
@@ -322,11 +333,11 @@ class ProjectController extends Controller
             'keywords' => $request->get('seo_keywords'),
         ]);
 
-        return response()->json([
+        return $this->noStore(response()->json([
             'success' => true,
             'message' => 'Đã tạo dự án thành công.',
             'data' => $project->load(['categories', 'seoMeta', 'developerRelation', 'locationRelation'])
-        ], 201);
+        ], 201));
     }
 
     /**
@@ -467,11 +478,11 @@ class ProjectController extends Controller
             ]
         );
 
-        return response()->json([
+        return $this->noStore(response()->json([
             'success' => true,
             'message' => 'Đã cập nhật dự án thành công.',
             'data' => $project->load(['categories', 'seoMeta', 'developerRelation', 'locationRelation'])
-        ], 200);
+        ], 200));
     }
 
     /**

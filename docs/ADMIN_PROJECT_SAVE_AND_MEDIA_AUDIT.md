@@ -17,6 +17,8 @@ Frontend gọi qua `src/lib/api.ts`; nếu có token trong `localStorage.mh_toke
 3. `handleEditOpen` chỉ nhận array thật cho một số field. Nếu API hoặc DB trả JSON string, form có thể mở lại rỗng.
 4. Checklist chỉ có trạng thái tổng quát, chưa có danh sách field thiếu và chưa click được để nhảy đúng tab.
 5. Backend `Project` đã có phần lớn fillable/casts cần thiết cho gallery và các repeater chính; nhóm VR nâng cao không nằm trong bảng `projects`, đang thuộc module VR riêng.
+6. Form edit trước đây mở từ object trong danh sách dự án. Nếu list API hoặc proxy/cache trả dữ liệu cũ, admin sẽ thấy như “lưu không vào” dù PUT đã thành công.
+7. Request GET có token chưa chống cache đủ mạnh, dễ bị browser/proxy giữ bản cũ trong môi trường production có cache phía trước API.
 
 ## Bảng audit field trọng tâm
 
@@ -49,6 +51,10 @@ Frontend gọi qua `src/lib/api.ts`; nếu có token trong `localStorage.mh_toke
 - Khi chọn gallery, `formGallery` nhận đúng danh sách xác nhận cuối cùng từ modal.
 - Tab “Không gian sống” hiển thị thumbnail preview ngay, có xóa ảnh, đưa lên, đưa xuống.
 - `handleEditOpen` normalize array từ array thật hoặc JSON string.
+- `handleEditOpen` fetch lại detail mới nhất theo slug trước khi map vào form, không còn chỉ dùng object cũ trong bảng list.
+- Sau khi lưu, React Query cache của `admin-projects` được cập nhật bằng project mới từ response rồi mới refetch.
+- API client thêm `Cache-Control`, `cache: no-store` và cache-busting `_ts` cho GET có token.
+- Backend trả `Cache-Control: no-store` cho response project khi request admin có quyền xem unpublished và cho response store/update.
 - Checklist có field thiếu, click được, nhảy đúng tab và highlight field.
 - Lỗi validation backend trả về được map về tab/field tương ứng.
 

@@ -53,14 +53,20 @@ async function request<T>(
 
   if (token) {
     headers.set('Authorization', `Bearer ${token}`);
+    headers.set('Cache-Control', 'no-cache');
+    headers.set('Pragma', 'no-cache');
   }
 
   const config: RequestInit = {
     ...options,
     headers,
+    cache: token ? 'no-store' : options.cache,
   };
 
-  const url = endpoint.startsWith('http') ? endpoint : `${API_URL}/${endpoint.replace(/^\//, '')}`;
+  let url = endpoint.startsWith('http') ? endpoint : `${API_URL}/${endpoint.replace(/^\//, '')}`;
+  if (token && (config.method || 'GET').toUpperCase() === 'GET') {
+    url += `${url.includes('?') ? '&' : '?'}_ts=${Date.now()}`;
+  }
 
   try {
     const response = await fetch(url, config);
@@ -90,21 +96,21 @@ export const api = {
   get: <T>(endpoint: string, options?: RequestInit) =>
     request<T>(endpoint, { ...options, method: 'GET' }),
 
-  post: <T>(endpoint: string, body?: any, options?: RequestInit) =>
+  post: <T>(endpoint: string, body?: unknown, options?: RequestInit) =>
     request<T>(endpoint, {
       ...options,
       method: 'POST',
       body: body instanceof FormData ? body : JSON.stringify(body),
     }),
 
-  put: <T>(endpoint: string, body?: any, options?: RequestInit) =>
+  put: <T>(endpoint: string, body?: unknown, options?: RequestInit) =>
     request<T>(endpoint, {
       ...options,
       method: 'PUT',
       body: body instanceof FormData ? body : JSON.stringify(body),
     }),
 
-  patch: <T>(endpoint: string, body?: any, options?: RequestInit) =>
+  patch: <T>(endpoint: string, body?: unknown, options?: RequestInit) =>
     request<T>(endpoint, {
       ...options,
       method: 'PATCH',
