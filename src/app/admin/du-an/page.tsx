@@ -65,6 +65,15 @@ type ProjectAdminTab =
   | 'seo'
   | 'vr360';
 type ProjectSaveMode = 'draft' | 'save' | 'preview' | 'publish';
+type ChecklistStatus = 'complete' | 'missing' | 'optional' | 'error';
+type SectionChecklistItem = {
+  key: ProjectAdminTab;
+  label: string;
+  status: ChecklistStatus;
+  missingFields: string[];
+  targetTab: ProjectAdminTab;
+  targetField?: string;
+};
 
 export default function AdminProjects() {
   const queryClient = useQueryClient();
@@ -83,6 +92,7 @@ export default function AdminProjects() {
   const [formError, setFormError] = useState('');
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [lastSavedAt, setLastSavedAt] = useState('');
+  const [activeChecklistTarget, setActiveChecklistTarget] = useState<{ tab: ProjectAdminTab; field?: string } | null>(null);
   
   // Category manager modal state
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
@@ -200,6 +210,40 @@ export default function AdminProjects() {
     status: 'Trạng thái dự án',
     floor_plans: 'Danh sách mặt bằng',
     price_rows: 'Dòng bảng giá',
+    gallery: 'Danh sách ảnh không gian sống',
+    gallery_label: 'Nhãn section Không gian sống',
+    gallery_title: 'Tiêu đề section Không gian sống',
+    gallery_description: 'Mô tả section Không gian sống',
+    map_image_url: 'Ảnh bản đồ',
+    category_ids: 'Danh mục dự án',
+  };
+  const fieldTabMap: Record<string, ProjectAdminTab> = {
+    name: 'overview',
+    slug: 'overview',
+    description: 'overview',
+    content: 'overview',
+    banner_image: 'media',
+    thumbnail: 'media',
+    gallery: 'gallery',
+    gallery_label: 'gallery',
+    gallery_title: 'gallery',
+    gallery_description: 'gallery',
+    location: 'location',
+    address: 'location',
+    map_image_url: 'location',
+    connectivity: 'location',
+    amenity_details: 'amenities',
+    floor_tabs: 'floor',
+    floor_plans: 'floor',
+    price_rows: 'pricingPolicy',
+    policy_cards: 'pricingPolicy',
+    project_timeline: 'timeline',
+    investment_reasons: 'investment',
+    project_testimonials: 'investment',
+    project_faqs: 'faq',
+    seo_title: 'seo',
+    seo_description: 'seo',
+    schema_price: 'seo',
   };
   const getErrorMessage = (error: unknown) => error instanceof Error ? error.message : 'Lỗi khi xử lý yêu cầu.';
   const normalizeApiErrors = (error: unknown) => {
@@ -229,12 +273,24 @@ export default function AdminProjects() {
       fieldErrors: {},
     };
   };
-  const asRecords = (value: unknown): Record<string, unknown>[] => Array.isArray(value)
-    ? value.filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === 'object' && !Array.isArray(item))
-    : [];
-  const asStrings = (value: unknown): string[] => Array.isArray(value)
-    ? value.map((item) => String(item || '').trim()).filter(Boolean)
-    : [];
+  const normalizeArray = (value: unknown): unknown[] => {
+    if (Array.isArray(value)) return value;
+    if (!value) return [];
+    if (typeof value === 'string') {
+      try {
+        const parsed = JSON.parse(value);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  };
+  const asRecords = (value: unknown): Record<string, unknown>[] => normalizeArray(value)
+    .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === 'object' && !Array.isArray(item));
+  const asStrings = (value: unknown): string[] => normalizeArray(value)
+    .map((item) => String(item || '').trim())
+    .filter(Boolean);
   const textValue = (value: unknown) => String(value || '');
   const loadIconValueItems = (value: unknown, icon = 'LandPlot'): IconValueItem[] => asRecords(value).map((item) => ({
     label: textValue(item.label),
@@ -277,11 +333,11 @@ export default function AdminProjects() {
     totalArea: textValue(item.totalArea || item.total_area),
     image: textValue(item.image),
   }));
-  const loadPriceRowItems = (value: unknown): PriceRowItem[] => Array.isArray(value)
-    ? value.map((row) => Array.isArray(row)
+  const loadPriceRowItems = (value: unknown): PriceRowItem[] => normalizeArray(value)
+    .map((row) => Array.isArray(row)
       ? { productType: textValue(row[0]), area: textValue(row[1]), price: textValue(row[2]) }
       : { productType: '', area: '', price: '' })
-    : [];
+    .filter(item => Boolean(item.productType || item.area || item.price));
   const loadPolicyItems = (value: unknown): PolicyItem[] => asRecords(value).map((item) => ({
     title: textValue(item.title),
     description: textValue(item.description),
@@ -492,7 +548,7 @@ export default function AdminProjects() {
     setFormBookingPolicy(project.booking_policy || '');
     setFormThumbnail(project.thumbnail || '');
     setFormBannerImage(project.banner_image || '');
-    setFormGallery(project.gallery || []);
+    setFormGallery(asStrings(project.gallery));
     setFormBrochureUrl(project.brochure_url || '');
     setFormVideoUrl(project.video_url || '');
     setFormVirtualTourUrl(project.virtual_tour_url || '');
@@ -558,6 +614,7 @@ export default function AdminProjects() {
         .map(item => [item.productType, item.area, item.price]);
       const policyCards = cleanArray(formPolicyCards, item => Boolean(item.title || item.description));
       const projectTimeline = cleanArray(formProjectTimeline, item => Boolean(item.date || item.title));
+      const gallery = asStrings(formGallery);
       const slugValue = formSlug.trim() || slugifyProjectName(formName);
       const shouldPublish = mode === 'publish' ? true : mode === 'draft' ? false : formIsPublished;
 
@@ -632,7 +689,7 @@ export default function AdminProjects() {
         
         thumbnail: formThumbnail,
         banner_image: formBannerImage || null,
-        gallery: formGallery,
+        gallery,
         gallery_label: formGalleryLabel || null,
         gallery_title: formGalleryTitle || null,
         gallery_description: formGalleryDescription || null,
@@ -675,6 +732,15 @@ export default function AdminProjects() {
       const normalized = normalizeApiErrors(err);
       setFormError(normalized.message);
       setFieldErrors(normalized.fieldErrors);
+      const firstField = Object.keys(normalized.fieldErrors)[0];
+      if (firstField) {
+        const targetTab = fieldTabMap[firstField] || 'overview';
+        setActiveTab(targetTab);
+        setActiveChecklistTarget({ tab: targetTab, field: firstField });
+        window.setTimeout(() => {
+          document.querySelector(`[data-project-field="${firstField}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 80);
+      }
     }
   });
 
@@ -737,10 +803,9 @@ export default function AdminProjects() {
     } else if (mediaSelectorTarget === 'map') {
       setFormMapImageUrl(url as string);
     } else if (mediaSelectorTarget === 'gallery') {
-      const selectedArr = url as string[];
-      // Merge unique
-      const merged = Array.from(new Set([...formGallery, ...selectedArr]));
-      setFormGallery(merged);
+      const selectedArr = Array.isArray(url) ? url : [url];
+      setFormGallery(asStrings(selectedArr));
+      setActiveChecklistTarget({ tab: 'gallery', field: selectedArr.length ? undefined : 'gallery' });
     }
     setMediaSelectorTarget(null);
   };
@@ -814,21 +879,104 @@ export default function AdminProjects() {
     </p>
   );
 
-  const completionItems = [
-    { label: 'Tổng quan', done: Boolean(formName && formSlug && formDescription), optional: false },
-    { label: 'Hero & Thông tin nhanh', done: Boolean(formBannerImage && (formHeroSubtitle || formDescription) && formQuickCards.length && formProjectFacts.length), optional: false },
-    { label: 'Không gian sống', done: Boolean(formGallery.length && formGalleryTitle), optional: false },
-    { label: 'Vị trí & Kết nối', done: Boolean((formLocation || formAddress) && (formConnectivity.length || formMapImageUrl)), optional: false },
-    { label: 'Tiện ích nổi bật', done: Boolean(formAmenityDetails.length), optional: false },
-    { label: 'Sản phẩm & Mặt bằng', done: Boolean(formFloorPlans.length), optional: false },
-    { label: 'Bảng giá & Chính sách', done: Boolean(formPriceRows.length || formPolicyCards.length), optional: false },
-    { label: 'Tiến độ thi công', done: Boolean(formProjectTimeline.length), optional: true },
-    { label: 'Đầu tư & Đánh giá', done: Boolean(formInvestmentReasons.length || formProjectTestimonials.length), optional: true },
-    { label: 'Câu hỏi thường gặp', done: Boolean(formProjectFaqs.length), optional: true },
-    { label: 'Ảnh, Video & Tài liệu', done: Boolean(formThumbnail && formBannerImage), optional: false },
-    { label: 'SEO & Schema', done: Boolean(formSeoTitle || formSeoDescription || formName), optional: false },
-    { label: 'VR 360', done: Boolean(formVirtualTourUrl), optional: true },
+  const buildChecklistItem = (
+    key: ProjectAdminTab,
+    label: string,
+    missingFields: (string | null)[],
+    optional = false,
+    targetField?: string
+  ): SectionChecklistItem => {
+    const missing = missingFields.filter(Boolean) as string[];
+    return {
+      key,
+      label,
+      status: missing.length ? (optional ? 'optional' : 'missing') : 'complete',
+      missingFields: missing,
+      targetTab: key,
+      targetField: missing.length ? targetField : undefined,
+    };
+  };
+
+  const completionItems: SectionChecklistItem[] = [
+    buildChecklistItem('overview', 'Tổng quan', [
+      !formName.trim() ? 'Tên dự án' : null,
+      !(formSlug.trim() || slugifyProjectName(formName)) ? 'Đường dẫn tĩnh' : null,
+      !formDescription.trim() ? 'Mô tả ngắn' : null,
+    ], false, !formName.trim() ? 'name' : !formDescription.trim() ? 'description' : 'slug'),
+    buildChecklistItem('hero', 'Hero & Thông tin nhanh', [
+      !formBannerImage ? 'Ảnh Hero' : null,
+      !(formHeroSubtitle.trim() || formDescription.trim()) ? 'Dòng mô tả dưới tên dự án' : null,
+      !formQuickCards.length ? 'Thông tin nhanh trong hộp Hero' : null,
+      !formProjectFacts.length ? 'Thông tin tổng quan dưới Hero' : null,
+    ], false, !formBannerImage ? 'banner_image' : 'quick_cards'),
+    buildChecklistItem('gallery', 'Không gian sống', [
+      !formGalleryLabel.trim() ? 'Nhãn section' : null,
+      !formGalleryTitle.trim() ? 'Tiêu đề section' : null,
+      !formGalleryDescription.trim() ? 'Mô tả section' : null,
+      !formGallery.length ? 'Danh sách ảnh không gian sống' : null,
+    ], false, !formGallery.length ? 'gallery' : !formGalleryTitle.trim() ? 'gallery_title' : 'gallery_label'),
+    buildChecklistItem('location', 'Vị trí & Kết nối', [
+      !(formLocation.trim() || formAddress.trim()) ? 'Địa chỉ/vị trí dự án' : null,
+      !(formConnectivity.length || formMapImageUrl) ? 'Danh sách kết nối hoặc ảnh bản đồ' : null,
+    ], false, !(formLocation.trim() || formAddress.trim()) ? 'location' : 'connectivity'),
+    buildChecklistItem('amenities', 'Tiện ích nổi bật', [
+      !formAmenityDetails.length ? 'Danh sách tiện ích nổi bật' : null,
+    ], false, 'amenity_details'),
+    buildChecklistItem('floor', 'Sản phẩm & Mặt bằng', [
+      !formFloorTabs.length ? 'Nhóm loại sản phẩm' : null,
+      !formFloorPlans.length ? 'Danh sách mặt bằng' : null,
+    ], false, !formFloorTabs.length ? 'floor_tabs' : 'floor_plans'),
+    buildChecklistItem('pricingPolicy', 'Bảng giá & Chính sách', [
+      !(formPriceRows.length || formPolicyCards.length || formPriceText.trim()) ? 'Bảng giá hoặc chính sách bán hàng' : null,
+    ], false, 'price_rows'),
+    buildChecklistItem('timeline', 'Tiến độ thi công', [
+      !formProjectTimeline.length ? 'Tiến độ thi công' : null,
+    ], true, 'project_timeline'),
+    buildChecklistItem('investment', 'Đầu tư & Đánh giá', [
+      !(formInvestmentReasons.length || formProjectTestimonials.length) ? 'Lý do đầu tư hoặc đánh giá khách hàng' : null,
+    ], true, 'investment_reasons'),
+    buildChecklistItem('faq', 'Câu hỏi thường gặp', [
+      !formProjectFaqs.length ? 'Danh sách câu hỏi thường gặp' : null,
+    ], true, 'project_faqs'),
+    buildChecklistItem('media', 'Ảnh, Video & Tài liệu', [
+      !formThumbnail ? 'Ảnh đại diện' : null,
+      !formBannerImage ? 'Ảnh Hero' : null,
+      !formMapImageUrl ? 'Ảnh bản đồ' : null,
+    ], false, !formThumbnail ? 'thumbnail' : !formBannerImage ? 'banner_image' : 'map_image_url'),
+    buildChecklistItem('seo', 'SEO & Schema', [
+      !formSeoTitle.trim() ? 'Tiêu đề SEO' : null,
+      !formSeoDescription.trim() ? 'Mô tả SEO' : null,
+    ], false, !formSeoTitle.trim() ? 'seo_title' : 'seo_description'),
+    buildChecklistItem('vr360', 'VR 360', [
+      !formVirtualTourUrl ? 'Đường dẫn VR 360' : null,
+    ], true, 'virtual_tour_url'),
   ];
+  const activeChecklistItem = completionItems.find(item => item.key === activeTab);
+  const isFieldMissing = (field: string) =>
+    activeChecklistTarget?.tab === activeTab && activeChecklistTarget.field === field && activeChecklistItem?.targetField === field;
+  const highlightClass = (field: string) => isFieldMissing(field) ? ' ring-2 ring-amber-400 border-amber-400 bg-amber-50' : '';
+  const checklistStatusLabel: Record<ChecklistStatus, string> = {
+    complete: 'Đã đủ dữ liệu',
+    missing: 'Còn thiếu dữ liệu',
+    optional: 'Không bắt buộc',
+    error: 'Có lỗi cần sửa',
+  };
+  const checklistStatusClass: Record<ChecklistStatus, string> = {
+    complete: 'bg-emerald-50 text-emerald-700',
+    missing: 'bg-amber-50 text-amber-700',
+    optional: 'bg-gray-100 text-gray-600',
+    error: 'bg-red-50 text-red-700',
+  };
+  const handleChecklistClick = (item: SectionChecklistItem) => {
+    setActiveTab(item.targetTab);
+    setActiveChecklistTarget({ tab: item.targetTab, field: item.targetField });
+    window.setTimeout(() => {
+      const target = item.targetField
+        ? document.querySelector(`[data-project-field="${item.targetField}"]`)
+        : document.querySelector(`[data-project-tab="${item.targetTab}"]`);
+      target?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 80);
+  };
 
   const renderCompletionChecklist = () => (
     <div className="rounded-2xl border border-[#E8DCCB] bg-white p-4">
@@ -840,15 +988,27 @@ export default function AdminProjects() {
       </div>
       <div className="grid gap-2 sm:grid-cols-2">
         {completionItems.map((item) => (
-          <div key={item.label} className="flex items-center justify-between rounded-xl border border-[#E8DCCB]/80 bg-[#FBF8F2]/50 px-3 py-2">
-            <span className="text-[11px] font-semibold text-[#1F1B16]">{item.label}</span>
-            <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${item.done ? 'bg-emerald-50 text-emerald-700' : item.optional ? 'bg-gray-100 text-gray-600' : 'bg-amber-50 text-amber-700'}`}>
-              {item.done ? 'Đã đủ dữ liệu' : item.optional ? 'Không bắt buộc' : 'Còn thiếu dữ liệu'}
-            </span>
-          </div>
+          <button
+            type="button"
+            key={item.key}
+            onClick={() => handleChecklistClick(item)}
+            className="rounded-xl border border-[#E8DCCB]/80 bg-[#FBF8F2]/50 px-3 py-2 text-left transition hover:border-[#B88746] hover:bg-white"
+          >
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-[11px] font-semibold text-[#1F1B16]">{item.label}</span>
+              <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${checklistStatusClass[item.status]}`}>
+                {checklistStatusLabel[item.status]}
+              </span>
+            </div>
+            {item.missingFields.length ? (
+              <p className="mt-1 line-clamp-2 text-[10px] leading-4 text-[#8C7A6B]">
+                Thiếu: {item.missingFields.join(', ')}
+              </p>
+            ) : null}
+          </button>
         ))}
       </div>
-      {formIsPublished && completionItems.some((item) => !item.optional && !item.done) ? (
+      {formIsPublished && completionItems.some((item) => item.status === 'missing') ? (
         <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] font-semibold text-amber-800">
           Dự án còn thiếu một số thông tin quan trọng. Hãy bổ sung trước khi xuất bản để trang chi tiết hiển thị đầy đủ.
         </p>
@@ -856,16 +1016,9 @@ export default function AdminProjects() {
     </div>
   );
 
-  const getPublishMissingFields = () => [
-    !formName.trim() ? 'Thiếu tên dự án' : null,
-    !(formSlug.trim() || slugifyProjectName(formName)) ? 'Thiếu đường dẫn tĩnh' : null,
-    !formDescription.trim() ? 'Thiếu mô tả ngắn' : null,
-    !formThumbnail ? 'Thiếu ảnh đại diện' : null,
-    !formBannerImage ? 'Thiếu ảnh Hero' : null,
-    !formSalesStatus ? 'Thiếu trạng thái mở bán' : null,
-    !formSeoTitle.trim() ? 'Thiếu tiêu đề SEO' : null,
-    !formSeoDescription.trim() ? 'Thiếu mô tả SEO' : null,
-  ].filter(Boolean) as string[];
+  const getPublishMissingFields = () => completionItems
+    .filter(item => item.status === 'missing')
+    .flatMap(item => item.missingFields.map(field => `${item.label}: ${field}`));
 
   const handleSaveProject = (mode: ProjectSaveMode) => {
     setFormError('');
@@ -897,6 +1050,98 @@ export default function AdminProjects() {
     }
 
     saveProjectMutation.mutate(mode);
+  };
+
+  const getFileNameFromUrl = (url: string) => {
+    try {
+      const pathname = new URL(url, window.location.origin).pathname;
+      return decodeURIComponent(pathname.split('/').filter(Boolean).pop() || 'Ảnh đã chọn');
+    } catch {
+      return url.split('/').filter(Boolean).pop() || 'Ảnh đã chọn';
+    }
+  };
+
+  const getShortUrl = (url: string) => url.length > 64 ? `${url.slice(0, 34)}...${url.slice(-22)}` : url;
+
+  const renderGalleryManager = (compact = false) => (
+    <div data-project-field="gallery" className={`space-y-3 rounded-xl border bg-[#FBF8F2]/60 p-4 ${highlightClass('gallery') || 'border-[#E8DCCB]'}`}>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-xs font-bold text-[#1F1B16]">Danh sách ảnh không gian sống</p>
+          <p className="mt-1 text-[11px] text-[#8C7A6B]">
+            {formGallery.length
+              ? `Đang chọn ${formGallery.length} ảnh. Thứ tự ảnh dưới đây sẽ được dùng ngoài trang chi tiết.`
+              : 'Chưa có ảnh không gian sống. Bấm “Thêm ảnh” để chọn ảnh từ thư viện.'}
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {formGallery.length ? (
+            <button
+              type="button"
+              onClick={() => setFormGallery([])}
+              className="px-3 py-1.5 border border-red-200 bg-white text-red-600 text-xs font-semibold rounded-lg hover:bg-red-50 transition-colors"
+            >
+              Bỏ chọn tất cả
+            </button>
+          ) : null}
+          <button type="button" onClick={() => setMediaSelectorTarget('gallery')} className={addButtonClass}>Thêm ảnh</button>
+        </div>
+      </div>
+
+      {formGallery.length ? (
+        <div className={`grid gap-3 ${compact ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3'}`}>
+          {formGallery.map((imgUrl, idx) => (
+            <div key={`${imgUrl}-${idx}`} className="overflow-hidden rounded-xl border border-[#E8DCCB] bg-white">
+              <div className="aspect-video overflow-hidden bg-[#FBF8F2]">
+                <img src={imgUrl} alt={`Ảnh không gian sống ${idx + 1}`} className="h-full w-full object-cover" />
+              </div>
+              <div className="space-y-2 p-3">
+                <div>
+                  <p className="truncate text-[11px] font-bold text-[#1F1B16]" title={getFileNameFromUrl(imgUrl)}>
+                    {idx + 1}. {getFileNameFromUrl(imgUrl)}
+                  </p>
+                  <p className="mt-0.5 break-all text-[10px] leading-4 text-[#8C7A6B]" title={imgUrl}>
+                    {getShortUrl(imgUrl)}
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  <button type="button" onClick={() => moveListItem(formGallery, setFormGallery, idx, -1)} disabled={idx === 0} className={removeButtonClass}>Đưa lên</button>
+                  <button type="button" onClick={() => moveListItem(formGallery, setFormGallery, idx, 1)} disabled={idx === formGallery.length - 1} className={removeButtonClass}>Đưa xuống</button>
+                  <button
+                    type="button"
+                    onClick={() => setFormGallery(formGallery.filter((_, itemIndex) => itemIndex !== idx))}
+                    className="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-semibold text-red-600 hover:bg-red-50 rounded-lg"
+                  >
+                    <X className="h-3 w-3" />
+                    Xóa ảnh
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+
+  const getMediaSelectorSelectedUrls = () => {
+    if (mediaSelectorTarget === 'gallery') return formGallery;
+    if (mediaSelectorTarget === 'thumbnail') return formThumbnail ? [formThumbnail] : [];
+    if (mediaSelectorTarget === 'banner') return formBannerImage ? [formBannerImage] : [];
+    if (mediaSelectorTarget === 'map') return formMapImageUrl ? [formMapImageUrl] : [];
+    if (mediaSelectorTarget === 'brochure') return formBrochureUrl ? [formBrochureUrl] : [];
+    if (mediaSelectorTarget && typeof mediaSelectorTarget === 'object') {
+      if (mediaSelectorTarget.group === 'amenityDetails') {
+        return formAmenityDetails[mediaSelectorTarget.index]?.image ? [formAmenityDetails[mediaSelectorTarget.index].image] : [];
+      }
+      if (mediaSelectorTarget.group === 'projectTestimonials') {
+        return formProjectTestimonials[mediaSelectorTarget.index]?.avatar ? [formProjectTestimonials[mediaSelectorTarget.index].avatar] : [];
+      }
+      if (mediaSelectorTarget.group === 'floorPlans') {
+        return formFloorPlans[mediaSelectorTarget.index]?.image ? [formFloorPlans[mediaSelectorTarget.index].image] : [];
+      }
+    }
+    return [];
   };
 
   const renderIconValueRepeater = (
@@ -1290,6 +1535,29 @@ export default function AdminProjects() {
                       <ul className="mt-2 list-disc space-y-1 pl-5 text-xs">
                         {Object.entries(fieldErrors).map(([field, message]) => (
                           <li key={field}>{message}</li>
+                        ))}
+                      </ul>
+                    ) : null}
+                  </div>
+                ) : null}
+                {activeChecklistItem ? (
+                  <div
+                    data-project-tab={activeTab}
+                    className={`rounded-2xl border p-4 text-sm ${
+                      activeChecklistItem.missingFields.length
+                        ? 'border-amber-200 bg-amber-50 text-amber-800'
+                        : 'border-emerald-200 bg-emerald-50 text-emerald-800'
+                    }`}
+                  >
+                    <p className="font-bold">
+                      {activeChecklistItem.missingFields.length
+                        ? `Mục ${activeChecklistItem.label} còn thiếu dữ liệu:`
+                        : `Mục ${activeChecklistItem.label} đã đủ dữ liệu cần thiết.`}
+                    </p>
+                    {activeChecklistItem.missingFields.length ? (
+                      <ul className="mt-2 list-disc space-y-1 pl-5 text-xs">
+                        {activeChecklistItem.missingFields.map((field) => (
+                          <li key={field}>{field}</li>
                         ))}
                       </ul>
                     ) : null}
@@ -1932,26 +2200,20 @@ export default function AdminProjects() {
                   <div className="space-y-4">
                     {sectionNote('Phần này quản lý section “Không gian sống” và thư viện ảnh hiển thị ngay dưới dãy chỉ số nổi bật. Ảnh được chọn trong tab “Ảnh, Video & Tài liệu”.')}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div>
+                      <div data-project-field="gallery_label">
                         <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Nhãn section</label>
-                        <input value={formGalleryLabel} onChange={(e) => setFormGalleryLabel(e.target.value)} className={inputClass} placeholder="Ví dụ: Kiến tạo chuẩn mực sống mới" />
+                        <input value={formGalleryLabel} onChange={(e) => setFormGalleryLabel(e.target.value)} className={`${inputClass}${highlightClass('gallery_label')}`} placeholder="Ví dụ: Kiến tạo chuẩn mực sống mới" />
                       </div>
-                      <div className="md:col-span-2">
+                      <div data-project-field="gallery_title" className="md:col-span-2">
                         <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Tiêu đề section</label>
-                        <input value={formGalleryTitle} onChange={(e) => setFormGalleryTitle(e.target.value)} className={inputClass} placeholder="Ví dụ: Không gian sống đẳng cấp quốc tế" />
+                        <input value={formGalleryTitle} onChange={(e) => setFormGalleryTitle(e.target.value)} className={`${inputClass}${highlightClass('gallery_title')}`} placeholder="Ví dụ: Không gian sống đẳng cấp quốc tế" />
                       </div>
                     </div>
-                    <div>
+                    <div data-project-field="gallery_description">
                       <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Mô tả section</label>
-                      <textarea value={formGalleryDescription} onChange={(e) => setFormGalleryDescription(e.target.value)} rows={3} className={inputClass} placeholder="Nhập mô tả ngắn cho section không gian sống" />
+                      <textarea value={formGalleryDescription} onChange={(e) => setFormGalleryDescription(e.target.value)} rows={3} className={`${inputClass}${highlightClass('gallery_description')}`} placeholder="Nhập mô tả ngắn cho section không gian sống" />
                     </div>
-                    <div className="flex items-center justify-between rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] p-4">
-                      <div>
-                        <p className="text-xs font-bold text-[#1F1B16]">Danh sách ảnh không gian sống</p>
-                        <p className="mt-1 text-[11px] text-[#8C7A6B]">Hiện có {formGallery.length} ảnh. Bấm nút bên phải để chọn thêm từ Media Library.</p>
-                      </div>
-                      <button type="button" onClick={() => setMediaSelectorTarget('gallery')} className={addButtonClass}>Thêm ảnh</button>
-                    </div>
+                    {renderGalleryManager()}
                   </div>
                 )}
 
@@ -2199,39 +2461,7 @@ export default function AdminProjects() {
                     </div>
 
                     {/* Gallery Selection */}
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <label className="block text-xs font-semibold text-[#8C7A6B]">Bộ sưu tập ảnh (Gallery)</label>
-                        <button
-                          type="button"
-                          onClick={() => setMediaSelectorTarget('gallery')}
-                          className="px-2.5 py-1.5 border border-[#B88746] hover:bg-[#B88746]/5 text-[#B88746] text-xs font-semibold rounded-lg transition-colors"
-                        >
-                          Thêm ảnh từ Thư viện
-                        </button>
-                      </div>
-
-                      {formGallery.length === 0 ? (
-                        <div className="p-8 text-center border border-dashed border-[#E8DCCB] rounded-xl text-xs text-[#8C7A6B]">
-                          Chưa có ảnh nào trong bộ sưu tập.
-                        </div>
-                      ) : (
-                        <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 border border-[#E8DCCB] p-3 rounded-xl bg-[#FBF8F2]/30">
-                          {formGallery.map((imgUrl, idx) => (
-                            <div key={idx} className="relative aspect-video rounded-lg overflow-hidden border border-[#E8DCCB]/60 group">
-                              <img src={imgUrl} alt={`Gallery ${idx}`} className="w-full h-full object-cover" />
-                              <button
-                                type="button"
-                                onClick={() => setFormGallery(formGallery.filter(u => u !== imgUrl))}
-                                className="absolute top-1 right-1 p-0.5 bg-black/70 hover:bg-red-600 text-white rounded-full transition-colors"
-                              >
-                                <X className="w-3 h-3" />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                    {renderGalleryManager(true)}
 
                     {/* Brochure PDF */}
                     <div className="space-y-2">
@@ -2491,11 +2721,12 @@ export default function AdminProjects() {
       <AnimatePresence>
         {mediaSelectorTarget !== null && (
           <MediaSelectModal
+            key={`${typeof mediaSelectorTarget === 'string' ? mediaSelectorTarget : `${mediaSelectorTarget.group}-${mediaSelectorTarget.index}`}-${getMediaSelectorSelectedUrls().join('|')}`}
             isOpen={mediaSelectorTarget !== null}
             onClose={() => setMediaSelectorTarget(null)}
             onSelect={handleMediaSelected}
             multiple={mediaSelectorTarget === 'gallery'}
-            selectedUrls={mediaSelectorTarget === 'gallery' ? formGallery : undefined}
+            selectedUrls={getMediaSelectorSelectedUrls()}
           />
         )}
       </AnimatePresence>

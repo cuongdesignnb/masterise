@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { Media } from '@/types/api';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { X, Search, Upload, FileText, Check, Loader2 } from 'lucide-react';
 
 interface MediaSelectModalProps {
@@ -28,13 +28,6 @@ export default function MediaSelectModal({
   const [uploading, setUploading] = useState(false);
   const [tempSelected, setTempSelected] = useState<string[]>(selectedUrls);
 
-  // Sync tempSelected with selectedUrls when modal opens
-  React.useEffect(() => {
-    if (isOpen) {
-      setTempSelected(selectedUrls);
-    }
-  }, [isOpen, selectedUrls]);
-
   // Fetch media library
   const { data: mediaData, isLoading } = useQuery({
     queryKey: ['media-select', search, page],
@@ -55,7 +48,7 @@ export default function MediaSelectModal({
       queryClient.invalidateQueries({ queryKey: ['media-select'] });
       queryClient.invalidateQueries({ queryKey: ['media'] });
       setUploading(false);
-      
+
       // Auto-select uploaded file
       const fileUrl = response.data.url;
       if (multiple) {
@@ -65,8 +58,8 @@ export default function MediaSelectModal({
         onClose();
       }
     },
-    onError: (err: any) => {
-      alert(err.message || 'Lỗi khi upload file.');
+    onError: (err: unknown) => {
+      alert(err instanceof Error ? err.message : 'Lỗi khi tải ảnh lên.');
       setUploading(false);
     },
   });
@@ -98,12 +91,8 @@ export default function MediaSelectModal({
     onClose();
   };
 
-  const formatSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  const handleClearSelection = () => {
+    setTempSelected([]);
   };
 
   const mediaList = mediaData?.data || [];
@@ -133,10 +122,12 @@ export default function MediaSelectModal({
         <div className="px-6 py-4 border-b border-[#E8DCCB] flex justify-between items-center bg-[#FBF8F2]">
           <div>
             <h3 className="font-heading font-medium text-lg text-[#1F1B16]">
-              Chọn ảnh từ Thư viện Media
+              {multiple ? 'Chọn nhiều ảnh từ Thư viện Media' : 'Chọn một ảnh từ Thư viện Media'}
             </h3>
             <p className="text-xs text-[#8C7A6B]">
-              Chọn hình ảnh từ thư viện có sẵn hoặc tải tệp mới lên
+              {multiple
+                ? 'Ảnh đang chọn sẽ có viền nổi bật và dấu tích. Bấm “Xác nhận chọn ảnh” để cập nhật danh sách.'
+                : 'Bấm vào một ảnh để chọn ngay hoặc tải ảnh mới lên.'}
             </p>
           </div>
           <button
@@ -195,9 +186,9 @@ export default function MediaSelectModal({
                 >
                   Trước
                 </button>
-                <span className="text-[10px] text-[#8C7A6B] self-center px-1">
-                  Trang {page} / {meta.last_page}
-                </span>
+                  <span className="text-[10px] text-[#8C7A6B] self-center px-1">
+                    Trang {page} / {meta.last_page}
+                  </span>
                 <button
                   disabled={page === meta.last_page}
                   onClick={() => setPage(page + 1)}
@@ -220,7 +211,7 @@ export default function MediaSelectModal({
             </div>
           ) : mediaList.length === 0 ? (
             <div className="p-12 text-center text-[#8C7A6B] text-xs">
-              Chưa có file nào khớp trong thư viện. Vui lòng tải file lên.
+              Chưa có file nào khớp trong thư viện. Vui lòng tải ảnh lên.
             </div>
           ) : (
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
@@ -232,8 +223,8 @@ export default function MediaSelectModal({
                     key={file.id}
                     onClick={() => handleSelectFile(file.url)}
                     className={`bg-white border rounded-xl overflow-hidden flex flex-col justify-between cursor-pointer transition-all relative group aspect-square select-none ${
-                      isSelected 
-                        ? 'border-[#B88746] ring-2 ring-[#B88746]/30 shadow-md' 
+                      isSelected
+                        ? 'border-[#B88746] ring-2 ring-[#B88746]/30 shadow-md'
                         : 'border-[#E8DCCB] hover:border-[#B88746]/60 hover:shadow-sm'
                     }`}
                   >
@@ -274,24 +265,33 @@ export default function MediaSelectModal({
         {/* Footer */}
         <div className="px-6 py-4 border-t border-[#E8DCCB] flex justify-between items-center bg-[#FBF8F2]">
           <div className="text-xs text-[#8C7A6B]">
-            {multiple 
-              ? `Đã chọn ${tempSelected.length} hình ảnh` 
-              : 'Nhấp vào ảnh để chọn ngay'}
+            {multiple
+              ? `Đã chọn ${tempSelected.length} ảnh`
+              : 'Bấm vào ảnh để chọn ngay'}
           </div>
           <div className="flex gap-2">
             <button
               onClick={onClose}
               className="px-4 py-2 border border-[#E8DCCB] rounded-xl text-xs font-semibold hover:bg-gray-100 transition-colors"
             >
-              Hủy bỏ
+              Hủy
             </button>
             {multiple && (
-              <button
-                onClick={handleConfirmSelection}
-                className="px-5 py-2 bg-[#B88746] hover:bg-[#1F1B16] text-white rounded-xl text-xs font-semibold transition-colors shadow-sm"
-              >
-                Xác nhận ({tempSelected.length})
-              </button>
+              <>
+                <button
+                  onClick={handleClearSelection}
+                  disabled={tempSelected.length === 0}
+                  className="px-4 py-2 border border-red-200 bg-white text-red-600 rounded-xl text-xs font-semibold hover:bg-red-50 transition-colors disabled:opacity-50"
+                >
+                  Bỏ chọn tất cả
+                </button>
+                <button
+                  onClick={handleConfirmSelection}
+                  className="px-5 py-2 bg-[#B88746] hover:bg-[#1F1B16] text-white rounded-xl text-xs font-semibold transition-colors shadow-sm"
+                >
+                  Xác nhận chọn ảnh ({tempSelected.length})
+                </button>
+              </>
             )}
           </div>
         </div>
