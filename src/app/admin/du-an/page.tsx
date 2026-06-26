@@ -32,11 +32,6 @@ type SelectOption = {
   district?: string | null;
   ward?: string | null;
 };
-type ProjectShowResponse = {
-  project: Project;
-  related?: Project[];
-};
-
 type IconValueItem = { label: string; value: string; icon: string };
 type StatItem = { value: string; label: string };
 type ConnectivityItem = { time: string; label: string };
@@ -354,13 +349,25 @@ export default function AdminProjects() {
   }));
   const cleanArray = <T,>(items: T[], isFilled: (item: T) => boolean) => items.filter(isFilled);
 
+  const isProjectSaveDebugEnabled = () => {
+    if (process.env.NODE_ENV !== 'production') return true;
+    if (typeof window === 'undefined') return false;
+    return window.localStorage.getItem('mh_project_save_debug') === '1';
+  };
+
+  const debugProjectSave = (label: string, value: unknown) => {
+    if (isProjectSaveDebugEnabled()) {
+      console.log(label, value);
+    }
+  };
+
   // Queries
   const { data: projectsData, isLoading: isProjectsLoading } = useQuery({
     queryKey: ['admin-projects', search, categoryFilter, statusFilter, page],
     queryFn: async () => {
-      let url = `/projects?q=${search}&page=${page}&per_page=10`;
-      if (categoryFilter) url += `&category=${categoryFilter}`;
-      if (statusFilter) url += `&status=${statusFilter}`;
+      let url = `/admin/projects?q=${encodeURIComponent(search)}&page=${page}&per_page=10`;
+      if (categoryFilter) url += `&category=${encodeURIComponent(categoryFilter)}`;
+      if (statusFilter) url += `&status=${encodeURIComponent(statusFilter)}`;
       const response = await api.get<Project[]>(url);
       return response;
     },
@@ -494,27 +501,7 @@ export default function AdminProjects() {
     setIsFormOpen(true);
   };
 
-  // Open Form for Edit
-  const handleEditOpen = async (listProject: Project) => {
-    setEditLoadingProjectId(listProject.id);
-    let project = listProject;
-    try {
-      const response = await api.get<ProjectShowResponse>(`/projects/${listProject.slug}`);
-      project = response.data?.project || listProject;
-    } catch (error) {
-      toast.error('Chưa tải được dữ liệu mới nhất của dự án. Đang mở bản hiện có trong danh sách.');
-      console.error('Unable to fetch fresh project before edit:', error);
-    } finally {
-      setEditLoadingProjectId(null);
-    }
-
-    setEditingProject(project);
-    setActiveTab('overview');
-    setFormError('');
-    setFieldErrors({});
-    setLastSavedAt('');
-    
-    // Fill fields
+  const fillProjectForm = (project: Project) => {
     setFormName(project.name);
     setFormSlug(project.slug);
     setFormCode(project.code || '');
@@ -556,10 +543,10 @@ export default function AdminProjects() {
     setFormTotalFloors(project.total_floors || '');
     setFormDescription(project.description || '');
     setFormContent(project.content || '');
-    setFormAmenities(project.amenities ? project.amenities.join(', ') : '');
+    setFormAmenities(asStrings(project.amenities).join(', '));
     setFormCategoryIds(project.categories ? project.categories.map(c => c.id) : []);
-    setFormHighlightPoints(project.highlight_points ? project.highlight_points.join('\n') : '');
-    setFormNearbyPlaces(project.nearby_places ? project.nearby_places.join('\n') : '');
+    setFormHighlightPoints(asStrings(project.highlight_points).join('\n'));
+    setFormNearbyPlaces(asStrings(project.nearby_places).join('\n'));
     setFormPaymentPolicy(project.payment_policy || '');
     setFormSalesPolicy(project.sales_policy || '');
     setFormBookingPolicy(project.booking_policy || '');
@@ -570,7 +557,6 @@ export default function AdminProjects() {
     setFormVideoUrl(project.video_url || '');
     setFormVirtualTourUrl(project.virtual_tour_url || '');
     setFormMapImageUrl(project.map_image_url || '');
-    
     setFormSeoTitle(project.seo_meta?.title || '');
     setFormSeoDescription(project.seo_meta?.description || '');
     setFormSeoKeywords(project.seo_meta?.keywords || '');
@@ -595,8 +581,28 @@ export default function AdminProjects() {
     setFormPriceRows(loadPriceRowItems(project.price_rows));
     setFormPolicyCards(loadPolicyItems(project.policy_cards));
     setFormProjectTimeline(loadTimelineItems(project.project_timeline));
-    
-    setIsFormOpen(true);
+  };
+
+  // Open Form for Edit
+  const handleEditOpen = async (listProject: Project) => {
+    setEditLoadingProjectId(listProject.id);
+    try {
+      const response = await api.get<Project>(`/admin/projects/${listProject.id}`);
+      const project = response.data || listProject;
+      debugProjectSave('[PROJECT_ADMIN_DETAIL_BEFORE_EDIT]', response);
+      setEditingProject(project);
+      setActiveTab('overview');
+      setFormError('');
+      setFieldErrors({});
+      setLastSavedAt('');
+      fillProjectForm(project);
+      setIsFormOpen(true);
+    } catch (error) {
+      toast.error('Chưa tải được dữ liệu mới nhất từ API Admin. Hãy deploy backend và clear route cache cho /admin/projects/{id}.');
+      console.error('Unable to fetch admin project detail before edit:', error);
+    } finally {
+      setEditLoadingProjectId(null);
+    }
   };
 
   // Create or Update Project Mutation
@@ -723,41 +729,58 @@ export default function AdminProjects() {
         schema_availability: formSchemaAvailability || null,
       };
 
+      debugProjectSave('[PROJECT_SAVE_PAYLOAD]', payload);
+      debugProjectSave('[GALLERY_IN_PAYLOAD]', payload.gallery);
+      debugProjectSave('[LIVING_SECTION_PAYLOAD]', {
+        gallery_label: payload.gallery_label,
+        gallery_title: payload.gallery_title,
+        gallery_description: payload.gallery_description,
+      });
+
       if (editingProject) {
         return api.put<Project>(`/projects/${editingProject.id}`, payload);
-      } else {
-        return api.post<Project>('/projects', payload);
       }
+
+      return api.post<Project>('/projects', payload);
     },
     onSuccess: async (response, mode) => {
+      debugProjectSave('[PROJECT_SAVE_RESPONSE]', response);
       const savedProject = response.data;
+      let freshProject = savedProject;
+
       if (savedProject?.id) {
+        const freshResponse = await api.get<Project>(`/admin/projects/${savedProject.id}`);
+        debugProjectSave('[PROJECT_FRESH_DETAIL_AFTER_SAVE]', freshResponse);
+        freshProject = freshResponse.data || savedProject;
+
         queryClient.setQueriesData({ queryKey: ['admin-projects'] }, (oldData: unknown) => {
           const current = oldData as { data?: Project[] } | undefined;
           if (!current?.data) return oldData;
-          const exists = current.data.some(project => project.id === savedProject.id);
+          const exists = current.data.some(project => project.id === freshProject.id);
           return {
             ...current,
             data: exists
-              ? current.data.map(project => project.id === savedProject.id ? { ...project, ...savedProject } : project)
-              : [savedProject, ...current.data],
+              ? current.data.map(project => project.id === freshProject.id ? { ...project, ...freshProject } : project)
+              : [freshProject, ...current.data],
           };
         });
-        setEditingProject(savedProject);
+
+        setEditingProject(freshProject);
+        fillProjectForm(freshProject);
       }
-      queryClient.invalidateQueries({ queryKey: ['admin-projects'] });
+
+      await queryClient.invalidateQueries({ queryKey: ['admin-projects'] });
       await queryClient.refetchQueries({ queryKey: ['admin-projects'], type: 'active' });
       setFormError('');
       setFieldErrors({});
       setLastSavedAt(new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }));
       if (mode === 'preview') {
-        const slugValue = formSlug.trim() || slugifyProjectName(formName);
+        const slugValue = freshProject?.slug || formSlug.trim() || slugifyProjectName(formName);
         window.open(`/admin/du-an/xem-truoc/${slugValue}`, '_blank', 'noopener,noreferrer');
       } else {
-        setIsFormOpen(false);
         toast.success(mode === 'publish'
-          ? 'Đã xuất bản dự án thành công.'
-          : mode === 'draft' ? 'Đã lưu nháp dự án thành công.' : 'Đã lưu thay đổi thành công.'
+          ? 'Đã xuất bản dự án thành công. Dữ liệu mới đã được tải lại từ máy chủ.'
+          : mode === 'draft' ? 'Đã lưu nháp dự án thành công. Dữ liệu mới đã được tải lại từ máy chủ.' : 'Đã lưu thay đổi thành công. Dữ liệu mới đã được tải lại từ máy chủ.'
         );
       }
     },

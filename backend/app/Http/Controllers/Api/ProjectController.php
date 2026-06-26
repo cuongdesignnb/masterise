@@ -412,10 +412,13 @@ class ProjectController extends Controller
             'keywords' => $request->get('seo_keywords'),
         ]);
 
+        $project->refresh();
+        $project->load(['categories', 'seoMeta', 'developerRelation', 'locationRelation']);
+
         return $this->noStore(response()->json([
             'success' => true,
             'message' => 'Đã tạo dự án thành công.',
-            'data' => $project->load(['categories', 'seoMeta', 'developerRelation', 'locationRelation'])
+            'data' => $project
         ], 201));
     }
 
@@ -557,10 +560,13 @@ class ProjectController extends Controller
             ]
         );
 
+        $project->refresh();
+        $project->load(['categories', 'seoMeta', 'developerRelation', 'locationRelation']);
+
         return $this->noStore(response()->json([
             'success' => true,
             'message' => 'Đã cập nhật dự án thành công.',
-            'data' => $project->load(['categories', 'seoMeta', 'developerRelation', 'locationRelation'])
+            'data' => $project
         ], 200));
     }
 
