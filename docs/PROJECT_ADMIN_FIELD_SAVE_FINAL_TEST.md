@@ -46,3 +46,71 @@ Sau đó lưu lại dự án và kiểm tra 3 log:
 
 Nếu payload có nhưng response và fresh detail không có, lỗi nằm ở backend validation/fillable/cast/migration. Nếu response có nhưng F5 mất, kiểm tra endpoint `/api/v1/admin/projects/{id}` trên production và clear route/cache Laravel.
 
+## Kết quả kiểm chứng thực tế bằng automated backend test
+
+Ngày kiểm chứng: 2026-06-26.
+
+Lệnh đã chạy trong thư mục `backend`:
+
+```bash
+php artisan test --filter=AdminProjectSaveProofTest
+```
+
+Kết quả:
+
+```txt
+PASS  Tests\Feature\AdminProjectSaveProofTest
+✓ admin project save returns and reloads fresh detail fields
+Tests: 1 passed (25 assertions)
+```
+
+Bằng chứng từ test `backend/tests/Feature/AdminProjectSaveProofTest.php`:
+
+| Field | PUT payload | PUT response | GET admin detail | DB | Kết luận |
+| --- | --- | --- | --- | --- | --- |
+| `gallery_title` | Có: `Test lưu dữ liệu lúc phpunit` | Có | Có | Có | Backend/API lưu và đọc lại đúng |
+| `gallery` | Có 2 URL | Có | Có | Được cast JSON | Backend/API lưu và đọc lại đúng |
+| `quick_cards` | Có | Có | Có | Được cast JSON | Backend/API lưu và đọc lại đúng |
+| `project_facts` | Có | Không assert ở PUT response | Có | Được cast JSON | Admin detail đọc lại đúng |
+| `project_stats` | Có | Có | Có | Được cast JSON | Backend/API lưu và đọc lại đúng |
+| `connectivity` | Có | Không assert ở PUT response | Có | Được cast JSON | Admin detail đọc lại đúng |
+| `amenity_details` | Có | Không assert ở PUT response | Có | Được cast JSON | Admin detail đọc lại đúng |
+| `floor_tabs` | Có | Không assert ở PUT response | Có | Được cast JSON | Admin detail đọc lại đúng |
+| `floor_plans` | Có | Không assert ở PUT response | Có | Được cast JSON | Admin detail đọc lại đúng |
+| `price_rows` | Có | Không assert ở PUT response | Có | Được cast JSON | Admin detail đọc lại đúng |
+| `policy_cards` | Có | Không assert ở PUT response | Có | Được cast JSON | Admin detail đọc lại đúng |
+| `project_timeline` | Có | Không assert ở PUT response | Có | Được cast JSON | Admin detail đọc lại đúng |
+| `investment_reasons` | Có | Không assert ở PUT response | Có | Được cast JSON | Admin detail đọc lại đúng |
+| `project_testimonials` | Có | Không assert ở PUT response | Có | Được cast JSON | Admin detail đọc lại đúng |
+| `project_faqs` | Có | Không assert ở PUT response | Có | Được cast JSON | Admin detail đọc lại đúng |
+| `schema_price` | Có: `8.9` | Có | Có | Có | Backend/API lưu và đọc lại đúng |
+| `schema_price_currency` | Có: `VND` | Không assert ở PUT response | Có | Có | Backend/API lưu và đọc lại đúng |
+| `schema_availability` | Có: `InStock` | Không assert ở PUT response | Có | Có | Backend/API lưu và đọc lại đúng |
+
+Phần automated test đã chứng minh chuỗi backend/API:
+
+```txt
+Payload có dữ liệu
+→ PUT /api/v1/projects/{id} response có dữ liệu
+→ GET /api/v1/admin/projects/{id} có dữ liệu fresh
+→ DB có dữ liệu đã lưu
+```
+
+Phần còn cần kiểm chứng trên production bằng trình duyệt thật sau deploy:
+
+| Hạng mục | Trạng thái | Cách kiểm chứng |
+| --- | --- | --- |
+| F5 admin rồi mở lại form vẫn còn field | Cần chạy trên production sau deploy | Bật `mh_project_save_debug`, sửa `gallery_title`, lưu, F5, mở lại dự án |
+| Client chi tiết dự án hiển thị dữ liệu mới | Cần chạy trên production sau deploy | Mở `/du-an/{slug}` sau khi GET admin detail đã có dữ liệu mới |
+| Production route admin hết 404 | Cần chạy trên production sau deploy/cache clear | Network phải có `GET /api/v1/admin/projects` và `GET /api/v1/admin/projects/{id}` |
+
+Nếu production vẫn miss sau khi automated backend test đã pass, lỗi sẽ nằm ở deploy/cache/runtime production, không còn nằm ở controller/model/migration local:
+
+```bash
+php artisan optimize:clear
+php artisan route:clear
+php artisan config:clear
+php artisan cache:clear
+php artisan migrate --force
+```
+
