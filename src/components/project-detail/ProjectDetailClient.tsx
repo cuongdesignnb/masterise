@@ -346,10 +346,10 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
             sizes="(max-width: 768px) 100vw, 1500px"
             className="object-cover object-[62%_center]"
           />
-          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,253,248,.97)_0%,rgba(255,253,248,.86)_31%,rgba(255,253,248,.28)_55%,rgba(15,20,22,.04)_100%)] max-lg:bg-[linear-gradient(180deg,rgba(255,253,248,.95)_0%,rgba(255,253,248,.68)_48%,rgba(24,27,27,.08)_100%)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,253,248,.76)_0%,rgba(255,253,248,.46)_28%,rgba(255,253,248,.12)_43%,rgba(15,20,22,.03)_100%)] max-lg:bg-[linear-gradient(180deg,rgba(255,253,248,.9)_0%,rgba(255,253,248,.52)_44%,rgba(24,27,27,.06)_100%)]" />
 
           <div className="relative z-10 flex min-h-[610px] items-center px-6 py-10 sm:px-10 lg:min-h-[600px] lg:px-14 xl:px-16">
-            <div className="max-w-[780px] rounded-[24px] border border-white/70 bg-white/[0.58] p-5 shadow-[0_24px_70px_rgba(78,54,28,.13)] backdrop-blur-md sm:p-6 lg:bg-white/50">
+            <div className="max-w-[620px] rounded-[22px] border border-white/65 bg-white/[0.54] p-5 shadow-[0_20px_56px_rgba(78,54,28,.11)] backdrop-blur-md sm:p-6 lg:bg-white/[0.48] xl:max-w-[660px]">
               <motion.div
                 initial={{ opacity: 0, y: 14 }}
                 animate={{ opacity: 1, y: 0 }}
