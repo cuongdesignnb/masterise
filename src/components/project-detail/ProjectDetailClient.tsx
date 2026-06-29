@@ -33,7 +33,7 @@ import {
   Maximize2,
   type LucideIcon,
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { ProjectIconName, ProjectDetail } from "@/types/project-detail";
 import VR360Section from "@/components/vr360/VR360Section";
 
@@ -156,7 +156,9 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
   const [activeImageIndex, setActiveImageIndex] = useState<number | null>(null);
   const [floorPlanImageModal, setFloorPlanImageModal] = useState<{ images: string[]; index: number; title: string } | null>(null);
   const [heroTextExpanded, setHeroTextExpanded] = useState(false);
+  const [canToggleHeroText, setCanToggleHeroText] = useState(false);
   const [overviewExpanded, setOverviewExpanded] = useState(false);
+  const heroSubtitleRefs = useRef<(HTMLParagraphElement | null)[]>([]);
 
   // Lock body scroll when modal is open
   useEffect(() => {
@@ -218,6 +220,26 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [floorPlanImageModal]);
+
+  useEffect(() => {
+    const measureHeroText = () => {
+      const shouldToggle = heroSubtitleRefs.current.some((element) => {
+        if (!element) return false;
+        const lineHeight = Number.parseFloat(window.getComputedStyle(element).lineHeight);
+        return Number.isFinite(lineHeight) && element.scrollHeight > lineHeight * 3 + 2;
+      });
+      setCanToggleHeroText(shouldToggle);
+      if (!shouldToggle) {
+        setHeroTextExpanded(false);
+      }
+    };
+
+    measureHeroText();
+    window.addEventListener("resize", measureHeroText);
+    return () => {
+      window.removeEventListener("resize", measureHeroText);
+    };
+  }, [project.subtitle]);
   const hasFacts = project.facts.length > 0;
   const hasStats = project.stats.length > 0;
   const hasGallery = project.gallery.images.length > 0;
@@ -244,8 +266,6 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
     if (!images.length) return;
     setFloorPlanImageModal({ images, index: Math.min(Math.max(index, 0), images.length - 1), title: plan.name });
   };
-  const heroExtraCopy = project.description && project.description !== project.subtitle ? project.description : "";
-  const canToggleHeroText = project.subtitle.length > 90 || heroExtraCopy.length > 0;
   const canToggleOverview = Boolean(project.content && project.content.replace(/<[^>]*>/g, '').trim().length > 520);
 
   return (
@@ -284,14 +304,12 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
             <h1 className="heading-font mt-4 text-[38px] font-medium leading-[1.08] text-ink">
               {project.name}
             </h1>
-            <p className={`mt-3 text-[14px] font-medium leading-6 text-muted ${heroTextExpanded ? '' : 'line-clamp-3'}`}>
+            <p
+              ref={(element) => { heroSubtitleRefs.current[0] = element; }}
+              className={`mt-3 text-[14px] font-medium leading-6 text-muted ${heroTextExpanded ? '' : 'line-clamp-3'}`}
+            >
               {project.subtitle}
             </p>
-            {heroTextExpanded && heroExtraCopy ? (
-              <p className="mt-2 text-[13px] leading-6 text-muted">
-                {heroExtraCopy}
-              </p>
-            ) : null}
             {canToggleHeroText ? (
               <button
                 type="button"
@@ -371,28 +389,19 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                 initial={{ opacity: 0, y: 22 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.65, delay: 0.22, ease }}
-                className="heading-font mt-5 text-[44px] font-medium leading-[.98] tracking-[0.015em] text-ink sm:text-[58px] lg:whitespace-nowrap xl:text-[66px]"
+                className="heading-font mt-5 break-words text-[42px] font-medium leading-[1.02] tracking-[0.015em] text-ink sm:text-[52px] xl:text-[58px]"
               >
                 {project.name}
               </motion.h1>
               <motion.p
+                ref={(element) => { heroSubtitleRefs.current[1] = element; }}
                 initial={{ opacity: 0, y: 18 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.3, ease }}
-                className={`mt-4 text-base font-semibold text-ink sm:text-xl ${heroTextExpanded ? '' : 'line-clamp-2'}`}
+                className={`mt-4 text-base font-semibold text-ink sm:text-xl ${heroTextExpanded ? '' : 'line-clamp-3'}`}
               >
                 {project.subtitle}
               </motion.p>
-              {heroTextExpanded && heroExtraCopy ? (
-                <motion.p
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, ease }}
-                  className="mt-3 max-w-2xl text-[13px] font-medium leading-6 text-muted sm:text-sm"
-                >
-                  {heroExtraCopy}
-                </motion.p>
-              ) : null}
               {canToggleHeroText ? (
                 <button
                   type="button"
