@@ -93,7 +93,7 @@ services:
       dockerfile: docker/php/Dockerfile
     container_name: mh_queue
     restart: always
-    command: php artisan queue:work --sleep=3 --tries=3 --max-time=3600
+    command: sh -lc "until [ -f vendor/autoload.php ]; do echo 'Waiting for Composer dependencies...'; sleep 3; done; php artisan queue:work --sleep=3 --tries=3 --max-time=3600"
     volumes:
       - ./backend:/var/www/html
       - backend_storage:/var/www/html/storage/app/public
@@ -114,7 +114,7 @@ services:
       dockerfile: docker/php/Dockerfile
     container_name: mh_scheduler
     restart: always
-    command: sh -c "while true; do php artisan schedule:run --verbose --no-interaction & sleep 60; done"
+    command: sh -lc "until [ -f vendor/autoload.php ]; do echo 'Waiting for Composer dependencies...'; sleep 3; done; while true; do php artisan schedule:run --verbose --no-interaction & sleep 60; done"
     volumes:
       - ./backend:/var/www/html
       - backend_storage:/var/www/html/storage/app/public

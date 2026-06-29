@@ -31,13 +31,9 @@ WORKDIR /var/www/html
 
 ENV COMPOSER_ALLOW_SUPERUSER=1
 
-# Copy existing application
+# Copy application skeleton. Production bind-mounts ./backend over this path,
+# so dependencies are installed by deploy-production.sh inside the running container.
 COPY backend/ /var/www/html/
-
-# Install dependencies (production)
-RUN if [ -f composer.json ]; then \
-    composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-progress --no-scripts; \
-    fi
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www/html \
