@@ -57,11 +57,24 @@ export type ProjectDetail = {
   floorPlans: {
     productType?: string;
     name: string;
-    area: string;
-    totalArea: string;
-    image: string;
+    area?: string;
+    totalArea?: string;
+    image?: string;
+    price?: string;
+    bedrooms?: string;
+    status?: string;
+    description?: string;
   }[];
-  priceRows: [string, string, string][];
+  priceRows: {
+    productType: string;
+    area: string;
+    price: string;
+    bedrooms?: string;
+    status?: string;
+    note?: string;
+    description?: string;
+  }[];
+  productSummary: { label: string; value: string }[];
   policies: { title: string; description: string; icon: ProjectIconName }[];
   timeline: { date: string; title: string }[];
   investmentReasons: {

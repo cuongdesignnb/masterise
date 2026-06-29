@@ -164,14 +164,15 @@ function FloorPlanSketch() {
 }
 
 export default function ProjectDetailClient({ project }: { project: ProjectDetail }) {
-  const floorTabs = project.floorTabs.length ? project.floorTabs : (project.floorPlans.length ? ["Sản phẩm"] : []);
+  const floorTabs = project.floorTabs.length ? ["Tất cả", ...project.floorTabs] : (project.floorPlans.length ? ["Sản phẩm"] : []);
   const [activeTab, setActiveTab] = useState(floorTabs[0] ?? "");
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState<number | null>(null);
+  const [floorPlanImageModal, setFloorPlanImageModal] = useState<{ src: string; title: string } | null>(null);
 
   // Lock body scroll when modal is open
   useEffect(() => {
-    if (activeImageIndex !== null) {
+    if (activeImageIndex !== null || floorPlanImageModal) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "";
@@ -179,7 +180,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
     return () => {
       document.body.style.overflow = "";
     };
-  }, [activeImageIndex]);
+  }, [activeImageIndex, floorPlanImageModal]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -213,7 +214,9 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
   const hasConnectivity = project.connectivity.length > 0 || Boolean(project.mapImageUrl);
   const hasAmenities = project.amenities.length > 0;
   const hasFloorPlans = project.floorPlans.length > 0;
+  const hasFloorSection = hasFloorPlans || project.floorTabs.length > 0;
   const hasPriceRows = project.priceRows.length > 0;
+  const hasProductInfo = hasPriceRows || project.productSummary.length > 0;
   const hasPolicies = project.policies.length > 0;
   const hasTimeline = project.timeline.length > 0;
   const hasInvestmentReasons = project.investmentReasons.length > 0;
@@ -221,7 +224,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
   const hasFaqs = project.faqs.length > 0;
   const mobileHeroFacts = (project.quickCard.length ? project.quickCard : project.facts).slice(0, 4);
   const visibleFloorPlans = project.floorTabs.length && activeTab
-    ? project.floorPlans.filter((plan) => !plan.productType || plan.productType === activeTab)
+    ? project.floorPlans.filter((plan) => activeTab === "Tất cả" || !plan.productType || plan.productType === activeTab)
     : project.floorPlans;
 
   return (
@@ -517,10 +520,10 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
           </section>
         </Reveal> : null}
 
-        {hasFloorPlans ? <Reveal>
+        {hasFloorSection ? <Reveal>
           <section>
-            <SectionTitle>MẶT BẰNG &amp; LOẠI HÌNH SẢN PHẨM</SectionTitle>
-            <div className="mb-4 grid overflow-hidden rounded-[6px] border border-line bg-white sm:grid-cols-4">
+            <SectionTitle eyebrow="MẶT BẰNG">MẶT BẰNG ĐIỂN HÌNH</SectionTitle>
+            {floorTabs.length ? <div className="mb-4 grid overflow-hidden rounded-[6px] border border-line bg-white sm:grid-cols-4">
               {floorTabs.map((tab) => (
                 <button
                   key={tab}
@@ -533,25 +536,38 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                   {tab}
                 </button>
               ))}
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            </div> : null}
+            {visibleFloorPlans.length ? <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {visibleFloorPlans.map((plan, index) => (
                 <motion.article
-                  key={plan.name}
+                  key={`${plan.productType || 'floor'}-${plan.name}-${index}`}
                   layout
                   whileHover={{ y: -5 }}
                   className="overflow-hidden rounded-[16px] border border-line/80 bg-white shadow-[0_12px_35px_rgba(87,61,28,.07)]"
                 >
-                  <div className="grid h-[170px] grid-cols-[1.1fr_.9fr] gap-2 bg-[#fbfaf7] p-3">
-                    <div className="relative overflow-hidden rounded-[10px]">
-                      <Image
-                        src={plan.image}
-                        alt={`${plan.productType || activeTab || "Sản phẩm"} - ${plan.name}`}
-                        fill
-                        sizes="(max-width: 640px) 50vw, 25vw"
-                        className="object-cover"
-                      />
-                    </div>
+                  <div className="grid min-h-[170px] grid-cols-[1.1fr_.9fr] gap-2 bg-[#fbfaf7] p-3">
+                    {plan.image ? (
+                      <button
+                        type="button"
+                        onClick={() => setFloorPlanImageModal({ src: plan.image || '', title: plan.name })}
+                        className="group relative overflow-hidden rounded-[10px] text-left"
+                      >
+                        <Image
+                          src={plan.image}
+                          alt={`${plan.productType || activeTab || "Sản phẩm"} - ${plan.name}`}
+                          fill
+                          sizes="(max-width: 640px) 50vw, 25vw"
+                          className="object-cover transition duration-700 group-hover:scale-105"
+                        />
+                        <span className="absolute inset-0 flex items-center justify-center bg-black/25 opacity-0 transition group-hover:opacity-100">
+                          <span className="rounded-full bg-white/90 px-3 py-1 text-[10px] font-bold text-ink">Xem ảnh</span>
+                        </span>
+                      </button>
+                    ) : (
+                      <div className="flex items-center justify-center rounded-[10px] border border-dashed border-line bg-white p-4 text-center text-[10px] font-semibold text-muted">
+                        Chưa có ảnh mặt bằng
+                      </div>
+                    )}
                     <div className="rounded-[10px] border border-line/60 bg-white p-2">
                       <FloorPlanSketch />
                     </div>
@@ -561,57 +577,77 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                       {plan.productType || activeTab || "Sản phẩm"} · Mẫu {String(index + 1).padStart(2, "0")}
                     </p>
                     <h3 className="mt-1 text-sm font-bold text-ink">{plan.name}</h3>
-                    <p className="mt-2 text-[10px] text-muted">
-                      Diện tích: <strong className="text-ink">{plan.area}</strong>
-                    </p>
-                    <p className="mt-1 text-[10px] text-muted">
-                      Tổng diện tích sàn: <strong className="text-ink">{plan.totalArea}</strong>
-                    </p>
-                    <button
-                      type="button"
-                      className="mt-4 w-full rounded-[5px] border border-gold/45 py-2 text-[9px] font-bold text-gold-dark transition hover:bg-gold hover:text-white"
-                    >
-                      XEM CHI TIẾT
-                    </button>
+                    <div className="mt-2 space-y-1 text-[10px] text-muted">
+                      {plan.area ? <p>Diện tích: <strong className="text-ink">{plan.area}</strong></p> : null}
+                      {plan.totalArea && plan.totalArea !== plan.area ? <p>Tổng diện tích sàn: <strong className="text-ink">{plan.totalArea}</strong></p> : null}
+                      {plan.price ? <p>Giá tham khảo: <strong className="text-ink">{plan.price}</strong></p> : null}
+                      {plan.bedrooms ? <p>Phòng ngủ: <strong className="text-ink">{plan.bedrooms}</strong></p> : null}
+                      {plan.status ? <p>Tình trạng: <strong className="text-ink">{plan.status}</strong></p> : null}
+                    </div>
+                    {plan.description ? <p className="mt-3 text-[10px] leading-4 text-muted">{plan.description}</p> : null}
+                    {plan.image ? (
+                      <button
+                        type="button"
+                        onClick={() => setFloorPlanImageModal({ src: plan.image || '', title: plan.name })}
+                        className="mt-4 w-full rounded-[5px] border border-gold/45 py-2 text-[9px] font-bold text-gold-dark transition hover:bg-gold hover:text-white"
+                      >
+                        XEM ẢNH LỚN
+                      </button>
+                    ) : null}
                   </div>
                 </motion.article>
               ))}
-            </div>
+            </div> : (
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                {project.floorTabs.map((tab) => (
+                  <div key={tab} className="rounded-[14px] border border-line/75 bg-white p-4 shadow-[0_10px_26px_rgba(87,61,28,.05)]">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-gold">Loại sản phẩm</p>
+                    <p className="mt-1 text-sm font-bold text-ink">{tab}</p>
+                  </div>
+                ))}
+              </div>
+            )}
           </section>
         </Reveal> : null}
 
-        {hasPriceRows || hasPolicies ? <Reveal>
+        {hasProductInfo || hasPolicies ? <Reveal>
           <section className="grid gap-5 lg:grid-cols-[1.85fr_1fr]">
-            {hasPriceRows ? <div className="rounded-[18px] border border-line/80 bg-white p-5 shadow-soft">
-              <h2 className="mb-4 text-sm font-bold uppercase tracking-[0.06em] text-gold-dark">
-                BẢNG GIÁ DỰ KIẾN
+            {hasProductInfo ? <div className="rounded-[18px] border border-line/80 bg-white p-5 shadow-soft">
+              <h2 className="mb-2 text-sm font-bold uppercase tracking-[0.06em] text-gold-dark">
+                SẢN PHẨM &amp; BẢNG GIÁ
               </h2>
-              <div className="overflow-x-auto">
+              <p className="mb-4 text-[11px] leading-5 text-muted">
+                Thông tin loại hình, diện tích và giá tham khảo được cập nhật theo dữ liệu dự án.
+              </p>
+              {hasPriceRows ? <div className="overflow-x-auto">
                 <table className="w-full min-w-[560px] border-collapse text-left text-[10px]">
                   <thead>
                     <tr className="bg-[#fbf7f0] text-muted">
                       <th className="border border-line/70 px-4 py-2.5 font-semibold">LOẠI HÌNH</th>
-                      <th className="border border-line/70 px-4 py-2.5 text-center font-semibold">
-                        DIỆN TÍCH (m²)
-                      </th>
-                      <th className="border border-line/70 px-4 py-2.5 text-center font-semibold">
-                        GIÁ TỪ (TỶ/CĂN)
-                      </th>
+                      <th className="border border-line/70 px-4 py-2.5 text-center font-semibold">DIỆN TÍCH</th>
+                      <th className="border border-line/70 px-4 py-2.5 text-center font-semibold">GIÁ THAM KHẢO</th>
                     </tr>
                   </thead>
                   <tbody>
                     {project.priceRows.map((row) => (
-                      <tr key={row[0]} className="transition hover:bg-beige/35">
-                        <td className="border border-line/70 px-4 py-2.5 font-medium">{row[0]}</td>
-                        <td className="border border-line/70 px-4 py-2.5 text-center">{row[1]}</td>
-                        <td className="border border-line/70 px-4 py-2.5 text-center font-semibold text-gold-dark">
-                          {row[2]}
-                        </td>
+                      <tr key={`${row.productType}-${row.area}-${row.price}`} className="transition hover:bg-beige/35">
+                        <td className="border border-line/70 px-4 py-2.5 font-medium">{row.productType}</td>
+                        <td className="border border-line/70 px-4 py-2.5 text-center">{row.area}</td>
+                        <td className="border border-line/70 px-4 py-2.5 text-center font-semibold text-gold-dark">{row.price}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
-              </div>
+              </div> : (
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {project.productSummary.map((item) => (
+                    <div key={item.label} className="rounded-[12px] border border-line/70 bg-[#fbf7f0] p-4">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-muted">{item.label}</p>
+                      <p className="mt-1 text-sm font-bold text-ink">{item.value}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
               <p className="mt-3 text-[9px] italic text-muted">
                 * Giá dự kiến chưa bao gồm VAT và phí. Thông tin chỉ mang tính chất tham khảo.
               </p>
@@ -874,6 +910,42 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
           </section>
         </Reveal>
       </ProjectContainer>
+
+      {/* Floor plan lightbox */}
+      <AnimatePresence>
+        {floorPlanImageModal ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 p-4 backdrop-blur-md"
+            onClick={() => setFloorPlanImageModal(null)}
+          >
+            <button
+              type="button"
+              onClick={() => setFloorPlanImageModal(null)}
+              className="absolute right-5 top-5 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/25"
+            >
+              <X size={20} />
+            </button>
+            <motion.div
+              initial={{ scale: 0.96, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.96, opacity: 0 }}
+              className="relative h-[82vh] w-full max-w-5xl overflow-hidden rounded-[16px] border border-white/10 bg-zinc-950"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <Image
+                src={floorPlanImageModal.src}
+                alt={floorPlanImageModal.title}
+                fill
+                sizes="90vw"
+                className="object-contain"
+              />
+            </motion.div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
 
       {/* Lightbox Modal */}
       <AnimatePresence>

@@ -140,28 +140,86 @@ function normalizeFloorPlans(value: unknown) {
     .map((item) => {
       if (!item || typeof item !== 'object') return null;
       const record = item as Record<string, unknown>;
-      const name = String(record.name || '').trim();
+      const name = String(record.title || record.name || record.label || record.type || 'Mặt bằng điển hình').trim();
       const productType = String(record.productType || record.product_type || record.type || '').trim();
-      const area = String(record.area || '').trim();
+      const area = String(record.area || record.area_text || record.size || '').trim();
       const totalArea = String(record.totalArea || record.total_area || '').trim();
-      const image = String(record.image || '').trim();
-      if (!name || !area || !image) return null;
-      return { productType, name, area, totalArea: totalArea || area, image };
+      const image = String(record.image_url || record.image || record.thumbnail || record.url || record.src || '').trim();
+      const price = String(record.price || record.price_text || '').trim();
+      const bedrooms = String(record.bedrooms || record.bedroom || '').trim();
+      const status = String(record.status || '').trim();
+      const description = String(record.description || record.note || '').trim();
+      if (!name && !area && !image && !price && !description) return null;
+      return {
+        productType,
+        name,
+        area,
+        totalArea: totalArea || area,
+        image,
+        price,
+        bedrooms,
+        status,
+        description,
+      };
     })
     .filter(notNull);
 }
 
-function normalizePriceRows(value: unknown): [string, string, string][] {
+function normalizePriceRows(value: unknown) {
   if (!Array.isArray(value)) return [];
   return value
     .map((row) => {
       if (Array.isArray(row) && row.length >= 3) {
         const cells = row.slice(0, 3).map((cell) => String(cell || '').trim());
-        return cells.every(Boolean) ? (cells as [string, string, string]) : null;
+        return cells.some(Boolean)
+          ? { productType: cells[0] || 'Sản phẩm', area: cells[1] || 'Đang cập nhật', price: cells[2] || 'Liên hệ' }
+          : null;
+      }
+      if (row && typeof row === 'object') {
+        const record = row as Record<string, unknown>;
+        const productType = String(record.product_type || record.productType || record.type || record.name || record.title || '').trim();
+        const area = String(record.area || record.area_text || record.size || '').trim();
+        const price = String(record.price || record.price_text || '').trim();
+        const bedrooms = String(record.bedrooms || record.bedroom || '').trim();
+        const status = String(record.status || '').trim();
+        const note = String(record.note || '').trim();
+        const description = String(record.description || '').trim();
+        if (!productType && !area && !price && !bedrooms && !status && !note && !description) return null;
+        return {
+          productType: productType || 'Sản phẩm',
+          area: area || 'Đang cập nhật',
+          price: price || 'Liên hệ',
+          bedrooms,
+          status,
+          note,
+          description,
+        };
       }
       return null;
     })
     .filter(notNull);
+}
+
+function buildProductSummary(api: ApiProject) {
+  return [
+    api.price_text || api.price_min || api.price_max
+      ? {
+          label: 'Giá tham khảo',
+          value: api.price_text || [api.price_min, api.price_max].filter(Boolean).join(' - '),
+        }
+      : null,
+    api.area_text || api.area_min || api.area_max
+      ? {
+          label: 'Diện tích',
+          value: api.area_text || [api.area_min, api.area_max].filter(Boolean).join(' - '),
+        }
+      : null,
+    api.total_units ? { label: 'Số lượng sản phẩm', value: `${api.total_units}` } : null,
+    api.total_blocks ? { label: 'Số block', value: `${api.total_blocks}` } : null,
+    api.total_floors ? { label: 'Số tầng', value: `${api.total_floors}` } : null,
+    api.handover_time ? { label: 'Bàn giao', value: api.handover_time } : null,
+    api.ownership_type ? { label: 'Sở hữu', value: api.ownership_type } : null,
+  ].filter(notNull);
 }
 
 function normalizeTimeline(value: unknown) {
@@ -294,6 +352,7 @@ export function mapApiProjectToProjectDetail(api: ApiProject): ProjectDetail {
     floorTabs: asArray(api.floor_tabs),
     floorPlans: normalizeFloorPlans(api.floor_plans),
     priceRows: normalizePriceRows(api.price_rows),
+    productSummary: buildProductSummary(api),
     policies: api.policy_cards && Array.isArray(api.policy_cards)
       ? normalizeTextCards(api.policy_cards, 'ClipboardCheck')
       : buildPoliciesFromRealFields(api),

@@ -21,6 +21,7 @@ import {
   Star
 } from 'lucide-react';
 import MediaSelectModal from '@/components/admin/MediaSelectModal';
+import AdminMediaField from '@/components/admin/media/AdminMediaField';
 import RichTextEditor from '@/components/admin/RichTextEditor';
 import VR360Tab from '@/components/admin/vr360/VR360Tab';
 
@@ -1257,15 +1258,14 @@ export default function AdminProjects() {
 
               if (mediaGroup) {
                 return (
-                  <div key={fieldName} className="flex gap-2">
-                    <input value={item[field.key]} onChange={(e) => updateListItem(items, setter, index, { [field.key]: e.target.value } as Partial<T>)} className={inputClass} placeholder={field.label} readOnly />
-                    <button
-                      type="button"
-                      onClick={() => setMediaSelectorTarget({ group: mediaGroup, index, field: fieldName as 'image' | 'avatar' } as RepeaterMediaTarget)}
-                      className="shrink-0 px-3 py-2 bg-[#1F1B16] hover:bg-[#B88746] text-white text-xs font-semibold rounded-xl transition-colors"
-                    >
-                      Chọn ảnh
-                    </button>
+                  <div key={fieldName} className="md:col-span-2">
+                    <AdminMediaField
+                      label={field.label}
+                      value={item[field.key]}
+                      onChange={(url) => updateListItem(items, setter, index, { [field.key]: url } as Partial<T>)}
+                      onOpenMediaLibrary={() => setMediaSelectorTarget({ group: mediaGroup, index, field: fieldName as 'image' | 'avatar' } as RepeaterMediaTarget)}
+                      size="sm"
+                    />
                   </div>
                 );
               }
@@ -2425,148 +2425,63 @@ export default function AdminProjects() {
                 {/* TAB 4: Media Assets */}
                 {activeTab === 'media' && (
                   <div className="space-y-6">
-                    {/* Thumbnail Selection */}
-                    <div className="space-y-2">
-                      <label className="block text-xs font-semibold text-[#8C7A6B]">Ảnh đại diện hiển thị (Thumbnail)</label>
-                      <div className="flex gap-4 items-center">
-                        <div className="w-24 h-16 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] overflow-hidden flex items-center justify-center shrink-0">
-                          {formThumbnail ? (
-                            <img src={formThumbnail} alt="Thumbnail Preview" className="w-full h-full object-cover" />
-                          ) : (
-                            <ImageIcon className="w-6 h-6 text-[#B88746]/40" />
-                          )}
-                        </div>
-                        <div className="flex-1 space-y-2">
-                          <input
-                            type="text"
-                            value={formThumbnail}
-                            className="w-full px-3 py-1.5 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-xs focus:outline-none"
-                            placeholder="Chọn ảnh đại diện từ Media Library"
-                            readOnly
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setMediaSelectorTarget('thumbnail')}
-                            className="px-3 py-1.5 bg-[#1F1B16] hover:bg-[#B88746] text-white text-xs font-semibold rounded-lg transition-colors"
-                          >
-                            Chọn từ Media Library
-                          </button>
-                        </div>
-                      </div>
-                    </div>
+                    <AdminMediaField
+                      label="Ảnh đại diện hiển thị (Thumbnail)"
+                      value={formThumbnail}
+                      onChange={setFormThumbnail}
+                      onOpenMediaLibrary={() => setMediaSelectorTarget('thumbnail')}
+                      placeholder="Chọn ảnh đại diện từ Media Library hoặc dán URL"
+                      size="md"
+                    />
 
-                    {/* Banner Image Selection */}
-                    <div className="space-y-2">
-                      <label className="block text-xs font-semibold text-[#8C7A6B]">Ảnh Banner quảng cáo lớn (Banner Image)</label>
-                      <div className="flex gap-4 items-center">
-                        <div className="w-24 h-16 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] overflow-hidden flex items-center justify-center shrink-0">
-                          {formBannerImage ? (
-                            <img src={formBannerImage} alt="Banner Preview" className="w-full h-full object-cover" />
-                          ) : (
-                            <ImageIcon className="w-6 h-6 text-[#B88746]/40" />
-                          )}
-                        </div>
-                        <div className="flex-1 space-y-2">
-                          <input
-                            type="text"
-                            value={formBannerImage}
-                            className="w-full px-3 py-1.5 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-xs focus:outline-none"
-                            placeholder="Chọn ảnh Hero từ Media Library"
-                            readOnly
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setMediaSelectorTarget('banner')}
-                            className="px-3 py-1.5 bg-[#1F1B16] hover:bg-[#B88746] text-white text-xs font-semibold rounded-lg transition-colors"
-                          >
-                            Chọn từ Media Library
-                          </button>
-                        </div>
-                      </div>
-                    </div>
+                    <AdminMediaField
+                      label="Ảnh Hero / Banner dự án"
+                      value={formBannerImage}
+                      onChange={setFormBannerImage}
+                      onOpenMediaLibrary={() => setMediaSelectorTarget('banner')}
+                      placeholder="Chọn ảnh Hero từ Media Library hoặc dán URL"
+                      size="lg"
+                    />
 
-                    {/* Project Map Image Selection */}
-                    <div className="space-y-2">
-                      <label className="block text-xs font-semibold text-[#8C7A6B]">Bản đồ dự án (SVG động hoặc Ảnh phẳng - WebP/PNG/JPG)</label>
-                      <div className="flex gap-4 items-center">
-                        <div className="w-24 h-16 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] overflow-hidden flex items-center justify-center shrink-0">
-                          {formMapImageUrl ? (
-                            formMapImageUrl.endsWith('.svg') ? (
-                              <div className="w-full h-full p-1 bg-white">
-                                <img src={formMapImageUrl} alt="Map Preview" className="w-full h-full object-contain" />
-                              </div>
-                            ) : (
-                              <img src={formMapImageUrl} alt="Map Preview" className="w-full h-full object-cover" />
-                            )
-                          ) : (
-                            <ImageIcon className="w-6 h-6 text-[#B88746]/40" />
-                          )}
-                        </div>
-                        <div className="flex-1 space-y-2">
-                          <input
-                            type="text"
-                            value={formMapImageUrl}
-                            className="w-full px-3 py-1.5 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-xs focus:outline-none"
-                            placeholder="Chọn ảnh bản đồ từ Media Library"
-                            readOnly
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setMediaSelectorTarget('map')}
-                            className="px-3 py-1.5 bg-[#1F1B16] hover:bg-[#B88746] text-white text-xs font-semibold rounded-lg transition-colors"
-                          >
-                            Chọn từ Media Library
-                          </button>
-                        </div>
-                      </div>
-                    </div>
+                    <AdminMediaField
+                      label="Ảnh bản đồ dự án"
+                      value={formMapImageUrl}
+                      onChange={setFormMapImageUrl}
+                      onOpenMediaLibrary={() => setMediaSelectorTarget('map')}
+                      placeholder="Chọn ảnh bản đồ từ Media Library hoặc dán URL"
+                      description="Hỗ trợ SVG, WebP, PNG, JPG. Ảnh này hiển thị ở section vị trí ngoài client."
+                      size="lg"
+                    />
 
-                    {/* Gallery Selection */}
                     {renderGalleryManager(true)}
 
-                    {/* Brochure PDF */}
-                    <div className="space-y-2">
-                      <label className="block text-xs font-semibold text-[#8C7A6B]">Tài liệu Brochure (PDF URL)</label>
-                      <div className="flex gap-4 items-center">
-                        <input
-                          type="text"
-                          value={formBrochureUrl}
-                          onChange={(e) => setFormBrochureUrl(e.target.value)}
-                          className="flex-1 px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
-                          placeholder="URL file PDF tài liệu bán hàng"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setMediaSelectorTarget('brochure')}
-                          className="px-4 py-2 border border-[#1F1B16] hover:bg-gray-100 rounded-xl text-xs font-semibold transition-colors whitespace-nowrap"
-                        >
-                          Chọn từ Media
-                        </button>
-                      </div>
-                    </div>
+                    <AdminMediaField
+                      label="Tài liệu Brochure / PDF"
+                      value={formBrochureUrl}
+                      onChange={setFormBrochureUrl}
+                      onOpenMediaLibrary={() => setMediaSelectorTarget('brochure')}
+                      placeholder="URL file PDF hoặc ảnh brochure"
+                      description="Nếu là ảnh sẽ hiển thị thumbnail; nếu là PDF sẽ hiển thị biểu tượng tệp."
+                      size="sm"
+                    />
 
-                    {/* Video and Virtual Tour Links */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-1">
-                        <label className="block text-xs font-semibold text-[#8C7A6B]">Video giới thiệu (YouTube / Vimeo URL)</label>
-                        <input
-                          type="url"
-                          value={formVideoUrl}
-                          onChange={(e) => setFormVideoUrl(e.target.value)}
-                          className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
-                          placeholder="https://www.youtube.com/watch?v=..."
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="block text-xs font-semibold text-[#8C7A6B]">Link tham quan thực tế ảo (Virtual Tour 360/3D URL)</label>
-                        <input
-                          type="url"
-                          value={formVirtualTourUrl}
-                          onChange={(e) => setFormVirtualTourUrl(e.target.value)}
-                          className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
-                          placeholder="https://my.matterport.com/show/?m=..."
-                        />
-                      </div>
+                      <AdminMediaField
+                        label="Video giới thiệu"
+                        value={formVideoUrl}
+                        onChange={setFormVideoUrl}
+                        placeholder="https://www.youtube.com/watch?v=..."
+                        description="Có thể dán link YouTube, Vimeo hoặc video đã upload."
+                        size="sm"
+                      />
+                      <AdminMediaField
+                        label="Link tham quan thực tế ảo"
+                        value={formVirtualTourUrl}
+                        onChange={setFormVirtualTourUrl}
+                        placeholder="https://my.matterport.com/show/?m=..."
+                        description="Dùng cho tour 360/3D nếu dự án có sẵn link ngoài."
+                        size="sm"
+                      />
                     </div>
                   </div>
                 )}

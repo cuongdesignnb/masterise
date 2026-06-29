@@ -133,13 +133,18 @@ export const projectDetail: ProjectDetail = {
     },
   ],
   priceRows: [
-    ["Nhà phố liên kế", "80 - 120", "8,9"],
-    ["Nhà phố vườn", "100 - 140", "11,5"],
-    ["Nhà phố góc", "120 - 160", "13,8"],
-    ["Nhà phố shophouse", "90 - 150", "16,5"],
-    ["Biệt thự song lập", "160 - 200", "22,0"],
-    ["Biệt thự đơn lập", "250 - 400", "35,0"],
-    ["Căn hộ cao cấp", "50 - 120", "6,5"],
+    { productType: "Nhà phố liên kế", area: "80 - 120", price: "8,9" },
+    { productType: "Nhà phố vườn", area: "100 - 140", price: "11,5" },
+    { productType: "Nhà phố góc", area: "120 - 160", price: "13,8" },
+    { productType: "Nhà phố shophouse", area: "90 - 150", price: "16,5" },
+    { productType: "Biệt thự song lập", area: "160 - 200", price: "22,0" },
+    { productType: "Biệt thự đơn lập", area: "250 - 400", price: "35,0" },
+    { productType: "Căn hộ cao cấp", area: "50 - 120", price: "6,5" },
+  ],
+  productSummary: [
+    { label: "Giá tham khảo", value: "Từ 6,5 tỷ/căn" },
+    { label: "Diện tích", value: "50 - 400 m²" },
+    { label: "Số lượng sản phẩm", value: "2.000+" },
   ],
   policies: [
     {
