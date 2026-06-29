@@ -961,6 +961,41 @@ export default function AdminProjects() {
     setter(nextItems);
   };
 
+  const createEmptyFloorPlan = (productType = ''): FloorPlanItem => ({
+    productType,
+    name: '',
+    area: '',
+    totalArea: '',
+    image: '',
+    images: [],
+  });
+
+  const addFloorPlanForTab = (productType = '') => {
+    setFormFloorPlans(items => [...items, createEmptyFloorPlan(productType)]);
+  };
+
+  const renameFloorTab = (index: number, nextValue: string) => {
+    const previousValue = formFloorTabs[index] || '';
+    setFormFloorTabs(items => items.map((item, itemIndex) => itemIndex === index ? nextValue : item));
+    if (previousValue) {
+      setFormFloorPlans(items => items.map(item =>
+        item.productType === previousValue ? { ...item, productType: nextValue } : item
+      ));
+    }
+  };
+
+  const removeFloorTab = (index: number) => {
+    const tabName = formFloorTabs[index] || '';
+    if (window.confirm('Bạn có chắc chắn muốn xóa nhóm loại sản phẩm này không? Các mặt bằng trong nhóm sẽ chuyển về chưa phân nhóm.')) {
+      setFormFloorTabs(items => items.filter((_, itemIndex) => itemIndex !== index));
+      if (tabName) {
+        setFormFloorPlans(items => items.map(item =>
+          item.productType === tabName ? { ...item, productType: '' } : item
+        ));
+      }
+    }
+  };
+
   const sectionNote = (text: string) => (
     <p className="rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] px-4 py-3 text-xs leading-5 text-[#8C7A6B]">
       {text}
@@ -1262,16 +1297,18 @@ export default function AdminProjects() {
     </div>
   );
 
-  const renderFloorPlanRepeater = () => (
+  const renderFloorPlanRepeater = () => {
+    const floorTabOptions = uniqueStrings(formFloorTabs);
+    return (
     <div data-project-field="floor_plans" className={`space-y-2 rounded-xl border bg-[#FBF8F2]/40 p-3 ${highlightClass('floor_plans') || 'border-[#E8DCCB]'}`}>
       <div className="flex items-center justify-between gap-3">
         <div>
           <label className="text-xs font-semibold text-[#8C7A6B]">Danh sách mặt bằng</label>
-          <p className="mt-0.5 text-[11px] text-[#8C7A6B]">Mỗi mặt bằng có thể chọn nhiều ảnh. Ảnh đầu tiên sẽ là thumbnail ngoài client.</p>
+          <p className="mt-0.5 text-[11px] text-[#8C7A6B]">Chọn “Thuộc tab” để mặt bằng hiển thị đúng tab ngoài client. Ảnh đầu tiên sẽ là thumbnail.</p>
         </div>
         <button
           type="button"
-          onClick={() => setFormFloorPlans([...formFloorPlans, { productType: '', name: '', area: '', totalArea: '', image: '', images: [] }])}
+          onClick={() => addFloorPlanForTab(floorTabOptions[0] || '')}
           className={addButtonClass}
         >
           Thêm mặt bằng
@@ -1283,7 +1320,20 @@ export default function AdminProjects() {
         return (
           <div key={index} className={repeaterCardClass}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-              <input value={item.productType} onChange={(e) => updateListItem(formFloorPlans, setFormFloorPlans, index, { productType: e.target.value })} className={inputClass} placeholder="Loại sản phẩm, ví dụ: Căn hộ cao cấp" />
+              {floorTabOptions.length ? (
+                <select
+                  value={item.productType}
+                  onChange={(e) => updateListItem(formFloorPlans, setFormFloorPlans, index, { productType: e.target.value })}
+                  className={inputClass}
+                >
+                  <option value="">Chưa phân nhóm</option>
+                  {floorTabOptions.map((tab) => (
+                    <option key={tab} value={tab}>{tab}</option>
+                  ))}
+                </select>
+              ) : (
+                <input value={item.productType} onChange={(e) => updateListItem(formFloorPlans, setFormFloorPlans, index, { productType: e.target.value })} className={inputClass} placeholder="Loại sản phẩm, ví dụ: Căn hộ cao cấp" />
+              )}
               <input value={item.name} onChange={(e) => updateListItem(formFloorPlans, setFormFloorPlans, index, { name: e.target.value })} className={inputClass} placeholder="Tên mặt bằng, ví dụ: Căn hộ 2 phòng ngủ" />
               <input value={item.area} onChange={(e) => updateListItem(formFloorPlans, setFormFloorPlans, index, { area: e.target.value })} className={inputClass} placeholder="Diện tích, ví dụ: 68 - 75 m²" />
               <input value={item.totalArea} onChange={(e) => updateListItem(formFloorPlans, setFormFloorPlans, index, { totalArea: e.target.value })} className={inputClass} placeholder="Tổng diện tích sàn" />
@@ -1323,6 +1373,7 @@ export default function AdminProjects() {
       })}
     </div>
   );
+  };
 
   const renderTextPairRepeater = <T extends Record<string, string>>(
     title: string,
@@ -2393,12 +2444,19 @@ export default function AdminProjects() {
                         <button type="button" onClick={() => setFormFloorTabs([...formFloorTabs, ''])} className={addButtonClass}>Thêm loại sản phẩm</button>
                       </div>
                       {formFloorTabs.length === 0 ? <p className="text-xs text-[#8C7A6B]">Chưa có loại sản phẩm. Nếu có mặt bằng nhưng chưa có nhóm, Client sẽ gom vào “Sản phẩm”.</p> : null}
-                      {formFloorTabs.map((tab, index) => (
-                        <div key={index} className="flex gap-2">
-                          <input value={tab} onChange={(e) => setFormFloorTabs(formFloorTabs.map((item, itemIndex) => itemIndex === index ? e.target.value : item))} className={inputClass} placeholder="Ví dụ: Nhà phố" />
-                          <button type="button" onClick={() => removeListItem(formFloorTabs, setFormFloorTabs, index)} className={removeButtonClass}>Xóa</button>
-                        </div>
-                      ))}
+                      {formFloorTabs.map((tab, index) => {
+                        const floorPlanCount = tab ? formFloorPlans.filter((plan) => plan.productType === tab).length : 0;
+                        return (
+                          <div key={index} className="grid grid-cols-1 gap-2 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2]/45 p-2 md:grid-cols-[1fr_auto_auto] md:items-center">
+                            <div>
+                              <input value={tab} onChange={(e) => renameFloorTab(index, e.target.value)} className={inputClass} placeholder="Ví dụ: Mặt bằng căn hộ" />
+                              <p className="mt-1 px-1 text-[10px] text-[#8C7A6B]">{floorPlanCount} mặt bằng đang thuộc tab này.</p>
+                            </div>
+                            <button type="button" onClick={() => addFloorPlanForTab(tab)} className={addButtonClass}>Thêm mặt bằng vào tab</button>
+                            <button type="button" onClick={() => removeFloorTab(index)} className={removeButtonClass}>Xóa</button>
+                          </div>
+                        );
+                      })}
                     </div>
                     {renderFloorPlanRepeater()}
                   </div>
