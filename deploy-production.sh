@@ -127,7 +127,18 @@ fi
 php artisan --version
 '
 
-log "8. CLEAR LARAVEL CACHE BEFORE MIGRATE"
+log "8. INSTALL / UPDATE PHP DEPENDENCIES"
+
+docker compose -f "${COMPOSE_FILE}" exec -T php sh -lc '
+cd /var/www/html
+
+if [ -f composer.json ]; then
+  export COMPOSER_ALLOW_SUPERUSER=1
+  composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-progress
+fi
+'
+
+log "9. CLEAR LARAVEL CACHE BEFORE MIGRATE"
 
 docker compose -f "${COMPOSE_FILE}" exec -T php sh -lc '
 cd /var/www/html
@@ -138,7 +149,7 @@ php artisan config:clear
 php artisan view:clear
 '
 
-log "9. RUN SAFE MIGRATIONS"
+log "10. RUN SAFE MIGRATIONS"
 
 docker compose -f "${COMPOSE_FILE}" exec -T php sh -lc '
 cd /var/www/html
@@ -146,7 +157,7 @@ cd /var/www/html
 php artisan migrate --force
 '
 
-log "10. ENSURE STORAGE LINK"
+log "11. ENSURE STORAGE LINK"
 
 docker compose -f "${COMPOSE_FILE}" exec -T php sh -lc '
 cd /var/www/html
@@ -154,7 +165,7 @@ cd /var/www/html
 php artisan storage:link || true
 '
 
-log "11. FINAL LARAVEL CACHE CLEAR AND ROUTE CHECK"
+log "12. FINAL LARAVEL CACHE CLEAR AND ROUTE CHECK"
 
 docker compose -f "${COMPOSE_FILE}" exec -T php sh -lc '
 cd /var/www/html
@@ -169,17 +180,17 @@ echo "Checking required admin project routes:"
 php artisan route:list | grep -i "api/v1/admin/projects" || php artisan route:list | grep -i "admin/projects" || exit 1
 '
 
-log "12. RESTART PHP / NGINX / QUEUE / SCHEDULER RUNTIME"
+log "13. RESTART PHP / NGINX / QUEUE / SCHEDULER RUNTIME"
 
 docker compose -f "${COMPOSE_FILE}" restart ${SERVICES_TO_RESTART}
 
-log "13. WAIT AFTER RESTART"
+log "14. WAIT AFTER RESTART"
 
 sleep 8
 
 docker compose -f "${COMPOSE_FILE}" ps
 
-log "14. CLEAR HOST NGINX PROXY CACHE"
+log "15. CLEAR HOST NGINX PROXY CACHE"
 
 if [ -d "${NGINX_PROXY_CACHE_DIR}" ]; then
   rm -rf "${NGINX_PROXY_CACHE_DIR:?}/"*
@@ -188,7 +199,7 @@ else
   echo "Proxy cache dir not found, skipped: ${NGINX_PROXY_CACHE_DIR}"
 fi
 
-log "15. TEST AND RELOAD HOST NGINX"
+log "16. TEST AND RELOAD HOST NGINX"
 
 if command -v nginx >/dev/null 2>&1; then
   nginx -t
@@ -198,7 +209,7 @@ else
   echo "Host nginx command not found, skipped."
 fi
 
-log "16. HEALTH CHECK PUBLIC API"
+log "17. HEALTH CHECK PUBLIC API"
 
 PUBLIC_BODY="/tmp/masterise_public_api_check.txt"
 PUBLIC_CODE="$(curl -s -o "${PUBLIC_BODY}" -w "%{http_code}" "${PUBLIC_API_URL}" -H "Accept: application/json" || true)"
@@ -214,7 +225,7 @@ if [ "${PUBLIC_CODE}" != "200" ]; then
   fail "Public API must return 200"
 fi
 
-log "17. HEALTH CHECK ADMIN API WITHOUT TOKEN"
+log "18. HEALTH CHECK ADMIN API WITHOUT TOKEN"
 
 ADMIN_BODY="/tmp/masterise_admin_api_check.txt"
 ADMIN_CODE="$(curl -s -o "${ADMIN_BODY}" -w "%{http_code}" "${ADMIN_API_URL}" -H "Accept: application/json" || true)"
@@ -238,7 +249,7 @@ if [ "${ADMIN_CODE}" != "200" ] && [ "${ADMIN_CODE}" != "401" ] && [ "${ADMIN_CO
   fail "Admin API must return 200, 401 or 403. Current: ${ADMIN_CODE}"
 fi
 
-log "18. HEALTH CHECK FRONTEND"
+log "19. HEALTH CHECK FRONTEND"
 
 FRONTEND_BODY="/tmp/masterise_frontend_check.txt"
 FRONTEND_CODE="$(curl -s -o "${FRONTEND_BODY}" -w "%{http_code}" "${FRONTEND_URL}" || true)"
@@ -254,7 +265,7 @@ if [ "${FRONTEND_CODE}" != "200" ] && [ "${FRONTEND_CODE}" != "301" ] && [ "${FR
   fail "Frontend check failed. Expected 200/301/302."
 fi
 
-log "19. SHOW FINAL CONTAINER STATUS"
+log "20. SHOW FINAL CONTAINER STATUS"
 
 docker compose -f "${COMPOSE_FILE}" ps
 

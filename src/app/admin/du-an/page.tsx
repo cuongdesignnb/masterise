@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import MediaSelectModal from '@/components/admin/MediaSelectModal';
 import AdminMediaField from '@/components/admin/media/AdminMediaField';
+import AdminImagePreview from '@/components/admin/media/AdminImagePreview';
 import RichTextEditor from '@/components/admin/RichTextEditor';
 import VR360Tab from '@/components/admin/vr360/VR360Tab';
 
@@ -40,7 +41,7 @@ type AmenityItem = { title: string; description: string; image: string; icon: st
 type ReasonItem = { title: string; description: string; icon: string };
 type TestimonialItem = { name: string; role: string; content: string; avatar: string };
 type FaqItem = { question: string; answer: string };
-type FloorPlanItem = { productType: string; name: string; area: string; totalArea: string; image: string };
+type FloorPlanItem = { productType: string; name: string; area: string; totalArea: string; image: string; images: string[] };
 type PriceRowItem = { productType: string; area: string; price: string };
 type PolicyItem = { title: string; description: string; icon: string };
 type TimelineItem = { date: string; title: string };
@@ -48,7 +49,7 @@ type BaseMediaTarget = 'thumbnail' | 'banner' | 'gallery' | 'brochure' | 'map';
 type RepeaterMediaTarget =
   | { group: 'amenityDetails'; index: number; field: 'image' }
   | { group: 'projectTestimonials'; index: number; field: 'avatar' }
-  | { group: 'floorPlans'; index: number; field: 'image' };
+  | { group: 'floorPlans'; index: number; field: 'images' | 'image' };
 type MediaSelectorTarget = BaseMediaTarget | RepeaterMediaTarget | null;
 type ProjectAdminTab =
   | 'overview'
@@ -292,6 +293,7 @@ export default function AdminProjects() {
   const asStrings = (value: unknown): string[] => normalizeArray(value)
     .map((item) => String(item || '').trim())
     .filter(Boolean);
+  const uniqueStrings = (items: unknown[]) => Array.from(new Set(items.map((item) => String(item || '').trim()).filter(Boolean)));
   const textValue = (value: unknown) => String(value || '');
   const loadIconValueItems = (value: unknown, icon = 'LandPlot'): IconValueItem[] => asRecords(value).map((item) => ({
     label: textValue(item.label),
@@ -327,13 +329,27 @@ export default function AdminProjects() {
     question: textValue(item.question),
     answer: textValue(item.answer),
   }));
-  const loadFloorPlanItems = (value: unknown): FloorPlanItem[] => asRecords(value).map((item) => ({
-    productType: textValue(item.productType || item.product_type || item.type),
-    name: textValue(item.name),
-    area: textValue(item.area),
-    totalArea: textValue(item.totalArea || item.total_area),
-    image: textValue(item.image),
-  }));
+  const loadFloorPlanItems = (value: unknown): FloorPlanItem[] => asRecords(value).map((item) => {
+    const images = uniqueStrings([
+      ...asStrings(item.images),
+      ...asStrings(item.image_urls),
+      ...asStrings(item.gallery),
+      ...asStrings(item.photos),
+      item.image_url,
+      item.image,
+      item.thumbnail,
+      item.url,
+      item.src,
+    ]);
+    return {
+      productType: textValue(item.productType || item.product_type || item.type),
+      name: textValue(item.name),
+      area: textValue(item.area),
+      totalArea: textValue(item.totalArea || item.total_area),
+      image: images[0] || '',
+      images,
+    };
+  });
   const loadPriceRowItems = (value: unknown): PriceRowItem[] => normalizeArray(value)
     .map((row) => Array.isArray(row)
       ? { productType: textValue(row[0]), area: textValue(row[1]), price: textValue(row[2]) }
@@ -633,7 +649,15 @@ export default function AdminProjects() {
       const projectTestimonials = cleanArray(formProjectTestimonials, item => Boolean(item.name || item.content));
       const projectFaqs = cleanArray(formProjectFaqs, item => Boolean(item.question || item.answer));
       const floorTabs = formFloorTabs.map(tab => tab.trim()).filter(Boolean);
-      const floorPlans = cleanArray(formFloorPlans, item => Boolean(item.name || item.area || item.image));
+      const floorPlans = cleanArray(formFloorPlans, item => Boolean(item.name || item.area || item.image || item.images.length))
+        .map(item => {
+          const images = uniqueStrings([...(item.images || []), item.image]);
+          return {
+            ...item,
+            image: images[0] || '',
+            images,
+          };
+        });
       const priceRows = cleanArray(formPriceRows, item => Boolean(item.productType || item.area || item.price))
         .map(item => [item.productType, item.area, item.price]);
       const policyCards = cleanArray(formPolicyCards, item => Boolean(item.title || item.description));
@@ -844,8 +868,15 @@ export default function AdminProjects() {
           index === mediaSelectorTarget.index ? { ...item, [mediaSelectorTarget.field]: selectedUrl } : item
         ));
       } else if (mediaSelectorTarget.group === 'floorPlans') {
+        const selectedImages = uniqueStrings(Array.isArray(url) ? url : [url]);
         setFormFloorPlans(items => items.map((item, index) =>
-          index === mediaSelectorTarget.index ? { ...item, [mediaSelectorTarget.field]: selectedUrl } : item
+          index === mediaSelectorTarget.index
+            ? {
+                ...item,
+                image: selectedImages[0] || item.image,
+                images: selectedImages.length ? selectedImages : item.images,
+              }
+            : item
         ));
       }
       setMediaSelectorTarget(null);
@@ -1195,7 +1226,8 @@ export default function AdminProjects() {
         return formProjectTestimonials[mediaSelectorTarget.index]?.avatar ? [formProjectTestimonials[mediaSelectorTarget.index].avatar] : [];
       }
       if (mediaSelectorTarget.group === 'floorPlans') {
-        return formFloorPlans[mediaSelectorTarget.index]?.image ? [formFloorPlans[mediaSelectorTarget.index].image] : [];
+        const item = formFloorPlans[mediaSelectorTarget.index];
+        return uniqueStrings([...(item?.images || []), item?.image]);
       }
     }
     return [];
@@ -1227,6 +1259,68 @@ export default function AdminProjects() {
           </div>
         </div>
       ))}
+    </div>
+  );
+
+  const renderFloorPlanRepeater = () => (
+    <div data-project-field="floor_plans" className={`space-y-2 rounded-xl border bg-[#FBF8F2]/40 p-3 ${highlightClass('floor_plans') || 'border-[#E8DCCB]'}`}>
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <label className="text-xs font-semibold text-[#8C7A6B]">Danh sách mặt bằng</label>
+          <p className="mt-0.5 text-[11px] text-[#8C7A6B]">Mỗi mặt bằng có thể chọn nhiều ảnh. Ảnh đầu tiên sẽ là thumbnail ngoài client.</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setFormFloorPlans([...formFloorPlans, { productType: '', name: '', area: '', totalArea: '', image: '', images: [] }])}
+          className={addButtonClass}
+        >
+          Thêm mặt bằng
+        </button>
+      </div>
+      {formFloorPlans.length === 0 ? <p className="text-xs text-[#8C7A6B]">Chưa có dữ liệu. Bấm "Thêm mặt bằng" để nhập.</p> : null}
+      {formFloorPlans.map((item, index) => {
+        const selectedImages = uniqueStrings([...(item.images || []), item.image]);
+        return (
+          <div key={index} className={repeaterCardClass}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <input value={item.productType} onChange={(e) => updateListItem(formFloorPlans, setFormFloorPlans, index, { productType: e.target.value })} className={inputClass} placeholder="Loại sản phẩm, ví dụ: Căn hộ cao cấp" />
+              <input value={item.name} onChange={(e) => updateListItem(formFloorPlans, setFormFloorPlans, index, { name: e.target.value })} className={inputClass} placeholder="Tên mặt bằng, ví dụ: Căn hộ 2 phòng ngủ" />
+              <input value={item.area} onChange={(e) => updateListItem(formFloorPlans, setFormFloorPlans, index, { area: e.target.value })} className={inputClass} placeholder="Diện tích, ví dụ: 68 - 75 m²" />
+              <input value={item.totalArea} onChange={(e) => updateListItem(formFloorPlans, setFormFloorPlans, index, { totalArea: e.target.value })} className={inputClass} placeholder="Tổng diện tích sàn" />
+            </div>
+            <div className="space-y-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <p className="text-xs font-semibold text-[#8C7A6B]">Ảnh mặt bằng</p>
+                  <p className="text-[11px] text-[#8C7A6B]">{selectedImages.length ? `Đang chọn ${selectedImages.length} ảnh. Ảnh số 1 là thumbnail.` : 'Chọn ảnh từ Media Library.'}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setMediaSelectorTarget({ group: 'floorPlans', index, field: 'images' })}
+                  className={addButtonClass}
+                >
+                  Chọn ảnh
+                </button>
+              </div>
+              <AdminImagePreview
+                value={selectedImages}
+                label="Chưa chọn ảnh mặt bằng"
+                multiple
+                size="sm"
+                onRemove={(_, imageIndex) => {
+                  const images = selectedImages.filter((__, currentIndex) => currentIndex !== imageIndex);
+                  updateListItem(formFloorPlans, setFormFloorPlans, index, { images, image: images[0] || '' });
+                }}
+              />
+            </div>
+            <div className="flex flex-wrap gap-1">
+              <button type="button" onClick={() => moveListItem(formFloorPlans, setFormFloorPlans, index, -1)} disabled={index === 0} className={removeButtonClass}>Đưa lên</button>
+              <button type="button" onClick={() => moveListItem(formFloorPlans, setFormFloorPlans, index, 1)} disabled={index === formFloorPlans.length - 1} className={removeButtonClass}>Đưa xuống</button>
+              <button type="button" onClick={() => removeListItem(formFloorPlans, setFormFloorPlans, index)} className={removeButtonClass}>Xóa dòng này</button>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 
@@ -2306,13 +2400,7 @@ export default function AdminProjects() {
                         </div>
                       ))}
                     </div>
-                    {renderTextPairRepeater('Danh sách mặt bằng', formFloorPlans, setFormFloorPlans, { productType: '', name: '', area: '', totalArea: '', image: '' }, [
-                      { key: 'productType', label: 'Loại sản phẩm, ví dụ: Nhà phố' },
-                      { key: 'name', label: 'Tên mặt bằng, ví dụ: Căn hộ 2 phòng ngủ' },
-                      { key: 'area', label: 'Diện tích, ví dụ: 68 - 75 m²' },
-                      { key: 'totalArea', label: 'Tổng diện tích sàn' },
-                      { key: 'image', label: 'Ảnh mặt bằng', mediaTarget: 'floorPlans' },
-                    ])}
+                    {renderFloorPlanRepeater()}
                   </div>
                 )}
 
@@ -2398,13 +2486,7 @@ export default function AdminProjects() {
                         </div>
                       ))}
                     </div>
-                    {renderTextPairRepeater('Danh sách mặt bằng', formFloorPlans, setFormFloorPlans, { productType: '', name: '', area: '', totalArea: '', image: '' }, [
-                      { key: 'productType', label: 'Loại sản phẩm, ví dụ: Nhà phố' },
-                      { key: 'name', label: 'Tên mặt bằng, ví dụ: Căn hộ 2 phòng ngủ' },
-                      { key: 'area', label: 'Diện tích, ví dụ: 68 - 75 m²' },
-                      { key: 'totalArea', label: 'Tổng diện tích sàn' },
-                      { key: 'image', label: 'Ảnh mặt bằng', mediaTarget: 'floorPlans' },
-                    ])}
+                    {renderFloorPlanRepeater()}
                     {renderTextPairRepeater('Dòng bảng giá', formPriceRows, setFormPriceRows, { productType: '', area: '', price: '' }, [
                       { key: 'productType', label: 'Loại sản phẩm' },
                       { key: 'area', label: 'Diện tích' },
@@ -2701,7 +2783,10 @@ export default function AdminProjects() {
             isOpen={mediaSelectorTarget !== null}
             onClose={() => setMediaSelectorTarget(null)}
             onSelect={handleMediaSelected}
-            multiple={mediaSelectorTarget === 'gallery'}
+            multiple={
+              mediaSelectorTarget === 'gallery'
+              || (typeof mediaSelectorTarget === 'object' && mediaSelectorTarget?.group === 'floorPlans' && mediaSelectorTarget.field === 'images')
+            }
             selectedUrls={getMediaSelectorSelectedUrls()}
           />
         )}

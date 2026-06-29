@@ -60,6 +60,7 @@ export type ProjectDetail = {
     area?: string;
     totalArea?: string;
     image?: string;
+    images?: string[];
     price?: string;
     bedrooms?: string;
     status?: string;

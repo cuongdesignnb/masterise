@@ -65,7 +65,7 @@ class AdminProjectSaveProofTest extends TestCase
             'connectivity' => [['time' => '5 phút', 'label' => 'Đến trung tâm']],
             'amenity_details' => [['title' => 'Proof amenity', 'description' => 'Proof', 'image' => '/uploads/proof-amenity.jpg', 'icon' => 'Sparkles']],
             'floor_tabs' => ['Nhà phố', 'Căn hộ'],
-            'floor_plans' => [['productType' => 'Nhà phố', 'name' => 'Proof floor', 'area' => '80 m2', 'totalArea' => '120 m2', 'image' => '/uploads/proof-floor.jpg']],
+            'floor_plans' => [['productType' => 'Nhà phố', 'name' => 'Proof floor', 'area' => '80 m2', 'totalArea' => '120 m2', 'image' => '/uploads/proof-floor.jpg', 'images' => ['/uploads/proof-floor.jpg', '/uploads/proof-floor-2.jpg']]],
             'price_rows' => [['Nhà phố', '80 - 120 m2', '8,9 tỷ']],
             'policy_cards' => [['title' => 'Proof policy', 'description' => 'Proof', 'icon' => 'CalendarDays']],
             'project_timeline' => [['date' => 'Q1/2026', 'title' => 'Proof milestone']],
@@ -105,6 +105,7 @@ class AdminProjectSaveProofTest extends TestCase
             ->assertJsonPath('data.amenity_details.0.image', '/uploads/proof-amenity.jpg')
             ->assertJsonPath('data.floor_tabs.1', 'Căn hộ')
             ->assertJsonPath('data.floor_plans.0.name', 'Proof floor')
+            ->assertJsonPath('data.floor_plans.0.images.1', '/uploads/proof-floor-2.jpg')
             ->assertJsonPath('data.price_rows.0.2', '8,9 tỷ')
             ->assertJsonPath('data.policy_cards.0.title', 'Proof policy')
             ->assertJsonPath('data.project_timeline.0.title', 'Proof milestone')

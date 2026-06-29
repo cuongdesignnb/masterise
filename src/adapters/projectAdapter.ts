@@ -18,6 +18,13 @@ function normalizeGallery(gallery: string[] | null | undefined) {
   return asArray(gallery).filter(Boolean);
 }
 
+function normalizeStringList(...values: unknown[]) {
+  return Array.from(new Set(values.flatMap((value) => {
+    if (Array.isArray(value)) return value;
+    return value ? [value] : [];
+  }).map((value) => String(value || '').trim()).filter(Boolean)));
+}
+
 function normalizeIcon(icon: unknown, fallback: ProjectIconName): ProjectIconName {
   const allowed: ProjectIconName[] = [
     'BadgeDollarSign',
@@ -144,7 +151,18 @@ function normalizeFloorPlans(value: unknown) {
       const productType = String(record.productType || record.product_type || record.type || '').trim();
       const area = String(record.area || record.area_text || record.size || '').trim();
       const totalArea = String(record.totalArea || record.total_area || '').trim();
-      const image = String(record.image_url || record.image || record.thumbnail || record.url || record.src || '').trim();
+      const images = normalizeStringList(
+        record.images,
+        record.image_urls,
+        record.gallery,
+        record.photos,
+        record.image_url,
+        record.image,
+        record.thumbnail,
+        record.url,
+        record.src
+      );
+      const image = images[0] || '';
       const price = String(record.price || record.price_text || '').trim();
       const bedrooms = String(record.bedrooms || record.bedroom || '').trim();
       const status = String(record.status || '').trim();
@@ -156,6 +174,7 @@ function normalizeFloorPlans(value: unknown) {
         area,
         totalArea: totalArea || area,
         image,
+        images,
         price,
         bedrooms,
         status,

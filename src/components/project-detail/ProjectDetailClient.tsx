@@ -154,7 +154,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
   const [activeTab, setActiveTab] = useState(floorTabs[0] ?? "");
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState<number | null>(null);
-  const [floorPlanImageModal, setFloorPlanImageModal] = useState<{ src: string; title: string } | null>(null);
+  const [floorPlanImageModal, setFloorPlanImageModal] = useState<{ images: string[]; index: number; title: string } | null>(null);
 
   // Lock body scroll when modal is open
   useEffect(() => {
@@ -193,6 +193,29 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [activeImageIndex, project.gallery.images.length]);
+
+  useEffect(() => {
+    if (!floorPlanImageModal) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setFloorPlanImageModal(null);
+      } else if (e.key === "ArrowRight") {
+        setFloorPlanImageModal((current) => current
+          ? { ...current, index: (current.index + 1) % current.images.length }
+          : current);
+      } else if (e.key === "ArrowLeft") {
+        setFloorPlanImageModal((current) => current
+          ? { ...current, index: (current.index - 1 + current.images.length) % current.images.length }
+          : current);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [floorPlanImageModal]);
   const hasFacts = project.facts.length > 0;
   const hasStats = project.stats.length > 0;
   const hasGallery = project.gallery.images.length > 0;
@@ -212,6 +235,13 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
   const visibleFloorPlans = project.floorTabs.length && activeTab
     ? project.floorPlans.filter((plan) => activeTab === "Tất cả" || !plan.productType || plan.productType === activeTab)
     : project.floorPlans;
+  const getFloorPlanImages = (plan: ProjectDetail["floorPlans"][number]) =>
+    Array.from(new Set([...(plan.images || []), plan.image].map((image) => String(image || "").trim()).filter(Boolean)));
+  const openFloorPlanImages = (plan: ProjectDetail["floorPlans"][number], index = 0) => {
+    const images = getFloorPlanImages(plan);
+    if (!images.length) return;
+    setFloorPlanImageModal({ images, index: Math.min(Math.max(index, 0), images.length - 1), title: plan.name });
+  };
 
   return (
     <main className="overflow-hidden bg-ivory pb-0 pt-[76px] text-ink">
@@ -524,7 +554,10 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
               ))}
             </div> : null}
             {visibleFloorPlans.length ? <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {visibleFloorPlans.map((plan, index) => (
+              {visibleFloorPlans.map((plan, index) => {
+                const planImages = getFloorPlanImages(plan);
+                const thumbnailImage = planImages[0] || "";
+                return (
                 <motion.article
                   key={`${plan.productType || 'floor'}-${plan.name}-${index}`}
                   layout
@@ -532,14 +565,14 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                   className="overflow-hidden rounded-[16px] border border-line/80 bg-white shadow-[0_12px_35px_rgba(87,61,28,.07)]"
                 >
                   <div className="bg-[#fbfaf7] p-3">
-                    {plan.image ? (
+                    {thumbnailImage ? (
                       <button
                         type="button"
-                        onClick={() => setFloorPlanImageModal({ src: plan.image || '', title: plan.name })}
+                        onClick={() => openFloorPlanImages(plan)}
                         className="group relative block aspect-[16/9] w-full overflow-hidden rounded-[10px] text-left"
                       >
                         <Image
-                          src={plan.image}
+                          src={thumbnailImage}
                           alt={`${plan.productType || activeTab || "Sản phẩm"} - ${plan.name}`}
                           fill
                           sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
@@ -568,10 +601,10 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                       {plan.status ? <p>Tình trạng: <strong className="text-ink">{plan.status}</strong></p> : null}
                     </div>
                     {plan.description ? <p className="mt-3 text-[10px] leading-4 text-muted">{plan.description}</p> : null}
-                    {plan.image ? (
+                    {thumbnailImage ? (
                       <button
                         type="button"
-                        onClick={() => setFloorPlanImageModal({ src: plan.image || '', title: plan.name })}
+                        onClick={() => openFloorPlanImages(plan)}
                         className="mt-4 w-full rounded-[5px] border border-gold/45 py-2 text-[9px] font-bold text-gold-dark transition hover:bg-gold hover:text-white"
                       >
                         XEM ẢNH LỚN
@@ -579,7 +612,8 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                     ) : null}
                   </div>
                 </motion.article>
-              ))}
+                );
+              })}
             </div> : (
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 {project.floorTabs.map((tab) => (
@@ -904,6 +938,9 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
             className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 p-4 backdrop-blur-md"
             onClick={() => setFloorPlanImageModal(null)}
           >
+            <div className="absolute left-5 top-5 z-[10000] rounded-full bg-white/10 px-3 py-1.5 text-[11px] font-bold text-white/80">
+              {floorPlanImageModal.index + 1} / {floorPlanImageModal.images.length}
+            </div>
             <button
               type="button"
               onClick={() => setFloorPlanImageModal(null)}
@@ -911,6 +948,36 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
             >
               <X size={20} />
             </button>
+            {floorPlanImageModal.images.length > 1 ? (
+              <>
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setFloorPlanImageModal((current) => current
+                      ? { ...current, index: (current.index - 1 + current.images.length) % current.images.length }
+                      : current);
+                  }}
+                  className="absolute left-4 top-1/2 z-[10000] flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/25"
+                  aria-label="Xem ảnh trước"
+                >
+                  <ChevronLeft size={24} />
+                </button>
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setFloorPlanImageModal((current) => current
+                      ? { ...current, index: (current.index + 1) % current.images.length }
+                      : current);
+                  }}
+                  className="absolute right-4 top-1/2 z-[10000] flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/25"
+                  aria-label="Xem ảnh tiếp theo"
+                >
+                  <ChevronRight size={24} />
+                </button>
+              </>
+            ) : null}
             <motion.div
               initial={{ scale: 0.96, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -919,7 +986,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
               onClick={(event) => event.stopPropagation()}
             >
               <Image
-                src={floorPlanImageModal.src}
+                src={floorPlanImageModal.images[floorPlanImageModal.index]}
                 alt={floorPlanImageModal.title}
                 fill
                 sizes="90vw"

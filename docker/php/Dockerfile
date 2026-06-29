@@ -29,12 +29,14 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /var/www/html
 
+ENV COMPOSER_ALLOW_SUPERUSER=1
+
 # Copy existing application
 COPY backend/ /var/www/html/
 
 # Install dependencies (production)
 RUN if [ -f composer.json ]; then \
-    composer install --no-dev --optimize-autoloader --no-interaction; \
+    composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-progress --no-scripts; \
     fi
 
 # Set permissions
