@@ -155,6 +155,8 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState<number | null>(null);
   const [floorPlanImageModal, setFloorPlanImageModal] = useState<{ images: string[]; index: number; title: string } | null>(null);
+  const [heroTextExpanded, setHeroTextExpanded] = useState(false);
+  const [overviewExpanded, setOverviewExpanded] = useState(false);
 
   // Lock body scroll when modal is open
   useEffect(() => {
@@ -242,6 +244,9 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
     if (!images.length) return;
     setFloorPlanImageModal({ images, index: Math.min(Math.max(index, 0), images.length - 1), title: plan.name });
   };
+  const heroExtraCopy = project.description && project.description !== project.subtitle ? project.description : "";
+  const canToggleHeroText = project.subtitle.length > 90 || heroExtraCopy.length > 0;
+  const canToggleOverview = Boolean(project.content && project.content.replace(/<[^>]*>/g, '').trim().length > 520);
 
   return (
     <main className="overflow-hidden bg-ivory pb-0 pt-[76px] text-ink">
@@ -263,7 +268,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
             />
             <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/35 to-transparent" />
           </div>
-          <div className="rounded-[22px] border border-line/80 bg-white p-5 shadow-soft">
+          <div className="rounded-[22px] border border-white/70 bg-white/80 p-5 shadow-soft backdrop-blur-md">
             <div className="flex flex-wrap items-center gap-2">
               {project.badge ? (
                 <span className="inline-flex rounded-full border border-gold/35 bg-[#fffaf2] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.08em] text-gold-dark">
@@ -279,9 +284,23 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
             <h1 className="heading-font mt-4 text-[38px] font-medium leading-[1.08] text-ink">
               {project.name}
             </h1>
-            <p className="mt-3 line-clamp-3 text-[14px] font-medium leading-6 text-muted">
+            <p className={`mt-3 text-[14px] font-medium leading-6 text-muted ${heroTextExpanded ? '' : 'line-clamp-3'}`}>
               {project.subtitle}
             </p>
+            {heroTextExpanded && heroExtraCopy ? (
+              <p className="mt-2 text-[13px] leading-6 text-muted">
+                {heroExtraCopy}
+              </p>
+            ) : null}
+            {canToggleHeroText ? (
+              <button
+                type="button"
+                onClick={() => setHeroTextExpanded((value) => !value)}
+                className="mt-3 text-[11px] font-bold uppercase tracking-[0.06em] text-gold-dark"
+              >
+                {heroTextExpanded ? 'Thu gọn' : 'Xem thêm'}
+              </button>
+            ) : null}
             <div className="mt-5 grid gap-2">
               <Link
                 href="#dang-ky-tu-van"
@@ -330,7 +349,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
           <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,253,248,.97)_0%,rgba(255,253,248,.86)_31%,rgba(255,253,248,.28)_55%,rgba(15,20,22,.04)_100%)] max-lg:bg-[linear-gradient(180deg,rgba(255,253,248,.95)_0%,rgba(255,253,248,.68)_48%,rgba(24,27,27,.08)_100%)]" />
 
           <div className="relative z-10 flex min-h-[610px] items-center px-6 py-10 sm:px-10 lg:min-h-[600px] lg:px-14 xl:px-16">
-            <div className="max-w-[760px]">
+            <div className="max-w-[780px] rounded-[24px] border border-white/70 bg-white/[0.58] p-5 shadow-[0_24px_70px_rgba(78,54,28,.13)] backdrop-blur-md sm:p-6 lg:bg-white/50">
               <motion.div
                 initial={{ opacity: 0, y: 14 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -360,15 +379,34 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                 initial={{ opacity: 0, y: 18 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.3, ease }}
-                className="mt-4 text-base font-semibold text-ink sm:text-xl"
+                className={`mt-4 text-base font-semibold text-ink sm:text-xl ${heroTextExpanded ? '' : 'line-clamp-2'}`}
               >
                 {project.subtitle}
               </motion.p>
+              {heroTextExpanded && heroExtraCopy ? (
+                <motion.p
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, ease }}
+                  className="mt-3 max-w-2xl text-[13px] font-medium leading-6 text-muted sm:text-sm"
+                >
+                  {heroExtraCopy}
+                </motion.p>
+              ) : null}
+              {canToggleHeroText ? (
+                <button
+                  type="button"
+                  onClick={() => setHeroTextExpanded((value) => !value)}
+                  className="mt-4 text-[11px] font-bold uppercase tracking-[0.08em] text-gold-dark transition hover:text-ink"
+                >
+                  {heroTextExpanded ? 'Thu gọn' : 'Xem thêm'}
+                </button>
+              ) : null}
               <motion.div
                 initial={{ opacity: 0, y: 18 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.44, ease }}
-                className="mt-7 flex flex-wrap gap-3"
+                className="mt-6 flex flex-wrap gap-3"
               >
                 <Link
                   href="#dang-ky-tu-van"
@@ -428,10 +466,28 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
           <Reveal className="rounded-[22px] border border-line/80 bg-white p-5 shadow-soft sm:p-7">
             <section id="tong-quan">
               <SectionTitle eyebrow="TỔNG QUAN DỰ ÁN">GIỚI THIỆU CHI TIẾT</SectionTitle>
-              <div
-                className="prose prose-stone max-w-none mt-5 text-left text-sm leading-7 text-ink prose-headings:font-heading prose-headings:font-semibold prose-headings:text-[#1F1B16] prose-a:text-[#B88746] hover:prose-a:underline prose-img:rounded-2xl"
-                dangerouslySetInnerHTML={{ __html: project.content }}
-              />
+              <div className="relative mt-5">
+                <div
+                  className={`prose prose-stone max-w-none text-left text-sm leading-7 text-ink prose-headings:font-heading prose-headings:font-semibold prose-headings:text-[#1F1B16] prose-a:text-[#B88746] hover:prose-a:underline prose-img:rounded-2xl ${
+                    !overviewExpanded && canToggleOverview ? 'max-h-[360px] overflow-hidden sm:max-h-[430px]' : ''
+                  }`}
+                  dangerouslySetInnerHTML={{ __html: project.content }}
+                />
+                {!overviewExpanded && canToggleOverview ? (
+                  <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-white via-white/90 to-white/0 backdrop-blur-[1px]" />
+                ) : null}
+              </div>
+              {canToggleOverview ? (
+                <div className="mt-4 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => setOverviewExpanded((value) => !value)}
+                    className="rounded-full border border-gold/35 bg-[#fffaf2] px-5 py-2 text-[11px] font-bold uppercase tracking-[0.08em] text-gold-dark transition hover:border-gold hover:bg-white"
+                  >
+                    {overviewExpanded ? 'Thu gọn' : 'Xem thêm'}
+                  </button>
+                </div>
+              ) : null}
             </section>
           </Reveal>
         ) : null}
@@ -628,12 +684,12 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
         </Reveal> : null}
 
         {hasProductInfo || hasPolicies ? <Reveal>
-          <section className="grid gap-5 lg:grid-cols-[1.85fr_1fr]">
-            {hasProductInfo ? <div className="rounded-[18px] border border-line/80 bg-white p-5 shadow-soft">
-              <h2 className="mb-2 text-sm font-bold uppercase tracking-[0.06em] text-gold-dark">
+          <section className={`grid gap-5 ${hasProductInfo && hasPolicies ? 'lg:grid-cols-[1.85fr_1fr]' : ''}`}>
+            {hasProductInfo ? <div className="rounded-[18px] border border-line/80 bg-white p-3 shadow-soft sm:p-5">
+              <h2 className="mb-1 text-[12px] font-bold uppercase tracking-[0.06em] text-gold-dark sm:mb-2 sm:text-sm">
                 SẢN PHẨM &amp; BẢNG GIÁ
               </h2>
-              <p className="mb-4 text-[11px] leading-5 text-muted">
+              <p className="mb-4 hidden text-[11px] leading-5 text-muted sm:block">
                 Thông tin loại hình, diện tích và giá tham khảo được cập nhật theo dữ liệu dự án.
               </p>
               {hasPriceRows ? <div className="overflow-x-auto">
@@ -656,16 +712,16 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                   </tbody>
                 </table>
               </div> : (
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4">
                   {project.productSummary.map((item) => (
-                    <div key={item.label} className="rounded-[12px] border border-line/70 bg-[#fbf7f0] p-4">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-muted">{item.label}</p>
-                      <p className="mt-1 text-sm font-bold text-ink">{item.value}</p>
+                    <div key={item.label} className="rounded-[10px] border border-line/70 bg-[#fbf7f0] p-3 sm:rounded-[12px] sm:p-4">
+                      <p className="text-[8px] font-semibold uppercase tracking-[0.04em] text-muted sm:text-[10px] sm:tracking-[0.06em]">{item.label}</p>
+                      <p className="mt-1 text-[12px] font-bold leading-4 text-ink sm:text-sm">{item.value}</p>
                     </div>
                   ))}
                 </div>
               )}
-              <p className="mt-3 text-[9px] italic text-muted">
+              <p className="mt-2 text-[8px] italic leading-4 text-muted sm:mt-3 sm:text-[9px]">
                 * Giá dự kiến chưa bao gồm VAT và phí. Thông tin chỉ mang tính chất tham khảo.
               </p>
             </div> : null}
