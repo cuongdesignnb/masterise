@@ -149,20 +149,6 @@ function LocationMap({ projectName, mapImageUrl }: { projectName: string; mapIma
   return null;
 }
 
-function FloorPlanSketch() {
-  return (
-    <svg viewBox="0 0 180 120" className="h-full w-full text-[#9e968b]" aria-hidden="true">
-      <g fill="none" stroke="currentColor" strokeWidth="1.4">
-        <rect x="8" y="8" width="70" height="104" />
-        <rect x="90" y="8" width="82" height="104" />
-        <path d="M8 42H78M8 78H78M38 8V112M90 38H172M90 76H172M122 8V112" />
-        <path d="M21 23h18v12H21zM49 51h18v18H49zM19 88h25v14H19zM102 17h12v12h-12zM134 18h26v14h-26zM101 49h28v18h-28zM140 85h20v16h-20z" />
-        <path d="M78 55h12M84 49v12M122 92h18" strokeDasharray="3 3" />
-      </g>
-    </svg>
-  );
-}
-
 export default function ProjectDetailClient({ project }: { project: ProjectDetail }) {
   const floorTabs = project.floorTabs.length ? ["Tất cả", ...project.floorTabs] : (project.floorPlans.length ? ["Sản phẩm"] : []);
   const [activeTab, setActiveTab] = useState(floorTabs[0] ?? "");
@@ -545,18 +531,18 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                   whileHover={{ y: -5 }}
                   className="overflow-hidden rounded-[16px] border border-line/80 bg-white shadow-[0_12px_35px_rgba(87,61,28,.07)]"
                 >
-                  <div className="grid min-h-[170px] grid-cols-[1.1fr_.9fr] gap-2 bg-[#fbfaf7] p-3">
+                  <div className="bg-[#fbfaf7] p-3">
                     {plan.image ? (
                       <button
                         type="button"
                         onClick={() => setFloorPlanImageModal({ src: plan.image || '', title: plan.name })}
-                        className="group relative overflow-hidden rounded-[10px] text-left"
+                        className="group relative block aspect-[16/9] w-full overflow-hidden rounded-[10px] text-left"
                       >
                         <Image
                           src={plan.image}
                           alt={`${plan.productType || activeTab || "Sản phẩm"} - ${plan.name}`}
                           fill
-                          sizes="(max-width: 640px) 50vw, 25vw"
+                          sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
                           className="object-cover transition duration-700 group-hover:scale-105"
                         />
                         <span className="absolute inset-0 flex items-center justify-center bg-black/25 opacity-0 transition group-hover:opacity-100">
@@ -564,13 +550,10 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                         </span>
                       </button>
                     ) : (
-                      <div className="flex items-center justify-center rounded-[10px] border border-dashed border-line bg-white p-4 text-center text-[10px] font-semibold text-muted">
+                      <div className="flex aspect-[16/9] w-full items-center justify-center rounded-[10px] border border-dashed border-line bg-white p-4 text-center text-[10px] font-semibold text-muted">
                         Chưa có ảnh mặt bằng
                       </div>
                     )}
-                    <div className="rounded-[10px] border border-line/60 bg-white p-2">
-                      <FloorPlanSketch />
-                    </div>
                   </div>
                   <div className="p-4">
                     <p className="text-[9px] font-bold uppercase tracking-[0.08em] text-gold">
