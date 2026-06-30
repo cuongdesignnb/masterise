@@ -5,7 +5,6 @@ import Footer from '@/components/Footer';
 import ProjectDetailClient from '@/components/project-detail/ProjectDetailClient';
 import StickyLeadCTA from '@/components/lead/StickyLeadCTA';
 import FloatingContactButtons from '@/components/lead/FloatingContactButtons';
-import GlobalContactForm from '@/components/lead/GlobalContactForm';
 import { getProjectForSEO } from '@/services/projectServerService';
 import { mapApiProjectToProjectDetail } from '@/adapters/projectAdapter';
 
@@ -106,10 +105,6 @@ export default async function ProjectDetailPage({ params }: PageProps) {
       <ProjectDetailClient project={projectDetail} />
       <StickyLeadCTA projectId={projectDetail.id || projectData.id} projectName={projectDetail.name} />
       <FloatingContactButtons projectId={projectDetail.id || projectData.id} />
-      <GlobalContactForm
-        projectId={projectDetail.id || projectData.id}
-        leadSourcePosition="project_detail_footer_form"
-      />
       <Footer />
     </>
   );
