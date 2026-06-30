@@ -804,11 +804,12 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
         {hasHandoverStandards ? <Reveal>
           <section>
             <SectionTitle eyebrow="BÀN GIAO">TIÊU CHUẨN BÀN GIAO</SectionTitle>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="-mx-4 overflow-x-auto px-4 pb-2 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+              <div className="flex snap-x snap-mandatory gap-3">
               {project.handoverStandards.map((item, index) => (
                 <article
                   key={`${item.title}-${index}`}
-                  className="overflow-hidden rounded-[16px] border border-line/80 bg-white shadow-[0_10px_28px_rgba(87,61,28,.06)]"
+                  className="w-[78vw] shrink-0 snap-start overflow-hidden rounded-[16px] border border-line/80 bg-white shadow-[0_10px_28px_rgba(87,61,28,.06)] sm:w-[340px] lg:w-[360px]"
                 >
                   {item.image ? (
                     <div className="relative aspect-[4/3] bg-[#fbfaf7]">
@@ -830,6 +831,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                   </div>
                 </article>
               ))}
+              </div>
             </div>
           </section>
         </Reveal> : null}
