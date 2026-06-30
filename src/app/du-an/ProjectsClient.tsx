@@ -9,7 +9,6 @@ import ProjectsHero from "@/components/projects/ProjectsHero";
 import ProjectsSearchBar from "@/components/projects/ProjectsSearchBar";
 import FeaturedProjects from "@/components/projects/FeaturedProjects";
 
-import ProjectsByRegion from "@/components/projects/ProjectsByRegion";
 import WhyChooseProjects from "@/components/projects/WhyChooseProjects";
 import AllProjectsGrid from "@/components/projects/AllProjectsGrid";
 import ProjectsCTA from "@/components/projects/ProjectsCTA";
@@ -37,7 +36,6 @@ export default function ProjectsClient() {
         {!hasActiveFilters ? (
           <>
             <FeaturedProjects />
-            <ProjectsByRegion />
             <WhyChooseProjects />
             <AllProjectsGrid />
           </>

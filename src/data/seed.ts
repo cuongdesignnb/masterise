@@ -5,7 +5,6 @@ import type {
   StatItem,
   Project,
   CollectionItem,
-  RegionItem,
   InvestmentItem,
   PropertyTypeItem,
   StatusColumn,
@@ -177,16 +176,6 @@ export const featuredProjects: Project[] = [
 
 
 
-
-export const regions: RegionItem[] = [
-  { id: 1, name: "TP. Thủ Đức", count: 18 },
-  { id: 2, name: "Quận 1", count: 6 },
-  { id: 3, name: "Quận 2", count: 7 },
-  { id: 4, name: "Bình Thạnh", count: 5 },
-  { id: 5, name: "Nhà Bè", count: 4 },
-];
-
-export const regionTabs = ["TP.HCM", "Hà Nội", "Đà Nẵng", "Phú Quốc", "Các tỉnh khác"];
 
 export const investmentOpportunities: InvestmentItem[] = [
   {

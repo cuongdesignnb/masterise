@@ -104,15 +104,6 @@ export const projectCollections = [
   },
 ];
 
-export const regions = [
-  { name: "TP. Hồ Chí Minh & Vùng phụ cận", count: 28 },
-  { name: "Hà Nội & Vùng phụ cận", count: 6 },
-  { name: "Đà Nẵng", count: 3 },
-  { name: "Phú Quốc", count: 2 },
-  { name: "Khánh Hòa", count: 2 },
-  { name: "Các khu vực khác", count: 1 },
-];
-
 export const whyChooseProjects = [
   {
     title: "Thiết kế quốc tế",

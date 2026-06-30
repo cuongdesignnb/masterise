@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Project;
 use App\Models\ProjectCategory;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class ProjectController extends Controller
 {
@@ -267,23 +266,6 @@ class ProjectController extends Controller
         return response()->json([
             'success' => true,
             'data' => $categories
-        ], 200);
-    }
-
-    /**
-     * Get project regions and their counts.
-     */
-    public function regions()
-    {
-        $regions = Project::select('region', DB::raw('count(*) as total'))
-            ->whereNotNull('region')
-            ->where('region', '!=', '')
-            ->groupBy('region')
-            ->get();
-
-        return response()->json([
-            'success' => true,
-            'data' => $regions
         ], 200);
     }
 

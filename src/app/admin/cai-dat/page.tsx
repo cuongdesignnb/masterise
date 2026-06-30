@@ -89,15 +89,6 @@ export default function AdminSettings() {
     }
   });
 
-  // Fetch project regions for suggestions
-  const { data: projectRegionsData = [] } = useQuery({
-    queryKey: ['admin-project-regions-select'],
-    queryFn: async () => {
-      const response = await api.get<{ region: string; total: number }[]>('/project-regions');
-      return response.data || [];
-    }
-  });
-
   // Fetch projects for suggestions
   const { data: projectsData = [] } = useQuery({
     queryKey: ['admin-projects-select'],
@@ -2902,11 +2893,6 @@ export default function AdminSettings() {
                                     href: `/du-an?category=${cat.slug}`
                                   })).filter((p: any) => p.label.toLowerCase().includes(searchLower));
 
-                                  const filteredProjRegions = projectRegionsData.map((reg: any) => ({
-                                    label: `Khu vực: ${reg.region}`,
-                                    href: `/du-an?region=${reg.region}`
-                                  })).filter((p: any) => p.label.toLowerCase().includes(searchLower));
-
                                   const filteredProjects = projectsData.map((p: any) => ({
                                     label: p.name,
                                     href: `/du-an/${p.slug}`
@@ -3066,34 +3052,7 @@ export default function AdminSettings() {
                                             </div>
                                           )}
 
-                                          {/* Khu vực */}
-                                          {filteredProjRegions.length > 0 && (
-                                            <div>
-                                              <div className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1">Khu vực địa lý</div>
-                                              <div className="space-y-1">
-                                                {filteredProjRegions.map((item: any) => (
-                                                  <button
-                                                    key={item.href}
-                                                    type="button"
-                                                    onClick={() => {
-                                                      const newCols = [...footerNavigation];
-                                                      newCols[colIdx].links[linkIdx].label = item.label.replace('Khu vực: ', '');
-                                                      newCols[colIdx].links[linkIdx].href = item.href;
-                                                      setFooterNavigation(newCols);
-                                                      setSuggestTarget(null);
-                                                      setSuggestSearch('');
-                                                    }}
-                                                    className="w-full p-1.5 hover:bg-[#B88746]/10 text-left rounded text-[11px] hover:text-[#B88746] flex justify-between items-center transition-all bg-[#FBF8F2]/60"
-                                                  >
-                                                    <span className="font-medium text-gray-700">{item.label}</span>
-                                                    <span className="text-[9px] text-gray-400 font-mono truncate max-w-[120px]">{item.href}</span>
-                                                  </button>
-                                                ))}
-                                              </div>
-                                            </div>
-                                          )}
-
-                                          {filteredStatuses.length === 0 && filteredProjCats.length === 0 && filteredProjRegions.length === 0 && (
+                                          {filteredStatuses.length === 0 && filteredProjCats.length === 0 && (
                                             <div className="text-gray-400 italic text-center py-4 text-[11px]">Không tìm thấy bộ lọc nào</div>
                                           )}
                                         </div>

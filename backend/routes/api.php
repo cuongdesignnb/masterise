@@ -37,7 +37,6 @@ Route::group(['prefix' => 'v1'], function() {
     Route::get('/projects/featured', [ProjectController::class, 'featured']);
     Route::get('/projects/{slug}', [ProjectController::class, 'show']);
     Route::get('/project-categories', [ProjectController::class, 'categories']);
-    Route::get('/project-regions', [ProjectController::class, 'regions']);
 
     // Posts
     Route::get('/posts', [PostController::class, 'index']);
