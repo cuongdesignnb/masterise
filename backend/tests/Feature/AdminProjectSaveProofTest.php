@@ -22,6 +22,7 @@ class AdminProjectSaveProofTest extends TestCase
             'name' => 'Hanoi Seasons Garden',
             'slug' => 'hanoi-seasons-garden',
             'description' => 'Initial description',
+            'project_label' => 'Old label',
             'status' => 'selling',
             'sales_status' => 'selling',
             'is_featured' => false,
@@ -50,6 +51,7 @@ class AdminProjectSaveProofTest extends TestCase
             'name' => $project->name,
             'slug' => $project->slug,
             'description' => $project->description,
+            'project_label' => 'Lumiere Series',
             'status' => 'selling',
             'sales_status' => 'selling',
             'is_featured' => false,
@@ -86,6 +88,7 @@ class AdminProjectSaveProofTest extends TestCase
         $putResponse
             ->assertOk()
             ->assertJsonPath('data.gallery_title', $proofValue)
+            ->assertJsonPath('data.project_label', 'Lumiere Series')
             ->assertJsonPath('data.gallery.0', '/uploads/proof-1.jpg')
             ->assertJsonPath('data.quick_cards.0.label', 'Proof quick card')
             ->assertJsonPath('data.project_stats.0.value', '2.000+')
@@ -100,6 +103,7 @@ class AdminProjectSaveProofTest extends TestCase
         $freshResponse
             ->assertOk()
             ->assertJsonPath('data.gallery_title', $proofValue)
+            ->assertJsonPath('data.project_label', 'Lumiere Series')
             ->assertJsonPath('data.gallery.1', '/uploads/proof-2.jpg')
             ->assertJsonPath('data.quick_cards.0.label', 'Proof quick card')
             ->assertJsonPath('data.project_facts.0.label', 'Proof fact')
@@ -123,11 +127,47 @@ class AdminProjectSaveProofTest extends TestCase
 
         $this->assertDatabaseHas('projects', [
             'id' => $project->id,
+            'project_label' => 'Lumiere Series',
             'gallery_title' => $proofValue,
             'schema_price' => '8.9',
             'schema_price_currency' => 'VND',
             'schema_availability' => 'InStock',
         ]);
+    }
+
+    public function test_public_projects_can_be_filtered_by_project_label(): void
+    {
+        Project::create([
+            'name' => 'Masteri Collection Project',
+            'slug' => 'masteri-collection-project',
+            'description' => 'Published project',
+            'project_label' => 'Masteri Collection',
+            'status' => 'selling',
+            'sales_status' => 'selling',
+            'is_featured' => false,
+            'is_hot' => false,
+            'is_published' => true,
+            'sort_order' => 0,
+        ]);
+
+        Project::create([
+            'name' => 'Lumiere Project',
+            'slug' => 'lumiere-project',
+            'description' => 'Published project',
+            'project_label' => 'Lumiere Series',
+            'status' => 'selling',
+            'sales_status' => 'selling',
+            'is_featured' => false,
+            'is_hot' => false,
+            'is_published' => true,
+            'sort_order' => 0,
+        ]);
+
+        $this->getJson('/api/v1/projects?project_label=Masteri%20Collection')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.slug', 'masteri-collection-project')
+            ->assertJsonPath('data.0.project_label', 'Masteri Collection');
     }
 
     public function test_featured_projects_prioritize_hot_then_manual_sort_order(): void

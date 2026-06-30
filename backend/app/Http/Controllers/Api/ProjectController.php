@@ -60,6 +60,10 @@ class ProjectController extends Controller
             $query->where('is_hot', filter_var($request->is_hot, FILTER_VALIDATE_BOOLEAN));
         }
 
+        if ($request->has('project_label') && !empty($request->project_label)) {
+            $query->where('project_label', $request->project_label);
+        }
+
         // Filter by category slug
         if ($request->has('category') && !empty($request->category)) {
             $categorySlug = $request->category;
@@ -132,6 +136,10 @@ class ProjectController extends Controller
 
         if ($request->has('is_hot') && $request->is_hot !== '') {
             $query->where('is_hot', filter_var($request->is_hot, FILTER_VALIDATE_BOOLEAN));
+        }
+
+        if ($request->has('project_label') && !empty($request->project_label)) {
+            $query->where('project_label', $request->project_label);
         }
 
         if ($request->has('category') && !empty($request->category)) {
@@ -284,6 +292,7 @@ class ProjectController extends Controller
             'content' => 'nullable|string',
             'hero_subtitle' => 'nullable|string|max:255',
             'badge_text' => 'nullable|string|max:100',
+            'project_label' => 'nullable|string|max:255',
             'location' => 'nullable|string',
             'region' => 'nullable|string',
             'address' => 'nullable|string',
@@ -370,7 +379,7 @@ class ProjectController extends Controller
         // Create project
         $project = Project::create($request->only([
             'name', 'slug', 'code', 'developer_id', 'location_id', 'description', 'content', 
-            'hero_subtitle', 'badge_text', 'location', 'region', 'address', 'province', 'district', 'ward',
+            'hero_subtitle', 'badge_text', 'project_label', 'location', 'region', 'address', 'province', 'district', 'ward',
             'price_min', 'price_max', 'price_text', 'area_min', 'area_max', 'area_text',
             'status', 'sales_status', 'open_sale_at', 'handover_year', 'handover_time', 'legal_status', 
             'ownership_type', 'construction_density', 'total_area', 'total_units', 
@@ -431,6 +440,7 @@ class ProjectController extends Controller
             'content' => 'nullable|string',
             'hero_subtitle' => 'nullable|string|max:255',
             'badge_text' => 'nullable|string|max:100',
+            'project_label' => 'nullable|string|max:255',
             'location' => 'nullable|string',
             'region' => 'nullable|string',
             'address' => 'nullable|string',
@@ -516,7 +526,7 @@ class ProjectController extends Controller
 
         $project->update($request->only([
             'name', 'slug', 'code', 'developer_id', 'location_id', 'description', 'content', 
-            'hero_subtitle', 'badge_text', 'location', 'region', 'address', 'province', 'district', 'ward',
+            'hero_subtitle', 'badge_text', 'project_label', 'location', 'region', 'address', 'province', 'district', 'ward',
             'price_min', 'price_max', 'price_text', 'area_min', 'area_max', 'area_text',
             'status', 'sales_status', 'open_sale_at', 'handover_year', 'handover_time', 'legal_status', 
             'ownership_type', 'construction_density', 'total_area', 'total_units', 

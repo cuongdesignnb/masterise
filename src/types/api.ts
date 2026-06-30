@@ -46,6 +46,7 @@ export interface Project {
   content: string | null;
   hero_subtitle?: string | null;
   badge_text?: string | null;
+  project_label?: string | null;
   location: string | null;
   location_description: string | null;
   region: string | null;

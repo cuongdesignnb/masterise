@@ -1,13 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { projectService } from "@/services/projectService";
 import { mapApiProjectToProjectCard } from "@/adapters/projectAdapter";
-import { projectTabs } from "@/data/projectsSeed";
 import { ArrowRight, MapPin, Heart, ChevronDown } from "lucide-react";
 import Container from "@/components/Container";
 import MotionWrapper from "@/components/MotionWrapper";
@@ -17,9 +16,20 @@ import EmptyState from "@/components/common/EmptyState";
 import ErrorState from "@/components/common/ErrorState";
 import { getSalesStatusLabel, getSalesStatusColor } from "@/lib/salesStatus";
 
+const sortOptions = [
+  { value: "latest", label: "Mới nhất", sortBy: "created_at", sortOrder: "desc" },
+  { value: "manual", label: "Thứ tự admin", sortBy: "sort_order", sortOrder: "asc" },
+  { value: "opening", label: "Mở bán gần nhất", sortBy: "open_sale_at", sortOrder: "asc" },
+  { value: "price_asc", label: "Giá thấp đến cao", sortBy: "price_min", sortOrder: "asc" },
+  { value: "price_desc", label: "Giá cao đến thấp", sortBy: "price_min", sortOrder: "desc" },
+  { value: "name_asc", label: "Tên A-Z", sortBy: "name", sortOrder: "asc" },
+] as const;
+
 export default function AllProjectsGrid() {
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState("Tất cả");
+  const [sortValue, setSortValue] = useState<(typeof sortOptions)[number]["value"]>("latest");
+  const activeSort = sortOptions.find((option) => option.value === sortValue) || sortOptions[0];
 
   // Read search query parameters
   const q = searchParams.get("q") || "";
@@ -38,8 +48,9 @@ export default function AllProjectsGrid() {
   if (salesStatus) queryParams.sales_status = salesStatus;
   if (priceMin) queryParams.price_min = priceMin;
   if (priceMax) queryParams.price_max = priceMax;
-  queryParams.sort_by = "open_sale_at";
-  queryParams.sort_order = "asc";
+  queryParams.sort_by = activeSort.sortBy;
+  queryParams.sort_order = activeSort.sortOrder;
+  queryParams.per_page = "100";
 
   const { data: projects = [], isLoading, error, refetch } = useQuery({
     queryKey: ["all-projects-grid", queryParams],
@@ -48,29 +59,25 @@ export default function AllProjectsGrid() {
     },
   });
 
-  const filteredProjects = projects.filter(project => {
-    if (activeTab === "Tất cả") return true;
-    
-    const categories = project.categories || [];
-    const catNames = categories.map(c => c.name.toLowerCase());
-    
-    if (activeTab === "Căn hộ") {
-      return catNames.some(name => name.includes("căn hộ"));
+  const labelTabs = useMemo(() => {
+    const labels = Array.from(new Set(
+      projects
+        .map((project) => project.project_label?.trim())
+        .filter((label): label is string => Boolean(label))
+    ));
+
+    return ["Tất cả", ...labels];
+  }, [projects]);
+
+  useEffect(() => {
+    if (!labelTabs.includes(activeTab)) {
+      setActiveTab("Tất cả");
     }
-    if (activeTab === "Biệt thự") {
-      return catNames.some(name => name.includes("biệt thự") || name.includes("dinh thự"));
-    }
-    if (activeTab === "Shophouse") {
-      return catNames.some(name => name.includes("shophouse") || name.includes("thương mại"));
-    }
-    if (activeTab === "Branded Residences") {
-      return catNames.some(name => name.includes("branded") || name.includes("residences") || name.includes("marriott"));
-    }
-    if (activeTab === "Nghỉ dưỡng") {
-      return catNames.some(name => name.includes("nghỉ dưỡng") || name.includes("resort"));
-    }
-    return true;
-  }).map(mapApiProjectToProjectCard);
+  }, [activeTab, labelTabs]);
+
+  const filteredProjects = projects
+    .filter(project => activeTab === "Tất cả" || project.project_label?.trim() === activeTab)
+    .map(mapApiProjectToProjectCard);
 
   return (
     <section id="tat-ca-du-an" className="scroll-mt-24 py-10">
@@ -88,7 +95,7 @@ export default function AllProjectsGrid() {
         <MotionWrapper delay={0.05}>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div className="flex gap-2 flex-wrap">
-              {projectTabs.map((tab) => (
+              {labelTabs.map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
@@ -102,10 +109,21 @@ export default function AllProjectsGrid() {
                 </button>
               ))}
             </div>
-            <button className="flex items-center gap-1.5 text-xs text-muted bg-white border border-line/50 rounded-xl px-3 py-2 hover:border-gold transition cursor-pointer">
-              Sắp xếp: Mới nhất
+            <label className="relative inline-flex items-center text-xs text-muted bg-white border border-line/50 rounded-xl hover:border-gold transition">
+              <span className="sr-only">Sắp xếp dự án</span>
+              <select
+                value={sortValue}
+                onChange={(event) => setSortValue(event.target.value as typeof sortValue)}
+                className="appearance-none bg-transparent py-2 pl-3 pr-8 text-xs font-semibold text-muted focus:outline-none cursor-pointer"
+              >
+                {sortOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    Sắp xếp: {option.label}
+                  </option>
+                ))}
+              </select>
               <ChevronDown className="w-3.5 h-3.5" />
-            </button>
+            </label>
           </div>
         </MotionWrapper>
 

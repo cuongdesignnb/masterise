@@ -37,6 +37,7 @@ export type Project = {
   type?: string;
   description?: string;
   slug?: string;
+  project_label?: string | null;
 };
 
 export type CollectionItem = {

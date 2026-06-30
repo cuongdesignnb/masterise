@@ -382,6 +382,7 @@ export function mapApiProjectToProjectCard(api: ApiProject): FrontendProject {
     description: api.description || '',
     slug: api.slug,
     sales_status: api.sales_status,
+    project_label: api.project_label || null,
   };
 }
 

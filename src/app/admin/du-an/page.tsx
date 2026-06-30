@@ -110,6 +110,7 @@ export default function AdminProjects() {
   const [formName, setFormName] = useState('');
   const [formSlug, setFormSlug] = useState('');
   const [formCode, setFormCode] = useState('');
+  const [formProjectLabel, setFormProjectLabel] = useState('');
   const [formDeveloperId, setFormDeveloperId] = useState<number | ''>('');
   const [formLocationId, setFormLocationId] = useState<number | ''>('');
   const [formStatus, setFormStatus] = useState<'upcoming' | 'selling' | 'completed'>('upcoming');
@@ -207,6 +208,7 @@ export default function AdminProjects() {
   const fieldLabelMap: Record<string, string> = {
     name: 'Tên dự án',
     slug: 'Đường dẫn tĩnh',
+    project_label: 'Nhãn dự án',
     description: 'Mô tả ngắn',
     thumbnail: 'Ảnh đại diện',
     banner_image: 'Ảnh Hero',
@@ -227,6 +229,7 @@ export default function AdminProjects() {
   const fieldTabMap: Record<string, ProjectAdminTab> = {
     name: 'overview',
     slug: 'overview',
+    project_label: 'overview',
     description: 'overview',
     content: 'overview',
     banner_image: 'media',
@@ -461,6 +464,7 @@ export default function AdminProjects() {
     setFormName('');
     setFormSlug('');
     setFormCode('');
+    setFormProjectLabel('');
     setFormDeveloperId('');
     setFormLocationId('');
     setFormStatus('upcoming');
@@ -546,6 +550,7 @@ export default function AdminProjects() {
     setFormName(project.name);
     setFormSlug(project.slug);
     setFormCode(project.code || '');
+    setFormProjectLabel(project.project_label || '');
     setFormDeveloperId(project.developer_id || '');
     setFormLocationId(project.location_id || '');
     setFormStatus(project.status);
@@ -696,6 +701,7 @@ export default function AdminProjects() {
         name: formName,
         slug: slugValue,
         code: formCode || null,
+        project_label: formProjectLabel || null,
         developer_id: formDeveloperId !== '' ? Number(formDeveloperId) : null,
         location_id: formLocationId !== '' ? Number(formLocationId) : null,
         status: formStatus,
@@ -1847,6 +1853,20 @@ export default function AdminProjects() {
                           placeholder="Ví dụ: TGC-2026"
                         />
                       </div>
+                    </div>
+
+                    <div data-project-field="project_label">
+                      <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Nhãn dự án</label>
+                      <input
+                        type="text"
+                        value={formProjectLabel}
+                        onChange={(e) => setFormProjectLabel(e.target.value)}
+                        className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
+                        placeholder="Ví dụ: Masteri Collection, Lumiere Series, Branded Residence"
+                      />
+                      <p className="mt-1 text-[10px] leading-4 text-[#8C7A6B]">
+                        Dùng để tạo bộ lọc nhãn dự án ngoài trang danh sách. Các dự án có cùng nhãn sẽ nằm chung một tab.
+                      </p>
                     </div>
 
                     {/* Developer dropdown, Developer name, Location dropdown */}

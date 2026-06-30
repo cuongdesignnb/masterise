@@ -16,6 +16,7 @@ class Project extends Model
         'content',
         'hero_subtitle',
         'badge_text',
+        'project_label',
         'location',
         'region',
         'address',
