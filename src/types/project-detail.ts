@@ -66,6 +66,12 @@ export type ProjectDetail = {
     status?: string;
     description?: string;
   }[];
+  handoverStandards: {
+    title: string;
+    description: string;
+    image?: string;
+    icon: ProjectIconName;
+  }[];
   priceRows: {
     productType: string;
     area: string;

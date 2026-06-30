@@ -269,6 +269,26 @@ function normalizeTextCards(value: unknown, fallbackIcon: ProjectIconName) {
     .filter(notNull);
 }
 
+function normalizeHandoverStandards(value: unknown) {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => {
+      if (!item || typeof item !== 'object') return null;
+      const record = item as Record<string, unknown>;
+      const title = String(record.title || record.name || '').trim();
+      const description = String(record.description || record.note || '').trim();
+      const image = String(record.image || record.image_url || record.thumbnail || '').trim();
+      if (!title || !description) return null;
+      return {
+        title,
+        description,
+        image,
+        icon: normalizeIcon(record.icon, 'ClipboardCheck'),
+      };
+    })
+    .filter(notNull);
+}
+
 function normalizeTestimonials(value: unknown) {
   if (!Array.isArray(value)) return [];
   return value
@@ -370,6 +390,7 @@ export function mapApiProjectToProjectDetail(api: ApiProject): ProjectDetail {
     amenities: normalizeAmenities(api.amenity_details),
     floorTabs: asArray(api.floor_tabs),
     floorPlans: normalizeFloorPlans(api.floor_plans),
+    handoverStandards: normalizeHandoverStandards(api.handover_standards),
     priceRows: normalizePriceRows(api.price_rows),
     productSummary: buildProductSummary(api),
     policies: api.policy_cards && Array.isArray(api.policy_cards)

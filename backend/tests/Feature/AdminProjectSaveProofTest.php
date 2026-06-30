@@ -36,6 +36,7 @@ class AdminProjectSaveProofTest extends TestCase
             'amenity_details' => [['title' => 'Old amenity', 'description' => 'Old', 'image' => '/uploads/old.jpg', 'icon' => 'Sparkles']],
             'floor_tabs' => ['Old tab'],
             'floor_plans' => [['productType' => 'Old', 'name' => 'Old floor', 'area' => '50 m2', 'totalArea' => '60 m2', 'image' => '/uploads/old-floor.jpg']],
+            'handover_standards' => [['title' => 'Old standard', 'description' => 'Old', 'image' => '/uploads/old-standard.jpg', 'icon' => 'ClipboardCheck']],
             'price_rows' => [['Old type', '50 m2', '1 tỷ']],
             'policy_cards' => [['title' => 'Old policy', 'description' => 'Old', 'icon' => 'CalendarDays']],
             'project_timeline' => [['date' => 'Q1/2026', 'title' => 'Old milestone']],
@@ -66,6 +67,7 @@ class AdminProjectSaveProofTest extends TestCase
             'amenity_details' => [['title' => 'Proof amenity', 'description' => 'Proof', 'image' => '/uploads/proof-amenity.jpg', 'icon' => 'Sparkles']],
             'floor_tabs' => ['Nhà phố', 'Căn hộ'],
             'floor_plans' => [['productType' => 'Nhà phố', 'name' => 'Proof floor', 'area' => '80 m2', 'totalArea' => '120 m2', 'image' => '/uploads/proof-floor.jpg', 'images' => ['/uploads/proof-floor.jpg', '/uploads/proof-floor-2.jpg']]],
+            'handover_standards' => [['title' => 'Proof standard', 'description' => 'Proof handover', 'image' => '/uploads/proof-standard.jpg', 'icon' => 'ClipboardCheck']],
             'price_rows' => [['Nhà phố', '80 - 120 m2', '8,9 tỷ']],
             'policy_cards' => [['title' => 'Proof policy', 'description' => 'Proof', 'icon' => 'CalendarDays']],
             'project_timeline' => [['date' => 'Q1/2026', 'title' => 'Proof milestone']],
@@ -106,6 +108,8 @@ class AdminProjectSaveProofTest extends TestCase
             ->assertJsonPath('data.floor_tabs.1', 'Căn hộ')
             ->assertJsonPath('data.floor_plans.0.name', 'Proof floor')
             ->assertJsonPath('data.floor_plans.0.images.1', '/uploads/proof-floor-2.jpg')
+            ->assertJsonPath('data.handover_standards.0.title', 'Proof standard')
+            ->assertJsonPath('data.handover_standards.0.image', '/uploads/proof-standard.jpg')
             ->assertJsonPath('data.price_rows.0.2', '8,9 tỷ')
             ->assertJsonPath('data.policy_cards.0.title', 'Proof policy')
             ->assertJsonPath('data.project_timeline.0.title', 'Proof milestone')

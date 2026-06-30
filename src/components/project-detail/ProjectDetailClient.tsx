@@ -131,18 +131,64 @@ function SectionTitle({
 }
 
 function LocationMap({ projectName, mapImageUrl }: { projectName: string; mapImageUrl?: string | null }) {
+  const [isMapOpen, setIsMapOpen] = useState(false);
+
+  useEffect(() => {
+    if (!isMapOpen) return;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isMapOpen]);
+
   if (mapImageUrl) {
     return (
-      <div className="relative h-[330px] overflow-hidden rounded-[18px] border border-gold/35 bg-[#faf7f0] lg:h-[410px] flex items-center justify-center">
-        <img
-          src={mapImageUrl}
-          alt={`Bản đồ dự án ${projectName}`}
-          className={`h-full w-full ${mapImageUrl.toLowerCase().includes('.svg') ? 'object-contain' : 'object-cover'}`}
-        />
-        <div className="absolute bottom-3 right-3 rounded-full border border-line bg-white/90 px-3 py-1.5 text-[10px] font-semibold text-muted shadow-sm backdrop-blur">
-          Bản đồ dự án
-        </div>
-      </div>
+      <>
+        <button
+          type="button"
+          onClick={() => setIsMapOpen(true)}
+          className="group relative flex h-[330px] w-full items-center justify-center overflow-hidden rounded-[18px] border border-gold/35 bg-[#faf7f0] text-left lg:h-[410px]"
+        >
+          <img
+            src={mapImageUrl}
+            alt={`Bản đồ dự án ${projectName}`}
+            className="h-full w-full object-contain p-2 transition duration-500 group-hover:scale-[1.015] sm:p-3"
+          />
+          <div className="absolute bottom-3 right-3 rounded-full border border-line bg-white/90 px-3 py-1.5 text-[10px] font-semibold text-muted shadow-sm backdrop-blur">
+            Bấm để phóng to
+          </div>
+        </button>
+        <AnimatePresence>
+          {isMapOpen ? (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[80] flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm"
+              onClick={() => setIsMapOpen(false)}
+            >
+              <button
+                type="button"
+                onClick={() => setIsMapOpen(false)}
+                className="absolute right-4 top-4 z-10 rounded-full bg-white/90 p-2 text-ink shadow-lg"
+                aria-label="Đóng bản đồ"
+              >
+                <X className="h-5 w-5" />
+              </button>
+              <motion.img
+                src={mapImageUrl}
+                alt={`Bản đồ dự án ${projectName}`}
+                initial={{ scale: 0.96, y: 12 }}
+                animate={{ scale: 1, y: 0 }}
+                exit={{ scale: 0.96, y: 12 }}
+                transition={{ duration: 0.24, ease }}
+                className="max-h-[88vh] max-w-[94vw] rounded-[14px] bg-white object-contain p-2 shadow-2xl"
+                onClick={(event) => event.stopPropagation()}
+              />
+            </motion.div>
+          ) : null}
+        </AnimatePresence>
+      </>
     );
   }
 
@@ -158,6 +204,8 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
   const [heroTextExpanded, setHeroTextExpanded] = useState(false);
   const [canToggleHeroText, setCanToggleHeroText] = useState(false);
   const [overviewExpanded, setOverviewExpanded] = useState(false);
+  const [floorPlansExpanded, setFloorPlansExpanded] = useState(false);
+  const [floorPlanLimit, setFloorPlanLimit] = useState(6);
   const heroSubtitleRefs = useRef<(HTMLParagraphElement | null)[]>([]);
 
   // Lock body scroll when modal is open
@@ -240,6 +288,24 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
       window.removeEventListener("resize", measureHeroText);
     };
   }, [project.subtitle]);
+
+  useEffect(() => {
+    const updateFloorLimit = () => {
+      const width = window.innerWidth;
+      setFloorPlanLimit(width < 640 ? 2 : width < 1280 ? 4 : 6);
+    };
+
+    updateFloorLimit();
+    window.addEventListener("resize", updateFloorLimit);
+    return () => {
+      window.removeEventListener("resize", updateFloorLimit);
+    };
+  }, []);
+
+  useEffect(() => {
+    setFloorPlansExpanded(false);
+  }, [activeTab]);
+
   const hasFacts = project.facts.length > 0;
   const hasStats = project.stats.length > 0;
   const hasGallery = project.gallery.images.length > 0;
@@ -248,6 +314,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
   const hasAmenities = project.amenities.length > 0;
   const hasFloorPlans = project.floorPlans.length > 0;
   const hasFloorSection = hasFloorPlans || project.floorTabs.length > 0;
+  const hasHandoverStandards = project.handoverStandards.length > 0;
   const hasPriceRows = project.priceRows.length > 0;
   const hasProductInfo = hasPriceRows || project.productSummary.length > 0;
   const hasPolicies = project.policies.length > 0;
@@ -259,6 +326,8 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
   const visibleFloorPlans = project.floorTabs.length && activeTab
     ? project.floorPlans.filter((plan) => activeTab === "Tất cả" || !plan.productType || plan.productType === activeTab)
     : project.floorPlans;
+  const floorPlansCanExpand = visibleFloorPlans.length > floorPlanLimit;
+  const displayedFloorPlans = floorPlansExpanded ? visibleFloorPlans : visibleFloorPlans.slice(0, floorPlanLimit);
   const getFloorPlanImages = (plan: ProjectDetail["floorPlans"][number]) =>
     Array.from(new Set([...(plan.images || []), plan.image].map((image) => String(image || "").trim()).filter(Boolean)));
   const openFloorPlanImages = (plan: ProjectDetail["floorPlans"][number], index = 0) => {
@@ -618,8 +687,9 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                 </button>
               ))}
             </div> : null}
-            {visibleFloorPlans.length ? <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {visibleFloorPlans.map((plan, index) => {
+            {visibleFloorPlans.length ? <>
+              <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3">
+              {displayedFloorPlans.map((plan, index) => {
                 const planImages = getFloorPlanImages(plan);
                 const thumbnailImage = planImages[0] || "";
                 return (
@@ -627,14 +697,14 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                   key={`${plan.productType || 'floor'}-${plan.name}-${index}`}
                   layout
                   whileHover={{ y: -5 }}
-                  className="overflow-hidden rounded-[16px] border border-line/80 bg-white shadow-[0_12px_35px_rgba(87,61,28,.07)]"
+                  className="overflow-hidden rounded-[14px] border border-line/80 bg-white shadow-[0_12px_35px_rgba(87,61,28,.07)] sm:rounded-[16px]"
                 >
-                  <div className="bg-[#fbfaf7] p-3">
+                  <div className="bg-[#fbfaf7] p-2 sm:p-3">
                     {thumbnailImage ? (
                       <button
                         type="button"
                         onClick={() => openFloorPlanImages(plan)}
-                        className="group relative block aspect-[16/9] w-full overflow-hidden rounded-[10px] text-left"
+                        className="group relative block aspect-[4/3] w-full overflow-hidden rounded-[10px] text-left sm:aspect-[16/9]"
                       >
                         <Image
                           src={thumbnailImage}
@@ -648,12 +718,12 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                         </span>
                       </button>
                     ) : (
-                      <div className="flex aspect-[16/9] w-full items-center justify-center rounded-[10px] border border-dashed border-line bg-white p-4 text-center text-[10px] font-semibold text-muted">
+                      <div className="flex aspect-[4/3] w-full items-center justify-center rounded-[10px] border border-dashed border-line bg-white p-4 text-center text-[10px] font-semibold text-muted sm:aspect-[16/9]">
                         Chưa có ảnh mặt bằng
                       </div>
                     )}
                   </div>
-                  <div className="p-4">
+                  <div className="p-3 sm:p-4">
                     <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-gold">
                       {plan.productType || activeTab || "Sản phẩm"} · Mẫu {String(index + 1).padStart(2, "0")}
                     </p>
@@ -679,7 +749,20 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                 </motion.article>
                 );
               })}
-            </div> : (
+              </div>
+              {floorPlansCanExpand ? (
+                <div className="mt-5 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => setFloorPlansExpanded((value) => !value)}
+                    className="inline-flex items-center gap-2 rounded-full border border-gold/45 bg-white px-5 py-2.5 text-[11px] font-bold uppercase tracking-[0.05em] text-gold-dark shadow-sm transition hover:bg-gold hover:text-white"
+                  >
+                    {floorPlansExpanded ? "Thu gọn" : `Xem thêm ${visibleFloorPlans.length - floorPlanLimit} mặt bằng`}
+                    <ChevronDown className={`h-4 w-4 transition ${floorPlansExpanded ? "rotate-180" : ""}`} />
+                  </button>
+                </div>
+              ) : null}
+            </> : (
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 {project.floorTabs.map((tab) => (
                   <div key={tab} className="rounded-[14px] border border-line/75 bg-white p-4 shadow-[0_10px_26px_rgba(87,61,28,.05)]">
@@ -689,6 +772,39 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                 ))}
               </div>
             )}
+          </section>
+        </Reveal> : null}
+
+        {hasHandoverStandards ? <Reveal>
+          <section>
+            <SectionTitle eyebrow="BÀN GIAO">TIÊU CHUẨN BÀN GIAO</SectionTitle>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {project.handoverStandards.map((item, index) => (
+                <article
+                  key={`${item.title}-${index}`}
+                  className="overflow-hidden rounded-[16px] border border-line/80 bg-white shadow-[0_10px_28px_rgba(87,61,28,.06)]"
+                >
+                  {item.image ? (
+                    <div className="relative aspect-[4/3] bg-[#fbfaf7]">
+                      <Image
+                        src={item.image}
+                        alt={item.title}
+                        fill
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                        className="object-cover"
+                      />
+                    </div>
+                  ) : null}
+                  <div className="p-4">
+                    <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-[#fff7ea] text-gold">
+                      <ProjectIcon name={item.icon} size={19} />
+                    </div>
+                    <h3 className="text-[14px] font-bold leading-5 text-ink">{item.title}</h3>
+                    <p className="mt-2 text-[13px] leading-6 text-muted">{item.description}</p>
+                  </div>
+                </article>
+              ))}
+            </div>
           </section>
         </Reveal> : null}
 

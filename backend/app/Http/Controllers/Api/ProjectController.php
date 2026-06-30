@@ -362,6 +362,7 @@ class ProjectController extends Controller
             'amenity_details' => 'nullable|array',
             'floor_tabs' => 'nullable|array',
             'floor_plans' => 'nullable|array',
+            'handover_standards' => 'nullable|array',
             'price_rows' => 'nullable|array',
             'schema_price' => 'nullable|string|max:255',
             'schema_price_currency' => 'nullable|string|max:10',
@@ -397,7 +398,7 @@ class ProjectController extends Controller
             'gallery_label', 'gallery_title', 'gallery_description',
             'brochure_url', 'video_url', 'virtual_tour_url', 'map_image_url', 'location_description', 'lat', 'lng',
             'area_size', 'developer', 'scale', 'amenities', 'amenity_details', 'floor_tabs',
-            'floor_plans', 'price_rows', 'schema_price', 'schema_price_currency', 'schema_availability'
+            'floor_plans', 'handover_standards', 'price_rows', 'schema_price', 'schema_price_currency', 'schema_availability'
         ]));
 
         // Sync categories
@@ -508,6 +509,7 @@ class ProjectController extends Controller
             'amenity_details' => 'nullable|array',
             'floor_tabs' => 'nullable|array',
             'floor_plans' => 'nullable|array',
+            'handover_standards' => 'nullable|array',
             'price_rows' => 'nullable|array',
             'schema_price' => 'nullable|string|max:255',
             'schema_price_currency' => 'nullable|string|max:10',
@@ -542,7 +544,7 @@ class ProjectController extends Controller
             'gallery_label', 'gallery_title', 'gallery_description',
             'brochure_url', 'video_url', 'virtual_tour_url', 'map_image_url', 'location_description', 'lat', 'lng',
             'area_size', 'developer', 'scale', 'amenities', 'amenity_details', 'floor_tabs',
-            'floor_plans', 'price_rows', 'schema_price', 'schema_price_currency', 'schema_availability'
+            'floor_plans', 'handover_standards', 'price_rows', 'schema_price', 'schema_price_currency', 'schema_availability'
         ]));
 
         // Sync categories

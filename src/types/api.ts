@@ -83,6 +83,7 @@ export interface Project {
   amenity_details?: unknown[] | null;
   floor_tabs?: string[] | null;
   floor_plans?: unknown[] | null;
+  handover_standards?: unknown[] | null;
   price_rows?: unknown[] | null;
   policy_cards?: unknown[] | null;
   project_timeline?: unknown[] | null;

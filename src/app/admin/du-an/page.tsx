@@ -38,6 +38,7 @@ type IconValueItem = { label: string; value: string; icon: string };
 type StatItem = { value: string; label: string };
 type ConnectivityItem = { time: string; label: string };
 type AmenityItem = { title: string; description: string; image: string; icon: string };
+type HandoverStandardItem = { title: string; description: string; image: string; icon: string };
 type ReasonItem = { title: string; description: string; icon: string };
 type TestimonialItem = { name: string; role: string; content: string; avatar: string };
 type FaqItem = { question: string; answer: string };
@@ -48,6 +49,7 @@ type TimelineItem = { date: string; title: string };
 type BaseMediaTarget = 'thumbnail' | 'banner' | 'gallery' | 'brochure' | 'map';
 type RepeaterMediaTarget =
   | { group: 'amenityDetails'; index: number; field: 'image' }
+  | { group: 'handoverStandards'; index: number; field: 'image' }
   | { group: 'projectTestimonials'; index: number; field: 'avatar' }
   | { group: 'floorPlans'; index: number; field: 'images' | 'image' };
 type MediaSelectorTarget = BaseMediaTarget | RepeaterMediaTarget | null;
@@ -186,6 +188,7 @@ export default function AdminProjects() {
   const [formProjectFaqs, setFormProjectFaqs] = useState<FaqItem[]>([]);
   const [formFloorTabs, setFormFloorTabs] = useState<string[]>([]);
   const [formFloorPlans, setFormFloorPlans] = useState<FloorPlanItem[]>([]);
+  const [formHandoverStandards, setFormHandoverStandards] = useState<HandoverStandardItem[]>([]);
   const [formPriceRows, setFormPriceRows] = useState<PriceRowItem[]>([]);
   const [formPolicyCards, setFormPolicyCards] = useState<PolicyItem[]>([]);
   const [formProjectTimeline, setFormProjectTimeline] = useState<TimelineItem[]>([]);
@@ -211,6 +214,7 @@ export default function AdminProjects() {
     seo_description: 'Mô tả SEO',
     status: 'Trạng thái dự án',
     floor_plans: 'Danh sách mặt bằng',
+    handover_standards: 'Tiêu chuẩn bàn giao',
     price_rows: 'Dòng bảng giá',
     gallery: 'Danh sách ảnh không gian sống',
     gallery_label: 'Nhãn section Không gian sống',
@@ -237,6 +241,7 @@ export default function AdminProjects() {
     amenity_details: 'amenities',
     floor_tabs: 'floor',
     floor_plans: 'floor',
+    handover_standards: 'floor',
     price_rows: 'pricingPolicy',
     policy_cards: 'pricingPolicy',
     project_timeline: 'timeline',
@@ -313,6 +318,12 @@ export default function AdminProjects() {
     description: textValue(item.description),
     image: textValue(item.image),
     icon: textValue(item.icon || 'Sparkles'),
+  }));
+  const loadHandoverStandardItems = (value: unknown): HandoverStandardItem[] => asRecords(value).map((item) => ({
+    title: textValue(item.title || item.name),
+    description: textValue(item.description || item.note),
+    image: textValue(item.image || item.image_url || item.thumbnail),
+    icon: textValue(item.icon || 'ClipboardCheck'),
   }));
   const loadReasonItems = (value: unknown): ReasonItem[] => asRecords(value).map((item) => ({
     title: textValue(item.title),
@@ -511,6 +522,7 @@ export default function AdminProjects() {
     setFormProjectFaqs([]);
     setFormFloorTabs([]);
     setFormFloorPlans([]);
+    setFormHandoverStandards([]);
     setFormPriceRows([]);
     setFormPolicyCards([]);
     setFormProjectTimeline([]);
@@ -595,6 +607,7 @@ export default function AdminProjects() {
     setFormProjectFaqs(loadFaqItems(project.project_faqs));
     setFormFloorTabs(asStrings(project.floor_tabs));
     setFormFloorPlans(loadFloorPlanItems(project.floor_plans));
+    setFormHandoverStandards(loadHandoverStandardItems(project.handover_standards));
     setFormPriceRows(loadPriceRowItems(project.price_rows));
     setFormPolicyCards(loadPolicyItems(project.policy_cards));
     setFormProjectTimeline(loadTimelineItems(project.project_timeline));
@@ -658,6 +671,7 @@ export default function AdminProjects() {
             images,
           };
         });
+      const handoverStandards = cleanArray(formHandoverStandards, item => Boolean(item.title || item.description || item.image));
       const priceRows = cleanArray(formPriceRows, item => Boolean(item.productType || item.area || item.price))
         .map(item => [item.productType, item.area, item.price]);
       const policyCards = cleanArray(formPolicyCards, item => Boolean(item.title || item.description));
@@ -725,6 +739,7 @@ export default function AdminProjects() {
         project_faqs: projectFaqs,
         floor_tabs: floorTabs,
         floor_plans: floorPlans,
+        handover_standards: handoverStandards,
         price_rows: priceRows,
         policy_cards: policyCards,
         project_timeline: projectTimeline,
@@ -861,6 +876,10 @@ export default function AdminProjects() {
       if (!selectedUrl) return;
       if (mediaSelectorTarget.group === 'amenityDetails') {
         setFormAmenityDetails(items => items.map((item, index) =>
+          index === mediaSelectorTarget.index ? { ...item, [mediaSelectorTarget.field]: selectedUrl } : item
+        ));
+      } else if (mediaSelectorTarget.group === 'handoverStandards') {
+        setFormHandoverStandards(items => items.map((item, index) =>
           index === mediaSelectorTarget.index ? { ...item, [mediaSelectorTarget.field]: selectedUrl } : item
         ));
       } else if (mediaSelectorTarget.group === 'projectTestimonials') {
@@ -1256,6 +1275,9 @@ export default function AdminProjects() {
     if (mediaSelectorTarget && typeof mediaSelectorTarget === 'object') {
       if (mediaSelectorTarget.group === 'amenityDetails') {
         return formAmenityDetails[mediaSelectorTarget.index]?.image ? [formAmenityDetails[mediaSelectorTarget.index].image] : [];
+      }
+      if (mediaSelectorTarget.group === 'handoverStandards') {
+        return formHandoverStandards[mediaSelectorTarget.index]?.image ? [formHandoverStandards[mediaSelectorTarget.index].image] : [];
       }
       if (mediaSelectorTarget.group === 'projectTestimonials') {
         return formProjectTestimonials[mediaSelectorTarget.index]?.avatar ? [formProjectTestimonials[mediaSelectorTarget.index].avatar] : [];
@@ -2459,6 +2481,12 @@ export default function AdminProjects() {
                       })}
                     </div>
                     {renderFloorPlanRepeater()}
+                    {renderTextPairRepeater('Tiêu chuẩn bàn giao', formHandoverStandards, setFormHandoverStandards, { title: '', description: '', image: '', icon: 'ClipboardCheck' }, [
+                      { key: 'title', label: 'Hạng mục, ví dụ: Sàn, tường, thiết bị vệ sinh' },
+                      { key: 'icon', label: 'Biểu tượng' },
+                      { key: 'image', label: 'Ảnh minh họa tiêu chuẩn bàn giao', mediaTarget: 'handoverStandards' },
+                      { key: 'description', label: 'Mô tả tiêu chuẩn bàn giao', wide: true },
+                    ])}
                   </div>
                 )}
 
@@ -2589,7 +2617,7 @@ export default function AdminProjects() {
                       onChange={setFormMapImageUrl}
                       onOpenMediaLibrary={() => setMediaSelectorTarget('map')}
                       placeholder="Chọn ảnh bản đồ từ Media Library hoặc dán URL"
-                      description="Hỗ trợ SVG, WebP, PNG, JPG. Ảnh này hiển thị ở section vị trí ngoài client."
+                      description="Hỗ trợ SVG, WebP, PNG, JPG. Khuyến nghị ảnh ngang 16:9 hoặc 4:3, tối thiểu 1600px chiều ngang. Client sẽ fit toàn bộ ảnh và cho bấm phóng to."
                       size="lg"
                     />
 

@@ -132,6 +132,29 @@ export const projectDetail: ProjectDetail = {
         "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?q=88&w=800&auto=format&fit=crop",
     },
   ],
+  handoverStandards: [
+    {
+      title: "Hoàn thiện sàn",
+      description: "Bàn giao vật liệu hoàn thiện theo tiêu chuẩn từng dòng sản phẩm.",
+      image:
+        "https://images.unsplash.com/photo-1600566752355-35792bedcfea?q=88&w=900&auto=format&fit=crop",
+      icon: "ClipboardCheck",
+    },
+    {
+      title: "Thiết bị vệ sinh",
+      description: "Trang bị thiết bị vệ sinh đồng bộ từ các thương hiệu được công bố.",
+      image:
+        "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?q=88&w=900&auto=format&fit=crop",
+      icon: "ShieldCheck",
+    },
+    {
+      title: "Hệ cửa và kính",
+      description: "Hệ cửa, kính và phụ kiện được nghiệm thu trước khi bàn giao.",
+      image:
+        "https://images.unsplash.com/photo-1600607687644-c7171b42498f?q=88&w=900&auto=format&fit=crop",
+      icon: "FileCheck2",
+    },
+  ],
   priceRows: [
     { productType: "Nhà phố liên kế", area: "80 - 120", price: "8,9" },
     { productType: "Nhà phố vườn", area: "100 - 140", price: "11,5" },
