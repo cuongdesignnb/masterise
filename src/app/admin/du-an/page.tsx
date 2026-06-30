@@ -60,6 +60,7 @@ type ProjectAdminTab =
   | 'location'
   | 'amenities'
   | 'floor'
+  | 'handover'
   | 'pricingPolicy'
   | 'timeline'
   | 'investment'
@@ -241,7 +242,7 @@ export default function AdminProjects() {
     amenity_details: 'amenities',
     floor_tabs: 'floor',
     floor_plans: 'floor',
-    handover_standards: 'floor',
+    handover_standards: 'handover',
     price_rows: 'pricingPolicy',
     policy_cards: 'pricingPolicy',
     project_timeline: 'timeline',
@@ -1068,6 +1069,9 @@ export default function AdminProjects() {
       !formFloorTabs.length ? 'Nhóm loại sản phẩm' : null,
       !formFloorPlans.length ? 'Danh sách mặt bằng' : null,
     ], false, !formFloorTabs.length ? 'floor_tabs' : 'floor_plans'),
+    buildChecklistItem('handover', 'Tiêu chuẩn bàn giao', [
+      !formHandoverStandards.length ? 'Danh sách tiêu chuẩn bàn giao' : null,
+    ], true, 'handover_standards'),
     buildChecklistItem('pricingPolicy', 'Bảng giá & Chính sách', [
       !(formPriceRows.length || formPolicyCards.length || formPriceText.trim()) ? 'Bảng giá hoặc chính sách bán hàng' : null,
     ], false, 'price_rows'),
@@ -1732,6 +1736,7 @@ export default function AdminProjects() {
                   { id: 'location', label: 'Vị trí & Kết nối' },
                   { id: 'amenities', label: 'Tiện ích nổi bật' },
                   { id: 'floor', label: 'Sản phẩm & Mặt bằng' },
+                  { id: 'handover', label: 'Tiêu chuẩn bàn giao' },
                   { id: 'pricingPolicy', label: 'Bảng giá & Chính sách' },
                   { id: 'timeline', label: 'Tiến độ thi công' },
                   { id: 'investment', label: 'Đầu tư & Đánh giá' },
@@ -2489,6 +2494,12 @@ export default function AdminProjects() {
                       })}
                     </div>
                     {renderFloorPlanRepeater()}
+                  </div>
+                )}
+
+                {activeTab === 'handover' && (
+                  <div className="space-y-4">
+                    {sectionNote('Phần này quản lý section “Tiêu chuẩn bàn giao” hiển thị ngay dưới mục Mặt bằng ngoài Client. Có thể thêm nhiều hạng mục, chọn ảnh từ Media Library và chỉnh thứ tự bằng nút đưa lên/đưa xuống.')}
                     {renderTextPairRepeater('Tiêu chuẩn bàn giao', formHandoverStandards, setFormHandoverStandards, { title: '', description: '', image: '', icon: 'ClipboardCheck' }, [
                       { key: 'title', label: 'Hạng mục, ví dụ: Sàn, tường, thiết bị vệ sinh' },
                       { key: 'icon', label: 'Biểu tượng' },
