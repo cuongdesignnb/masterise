@@ -73,7 +73,7 @@ export default function AllProjectsGrid() {
   }).map(mapApiProjectToProjectCard);
 
   return (
-    <section className="py-10">
+    <section id="tat-ca-du-an" className="scroll-mt-24 py-10">
       <Container>
         {/* Header */}
         <MotionWrapper>

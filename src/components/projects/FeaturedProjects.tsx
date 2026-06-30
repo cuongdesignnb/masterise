@@ -42,7 +42,7 @@ export default function FeaturedProjects() {
               </h2>
             </div>
             <Link
-              href="/du-an"
+              href="#tat-ca-du-an"
               className="hidden sm:inline-flex items-center gap-1 text-gold text-xs font-semibold hover:text-gold-dark transition-colors"
             >
               Xem tất cả dự án
@@ -149,7 +149,7 @@ export default function FeaturedProjects() {
         {/* Mobile "see all" link */}
         <div className="sm:hidden mt-6 text-center">
           <Link
-            href="/du-an"
+            href="#tat-ca-du-an"
             className="inline-flex items-center gap-1 text-gold text-xs font-semibold hover:text-gold-dark transition-colors"
           >
             Xem tất cả dự án
