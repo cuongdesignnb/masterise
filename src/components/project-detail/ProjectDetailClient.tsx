@@ -59,6 +59,25 @@ const iconMap: Record<ProjectIconName, LucideIcon> = {
 };
 
 const ease = [0.22, 1, 0.36, 1] as const;
+const compactProductLabels = new Set([
+  "gia tham khao",
+  "ban giao",
+  "dien tich",
+  "so luong san pham",
+  "so block",
+  "so tang",
+  "so huu",
+]);
+
+function normalizeInfoLabel(value: string) {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[đĐ]/g, "d")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
 
 function ProjectContainer({
   children,
@@ -322,7 +341,14 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
   const hasInvestmentReasons = project.investmentReasons.length > 0;
   const hasTestimonials = project.testimonials.length > 0;
   const hasFaqs = project.faqs.length > 0;
-  const mobileHeroFacts = (project.quickCard.length ? project.quickCard : project.facts).slice(0, 4);
+  const productSummaryLabels = new Set(project.productSummary.map((item) => normalizeInfoLabel(item.label)));
+  const mobileHeroFactsSource = project.facts.length ? project.facts : project.quickCard;
+  const mobileHeroFacts = mobileHeroFactsSource
+    .filter((fact) => {
+      const label = normalizeInfoLabel(fact.label);
+      return !productSummaryLabels.has(label) && !compactProductLabels.has(label);
+    })
+    .slice(0, 4);
   const visibleFloorPlans = project.floorTabs.length && activeTab
     ? project.floorPlans.filter((plan) => activeTab === "Tất cả" || !plan.productType || plan.productType === activeTab)
     : project.floorPlans;
