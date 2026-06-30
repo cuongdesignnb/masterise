@@ -341,8 +341,8 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                 {mobileHeroFacts.map((fact) => (
                   <div key={`${fact.label}-${fact.value}`} className="rounded-[14px] border border-line/80 bg-[#fcfaf6] p-3">
                     <ProjectIcon name={fact.icon} size={17} className="text-gold" />
-                    <p className="mt-2 text-[9px] text-muted">{fact.label}</p>
-                    <p className="mt-0.5 text-[11px] font-bold leading-4 text-ink">{fact.value}</p>
+                    <p className="mt-2 text-[10px] text-muted">{fact.label}</p>
+                    <p className="mt-0.5 text-[12px] font-bold leading-5 text-ink">{fact.value}</p>
                   </div>
                 ))}
               </div>
@@ -448,8 +448,8 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
               >
                 <ProjectIcon name={fact.icon} className="shrink-0 text-gold" />
                 <div className="min-w-0">
-                  <p className="text-[9px] text-muted">{fact.label}</p>
-                  <p className="mt-0.5 text-[10px] font-bold leading-4 text-ink">{fact.value}</p>
+                  <p className="text-[10px] text-muted">{fact.label}</p>
+                  <p className="mt-0.5 text-[11px] font-bold leading-5 text-ink">{fact.value}</p>
                 </div>
               </div>
             ))}
@@ -464,7 +464,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                 className={`text-center lg:px-5 ${index ? "lg:border-l lg:border-line/80" : ""}`}
               >
                 <p className="text-2xl font-bold text-gold sm:text-[28px]">{stat.value}</p>
-                <p className="mt-2 text-[11px] font-medium text-muted">{stat.label}</p>
+                <p className="mt-2 text-[12px] font-medium text-muted">{stat.label}</p>
               </div>
             ))}
           </div>
@@ -477,7 +477,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
               <SectionTitle eyebrow="TỔNG QUAN DỰ ÁN">GIỚI THIỆU CHI TIẾT</SectionTitle>
               <div className="relative mt-5">
                 <div
-                  className={`prose prose-stone max-w-none text-left text-sm leading-7 text-ink prose-headings:font-heading prose-headings:font-semibold prose-headings:text-[#1F1B16] prose-a:text-[#B88746] hover:prose-a:underline prose-img:rounded-2xl ${
+                  className={`prose prose-stone max-w-none text-left text-[15px] leading-7 text-ink prose-p:my-4 prose-headings:font-heading prose-headings:font-semibold prose-headings:text-[#1F1B16] prose-a:text-[#B88746] hover:prose-a:underline prose-img:rounded-2xl sm:text-base sm:leading-8 ${
                     !overviewExpanded && canToggleOverview ? 'max-h-[360px] overflow-hidden sm:max-h-[430px]' : ''
                   }`}
                   dangerouslySetInnerHTML={{ __html: project.content }}
@@ -517,7 +517,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                   </h2>
                 ) : null}
                 {project.gallery.description ? (
-                  <p className="mt-4 text-[13px] leading-6 text-muted">{project.gallery.description}</p>
+                  <p className="mt-4 text-sm leading-6 text-muted sm:text-[15px] sm:leading-7">{project.gallery.description}</p>
                 ) : null}
               </div>
             ) : null}
@@ -553,7 +553,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
             <div>
               <SectionTitle eyebrow="VỊ TRÍ CHIẾN LƯỢC">KẾT NỐI TOÀN DIỆN</SectionTitle>
               {project.locationDescription ? (
-                <p className="mb-6 text-[13px] leading-6 text-muted">{project.locationDescription}</p>
+                <p className="mb-6 text-sm leading-6 text-muted sm:text-[15px] sm:leading-7">{project.locationDescription}</p>
               ) : null}
               <div className="space-y-4">
                 {project.connectivity.map((item) => (
@@ -562,8 +562,8 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                       <MapPin size={15} />
                     </div>
                     <div>
-                      <p className="text-[12px] font-bold text-ink">{item.time}</p>
-                      <p className="text-[10px] text-muted">{item.label}</p>
+                      <p className="text-[13px] font-bold text-ink">{item.time}</p>
+                      <p className="text-[12px] leading-5 text-muted">{item.label}</p>
                     </div>
                   </div>
                 ))}
@@ -591,8 +591,8 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                   <div className="mt-3 flex items-start gap-2.5">
                     <ProjectIcon name={amenity.icon} size={18} className="mt-0.5 shrink-0 text-gold" />
                     <div>
-                      <h3 className="text-[10px] font-bold leading-4 text-ink">{amenity.title}</h3>
-                      <p className="text-[9px] leading-4 text-muted">{amenity.description}</p>
+                      <h3 className="text-[12px] font-bold leading-5 text-ink">{amenity.title}</h3>
+                      <p className="text-[11px] leading-5 text-muted">{amenity.description}</p>
                     </div>
                   </div>
                 </article>
@@ -654,18 +654,18 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                     )}
                   </div>
                   <div className="p-4">
-                    <p className="text-[9px] font-bold uppercase tracking-[0.08em] text-gold">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-gold">
                       {plan.productType || activeTab || "Sản phẩm"} · Mẫu {String(index + 1).padStart(2, "0")}
                     </p>
                     <h3 className="mt-1 text-sm font-bold text-ink">{plan.name}</h3>
-                    <div className="mt-2 space-y-1 text-[10px] text-muted">
+                    <div className="mt-2 space-y-1.5 text-[12px] leading-5 text-muted">
                       {plan.area ? <p>Diện tích: <strong className="text-ink">{plan.area}</strong></p> : null}
                       {plan.totalArea && plan.totalArea !== plan.area ? <p>Tổng diện tích sàn: <strong className="text-ink">{plan.totalArea}</strong></p> : null}
                       {plan.price ? <p>Giá tham khảo: <strong className="text-ink">{plan.price}</strong></p> : null}
                       {plan.bedrooms ? <p>Phòng ngủ: <strong className="text-ink">{plan.bedrooms}</strong></p> : null}
                       {plan.status ? <p>Tình trạng: <strong className="text-ink">{plan.status}</strong></p> : null}
                     </div>
-                    {plan.description ? <p className="mt-3 text-[10px] leading-4 text-muted">{plan.description}</p> : null}
+                    {plan.description ? <p className="mt-3 text-[12px] leading-5 text-muted">{plan.description}</p> : null}
                     {thumbnailImage ? (
                       <button
                         type="button"
@@ -698,11 +698,11 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
               <h2 className="mb-1 text-[12px] font-bold uppercase tracking-[0.06em] text-gold-dark sm:mb-2 sm:text-sm">
                 SẢN PHẨM &amp; BẢNG GIÁ
               </h2>
-              <p className="mb-4 hidden text-[11px] leading-5 text-muted sm:block">
+              <p className="mb-4 hidden text-[13px] leading-6 text-muted sm:block">
                 Thông tin loại hình, diện tích và giá tham khảo được cập nhật theo dữ liệu dự án.
               </p>
               {hasPriceRows ? <div className="overflow-x-auto">
-                <table className="w-full min-w-[560px] border-collapse text-left text-[10px]">
+                <table className="w-full min-w-[560px] border-collapse text-left text-[12px]">
                   <thead>
                     <tr className="bg-[#fbf7f0] text-muted">
                       <th className="border border-line/70 px-4 py-2.5 font-semibold">LOẠI HÌNH</th>
@@ -724,13 +724,13 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                 <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4">
                   {project.productSummary.map((item) => (
                     <div key={item.label} className="rounded-[10px] border border-line/70 bg-[#fbf7f0] p-3 sm:rounded-[12px] sm:p-4">
-                      <p className="text-[8px] font-semibold uppercase tracking-[0.04em] text-muted sm:text-[10px] sm:tracking-[0.06em]">{item.label}</p>
-                      <p className="mt-1 text-[12px] font-bold leading-4 text-ink sm:text-sm">{item.value}</p>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.04em] text-muted sm:text-[11px] sm:tracking-[0.06em]">{item.label}</p>
+                      <p className="mt-1 text-[13px] font-bold leading-5 text-ink sm:text-[15px]">{item.value}</p>
                     </div>
                   ))}
                 </div>
               )}
-              <p className="mt-2 text-[8px] italic leading-4 text-muted sm:mt-3 sm:text-[9px]">
+              <p className="mt-2 text-[10px] italic leading-4 text-muted sm:mt-3 sm:text-[11px]">
                 * Giá dự kiến chưa bao gồm VAT và phí. Thông tin chỉ mang tính chất tham khảo.
               </p>
             </div> : null}
@@ -745,8 +745,8 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                       <ProjectIcon name={policy.icon} size={18} />
                     </div>
                     <div>
-                      <h3 className="text-[11px] font-bold text-ink">{policy.title}</h3>
-                      <p className="mt-0.5 text-[9px] leading-4 text-muted">{policy.description}</p>
+                      <h3 className="text-[13px] font-bold text-ink">{policy.title}</h3>
+                      <p className="mt-1 text-[12px] leading-5 text-muted">{policy.description}</p>
                     </div>
                   </div>
                 ))}
@@ -785,8 +785,8 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                       <HardHat size={18} />
                     </div>
                     <div className="pt-1 md:pt-3">
-                      <p className={`text-[11px] font-bold ${active ? "text-gold-dark" : "text-ink"}`}>{item.date}</p>
-                      <p className="mt-1 text-[9px] leading-4 text-muted">{item.title}</p>
+                      <p className={`text-[12px] font-bold ${active ? "text-gold-dark" : "text-ink"}`}>{item.date}</p>
+                      <p className="mt-1 text-[11px] leading-5 text-muted">{item.title}</p>
                     </div>
                   </motion.div>
                 );
@@ -806,8 +806,8 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                   className="rounded-[14px] border border-line/75 bg-white px-4 py-5 text-center shadow-[0_10px_26px_rgba(87,61,28,.05)]"
                 >
                   <ProjectIcon name={reason.icon} size={27} className="mx-auto text-gold" />
-                  <h3 className="mt-3 text-[10px] font-bold leading-4 text-ink">{reason.title}</h3>
-                  <p className="mt-1 text-[9px] text-muted">{reason.description}</p>
+                  <h3 className="mt-3 text-[12px] font-bold leading-5 text-ink">{reason.title}</h3>
+                  <p className="mt-1 text-[11px] leading-5 text-muted">{reason.description}</p>
                 </motion.article>
               ))}
             </div>
@@ -825,7 +825,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                 >
                   <div className="flex gap-3">
                     <Quote size={25} fill="currentColor" className="shrink-0 text-gold/35" />
-                    <p className="text-[11px] leading-5 text-muted">{testimonial.content}</p>
+                    <p className="text-[13px] leading-6 text-muted">{testimonial.content}</p>
                   </div>
                   <div className="mt-5 flex items-center justify-between gap-3">
                     <div className="flex min-w-0 items-center gap-3">
@@ -839,8 +839,8 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                         />
                       </div>
                       <div className="min-w-0">
-                        <h3 className="truncate text-[11px] font-bold">{testimonial.name}</h3>
-                        <p className="text-[9px] text-muted">{testimonial.role}</p>
+                        <h3 className="truncate text-[12px] font-bold">{testimonial.name}</h3>
+                        <p className="text-[11px] text-muted">{testimonial.role}</p>
                       </div>
                     </div>
                     <div className="flex shrink-0 text-[#d79a2c]">
@@ -874,7 +874,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                       aria-expanded={isOpen}
                       className="flex w-full items-center justify-between gap-4 px-4 py-3 text-left"
                     >
-                      <span className="text-[10px] font-semibold leading-4 text-ink">{faq.question}</span>
+                      <span className="text-[12px] font-semibold leading-5 text-ink">{faq.question}</span>
                       <Plus
                         size={15}
                         className={`shrink-0 text-gold transition-transform ${isOpen ? "rotate-45" : ""}`}
@@ -888,7 +888,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                           exit={{ height: 0, opacity: 0 }}
                           transition={{ duration: 0.28, ease }}
                         >
-                          <p className="border-t border-line/60 px-4 py-3 text-[10px] leading-5 text-muted">
+                          <p className="border-t border-line/60 px-4 py-3 text-[12px] leading-6 text-muted">
                             {faq.answer}
                           </p>
                         </motion.div>
@@ -929,7 +929,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                   <br />
                   NHẬN THÔNG TIN DỰ ÁN
                 </p>
-                <p className="mt-3 max-w-sm text-[11px] leading-5 text-muted">
+                <p className="mt-3 max-w-sm text-[13px] leading-6 text-muted">
                   Để lại thông tin, chuyên viên tư vấn sẽ liên hệ và gửi chính sách bán hàng mới nhất.
                 </p>
               </div>
@@ -937,40 +937,40 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                 onSubmit={(event) => event.preventDefault()}
                 className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr] xl:grid-cols-[1fr_1fr_1fr_auto]"
               >
-                <label className="text-[9px] font-semibold text-muted">
+                <label className="text-[11px] font-semibold text-muted">
                   Họ và tên <span className="text-red-500">*</span>
                   <input
                     required
                     name="name"
                     placeholder="Nhập họ và tên"
-                    className="mt-1.5 w-full rounded-[6px] border border-line bg-white/90 px-3 py-2.5 text-[10px] text-ink outline-none transition placeholder:text-muted/60 focus:border-gold"
+                    className="mt-1.5 w-full rounded-[6px] border border-line bg-white/90 px-3 py-2.5 text-[12px] text-ink outline-none transition placeholder:text-muted/60 focus:border-gold"
                   />
                 </label>
-                <label className="text-[9px] font-semibold text-muted">
+                <label className="text-[11px] font-semibold text-muted">
                   Số điện thoại <span className="text-red-500">*</span>
                   <input
                     required
                     type="tel"
                     name="phone"
                     placeholder="Nhập số điện thoại"
-                    className="mt-1.5 w-full rounded-[6px] border border-line bg-white/90 px-3 py-2.5 text-[10px] text-ink outline-none transition placeholder:text-muted/60 focus:border-gold"
+                    className="mt-1.5 w-full rounded-[6px] border border-line bg-white/90 px-3 py-2.5 text-[12px] text-ink outline-none transition placeholder:text-muted/60 focus:border-gold"
                   />
                 </label>
-                <label className="text-[9px] font-semibold text-muted">
+                <label className="text-[11px] font-semibold text-muted">
                   Email
                   <input
                     type="email"
                     name="email"
                     placeholder="Nhập email"
-                    className="mt-1.5 w-full rounded-[6px] border border-line bg-white/90 px-3 py-2.5 text-[10px] text-ink outline-none transition placeholder:text-muted/60 focus:border-gold"
+                    className="mt-1.5 w-full rounded-[6px] border border-line bg-white/90 px-3 py-2.5 text-[12px] text-ink outline-none transition placeholder:text-muted/60 focus:border-gold"
                   />
                 </label>
-                <label className="relative text-[9px] font-semibold text-muted">
+                <label className="relative text-[11px] font-semibold text-muted">
                   Nhu cầu quan tâm
                   <select
                     name="interest"
                     defaultValue=""
-                    className="mt-1.5 w-full appearance-none rounded-[6px] border border-line bg-white/90 px-3 py-2.5 pr-8 text-[10px] text-muted outline-none transition focus:border-gold"
+                    className="mt-1.5 w-full appearance-none rounded-[6px] border border-line bg-white/90 px-3 py-2.5 pr-8 text-[12px] text-muted outline-none transition focus:border-gold"
                   >
                     <option value="" disabled>
                       Chọn loại sản phẩm
@@ -983,7 +983,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                 </label>
                 <button
                   type="submit"
-                  className="gold-gradient mt-auto h-[37px] rounded-[6px] px-6 text-[9px] font-bold text-white shadow-sm sm:col-span-2 lg:col-span-2 xl:col-span-1"
+                  className="gold-gradient mt-auto h-[39px] rounded-[6px] px-6 text-[11px] font-bold text-white shadow-sm sm:col-span-2 lg:col-span-2 xl:col-span-1"
                 >
                   ĐĂNG KÝ NGAY
                 </button>
