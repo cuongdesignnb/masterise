@@ -13,8 +13,13 @@ export const projectService = {
     return unwrapData<ApiProject[]>(response) || [];
   },
 
-  getFeaturedProjects: async (): Promise<ApiProject[]> => {
-    const response = await api.get<ApiProject[]>('/projects/featured');
+  getFeaturedProjects: async (params?: Record<string, string>): Promise<ApiProject[]> => {
+    let endpoint = '/projects/featured';
+    if (params) {
+      const query = new URLSearchParams(params).toString();
+      endpoint += `?${query}`;
+    }
+    const response = await api.get<ApiProject[]>(endpoint);
     return unwrapData<ApiProject[]>(response) || [];
   },
 

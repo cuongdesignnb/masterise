@@ -90,7 +90,7 @@ export default function HomePageClient() {
       .catch(() => setHero(fallbackHero));
 
     projectService
-      .getProjects({ per_page: "6", sort_by: "open_sale_at", sort_order: "asc" })
+      .getFeaturedProjects({ limit: "6" })
       .then(setProjects)
       .catch(() => setProjects([]));
 

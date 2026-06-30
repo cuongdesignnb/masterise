@@ -182,6 +182,8 @@ class ProjectController extends Controller
 
         $projects = $query
             ->with(['categories', 'seoMeta'])
+            ->orderBy('is_hot', 'desc')
+            ->orderBy('sort_order', 'asc')
             ->orderByRaw('open_sale_at IS NULL')
             ->orderBy('open_sale_at', 'asc')
             ->orderBy('created_at', 'desc')

@@ -129,4 +129,64 @@ class AdminProjectSaveProofTest extends TestCase
             'schema_availability' => 'InStock',
         ]);
     }
+
+    public function test_featured_projects_prioritize_hot_then_manual_sort_order(): void
+    {
+        Project::create([
+            'name' => 'Normal Featured Low Sort',
+            'slug' => 'normal-featured-low-sort',
+            'description' => 'Normal featured project',
+            'status' => 'selling',
+            'sales_status' => 'selling',
+            'is_featured' => true,
+            'is_hot' => false,
+            'is_published' => true,
+            'sort_order' => 1,
+            'open_sale_at' => '2026-01-01',
+        ]);
+
+        Project::create([
+            'name' => 'Hot Featured Later Sort',
+            'slug' => 'hot-featured-later-sort',
+            'description' => 'Hot featured project',
+            'status' => 'selling',
+            'sales_status' => 'selling',
+            'is_featured' => true,
+            'is_hot' => true,
+            'is_published' => true,
+            'sort_order' => 5,
+            'open_sale_at' => '2026-01-01',
+        ]);
+
+        Project::create([
+            'name' => 'Hot Featured First Sort',
+            'slug' => 'hot-featured-first-sort',
+            'description' => 'Hot featured project first',
+            'status' => 'selling',
+            'sales_status' => 'selling',
+            'is_featured' => true,
+            'is_hot' => true,
+            'is_published' => true,
+            'sort_order' => 2,
+            'open_sale_at' => '2026-01-01',
+        ]);
+
+        Project::create([
+            'name' => 'Not Featured',
+            'slug' => 'not-featured',
+            'description' => 'Should not appear',
+            'status' => 'selling',
+            'sales_status' => 'selling',
+            'is_featured' => false,
+            'is_hot' => true,
+            'is_published' => true,
+            'sort_order' => 0,
+        ]);
+
+        $this->getJson('/api/v1/projects/featured?limit=3')
+            ->assertOk()
+            ->assertJsonPath('data.0.slug', 'hot-featured-first-sort')
+            ->assertJsonPath('data.1.slug', 'hot-featured-later-sort')
+            ->assertJsonPath('data.2.slug', 'normal-featured-low-sort');
+    }
 }

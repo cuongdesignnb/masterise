@@ -1988,6 +1988,9 @@ export default function AdminProjects() {
                           className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
                           placeholder="0"
                         />
+                        <p className="mt-1 text-[10px] leading-4 text-[#8C7A6B]">
+                          Dùng cho trang chủ và trang dự án: số nhỏ hơn hiển thị trước. Nếu dự án có nhãn Hot, Hot vẫn được ưu tiên lên đầu nhóm nổi bật.
+                        </p>
                       </div>
                     </div>
 
@@ -2067,7 +2070,11 @@ export default function AdminProjects() {
                     </div>
 
                     {/* Featured Checkbox & Publish Checkbox */}
-                    <div className="flex flex-col sm:flex-row gap-4 py-2 border-t border-b border-[#E8DCCB]/40">
+                    <div className="space-y-2 border-t border-b border-[#E8DCCB]/40 py-3">
+                      <p className="text-[11px] leading-5 text-[#8C7A6B]">
+                        Trang chủ mục "Dự án nổi bật" chỉ lấy các dự án đã bật Nổi bật. Dự án Hot sẽ lên trước, sau đó sắp xếp theo "Thứ tự sắp xếp hiển thị".
+                      </p>
+                      <div className="flex flex-col gap-4 sm:flex-row">
                       <div className="flex items-center gap-2">
                         <input
                           type="checkbox"
@@ -2103,6 +2110,7 @@ export default function AdminProjects() {
                         <label htmlFor="formIsPublished" className="text-xs font-semibold text-[#1F1B16] cursor-pointer">
                           Xuất bản công khai dự án lên website
                         </label>
+                      </div>
                       </div>
                     </div>
 
