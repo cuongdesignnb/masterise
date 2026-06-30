@@ -67,13 +67,39 @@ function normalizeIconDetails(value: unknown, fallbackIcon: ProjectIconName): Ic
     .filter(notNull);
 }
 
+function normalizeLabelKey(value: string) {
+  return value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[đĐ]/g, 'd')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+}
+
+function normalizeHeroQuickCards(api: ApiProject) {
+  const cards = normalizeIconDetails(api.quick_cards, 'LandPlot');
+  if (!cards.length) return buildQuickCardsFromRealFields(api);
+
+  return cards.map((card) => {
+    if (normalizeLabelKey(card.label) === 'gia tham khao' && api.ownership_type) {
+      return {
+        label: 'Sở hữu',
+        value: api.ownership_type,
+        icon: 'ClipboardCheck' as const,
+      };
+    }
+    return card;
+  });
+}
+
 function buildQuickCardsFromRealFields(api: ApiProject): IconDetail[] {
   return [
     api.area_size || api.area_text
       ? { label: 'Quy mô', value: api.area_size || api.area_text || '', icon: 'LandPlot' as const }
       : null,
-    api.price_text
-      ? { label: 'Giá tham khảo', value: api.price_text, icon: 'BadgeDollarSign' as const }
+    api.ownership_type
+      ? { label: 'Sở hữu', value: api.ownership_type, icon: 'ClipboardCheck' as const }
       : null,
     api.handover_time
       ? { label: 'Bàn giao', value: api.handover_time, icon: 'CalendarDays' as const }
@@ -361,7 +387,7 @@ export function mapApiProjectToProjectCard(api: ApiProject): FrontendProject {
 
 export function mapApiProjectToProjectDetail(api: ApiProject): ProjectDetail {
   const galleryImages = normalizeGallery(api.gallery);
-  const quickCard = normalizeIconDetails(api.quick_cards, 'LandPlot');
+  const quickCard = normalizeHeroQuickCards(api);
   const facts = normalizeIconDetails(api.project_facts, 'MapPin');
 
   return {
@@ -377,7 +403,7 @@ export function mapApiProjectToProjectDetail(api: ApiProject): ProjectDetail {
     heroImage: api.banner_image || api.thumbnail || INTERNAL_IMAGE_PLACEHOLDER,
     thumbnail: api.thumbnail || api.banner_image || null,
     priceFrom: api.price_text || UPDATING,
-    quickCard: quickCard.length ? quickCard : buildQuickCardsFromRealFields(api),
+    quickCard,
     facts: facts.length ? facts : buildFactsFromRealFields(api),
     stats: asArray(api.project_stats),
     gallery: {

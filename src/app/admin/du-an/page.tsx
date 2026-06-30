@@ -301,11 +301,22 @@ export default function AdminProjects() {
     .filter(Boolean);
   const uniqueStrings = (items: unknown[]) => Array.from(new Set(items.map((item) => String(item || '').trim()).filter(Boolean)));
   const textValue = (value: unknown) => String(value || '');
+  const labelKey = (value: unknown) => textValue(value)
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[đĐ]/g, 'd')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
   const loadIconValueItems = (value: unknown, icon = 'LandPlot'): IconValueItem[] => asRecords(value).map((item) => ({
     label: textValue(item.label),
     value: textValue(item.value),
     icon: textValue(item.icon || icon),
   }));
+  const loadHeroQuickCardItems = (value: unknown, ownershipType: unknown): IconValueItem[] => loadIconValueItems(value)
+    .map((item) => labelKey(item.label) === 'gia tham khao' && textValue(ownershipType)
+      ? { label: 'Sở hữu', value: textValue(ownershipType), icon: 'ClipboardCheck' }
+      : item);
   const loadStatItems = (value: unknown): StatItem[] => asRecords(value).map((item) => ({
     value: textValue(item.value),
     label: textValue(item.label),
@@ -598,7 +609,7 @@ export default function AdminProjects() {
     setFormSchemaPrice(project.schema_price || '');
     setFormSchemaPriceCurrency(project.schema_price_currency || 'VND');
     setFormSchemaAvailability(project.schema_availability || '');
-    setFormQuickCards(loadIconValueItems(project.quick_cards));
+    setFormQuickCards(loadHeroQuickCardItems(project.quick_cards, project.ownership_type));
     setFormProjectFacts(loadIconValueItems(project.project_facts, 'MapPin'));
     setFormProjectStats(loadStatItems(project.project_stats));
     setFormConnectivity(loadConnectivityItems(project.connectivity));
@@ -2417,7 +2428,7 @@ export default function AdminProjects() {
 
                 {activeTab === 'hero' && (
                   <div className="space-y-4">
-                    {sectionNote('Phần này hiển thị ở đầu trang chi tiết dự án, gồm ảnh Hero, nhãn nổi bật, mô tả ngắn, hộp thông tin nhanh, thanh tổng quan và dãy chỉ số nổi bật.')}
+                    {sectionNote('Phần này hiển thị ở đầu trang chi tiết dự án, gồm ảnh Hero, nhãn nổi bật, mô tả ngắn, hộp thông tin nhanh, thanh tổng quan và dãy chỉ số nổi bật. Hộp thông tin nhanh nên dùng “Sở hữu / Lâu dài” thay cho “Giá tham khảo” để tránh trùng với section Sản phẩm & Bảng giá.')}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Dòng mô tả dưới tên dự án</label>
@@ -2428,7 +2439,7 @@ export default function AdminProjects() {
                         <input value={formBadgeText} onChange={(e) => setFormBadgeText(e.target.value)} className={inputClass} placeholder="Ví dụ: Dự án đô thị biểu tượng" />
                       </div>
                     </div>
-                    {renderIconValueRepeater('Thông tin nhanh trong hộp Hero', formQuickCards, setFormQuickCards, { label: '', value: '', icon: 'LandPlot' })}
+                    {renderIconValueRepeater('Thông tin nhanh trong hộp Hero (dùng Sở hữu thay cho Giá tham khảo)', formQuickCards, setFormQuickCards, { label: '', value: '', icon: 'LandPlot' })}
                     {renderIconValueRepeater('Thông tin tổng quan dưới Hero', formProjectFacts, setFormProjectFacts, { label: '', value: '', icon: 'MapPin' })}
                     {renderTextPairRepeater('Chỉ số nổi bật', formProjectStats, setFormProjectStats, { value: '', label: '' }, [
                       { key: 'value', label: 'Con số hiển thị, ví dụ: 117,4 ha' },
