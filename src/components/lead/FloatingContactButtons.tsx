@@ -24,7 +24,7 @@ export default function FloatingContactButtons({ projectId }: FloatingContactBut
   };
 
   return (
-    <div className="fixed bottom-24 right-6 lg:bottom-8 lg:right-8 z-40 flex flex-col gap-4">
+    <div className="fixed bottom-24 right-6 lg:bottom-8 lg:right-8 z-40 hidden flex-col gap-4 lg:flex">
       {/* Zalo Button */}
       <button
         onClick={handleZaloChat}
