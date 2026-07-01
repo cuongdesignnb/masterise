@@ -66,6 +66,26 @@ class AdminPostPublishClientFlowTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.post.slug', 'bai-viet-kiem-tra-luu-admin')
             ->assertJsonPath('data.post.content', '<p>Nội dung bài viết kiểm tra.</p>');
+
+        $updatePayload = [
+            ...$payload,
+            'title' => 'Bài viết đã sửa ảnh đại diện',
+            'thumbnail' => '/uploads/news-proof-updated.jpg',
+        ];
+
+        $postId = $createResponse->json('data.id');
+
+        $this
+            ->actingAs($admin, 'sanctum')
+            ->putJson("/api/v1/posts/{$postId}", $updatePayload)
+            ->assertOk()
+            ->assertJsonPath('data.title', 'Bài viết đã sửa ảnh đại diện')
+            ->assertJsonPath('data.thumbnail', '/uploads/news-proof-updated.jpg');
+
+        $this->getJson('/api/v1/posts/bai-viet-kiem-tra-luu-admin')
+            ->assertOk()
+            ->assertJsonPath('data.post.title', 'Bài viết đã sửa ảnh đại diện')
+            ->assertJsonPath('data.post.thumbnail', '/uploads/news-proof-updated.jpg');
     }
 
     public function test_draft_news_is_hidden_from_client_endpoints(): void

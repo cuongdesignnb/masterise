@@ -217,14 +217,33 @@ function AdminNews() {
       };
 
       if (editingPost) {
-        return api.put(`/posts/${editingPost.id}`, payload);
+        return api.put<Post>(`/posts/${editingPost.id}`, payload);
       } else {
-        return api.post('/posts', payload);
+        return api.post<Post>('/posts', payload);
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-posts'] });
+    onSuccess: async (response) => {
+      const savedPost = response.data;
+      let freshPost = savedPost;
+
+      if (savedPost?.id) {
+        const freshResponse = await api.get<Post[]>(`/posts?id=${savedPost.id}&per_page=1&status=all`);
+        freshPost = freshResponse.data?.[0] || savedPost;
+
+        queryClient.setQueriesData({ queryKey: ['admin-posts'] }, (oldData: unknown) => {
+          const current = oldData as { data?: Post[] } | undefined;
+          if (!current?.data) return oldData;
+          return {
+            ...current,
+            data: current.data.map((post) => post.id === freshPost.id ? { ...post, ...freshPost } : post),
+          };
+        });
+      }
+
+      await queryClient.invalidateQueries({ queryKey: ['admin-posts'] });
+      await queryClient.refetchQueries({ queryKey: ['admin-posts'], type: 'active' });
       setIsFormOpen(false);
+      if (freshPost?.id) setEditingPost(freshPost);
       setFormError('');
       setFieldErrors({});
       toast.success(editingPost ? 'Đã cập nhật bài viết thành công!' : 'Đã đăng bài viết mới thành công!');
@@ -955,7 +974,11 @@ function AdminNews() {
           <MediaSelectModal
             isOpen={isMediaOpen}
             onClose={() => setIsMediaOpen(false)}
-            onSelect={(url) => setFormThumbnail(url as string)}
+            onSelect={(url) => {
+              const selectedUrl = Array.isArray(url) ? url[0] : url;
+              if (selectedUrl) setFormThumbnail(selectedUrl);
+              setIsMediaOpen(false);
+            }}
           />
         )}
       </AnimatePresence>
