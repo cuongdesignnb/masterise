@@ -58,6 +58,8 @@ function AdminNews() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingPost, setEditingPost] = useState<Post | null>(null);
   const [activeTab, setActiveTab] = useState<'content' | 'media' | 'seo'>('content');
+  const [formError, setFormError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   
   // Category manager modal state
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
@@ -84,6 +86,18 @@ function AdminNews() {
   const [formSeoTitle, setFormSeoTitle] = useState('');
   const [formSeoDescription, setFormSeoDescription] = useState('');
   const [formSeoKeywords, setFormSeoKeywords] = useState('');
+
+  const getApiErrorMessage = (err: unknown) => {
+    if (err instanceof Error) return err.message;
+    return 'Lỗi khi lưu bài viết. Vui lòng kiểm tra lại dữ liệu.';
+  };
+
+  const normalizeApiFieldErrors = (err: unknown) => {
+    const errors = (err as { errors?: Record<string, string[]> })?.errors || {};
+    return Object.fromEntries(
+      Object.entries(errors).map(([field, messages]) => [field, messages?.[0] || 'Dữ liệu chưa hợp lệ.'])
+    );
+  };
 
   // Fetch posts list
   const { data: postsData, isLoading: isPostsLoading } = useQuery({
@@ -129,6 +143,8 @@ function AdminNews() {
   const handleCreateOpen = () => {
     setEditingPost(null);
     setActiveTab('content');
+    setFormError('');
+    setFieldErrors({});
     
     setFormTitle('');
     setFormSlug('');
@@ -154,6 +170,8 @@ function AdminNews() {
   const handleEditOpen = (post: Post) => {
     setEditingPost(post);
     setActiveTab('content');
+    setFormError('');
+    setFieldErrors({});
     
     setFormTitle(post.title);
     setFormSlug(post.slug);
@@ -207,10 +225,17 @@ function AdminNews() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-posts'] });
       setIsFormOpen(false);
+      setFormError('');
+      setFieldErrors({});
       toast.success(editingPost ? 'Đã cập nhật bài viết thành công!' : 'Đã đăng bài viết mới thành công!');
     },
-    onError: (err: any) => {
-      toast.error(err.message || 'Lỗi khi lưu bài viết. Vui lòng kiểm tra lại dữ liệu.');
+    onError: (err: unknown) => {
+      const nextFieldErrors = normalizeApiFieldErrors(err);
+      const message = getApiErrorMessage(err);
+      setFieldErrors(nextFieldErrors);
+      setFormError(message);
+      setActiveTab('content');
+      toast.error(message);
     }
   });
 
@@ -232,6 +257,26 @@ function AdminNews() {
     if (window.confirm('Bạn có chắc chắn muốn xóa bài viết này? Điều này sẽ xóa toàn bộ SEO Meta liên quan.')) {
       deletePostMutation.mutate(id);
     }
+  };
+
+  const handleSavePost = () => {
+    const nextErrors: Record<string, string> = {};
+
+    if (!formTitle.trim()) nextErrors.title = 'Vui lòng nhập tiêu đề bài viết.';
+    if (!formSlug.trim()) nextErrors.slug = 'Vui lòng nhập slug URL.';
+    if (!formCategoryId) nextErrors.post_category_id = 'Vui lòng chọn danh mục tin tức trước khi lưu.';
+
+    if (Object.keys(nextErrors).length > 0) {
+      setFieldErrors(nextErrors);
+      setFormError(Object.values(nextErrors)[0]);
+      setActiveTab('content');
+      toast.error(Object.values(nextErrors)[0]);
+      return;
+    }
+
+    setFormError('');
+    setFieldErrors({});
+    savePostMutation.mutate();
   };
 
   // Post Category Mutations
@@ -554,6 +599,11 @@ function AdminNews() {
 
               {/* Form Content */}
               <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                {formError && (
+                  <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs font-semibold text-red-700">
+                    {formError}
+                  </div>
+                )}
                 
                 {/* TAB 1: Content */}
                 {activeTab === 'content' && (
@@ -568,6 +618,7 @@ function AdminNews() {
                         className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
                         placeholder="Tiêu đề tin tức..."
                       />
+                      {fieldErrors.title && <p className="mt-1 text-[11px] font-semibold text-red-600">{fieldErrors.title}</p>}
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -581,6 +632,7 @@ function AdminNews() {
                           className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
                           placeholder="slug-viet-lien-khong-dau"
                         />
+                        {fieldErrors.slug && <p className="mt-1 text-[11px] font-semibold text-red-600">{fieldErrors.slug}</p>}
                       </div>
                       <div>
                         <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Danh mục tin tức *</label>
@@ -594,6 +646,12 @@ function AdminNews() {
                             <option key={c.id} value={c.id}>{c.name}</option>
                           ))}
                         </select>
+                        {fieldErrors.post_category_id && <p className="mt-1 text-[11px] font-semibold text-red-600">{fieldErrors.post_category_id}</p>}
+                        {categories.length === 0 && (
+                          <p className="mt-1 text-[11px] text-[#8C7A6B]">
+                            Chưa có danh mục tin tức. Hãy bấm “Danh mục Tin tức” để thêm trước khi lưu bài.
+                          </p>
+                        )}
                       </div>
                       <div>
                         <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Loại nội dung *</label>
@@ -787,8 +845,8 @@ function AdminNews() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => savePostMutation.mutate()}
-                  disabled={savePostMutation.isPending || !formTitle || !formSlug || !formCategoryId}
+                  onClick={handleSavePost}
+                  disabled={savePostMutation.isPending}
                   className="px-6 py-2.5 bg-[#B88746] hover:bg-[#1F1B16] text-white rounded-xl text-xs font-bold transition-all disabled:opacity-50 inline-flex items-center gap-1.5"
                 >
                   {savePostMutation.isPending && <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />}
