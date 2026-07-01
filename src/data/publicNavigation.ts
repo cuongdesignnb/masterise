@@ -28,8 +28,9 @@ export const publicFooterColumns: FooterColumn[] = [
     links: [
       { label: "Tin tức", href: "/tin-tuc" },
       { label: "Đầu tư", href: "/dau-tu" },
-      { label: "Chính sách bảo mật", href: "#privacy" },
-      { label: "Điều khoản sử dụng", href: "#terms" },
+      { label: "Chuyên trang", href: "/chuyen-trang" },
+      { label: "Chính sách bảo mật", href: "/chuyen-trang/chinh-sach-bao-mat" },
+      { label: "Điều khoản sử dụng", href: "/chuyen-trang/dieu-khoan-su-dung" },
     ],
   },
 ];

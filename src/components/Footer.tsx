@@ -23,7 +23,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-12 pb-12 border-b border-white/10">
           
           {/* Column 1: Brand Logo & Description */}
-          <div className="lg:col-span-4 flex flex-col justify-start text-left">
+          <div className="lg:col-span-3 flex flex-col justify-start text-left">
             <Link href="#" className="flex items-center group self-start">
               <div className="flex flex-col">
                 <span className="text-lg font-bold tracking-[0.15em] text-white uppercase heading-font leading-none">
@@ -126,7 +126,7 @@ export default function Footer() {
           ))}
 
           {/* Column 5: Contact Info */}
-          <div className="lg:col-span-2 flex flex-col text-left">
+          <div className="lg:col-span-3 flex flex-col text-left min-w-0">
             <h3 className="text-xs font-bold text-gold tracking-widest uppercase mb-6">
               LIÊN HỆ
             </h3>
@@ -135,9 +135,19 @@ export default function Footer() {
                 <Phone size={14} className="text-gold mt-1 flex-shrink-0" />
                 <span className="text-sm font-bold text-line/90">{hotline || 'Đang cập nhật'}</span>
               </li>
-              <li className="flex items-start gap-2.5">
+              <li className="flex items-start gap-2.5 min-w-0">
                 <Mail size={14} className="text-gold mt-1 flex-shrink-0" />
-                <span className="text-sm text-line/80 break-all">{email || 'Đang cập nhật'}</span>
+                {email ? (
+                  <a
+                    href={`mailto:${email}`}
+                    className="min-w-0 max-w-full overflow-hidden text-ellipsis whitespace-nowrap break-normal text-sm text-line/80 transition-colors hover:text-gold"
+                    title={email}
+                  >
+                    {email}
+                  </a>
+                ) : (
+                  <span className="text-sm text-line/80">Đang cập nhật</span>
+                )}
               </li>
               <li className="flex items-start gap-2.5">
                 <MapPin size={14} className="text-gold mt-1 flex-shrink-0" />
@@ -160,10 +170,10 @@ export default function Footer() {
             <Link href="#sitemap" className="text-xs text-line/50 hover:text-gold transition-colors">
               Sơ đồ trang
             </Link>
-            <Link href="#privacy" className="text-xs text-line/50 hover:text-gold transition-colors">
+            <Link href="/chuyen-trang/chinh-sach-bao-mat" className="text-xs text-line/50 hover:text-gold transition-colors">
               Chính sách bảo mật
             </Link>
-            <Link href="#terms" className="text-xs text-line/50 hover:text-gold transition-colors">
+            <Link href="/chuyen-trang/dieu-khoan-su-dung" className="text-xs text-line/50 hover:text-gold transition-colors">
               Điều khoản sử dụng
             </Link>
           </div>

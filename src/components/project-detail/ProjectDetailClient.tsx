@@ -33,7 +33,7 @@ import {
   Maximize2,
   type LucideIcon,
 } from "lucide-react";
-import { type FormEvent, useState, useEffect, useRef } from "react";
+import { type FormEvent, useState, useEffect, useMemo, useRef } from "react";
 import type { ProjectIconName, ProjectDetail } from "@/types/project-detail";
 import VR360Section from "@/components/vr360/VR360Section";
 import { leadService } from "@/services/leadService";
@@ -78,6 +78,49 @@ function normalizeInfoLabel(value: string) {
     .replace(/[đĐ]/g, "d")
     .replace(/[^a-z0-9]+/g, " ")
     .trim();
+}
+
+function normalizeOption(value: unknown) {
+  return String(value || "").trim();
+}
+
+function getConsultInterestOptions(project: ProjectDetail) {
+  const options = new Set<string>();
+
+  project.floorTabs.forEach((tab) => {
+    const label = normalizeOption(tab);
+    if (label && label !== "Tất cả" && label !== "Táº¥t cáº£") {
+      options.add(label);
+    }
+  });
+
+  project.floorPlans.forEach((plan) => {
+    const productType = normalizeOption(plan.productType);
+    const name = normalizeOption(plan.name);
+
+    if (productType && productType !== "Tất cả" && productType !== "Táº¥t cáº£") {
+      options.add(productType);
+    } else if (name) {
+      options.add(name);
+    }
+  });
+
+  project.priceRows.forEach((row) => {
+    const productType = normalizeOption(row.productType);
+    if (productType && productType !== "Tất cả" && productType !== "Táº¥t cáº£") {
+      options.add(productType);
+    }
+  });
+
+  if (options.size === 0) {
+    options.add("Tư vấn dự án hiện tại");
+    options.add("Căn hộ");
+    options.add("Duplex");
+    options.add("Penthouse");
+    options.add("Shophouse");
+  }
+
+  return Array.from(options);
 }
 
 function ProjectContainer({
@@ -217,6 +260,7 @@ function LocationMap({ projectName, mapImageUrl }: { projectName: string; mapIma
 
 export default function ProjectDetailClient({ project }: { project: ProjectDetail }) {
   const floorTabs = project.floorTabs.length ? ["Tất cả", ...project.floorTabs] : (project.floorPlans.length ? ["Sản phẩm"] : []);
+  const consultInterestOptions = useMemo(() => getConsultInterestOptions(project), [project]);
   const [activeTab, setActiveTab] = useState(floorTabs[0] ?? "");
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState<number | null>(null);
@@ -235,6 +279,15 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
     interest: "",
   });
   const heroSubtitleRefs = useRef<(HTMLParagraphElement | null)[]>([]);
+
+  useEffect(() => {
+    if (!consultForm.interest && consultInterestOptions.length > 0) {
+      setConsultForm((value) => ({
+        ...value,
+        interest: consultInterestOptions[0],
+      }));
+    }
+  }, [consultForm.interest, consultInterestOptions]);
 
   const handleConsultSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -256,14 +309,16 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
 
     try {
       const params = new URLSearchParams(window.location.search);
+      const selectedInterest = consultForm.interest || consultInterestOptions[0] || "Tư vấn dự án hiện tại";
       await leadService.submitLead({
         name: consultForm.name.trim(),
         phone: consultForm.phone.trim(),
         email: consultForm.email.trim() || undefined,
         type: "consultation",
         project_id: project.id,
-        demand_type: consultForm.interest || "Đăng ký tư vấn",
-        message: `Khách hàng đăng ký tư vấn dự án ${project.name}${consultForm.interest ? ` - nhu cầu: ${consultForm.interest}` : ""}`,
+        demand_type: selectedInterest,
+        product_type: selectedInterest,
+        message: `Khách hàng đăng ký tư vấn dự án ${project.name} - nhu cầu: ${selectedInterest}`,
         utm_source: params.get("utm_source") || undefined,
         utm_medium: params.get("utm_medium") || undefined,
         utm_campaign: params.get("utm_campaign") || undefined,
@@ -276,7 +331,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
       });
 
       setConsultStatus("success");
-      setConsultForm({ name: "", phone: "", email: "", interest: "" });
+      setConsultForm({ name: "", phone: "", email: "", interest: consultInterestOptions[0] || "Tư vấn dự án hiện tại" });
     } catch (err: unknown) {
       setConsultError(err instanceof Error ? err.message : "Chưa thể gửi thông tin. Vui lòng thử lại sau.");
       setConsultStatus("error");
@@ -1177,13 +1232,12 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                     name="interest"
                     value={consultForm.interest}
                     onChange={(event) => setConsultForm((value) => ({ ...value, interest: event.target.value }))}
-                    className="mt-1.5 w-full appearance-none rounded-[6px] border border-line bg-white/90 px-3 py-2.5 pr-8 text-[12px] text-muted outline-none transition focus:border-gold"
+                    className="mt-1.5 w-full appearance-none rounded-[6px] border border-line bg-white/90 px-3 py-2.5 pr-8 text-[12px] text-ink outline-none transition focus:border-gold"
                   >
-                    <option value="" disabled>
-                      Chọn loại sản phẩm
-                    </option>
-                    {floorTabs.map((tab) => (
-                      <option key={tab}>{tab}</option>
+                    {consultInterestOptions.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
                     ))}
                   </select>
                   <ChevronDown size={13} className="absolute bottom-3 right-3 text-gold" />

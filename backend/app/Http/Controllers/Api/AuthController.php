@@ -18,15 +18,27 @@ class AuthController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'phone' => 'required|string|max:20|unique:users',
-            'password' => ['required', 'confirmed', Password::defaults()],
+            'email' => 'required|string|email|max:255|unique:users,email',
+            'phone' => 'required|string|max:20|unique:users,phone',
+            'password' => ['required', 'confirmed', Password::min(8)],
+            'terms' => 'accepted',
+        ], [
+            'name.required' => 'Vui lòng nhập Họ và tên.',
+            'email.required' => 'Vui lòng nhập Email.',
+            'email.email' => 'Email không đúng định dạng.',
+            'email.unique' => 'Email này đã được sử dụng.',
+            'phone.required' => 'Vui lòng nhập Số điện thoại.',
+            'phone.unique' => 'Số điện thoại này đã được sử dụng.',
+            'password.required' => 'Vui lòng nhập Mật khẩu.',
+            'password.confirmed' => 'Mật khẩu xác nhận không khớp.',
+            'password.min' => 'Mật khẩu phải có ít nhất 8 ký tự.',
+            'terms.accepted' => 'Vui lòng đồng ý Điều khoản & Chính sách bảo mật.',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Validation error',
+                'message' => $validator->errors()->first() ?: 'Dữ liệu đăng ký chưa hợp lệ.',
                 'errors' => $validator->errors()
             ], 422);
         }
@@ -53,7 +65,7 @@ class AuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'User registered successfully',
+            'message' => 'Đăng ký tài khoản thành công.',
             'data' => [
                 'user' => $user->load('customerProfile'),
                 'roles' => $user->getRoleNames(),

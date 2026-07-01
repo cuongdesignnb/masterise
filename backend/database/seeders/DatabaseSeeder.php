@@ -39,7 +39,10 @@ class DatabaseSeeder extends Seeder
         // 8. Run public news, investment and event content seeder
         $this->call(PostContentSeeder::class);
 
-        // 9. Seed System Settings (Idempotent)
+        // 9. Run static page seeder
+        $this->call(StaticPageSeeder::class);
+
+        // 10. Seed System Settings (Idempotent)
         Setting::set('company_name', 'Masterise Homes');
         Setting::set('company_address', 'Tòa nhà Masterise, Thảo Điền, Thành phố Thủ Đức, TP. HCM');
         Setting::set('hotline', '028 39 159 159');
@@ -123,9 +126,11 @@ class DatabaseSeeder extends Seeder
                 'links' => [
                     ['label' => 'Tin tức', 'href' => '/tin-tuc'],
                     ['label' => 'Đầu tư', 'href' => '/dau-tu'],
-                    ['label' => 'Chính sách bảo mật', 'href' => '#privacy'],
-                    ['label' => 'Điều khoản sử dụng', 'href' => '#terms']
+                    ['label' => 'Chuyên trang', 'href' => '/chuyen-trang'],
+                    ['label' => 'Chính sách bảo mật', 'href' => '/chuyen-trang/chinh-sach-bao-mat'],
+                    ['label' => 'Điều khoản sử dụng', 'href' => '/chuyen-trang/dieu-khoan-su-dung']
                 ]
+            ]
         ], 'json');
 
         // Seed default AI settings if not exist or if they are invalid defaults
@@ -136,7 +141,7 @@ class DatabaseSeeder extends Seeder
             Setting::set('ai_image_model', 'dall-e-2');
         }
 
-        // 10. Seed SEO Meta for Static pages (Idempotent)
+        // 11. Seed SEO Meta for Static pages (Idempotent)
         SeoMeta::updateOrCreate(
             ['path' => '/'],
             [

@@ -24,7 +24,7 @@ function getApiUrl(): string {
 
 const API_URL = getApiUrl();
 
-class ApiError extends Error {
+export class ApiError extends Error {
   status: number;
   errors?: Record<string, string[]>;
 
@@ -34,6 +34,31 @@ class ApiError extends Error {
     this.status = status;
     this.errors = errors;
   }
+}
+
+export function formatApiError(
+  error: unknown,
+  fallback = 'Có lỗi xảy ra. Vui lòng thử lại.'
+): string {
+  if (error instanceof ApiError) {
+    if (error.errors && typeof error.errors === 'object') {
+      const messages = Object.values(error.errors)
+        .flat()
+        .filter(Boolean);
+
+      if (messages.length > 0) {
+        return messages.join('\n');
+      }
+    }
+
+    return error.message || fallback;
+  }
+
+  if (error instanceof Error) {
+    return error.message || fallback;
+  }
+
+  return fallback;
 }
 
 async function request<T>(

@@ -27,7 +27,8 @@ export const authService = {
     emailVal: string,
     phoneVal: string,
     passwordVal: string,
-    confirmPasswordVal: string
+    confirmPasswordVal: string,
+    termsAccepted: boolean
   ): Promise<ApiResponse<RegisterResponse>> => {
     return api.post<RegisterResponse>('/auth/register', {
       name: nameVal,
@@ -35,6 +36,7 @@ export const authService = {
       phone: phoneVal,
       password: passwordVal,
       password_confirmation: confirmPasswordVal,
+      terms: termsAccepted,
     });
   },
 

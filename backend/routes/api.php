@@ -45,6 +45,7 @@ Route::group(['prefix' => 'v1'], function() {
     Route::get('/post-categories', [PostController::class, 'categories']);
 
     // Static Pages Public Route
+    Route::get('/pages', [PageController::class, 'index']);
     Route::get('/pages/{slug}', [PageController::class, 'show']);
 
     // Developers

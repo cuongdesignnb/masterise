@@ -12,7 +12,14 @@ interface AuthContextType {
   token: string | null;
   isLoading: boolean;
   login: (loginVal: string, passwordVal: string) => Promise<any>;
-  register: (nameVal: string, emailVal: string, phoneVal: string, passwordVal: string, confirmPasswordVal: string) => Promise<any>;
+  register: (
+    nameVal: string,
+    emailVal: string,
+    phoneVal: string,
+    passwordVal: string,
+    confirmPasswordVal: string,
+    termsAccepted: boolean
+  ) => Promise<any>;
   logout: () => Promise<void>;
   hasRole: (roleNames: string | string[]) => boolean;
   hasPermission: (permissionName: string) => boolean;
@@ -93,7 +100,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     emailVal: string,
     phoneVal: string,
     passwordVal: string,
-    confirmPasswordVal: string
+    confirmPasswordVal: string,
+    termsAccepted: boolean
   ) => {
     setIsLoading(true);
     try {
@@ -102,7 +110,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         emailVal,
         phoneVal,
         passwordVal,
-        confirmPasswordVal
+        confirmPasswordVal,
+        termsAccepted
       );
 
       if (response.success && response.data) {
