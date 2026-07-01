@@ -41,6 +41,7 @@ export default function ContactCTA() {
               {/* Buttons */}
               <div className="flex flex-col sm:flex-row gap-3 mt-5">
                 <Button
+                  href="#global-contact-form"
                   variant="solid"
                   size="sm"
                   icon={<ArrowRight className="w-4 h-4" />}
@@ -48,13 +49,15 @@ export default function ContactCTA() {
                   {contactCta.primaryButton}
                 </Button>
 
-                <button
-                  type="button"
-                  className="inline-flex items-center justify-center gap-2.5 px-4 py-1.5 text-xs font-semibold rounded-[4px] border border-white/40 text-white hover:bg-white/10 transition-all duration-300 cursor-pointer group"
+                <Button
+                  href="#global-contact-form"
+                  variant="outline"
+                  size="sm"
+                  className="border-white/40 text-white hover:bg-white hover:text-ink"
                 >
                   <span>{contactCta.secondaryButton}</span>
-                  <Download className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-y-[2px]" />
-                </button>
+                  <Download className="ml-2 w-3.5 h-3.5" />
+                </Button>
               </div>
             </div>
           </div>

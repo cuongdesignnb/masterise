@@ -107,6 +107,7 @@ export default function NewsHero() {
                   {hero.primaryCta}
                 </Button>
                 <Button
+                  href="/lien-he#global-contact-form"
                   variant="outline"
                   size="md"
                   icon={<Mail size={14} />}

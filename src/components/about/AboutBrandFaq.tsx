@@ -32,7 +32,7 @@ export default function AboutBrandFaq() {
                 {aboutPageBrandStory.description}
               </p>
 
-              <Button variant="outline" href="#">
+              <Button variant="outline" href="/lien-he#global-contact-form">
                 {aboutPageBrandStory.button}
               </Button>
             </MotionWrapper>

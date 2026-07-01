@@ -5,6 +5,7 @@ import Image from "next/image";
 import Container from "@/components/Container";
 import MotionWrapper from "@/components/MotionWrapper";
 import { useSiteSettings } from "@/providers/SiteSettingsProvider";
+import { leadService } from "@/services/leadService";
 
 export default function AboutContactCTA() {
   const { aboutPageContactCta } = useSiteSettings();
@@ -14,6 +15,8 @@ export default function AboutContactCTA() {
     email: "",
     note: "",
   });
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [error, setError] = useState("");
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -21,12 +24,49 @@ export default function AboutContactCTA() {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    alert(
-      `Cảm ơn ${form.name}! Chúng tôi sẽ liên hệ với bạn qua số ${form.phone} trong thời gian sớm nhất.`,
-    );
-    setForm({ name: "", phone: "", email: "", note: "" });
+    setError("");
+
+    if (!form.name.trim() || !form.phone.trim()) {
+      setError("Vui lòng nhập họ tên và số điện thoại.");
+      setStatus("error");
+      return;
+    }
+
+    if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      setError("Email chưa đúng định dạng.");
+      setStatus("error");
+      return;
+    }
+
+    setStatus("loading");
+
+    try {
+      const params = new URLSearchParams(window.location.search);
+      await leadService.submitLead({
+        name: form.name.trim(),
+        phone: form.phone.trim(),
+        email: form.email.trim() || undefined,
+        type: "consultation",
+        demand_type: "Tư vấn Masterise Homes",
+        message: form.note.trim() || undefined,
+        utm_source: params.get("utm_source") || undefined,
+        utm_medium: params.get("utm_medium") || undefined,
+        utm_campaign: params.get("utm_campaign") || undefined,
+        utm_content: params.get("utm_content") || undefined,
+        utm_term: params.get("utm_term") || undefined,
+        landing_page: window.location.href,
+        referrer: document.referrer || undefined,
+        visitor_id: localStorage.getItem("mh_visitor_id") || undefined,
+        lead_source_position: "about_contact_cta_form",
+      });
+      setStatus("success");
+      setForm({ name: "", phone: "", email: "", note: "" });
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Chưa thể gửi thông tin. Vui lòng thử lại sau.");
+      setStatus("error");
+    }
   };
 
   const inputClasses =
@@ -116,10 +156,19 @@ export default function AboutContactCTA() {
 
                   <button
                     type="submit"
+                    disabled={status === "loading"}
                     className="w-full gold-gradient text-white uppercase tracking-wider font-bold text-sm py-3.5 rounded-lg transition-opacity duration-300 hover:opacity-90 cursor-pointer"
                   >
-                    GỬI THÔNG TIN
+                    {status === "loading" ? "ĐANG GỬI..." : "GỬI THÔNG TIN"}
                   </button>
+                  {status === "success" ? (
+                    <p className="text-xs font-semibold text-emerald-200">
+                      Cảm ơn Quý khách. Đội ngũ tư vấn sẽ liên hệ trong thời gian sớm nhất.
+                    </p>
+                  ) : null}
+                  {status === "error" && error ? (
+                    <p className="text-xs font-semibold text-red-200">{error}</p>
+                  ) : null}
                 </form>
               </MotionWrapper>
             </div>

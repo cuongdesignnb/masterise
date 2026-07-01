@@ -171,6 +171,7 @@ export default function NewsSidebar() {
           />
 
           <Button
+            href="/lien-he#global-contact-form"
             variant="gold-gradient"
             className="w-full mt-3"
             icon={<ArrowRight size={15} />}

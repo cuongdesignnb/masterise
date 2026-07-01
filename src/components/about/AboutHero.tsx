@@ -99,7 +99,7 @@ export default function AboutHero() {
                   {aboutPageHero.primaryCta}
                 </Button>
                 <Button
-                  href="/#du-an-hot"
+                  href="/lien-he#global-contact-form"
                   variant="outline"
                   size="md"
                   className="bg-white/90 border-white text-ink hover:bg-gold hover:text-white"

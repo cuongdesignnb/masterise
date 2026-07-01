@@ -151,6 +151,7 @@ export default function ArticleSidebar() {
             className="bg-white border border-line/60 rounded-lg px-4 py-2.5 text-sm w-full mt-3 outline-none focus:border-gold/50 transition-colors"
           />
           <Button
+            href="/lien-he#global-contact-form"
             variant="gold-gradient"
             className="w-full mt-3"
             icon={<ArrowRight size={14} />}

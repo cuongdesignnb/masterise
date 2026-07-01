@@ -222,7 +222,7 @@ export default function Hero() {
                       Khám phá dự án
                     </Button>
                     <Button
-                      href="#lien-he"
+                      href="#global-contact-form"
                       variant="outline"
                       size="md"
                       className="bg-white/90 border-white text-ink hover:bg-gold hover:text-white sm:px-8 sm:py-3 sm:text-sm"
@@ -304,7 +304,7 @@ export default function Hero() {
                     Khám phá dự án
                   </Button>
                   <Button
-                    href="#lien-he"
+                    href="#global-contact-form"
                     variant="outline"
                     size="md"
                     className="bg-white/90 border-white text-ink hover:bg-gold hover:text-white sm:px-8 sm:py-3 sm:text-sm"
@@ -383,4 +383,3 @@ export default function Hero() {
     </section>
   );
 }
-
