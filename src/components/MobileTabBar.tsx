@@ -2,35 +2,63 @@
 
 import React from "react";
 import Link from "next/link";
-import { Home, Building2, Phone, Menu } from "lucide-react";
+import { Building2, Home, Menu, MessageSquare, Phone } from "lucide-react";
 import { motion } from "framer-motion";
-import { useSiteSettings } from '@/providers/SiteSettingsProvider';
+import { useSiteSettings } from "@/providers/SiteSettingsProvider";
+import { trackEvent } from "@/services/trackingService";
 
 export default function MobileTabBar() {
-  const { hotline } = useSiteSettings();
+  const { hotline, socialLinks } = useSiteSettings();
+  const cleanPhone = hotline.replace(/\D/g, "");
+  const zaloHandle = (socialLinks.zalo || cleanPhone).trim();
+  const zaloUrl = zaloHandle.startsWith("http")
+    ? zaloHandle
+    : `https://zalo.me/${zaloHandle.replace(/\D/g, "") || zaloHandle}`;
 
   const triggerMobileMenu = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    // Dispatch custom event to toggle the mobile menu in Header.tsx
     window.dispatchEvent(new CustomEvent("toggle-mobile-menu"));
+  };
+
+  const handleZaloChat = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!zaloHandle) return;
+    trackEvent("click_zalo", { source: "mobile_tab_bar" });
+    window.open(zaloUrl, "_blank", "noopener,noreferrer");
+  };
+
+  const handleHotlineCall = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!cleanPhone) return;
+    trackEvent("click_hotline", { source: "mobile_tab_bar" });
+    window.location.href = `tel:${cleanPhone}`;
   };
 
   const menuItems = [
     {
       label: "Trang chủ",
       icon: Home,
-      href: "#",
+      href: "/",
     },
     {
-      label: "Dự án HOT",
+      label: "Dự án",
       icon: Building2,
-      href: "#du-an-hot",
+      href: "/du-an",
     },
     {
-      label: "Liên hệ",
+      label: "Zalo",
+      icon: MessageSquare,
+      href: "#",
+      onClick: handleZaloChat,
+    },
+    {
+      label: "Gọi ngay",
       icon: Phone,
-      href: `tel:${hotline.replace(/\D/g, '')}`,
+      href: "#",
+      onClick: handleHotlineCall,
     },
     {
       label: "Danh mục",
@@ -41,17 +69,17 @@ export default function MobileTabBar() {
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur-xl border-t border-[#E8DCCB]/65 h-16 shadow-[0_-8px_30px_rgba(87,61,28,0.08)] flex items-center justify-around px-2 lg:hidden pb-safe">
-      {menuItems.map((item, idx) => {
+    <div className="fixed bottom-0 left-0 right-0 z-40 flex h-16 items-center justify-around border-t border-[#E8DCCB]/65 bg-white/90 px-1 shadow-[0_-8px_30px_rgba(87,61,28,0.08)] backdrop-blur-xl pb-safe lg:hidden">
+      {menuItems.map((item) => {
         const Icon = item.icon;
-        
-        const ButtonContent = (
+
+        const buttonContent = (
           <motion.div
             whileTap={{ scale: 0.92 }}
-            className="flex flex-col items-center justify-center w-16 h-12 text-[#6F665C] hover:text-[#B88746] transition-colors duration-200 cursor-pointer"
+            className="flex h-12 w-full flex-col items-center justify-center text-[#6F665C] transition-colors duration-200 hover:text-[#B88746]"
           >
             <Icon size={20} className="stroke-[1.8] group-hover:text-[#B88746]" />
-            <span className="text-[10px] font-bold mt-1 tracking-tight heading-font uppercase">
+            <span className="heading-font mt-1 text-[9px] font-bold uppercase leading-none tracking-tight">
               {item.label}
             </span>
           </motion.div>
@@ -60,24 +88,24 @@ export default function MobileTabBar() {
         if (item.onClick) {
           return (
             <button
-              key={idx}
+              key={item.label}
               onClick={item.onClick}
-              className="group flex flex-col items-center justify-center focus:outline-none"
+              className="group flex flex-1 flex-col items-center justify-center focus:outline-none"
               aria-label={item.label}
             >
-              {ButtonContent}
+              {buttonContent}
             </button>
           );
         }
 
         return (
           <Link
-            key={idx}
+            key={item.label}
             href={item.href}
-            className="group flex flex-col items-center justify-center"
+            className="group flex flex-1 flex-col items-center justify-center"
             aria-label={item.label}
           >
-            {ButtonContent}
+            {buttonContent}
           </Link>
         );
       })}
