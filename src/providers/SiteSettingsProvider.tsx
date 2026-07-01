@@ -48,6 +48,7 @@ export interface ProjectsPageHero {
   description: string;
   primaryCta: string;
   secondaryCta: string;
+  brochureUrl?: string;
   image: string;
   overview: { value: string; label: string }[];
 }
@@ -57,6 +58,7 @@ export interface ProjectsPageCta {
   title: string;
   primaryButton: string;
   secondaryButton: string;
+  brochureUrl?: string;
   image: string;
 }
 
@@ -297,6 +299,7 @@ export default function SiteSettingsProvider({
                 description: parsed.description || projectsHero.description,
                 primaryCta: parsed.primaryCta || projectsHero.primaryCta,
                 secondaryCta: parsed.secondaryCta || projectsHero.secondaryCta,
+                brochureUrl: parsed.brochureUrl || projectsHero.brochureUrl || "",
                 image: parsed.image || projectsHero.image,
                 overview: parsed.overview || projectsHero.overview,
               };
@@ -319,6 +322,7 @@ export default function SiteSettingsProvider({
                 title: parsed.title || projectsCta.title,
                 primaryButton: parsed.primaryButton || projectsCta.primaryButton,
                 secondaryButton: parsed.secondaryButton || projectsCta.secondaryButton,
+                brochureUrl: parsed.brochureUrl || projectsCta.brochureUrl || projectsPageHero.brochureUrl || "",
                 image: parsed.image || projectsCta.image,
               };
             }

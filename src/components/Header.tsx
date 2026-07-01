@@ -132,7 +132,7 @@ export default function Header() {
                 <Button href="/dang-nhap" variant="outline" size="sm">
                   Đăng nhập
                 </Button>
-                <Button href="#global-contact-form" variant="solid" size="sm">
+                <Button href="/lien-he#global-contact-form" variant="solid" size="sm">
                   Đăng ký tư vấn
                 </Button>
               </>
@@ -265,7 +265,7 @@ export default function Header() {
                     Đăng nhập
                   </Button>
                   <Button
-                    href="#global-contact-form"
+                    href="/lien-he#global-contact-form"
                     variant="solid"
                     size="md"
                     className="w-full text-center"

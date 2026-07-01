@@ -156,6 +156,7 @@ export default function AdminSettings() {
   const [projectsHeroDesc, setProjectsHeroDesc] = useState('');
   const [projectsHeroPrimaryCta, setProjectsHeroPrimaryCta] = useState('');
   const [projectsHeroSecondaryCta, setProjectsHeroSecondaryCta] = useState('');
+  const [projectsBrochureUrl, setProjectsBrochureUrl] = useState('');
   const [projectsHeroImage, setProjectsHeroImage] = useState('');
   const [projectsStats, setProjectsStats] = useState<{ value: string; label: string }[]>([
     { value: '', label: '' },
@@ -393,6 +394,7 @@ export default function AdminSettings() {
       setProjectsHeroDesc(projHero?.description || 'Tuyển chọn những dự án bất động sản hàng hiệu tại các vị trí chiến lược, kiến tạo chuẩn sống quốc tế và giá trị bền vững cho tương lai.');
       setProjectsHeroPrimaryCta(projHero?.primaryCta || 'Khám phá dự án');
       setProjectsHeroSecondaryCta(projHero?.secondaryCta || 'Tải brochure tổng hợp');
+      setProjectsBrochureUrl(projHero?.brochureUrl || '');
       setProjectsHeroImage(projHero?.image || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=1400&auto=format&fit=crop');
       setProjectsStats(projHero?.overview || [
         { value: '15+', label: 'Dự án đang triển khai' },
@@ -584,6 +586,7 @@ export default function AdminSettings() {
               description: projectsHeroDesc, 
               primaryCta: projectsHeroPrimaryCta, 
               secondaryCta: projectsHeroSecondaryCta, 
+              brochureUrl: projectsBrochureUrl,
               image: projectsHeroImage,
               overview: projectsStats
             }, 
@@ -596,6 +599,7 @@ export default function AdminSettings() {
               title: projectsCtaTitle, 
               primaryButton: projectsCtaPrimaryBtn, 
               secondaryButton: projectsCtaSecondaryBtn, 
+              brochureUrl: projectsBrochureUrl,
               image: projectsCtaImage 
             }, 
             type: 'json' 
@@ -2331,6 +2335,19 @@ export default function AdminSettings() {
                       onChange={(e) => setProjectsHeroSecondaryCta(e.target.value)}
                       className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
                     />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Link tải brochure tổng hợp</label>
+                    <input
+                      type="text"
+                      value={projectsBrochureUrl}
+                      onChange={(e) => setProjectsBrochureUrl(e.target.value)}
+                      className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                      placeholder="Ví dụ: /storage/media/masterise-brochure.pdf hoặc https://..."
+                    />
+                    <p className="mt-1 text-[10px] leading-4 text-[#8C7A6B]">
+                      Dùng cho nút tải brochure ở Hero và banner CTA trang /du-an. Nếu để trống, nút sẽ đưa khách xuống form tư vấn.
+                    </p>
                   </div>
                 </div>
 

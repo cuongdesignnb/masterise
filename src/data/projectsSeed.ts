@@ -6,6 +6,7 @@ export const projectsHero = {
     "Tuyển chọn những dự án bất động sản hàng hiệu tại các vị trí chiến lược, kiến tạo chuẩn sống quốc tế và giá trị bền vững cho tương lai.",
   primaryCta: "Khám phá dự án",
   secondaryCta: "Tải brochure tổng hợp",
+  brochureUrl: "",
   image:
     "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=1400&auto=format&fit=crop",
   overview: [
@@ -203,6 +204,7 @@ export const projectsCta = {
     "Nhận tư vấn lựa chọn dự án phù hợp và báo giá tốt nhất từ chuyên gia",
   primaryButton: "Nhận tư vấn ngay",
   secondaryButton: "Tải catalogue dự án",
+  brochureUrl: "",
   image:
     "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?q=80&w=1200&auto=format&fit=crop",
 };

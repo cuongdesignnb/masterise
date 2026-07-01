@@ -33,9 +33,10 @@ import {
   Maximize2,
   type LucideIcon,
 } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import { type FormEvent, useState, useEffect, useRef } from "react";
 import type { ProjectIconName, ProjectDetail } from "@/types/project-detail";
 import VR360Section from "@/components/vr360/VR360Section";
+import { leadService } from "@/services/leadService";
 
 const iconMap: Record<ProjectIconName, LucideIcon> = {
   BadgeDollarSign,
@@ -225,7 +226,62 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
   const [overviewExpanded, setOverviewExpanded] = useState(false);
   const [floorPlansExpanded, setFloorPlansExpanded] = useState(false);
   const [floorPlanLimit, setFloorPlanLimit] = useState(6);
+  const [consultStatus, setConsultStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [consultError, setConsultError] = useState("");
+  const [consultForm, setConsultForm] = useState({
+    name: "",
+    phone: "",
+    email: "",
+    interest: "",
+  });
   const heroSubtitleRefs = useRef<(HTMLParagraphElement | null)[]>([]);
+
+  const handleConsultSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setConsultError("");
+
+    if (!consultForm.name.trim() || !consultForm.phone.trim()) {
+      setConsultError("Vui lòng nhập họ tên và số điện thoại.");
+      setConsultStatus("error");
+      return;
+    }
+
+    if (consultForm.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(consultForm.email)) {
+      setConsultError("Email chưa đúng định dạng.");
+      setConsultStatus("error");
+      return;
+    }
+
+    setConsultStatus("loading");
+
+    try {
+      const params = new URLSearchParams(window.location.search);
+      await leadService.submitLead({
+        name: consultForm.name.trim(),
+        phone: consultForm.phone.trim(),
+        email: consultForm.email.trim() || undefined,
+        type: "consultation",
+        project_id: project.id,
+        demand_type: consultForm.interest || "Đăng ký tư vấn",
+        message: `Khách hàng đăng ký tư vấn dự án ${project.name}${consultForm.interest ? ` - nhu cầu: ${consultForm.interest}` : ""}`,
+        utm_source: params.get("utm_source") || undefined,
+        utm_medium: params.get("utm_medium") || undefined,
+        utm_campaign: params.get("utm_campaign") || undefined,
+        utm_content: params.get("utm_content") || undefined,
+        utm_term: params.get("utm_term") || undefined,
+        landing_page: window.location.href,
+        referrer: document.referrer || undefined,
+        visitor_id: localStorage.getItem("mh_visitor_id") || undefined,
+        lead_source_position: "project_detail_consult_form",
+      });
+
+      setConsultStatus("success");
+      setConsultForm({ name: "", phone: "", email: "", interest: "" });
+    } catch (err: unknown) {
+      setConsultError(err instanceof Error ? err.message : "Chưa thể gửi thông tin. Vui lòng thử lại sau.");
+      setConsultStatus("error");
+    }
+  };
 
   // Lock body scroll when modal is open
   useEffect(() => {
@@ -1078,7 +1134,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                 </p>
               </div>
               <form
-                onSubmit={(event) => event.preventDefault()}
+                onSubmit={handleConsultSubmit}
                 className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr] xl:grid-cols-[1fr_1fr_1fr_auto]"
               >
                 <label className="text-[11px] font-semibold text-muted">
@@ -1086,6 +1142,8 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                   <input
                     required
                     name="name"
+                    value={consultForm.name}
+                    onChange={(event) => setConsultForm((value) => ({ ...value, name: event.target.value }))}
                     placeholder="Nhập họ và tên"
                     className="mt-1.5 w-full rounded-[6px] border border-line bg-white/90 px-3 py-2.5 text-[12px] text-ink outline-none transition placeholder:text-muted/60 focus:border-gold"
                   />
@@ -1096,6 +1154,8 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                     required
                     type="tel"
                     name="phone"
+                    value={consultForm.phone}
+                    onChange={(event) => setConsultForm((value) => ({ ...value, phone: event.target.value }))}
                     placeholder="Nhập số điện thoại"
                     className="mt-1.5 w-full rounded-[6px] border border-line bg-white/90 px-3 py-2.5 text-[12px] text-ink outline-none transition placeholder:text-muted/60 focus:border-gold"
                   />
@@ -1105,6 +1165,8 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                   <input
                     type="email"
                     name="email"
+                    value={consultForm.email}
+                    onChange={(event) => setConsultForm((value) => ({ ...value, email: event.target.value }))}
                     placeholder="Nhập email"
                     className="mt-1.5 w-full rounded-[6px] border border-line bg-white/90 px-3 py-2.5 text-[12px] text-ink outline-none transition placeholder:text-muted/60 focus:border-gold"
                   />
@@ -1113,7 +1175,8 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                   Nhu cầu quan tâm
                   <select
                     name="interest"
-                    defaultValue=""
+                    value={consultForm.interest}
+                    onChange={(event) => setConsultForm((value) => ({ ...value, interest: event.target.value }))}
                     className="mt-1.5 w-full appearance-none rounded-[6px] border border-line bg-white/90 px-3 py-2.5 pr-8 text-[12px] text-muted outline-none transition focus:border-gold"
                   >
                     <option value="" disabled>
@@ -1127,10 +1190,21 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                 </label>
                 <button
                   type="submit"
-                  className="gold-gradient mt-auto h-[39px] rounded-[6px] px-6 text-[11px] font-bold text-white shadow-sm sm:col-span-2 lg:col-span-2 xl:col-span-1"
+                  disabled={consultStatus === "loading"}
+                  className="gold-gradient mt-auto h-[39px] rounded-[6px] px-6 text-[11px] font-bold text-white shadow-sm transition disabled:opacity-60 sm:col-span-2 lg:col-span-2 xl:col-span-1"
                 >
-                  ĐĂNG KÝ NGAY
+                  {consultStatus === "loading" ? "ĐANG GỬI..." : "ĐĂNG KÝ NGAY"}
                 </button>
+                {consultStatus === "success" ? (
+                  <p className="text-[11px] font-semibold text-emerald-700 sm:col-span-2 xl:col-span-4">
+                    Cảm ơn Quý khách. Chuyên viên tư vấn sẽ liên hệ trong thời gian sớm nhất.
+                  </p>
+                ) : null}
+                {consultStatus === "error" && consultError ? (
+                  <p className="text-[11px] font-semibold text-red-600 sm:col-span-2 xl:col-span-4">
+                    {consultError}
+                  </p>
+                ) : null}
               </form>
             </div>
           </section>

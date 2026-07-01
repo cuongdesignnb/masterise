@@ -94,7 +94,7 @@ export default function ProjectsHero() {
                 className="mt-5 flex flex-wrap gap-3"
               >
                 <Button
-                  href="/du-an"
+                  href="#tat-ca-du-an"
                   variant="solid"
                   size="md"
                   icon={<ArrowRight size={14} />}
@@ -103,6 +103,7 @@ export default function ProjectsHero() {
                   {hero.primaryCta}
                 </Button>
                 <Button
+                  href={hero.brochureUrl || "#global-contact-form"}
                   variant="outline"
                   size="md"
                   icon={<Download size={14} />}

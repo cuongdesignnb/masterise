@@ -38,12 +38,14 @@ export default function ProjectsCTA() {
                 </h2>
                 <div className="flex flex-col sm:flex-row gap-3 mt-5">
                   <Button
+                    href="#global-contact-form"
                     variant="solid"
                     icon={<ArrowRight size={14} />}
                   >
                     {cta.primaryButton}
                   </Button>
                   <Button
+                    href={cta.brochureUrl || "#global-contact-form"}
                     variant="outline"
                     icon={<Download size={14} />}
                   >
