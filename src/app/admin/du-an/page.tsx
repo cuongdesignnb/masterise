@@ -1457,11 +1457,11 @@ export default function AdminProjects() {
     <div data-project-field="gallery" className={`space-y-3 rounded-xl border bg-[#FBF8F2]/60 p-4 ${highlightClass('gallery') || 'border-[#E8DCCB]'}`}>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-xs font-bold text-[#1F1B16]">Danh sách ảnh không gian sống</p>
+          <p className="text-xs font-bold text-[#1F1B16]">Album ảnh cuối trang chi tiết</p>
           <p className="mt-1 text-[11px] text-[#8C7A6B]">
             {formGallery.length
-              ? `Đang chọn ${formGallery.length} ảnh. Thứ tự ảnh dưới đây sẽ được dùng ngoài trang chi tiết.`
-              : 'Chưa có ảnh không gian sống. Bấm “Thêm ảnh” để chọn ảnh từ thư viện.'}
+              ? `Đang chọn ${formGallery.length} ảnh. Thứ tự ảnh bên dưới sẽ được dùng cho album cuối trang chi tiết dự án.`
+              : 'Chưa có ảnh album cuối trang. Bấm "Thêm ảnh" để chọn ảnh từ Media Library.'}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -1483,7 +1483,7 @@ export default function AdminProjects() {
           {formGallery.map((imgUrl, idx) => (
             <div key={`${imgUrl}-${idx}`} className="overflow-hidden rounded-xl border border-[#E8DCCB] bg-white">
               <div className="aspect-video overflow-hidden bg-[#FBF8F2]">
-                <img src={imgUrl} alt={`Ảnh không gian sống ${idx + 1}`} className="h-full w-full object-cover" />
+                <img src={imgUrl} alt={`Ảnh album cuối trang ${idx + 1}`} className="h-full w-full object-cover" />
               </div>
               <div className="space-y-2 p-3">
                 <div>
@@ -1513,7 +1513,6 @@ export default function AdminProjects() {
       ) : null}
     </div>
   );
-
   const getMediaSelectorSelectedUrls = () => {
     if (mediaSelectorTarget === 'gallery') return formGallery;
     if (mediaSelectorTarget === 'thumbnail') return formThumbnail ? [formThumbnail] : [];
@@ -3070,7 +3069,45 @@ export default function AdminProjects() {
                       size="lg"
                     />
 
-                    {renderGalleryManager(true)}
+                    <div className="space-y-4 rounded-2xl border border-[#E8DCCB] bg-white p-4">
+                      <div>
+                        <h3 className="text-sm font-bold text-[#1F1B16]">Album ảnh cuối trang chi tiết</h3>
+                        <p className="mt-1 text-xs text-[#8C7A6B]">
+                          Ảnh ở đây sẽ hiển thị thành album ở gần cuối trang chi tiết dự án. Chọn ảnh bằng Media Library, có thể kéo thứ tự bằng nút đưa lên/đưa xuống.
+                        </p>
+                      </div>
+                      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                        <div>
+                          <label className="mb-1 block text-xs font-semibold text-[#8C7A6B]">Nhãn nhỏ của album</label>
+                          <input
+                            value={formGalleryLabel}
+                            onChange={(e) => setFormGalleryLabel(e.target.value)}
+                            className={inputClass}
+                            placeholder="Ví dụ: Thư viện hình ảnh"
+                          />
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-xs font-semibold text-[#8C7A6B]">Tiêu đề album</label>
+                          <input
+                            value={formGalleryTitle}
+                            onChange={(e) => setFormGalleryTitle(e.target.value)}
+                            className={inputClass}
+                            placeholder="Ví dụ: Bộ sưu tập hình ảnh dự án"
+                          />
+                        </div>
+                        <div className="md:col-span-2">
+                          <label className="mb-1 block text-xs font-semibold text-[#8C7A6B]">Mô tả album</label>
+                          <textarea
+                            value={formGalleryDescription}
+                            onChange={(e) => setFormGalleryDescription(e.target.value)}
+                            rows={3}
+                            className={inputClass}
+                            placeholder="Nhập mô tả ngắn cho album cuối trang chi tiết"
+                          />
+                        </div>
+                      </div>
+                      {renderGalleryManager(true)}
+                    </div>
 
                     <AdminMediaField
                       label="Tài liệu Brochure / PDF"
