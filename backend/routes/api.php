@@ -152,6 +152,7 @@ Route::group(['prefix' => 'v1'], function() {
             Route::post('/seo', [SeoController::class, 'update']);
 
             // Homepage content CRUD
+            Route::get('/admin/hero-banners', [HeroBannerController::class, 'adminIndex']);
             Route::post('/hero-banners', [HeroBannerController::class, 'store']);
             Route::put('/hero-banners/{id}', [HeroBannerController::class, 'update']);
             Route::delete('/hero-banners/{id}', [HeroBannerController::class, 'destroy']);

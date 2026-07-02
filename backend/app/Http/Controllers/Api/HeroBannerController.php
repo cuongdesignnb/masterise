@@ -11,11 +11,24 @@ class HeroBannerController extends Controller
     /**
      * Get list of active hero banners ordered by sort_order.
      */
-    public function index()
+    public function index(Request $request)
     {
         $banners = HeroBanner::where('is_active', true)
             ->orderBy('sort_order')
             ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $banners
+        ], 200);
+    }
+
+    /**
+     * Get all hero banners for admin management.
+     */
+    public function adminIndex()
+    {
+        $banners = HeroBanner::orderBy('sort_order')->get();
 
         return response()->json([
             'success' => true,

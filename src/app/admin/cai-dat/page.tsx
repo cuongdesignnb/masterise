@@ -36,13 +36,6 @@ import { postService } from '@/services/postService';
 import { projectService } from '@/services/projectService';
 
 // Interfaces for structured settings
-interface SlideItem {
-  title: string;
-  subtitle: string;
-  image: string;
-  link: string;
-}
-
 interface FaqItem {
   question: string;
   answer: string;
@@ -64,7 +57,7 @@ export default function AdminSettings() {
   const queryClient = useQueryClient();
   const toast = useToast();
   const [activeTab, setActiveTab] = useState<'general' | 'homepage' | 'about' | 'contact' | 'projects_page' | 'news_page' | 'smtp' | 'footer'>('general');
-  const [mediaTarget, setMediaTarget] = useState<{ type: 'logo' | 'slide' | 'projects_hero_image' | 'projects_cta_image' | 'news_hero_image' | 'about_hero_image' | 'about_intro_image_0' | 'about_intro_image_1' | 'about_intro_image_2' | 'about_sustainability_image' | 'about_brand_story_image' | 'about_contact_cta_image' | 'about_collection_image'; index?: number } | null>(null);
+  const [mediaTarget, setMediaTarget] = useState<{ type: 'logo' | 'projects_hero_image' | 'projects_cta_image' | 'news_hero_image' | 'about_hero_image' | 'about_intro_image_0' | 'about_intro_image_1' | 'about_intro_image_2' | 'about_sustainability_image' | 'about_brand_story_image' | 'about_contact_cta_image' | 'about_collection_image'; index?: number } | null>(null);
 
   const [footerNavigation, setFooterNavigation] = useState<{ title: string; links: { label: string; href: string }[] }[]>([]);
   const [suggestTarget, setSuggestTarget] = useState<{ colIdx: number; linkIdx: number } | null>(null);
@@ -141,7 +134,6 @@ export default function AdminSettings() {
   const [instagramUrl, setInstagramUrl] = useState('');
   const [linkedinUrl, setLinkedinUrl] = useState('');
 
-  const [slides, setSlides] = useState<SlideItem[]>([]);
   const [faqs, setFaqs] = useState<FaqItem[]>([]);
 
   const [aboutMission, setAboutMission] = useState('');
@@ -328,7 +320,6 @@ export default function AdminSettings() {
       setInstagramUrl(social?.instagram || '');
       setLinkedinUrl(social?.linkedin || '');
 
-      setSlides(getVal('homepage_slides', 'json') || []);
       setFaqs(getVal('homepage_faq', 'json') || []);
 
       setAboutMission(getVal('about_mission') || 'Masterise Homes cam kết mang đến những trải nghiệm sống khác biệt thông qua sản phẩm chất lượng, dịch vụ tận tâm và những giá trị bền vững cho khách hàng, đối tác và cộng đồng.');
@@ -572,7 +563,6 @@ export default function AdminSettings() {
             value: { facebook: facebookUrl, youtube: youtubeUrl, zalo: zaloUrl, instagram: instagramUrl, linkedin: linkedinUrl }, 
             type: 'json' 
           },
-          { key: 'homepage_slides', value: slides, type: 'json' },
           { key: 'homepage_faq', value: faqs, type: 'json' },
           { key: 'about_mission', value: aboutMission, type: 'string' },
           { key: 'about_vision', value: aboutVision, type: 'string' },
@@ -780,9 +770,6 @@ export default function AdminSettings() {
     if (!mediaTarget) return;
     if (mediaTarget.type === 'logo') {
       setLogoUrl(url as string);
-    } else if (mediaTarget.type === 'slide' && mediaTarget.index !== undefined) {
-      const idx = mediaTarget.index;
-      setSlides(prev => prev.map((s, i) => i === idx ? { ...s, image: url as string } : s));
     } else if (mediaTarget.type === 'projects_hero_image') {
       setProjectsHeroImage(url as string);
     } else if (mediaTarget.type === 'projects_cta_image') {
@@ -810,18 +797,6 @@ export default function AdminSettings() {
   };
 
   // List Builders functions
-  const addSlide = () => {
-    setSlides([...slides, { title: '', subtitle: '', image: '', link: '' }]);
-  };
-
-  const removeSlide = (idx: number) => {
-    setSlides(slides.filter((_, i) => i !== idx));
-  };
-
-  const handleSlideChange = (idx: number, field: keyof SlideItem, val: string) => {
-    setSlides(prev => prev.map((s, i) => i === idx ? { ...s, [field]: val } : s));
-  };
-
   const addFaq = () => {
     setFaqs([...faqs, { question: '', answer: '' }]);
   };
@@ -1071,99 +1046,8 @@ export default function AdminSettings() {
           {activeTab === 'homepage' && (
             <div className="space-y-8">
               
-              {/* Homepage Slider */}
-              <div className="space-y-4">
-                <div className="flex justify-between items-center border-b border-[#E8DCCB]/60 pb-2">
-                  <h3 className="text-lg font-heading font-medium text-[#1F1B16] flex items-center gap-2">
-                    <ImageIcon className="w-5 h-5 text-[#B88746]" />
-                    Banner Hero Slider (Trang chủ)
-                  </h3>
-                  <button
-                    type="button"
-                    onClick={addSlide}
-                    className="flex items-center gap-1 px-3 py-1.5 bg-[#B88746] hover:bg-[#1F1B16] text-white text-xs font-bold rounded-xl transition-all"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    Thêm Banner Slide
-                  </button>
-                </div>
-
-                {slides.length === 0 ? (
-                  <div className="p-8 text-center border border-dashed border-[#E8DCCB] rounded-xl text-xs text-[#8C7A6B]">
-                    Chưa có banner nào. Hãy nhấn nút để thêm slide.
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {slides.map((slide, idx) => (
-                      <div key={idx} className="p-4 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2]/30 grid grid-cols-1 md:grid-cols-12 gap-4 relative group">
-                        
-                        {/* Slide Image selection */}
-                        <div className="md:col-span-3 space-y-2">
-                          <div className="aspect-video w-full rounded-lg border border-[#E8DCCB] bg-white overflow-hidden flex items-center justify-center relative">
-                            {slide.image ? (
-                              <img src={slide.image} alt={`Slide ${idx}`} className="w-full h-full object-cover" />
-                            ) : (
-                              <ImageIcon className="w-8 h-8 text-[#B88746]/40" />
-                            )}
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => setMediaTarget({ type: 'slide', index: idx })}
-                            className="w-full px-2 py-1 bg-white hover:bg-gray-100 border border-[#E8DCCB] text-[10px] font-bold rounded text-center transition-colors"
-                          >
-                            Chọn ảnh Banner
-                          </button>
-                        </div>
-
-                        {/* Slide Info */}
-                        <div className="md:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          <div className="sm:col-span-2">
-                            <label className="block text-[10px] font-bold text-[#8C7A6B] uppercase mb-0.5">Tiêu đề Banner</label>
-                            <input
-                              type="text"
-                              value={slide.title}
-                              onChange={(e) => handleSlideChange(idx, 'title', e.target.value)}
-                              className="w-full px-3 py-1.5 border border-[#E8DCCB] rounded-lg text-xs bg-white focus:outline-none"
-                              placeholder="Tiêu đề chính lớn..."
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-[10px] font-bold text-[#8C7A6B] uppercase mb-0.5">Mô tả phụ</label>
-                            <input
-                              type="text"
-                              value={slide.subtitle}
-                              onChange={(e) => handleSlideChange(idx, 'subtitle', e.target.value)}
-                              className="w-full px-3 py-1.5 border border-[#E8DCCB] rounded-lg text-xs bg-white focus:outline-none"
-                              placeholder="Dòng chữ phụ phía trên..."
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-[10px] font-bold text-[#8C7A6B] uppercase mb-0.5">Link liên kết nút (URL)</label>
-                            <input
-                              type="text"
-                              value={slide.link}
-                              onChange={(e) => handleSlideChange(idx, 'link', e.target.value)}
-                              className="w-full px-3 py-1.5 border border-[#E8DCCB] rounded-lg text-xs bg-white focus:outline-none"
-                              placeholder="Ví dụ: /du-an/the-global-city"
-                            />
-                          </div>
-                        </div>
-
-                        {/* Action delete */}
-                        <div className="md:col-span-1 flex items-center justify-end md:justify-center">
-                          <button
-                            type="button"
-                            onClick={() => removeSlide(idx)}
-                            className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                            title="Xóa banner slide"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+              <div className="rounded-2xl border border-[#E8DCCB] bg-[#FBF8F2] p-4 text-sm text-[#8C7A6B]">
+                Banner hero trang ch? ?? ???c qu?n l? t?p trung t?i menu <strong className="text-[#1F1B16]">Banner trang ch?</strong>. Trang ch? l?y d? li?u tr?c ti?p t? API <code>/hero-banners</code>, kh?ng d?ng c?u h?nh banner trong m?c C?i ??t n?a.
               </div>
 
               {/* FAQs Builder */}

@@ -31,7 +31,6 @@ import { projectService } from "@/services/projectService";
 import { postService } from "@/services/postService";
 import { unwrapData } from "@/adapters/apiResponseAdapter";
 import { getSalesStatusLabel, getSalesStatusColor } from "@/lib/salesStatus";
-import { useSiteSettings } from "@/providers/SiteSettingsProvider";
 import {
   fadeUp,
   fadeIn,
@@ -50,7 +49,6 @@ type HomepageHero = {
   highlight?: string;
   description?: string;
   image?: string;
-  image_url?: string;
   link?: string;
   sort_order?: number;
   is_active?: boolean;
@@ -87,7 +85,6 @@ const aboutBullets = [
 ];
 
 export default function HomePageClient() {
-  const { homepageSlides, isLoaded } = useSiteSettings();
   const [heroSlides, setHeroSlides] = useState<HomepageHero[]>([fallbackHero]);
   const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
   const [heroAutoplay, setHeroAutoplay] = useState(true);
@@ -95,6 +92,20 @@ export default function HomePageClient() {
   const [posts, setPosts] = useState<Post[]>([]);
 
   useEffect(() => {
+    homepageService
+      .getHeroBanners()
+      .then((response) => {
+        const banners = unwrapData<HomepageHero[]>(response) || [];
+        const activeBanners = banners
+          .filter((banner) => banner.is_active !== false)
+          .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+          .filter((banner) => banner.image);
+
+        setHeroSlides(activeBanners.length > 0 ? activeBanners : [fallbackHero]);
+        setCurrentHeroIndex(0);
+      })
+      .catch(() => setHeroSlides([fallbackHero]));
+
     projectService
       .getFeaturedProjects({ limit: "6" })
       .then(setProjects)
@@ -105,40 +116,6 @@ export default function HomePageClient() {
       .then((response) => setPosts(unwrapData<Post[]>(response) || []))
       .catch(() => setPosts([]));
   }, []);
-
-  useEffect(() => {
-    if (!homepageSlides.length) return;
-    setHeroSlides(
-      homepageSlides.map((slide, index) => ({
-        id: `setting-${index}`,
-        title: slide.title,
-        subtitle: slide.subtitle,
-        image: slide.image,
-        link: slide.link || "/du-an",
-      }))
-    );
-    setCurrentHeroIndex(0);
-  }, [homepageSlides]);
-
-  useEffect(() => {
-    if (!isLoaded || homepageSlides.length > 0) return;
-
-    homepageService
-      .getHeroBanners()
-      .then((response) => {
-        const banners = unwrapData<HomepageHero[]>(response) || [];
-        const activeBanners = banners
-          .filter((banner) => banner.is_active !== false)
-          .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
-          .filter((banner) => banner.image || banner.image_url);
-
-        if (activeBanners.length > 0) {
-          setHeroSlides(activeBanners);
-          setCurrentHeroIndex(0);
-        }
-      })
-      .catch(() => setHeroSlides([fallbackHero]));
-  }, [homepageSlides.length, isLoaded]);
 
   useEffect(() => {
     if (!heroAutoplay || heroSlides.length <= 1) return;
@@ -157,7 +134,7 @@ export default function HomePageClient() {
   }, [currentHero]);
   const currentHeroSubtitle = currentHero.subtitle || currentHero.highlight || fallbackHero.highlight;
   const currentHeroDescription = currentHero.description || fallbackHero.description;
-  const currentHeroImage = currentHero.image || currentHero.image_url || fallbackHero.image;
+  const currentHeroImage = currentHero.image || fallbackHero.image;
   const currentHeroLink = currentHero.link || "/du-an";
 
   const goToHeroSlide = (index: number) => {

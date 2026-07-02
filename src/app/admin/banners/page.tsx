@@ -13,13 +13,14 @@ import {
   X,
   Image as ImageIcon,
 } from 'lucide-react';
+import MediaSelectModal from '@/components/admin/MediaSelectModal';
 
 interface Banner {
   id: number;
-  title: string;
+  title_lines: string[];
   highlight: string;
   description: string;
-  image_url: string;
+  image: string;
   sort_order: number;
   is_active: boolean;
 }
@@ -30,6 +31,7 @@ export default function AdminBanners() {
 
   // Modal states
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isMediaOpen, setIsMediaOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Banner | null>(null);
 
   // Form states
@@ -44,7 +46,7 @@ export default function AdminBanners() {
   const { data: bannersData, isLoading } = useQuery({
     queryKey: ['admin-banners'],
     queryFn: async () => {
-      const response = await api.get<Banner[]>('/hero-banners');
+      const response = await api.get<Banner[]>('/admin/hero-banners');
       return response;
     },
   });
@@ -64,10 +66,10 @@ export default function AdminBanners() {
   // Open Form for Edit
   const handleEditOpen = (item: Banner) => {
     setEditingItem(item);
-    setFormTitle(item.title || '');
+    setFormTitle((item.title_lines || []).join('\n'));
     setFormHighlight(item.highlight || '');
     setFormDescription(item.description || '');
-    setFormImageUrl(item.image_url || '');
+    setFormImageUrl(item.image || '');
     setFormSortOrder(item.sort_order || 0);
     setFormIsActive(item.is_active ?? true);
     setIsFormOpen(true);
@@ -77,10 +79,10 @@ export default function AdminBanners() {
   const saveMutation = useMutation({
     mutationFn: async () => {
       const payload = {
-        title: formTitle,
+        title_lines: formTitle.split('\n').map((line) => line.trim()).filter(Boolean),
         highlight: formHighlight,
         description: formDescription,
-        image_url: formImageUrl,
+        image: formImageUrl,
         sort_order: Number(formSortOrder),
         is_active: formIsActive,
       };
@@ -169,16 +171,16 @@ export default function AdminBanners() {
                   <tr key={item.id} className="hover:bg-[#FBF8F2]/30 transition-colors">
                     <td className="px-6 py-4">
                       <div className="w-20 h-12 rounded-lg bg-[#FBF8F2] border border-[#E8DCCB]/60 overflow-hidden shrink-0 flex items-center justify-center">
-                        {item.image_url ? (
-                          <img src={item.image_url} alt={item.title} className="w-full h-full object-cover" />
+                        {item.image ? (
+                          <img src={item.image} alt={(item.title_lines || []).join(' ')} className="w-full h-full object-cover" />
                         ) : (
                           <ImageIcon className="w-5 h-5 text-[#B88746]/40" />
                         )}
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="font-semibold text-[#1F1B16] block max-w-xs truncate" title={item.title}>
-                        {item.title || '-'}
+                      <span className="font-semibold text-[#1F1B16] block max-w-xs truncate" title={(item.title_lines || []).join(' ')}>
+                        {(item.title_lines || []).join(' ') || '-'}
                       </span>
                     </td>
                     <td className="px-6 py-4">
@@ -297,19 +299,24 @@ export default function AdminBanners() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">URL hình ảnh</label>
-                  <input
-                    type="text"
-                    value={formImageUrl}
-                    onChange={(e) => setFormImageUrl(e.target.value)}
-                    className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
-                    placeholder="https://example.com/image.jpg"
-                  />
+                  <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Ảnh banner từ Media Library *</label>
                   {formImageUrl && (
                     <div className="mt-2 w-full h-32 rounded-xl border border-[#E8DCCB] overflow-hidden bg-[#FBF8F2]">
                       <img src={formImageUrl} alt="Preview" className="w-full h-full object-cover" />
                     </div>
                   )}
+                  <div className="mt-2 flex items-center gap-2">
+                    <div className="min-h-10 flex-1 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] px-3 py-2 text-xs text-[#8C7A6B]">
+                      {formImageUrl ? 'Đã chọn ảnh từ Media Library' : 'Chưa chọn ảnh banner'}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsMediaOpen(true)}
+                      className="rounded-xl bg-[#1F1B16] px-4 py-2 text-xs font-bold text-white transition hover:bg-[#B88746]"
+                    >
+                      Chọn ảnh
+                    </button>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -358,6 +365,20 @@ export default function AdminBanners() {
               </div>
             </motion.div>
           </div>
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {isMediaOpen && (
+          <MediaSelectModal
+            isOpen={isMediaOpen}
+            multiple={false}
+            selectedUrls={formImageUrl ? [formImageUrl] : []}
+            onClose={() => setIsMediaOpen(false)}
+            onSelect={(url) => {
+              setFormImageUrl(Array.isArray(url) ? url[0] || '' : url);
+              setIsMediaOpen(false);
+            }}
+          />
         )}
       </AnimatePresence>
     </div>

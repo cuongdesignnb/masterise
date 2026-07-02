@@ -41,13 +41,6 @@ export interface ContactDepartment {
   icon?: string;
 }
 
-export interface HomepageSlide {
-  title: string;
-  subtitle: string;
-  image: string;
-  link: string;
-}
-
 export interface ProjectsPageHero {
   breadcrumb: string[];
   badge: string;
@@ -170,7 +163,6 @@ export interface SiteSettings {
   logoUrl: string;
   socialLinks: SocialLinks;
   contactDepartments: ContactDepartment[];
-  homepageSlides: HomepageSlide[];
   projectsPageHero: ProjectsPageHero;
   projectsPageCta: ProjectsPageCta;
   newsPageHero: NewsPageHero;
@@ -208,7 +200,6 @@ const defaultSettings: SiteSettings = {
     linkedin: "",
   },
   contactDepartments: [],
-  homepageSlides: [],
   projectsPageHero: projectsHero,
   projectsPageCta: projectsCta,
   newsPageHero: newsHero,
@@ -287,28 +278,6 @@ export default function SiteSettingsProvider({
                 : data.contact_departments;
             if (Array.isArray(parsed)) {
               contactDepartments = parsed;
-            }
-          } catch {
-            // keep default
-          }
-        }
-
-        let homepageSlides: HomepageSlide[] = [];
-        if (data.homepage_slides) {
-          try {
-            const parsed =
-              typeof data.homepage_slides === "string"
-                ? JSON.parse(data.homepage_slides)
-                : data.homepage_slides;
-            if (Array.isArray(parsed)) {
-              homepageSlides = parsed
-                .filter((slide) => slide?.image)
-                .map((slide) => ({
-                  title: slide.title || "",
-                  subtitle: slide.subtitle || "",
-                  image: slide.image || "",
-                  link: slide.link || "",
-                }));
             }
           } catch {
             // keep default
@@ -666,7 +635,6 @@ export default function SiteSettingsProvider({
           logoUrl: (data.logo_url as string) || "",
           socialLinks,
           contactDepartments,
-          homepageSlides,
           projectsPageHero,
           projectsPageCta,
           newsPageHero,
