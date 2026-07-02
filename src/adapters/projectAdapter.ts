@@ -515,6 +515,7 @@ export function mapApiProjectToProjectCard(api: ApiProject): FrontendProject {
 
 export function mapApiProjectToProjectDetail(api: ApiProject): ProjectDetail {
   const galleryImages = normalizeGallery(api.gallery);
+  const detailGalleryImages = normalizeGallery(api.detail_gallery);
   const quickCard = normalizeHeroQuickCards(api);
   const facts = normalizeIconDetails(api.project_facts, 'MapPin');
 
@@ -539,6 +540,12 @@ export function mapApiProjectToProjectDetail(api: ApiProject): ProjectDetail {
       title: api.gallery_title || '',
       description: api.gallery_description || '',
       images: galleryImages,
+    },
+    detailGallery: {
+      label: api.detail_gallery_label || '',
+      title: api.detail_gallery_title || '',
+      description: api.detail_gallery_description || '',
+      images: detailGalleryImages,
     },
     sectionTitles: normalizeSectionTitles(api.section_titles),
     connectivity: normalizeConnectivity(api.connectivity, api.nearby_places),

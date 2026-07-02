@@ -66,6 +66,10 @@ class Project extends Model
         'gallery_label',
         'gallery_title',
         'gallery_description',
+        'detail_gallery',
+        'detail_gallery_label',
+        'detail_gallery_title',
+        'detail_gallery_description',
         'section_titles',
         'brochure_url',
         'video_url',
@@ -92,6 +96,7 @@ class Project extends Model
     {
         return [
             'gallery' => 'array',
+            'detail_gallery' => 'array',
             'amenities' => 'array',
             'highlight_points' => 'array',
             'quick_cards' => 'array',

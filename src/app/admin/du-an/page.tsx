@@ -136,7 +136,7 @@ const normalizeProjectSectionTitles = (value: unknown): ProjectSectionTitles => 
   }, { ...defaultProjectSectionTitles } as ProjectSectionTitles);
 };
 
-type BaseMediaTarget = 'thumbnail' | 'banner' | 'gallery' | 'brochure' | 'map';
+type BaseMediaTarget = 'thumbnail' | 'banner' | 'gallery' | 'detailGallery' | 'brochure' | 'map';
 type RepeaterMediaTarget =
   | { group: 'amenityDetails'; index: number; field: 'image' }
   | { group: 'handoverStandards'; index: number; field: 'image' }
@@ -256,6 +256,7 @@ export default function AdminProjects() {
   const [formThumbnail, setFormThumbnail] = useState('');
   const [formBannerImage, setFormBannerImage] = useState('');
   const [formGallery, setFormGallery] = useState<string[]>([]);
+  const [formDetailGallery, setFormDetailGallery] = useState<string[]>([]);
   const [formBrochureUrl, setFormBrochureUrl] = useState('');
   const [formVideoUrl, setFormVideoUrl] = useState('');
   const [formVirtualTourUrl, setFormVirtualTourUrl] = useState('');
@@ -269,6 +270,9 @@ export default function AdminProjects() {
   const [formGalleryLabel, setFormGalleryLabel] = useState('');
   const [formGalleryTitle, setFormGalleryTitle] = useState('');
   const [formGalleryDescription, setFormGalleryDescription] = useState('');
+  const [formDetailGalleryLabel, setFormDetailGalleryLabel] = useState('');
+  const [formDetailGalleryTitle, setFormDetailGalleryTitle] = useState('');
+  const [formDetailGalleryDescription, setFormDetailGalleryDescription] = useState('');
   const [formSectionTitles, setFormSectionTitles] = useState<ProjectSectionTitles>(defaultProjectSectionTitles);
   const [formSchemaPrice, setFormSchemaPrice] = useState('');
   const [formSchemaPriceCurrency, setFormSchemaPriceCurrency] = useState('VND');
@@ -316,6 +320,10 @@ export default function AdminProjects() {
     gallery_label: 'Nhãn section Không gian sống',
     gallery_title: 'Tiêu đề section Không gian sống',
     gallery_description: 'Mô tả section Không gian sống',
+    detail_gallery: 'Album ảnh cuối trang chi tiết',
+    detail_gallery_label: 'Nhãn album cuối trang',
+    detail_gallery_title: 'Tiêu đề album cuối trang',
+    detail_gallery_description: 'Mô tả album cuối trang',
     map_image_url: 'Ảnh bản đồ',
     category_ids: 'Danh mục dự án',
   };
@@ -331,6 +339,10 @@ export default function AdminProjects() {
     gallery_label: 'gallery',
     gallery_title: 'gallery',
     gallery_description: 'gallery',
+    detail_gallery: 'media',
+    detail_gallery_label: 'media',
+    detail_gallery_title: 'media',
+    detail_gallery_description: 'media',
     location: 'location',
     address: 'location',
     map_image_url: 'location',
@@ -695,6 +707,7 @@ export default function AdminProjects() {
     setFormThumbnail('');
     setFormBannerImage('');
     setFormGallery([]);
+    setFormDetailGallery([]);
     setFormBrochureUrl('');
     setFormVideoUrl('');
     setFormVirtualTourUrl('');
@@ -707,6 +720,9 @@ export default function AdminProjects() {
     setFormGalleryLabel('');
     setFormGalleryTitle('');
     setFormGalleryDescription('');
+    setFormDetailGalleryLabel('');
+    setFormDetailGalleryTitle('');
+    setFormDetailGalleryDescription('');
     setFormSectionTitles(defaultProjectSectionTitles);
     setFormSchemaPrice('');
     setFormSchemaPriceCurrency('VND');
@@ -782,6 +798,7 @@ export default function AdminProjects() {
     setFormThumbnail(project.thumbnail || '');
     setFormBannerImage(project.banner_image || '');
     setFormGallery(asStrings(project.gallery));
+    setFormDetailGallery(asStrings(project.detail_gallery));
     setFormBrochureUrl(project.brochure_url || '');
     setFormVideoUrl(project.video_url || '');
     setFormVirtualTourUrl(project.virtual_tour_url || '');
@@ -794,6 +811,9 @@ export default function AdminProjects() {
     setFormGalleryLabel(project.gallery_label || '');
     setFormGalleryTitle(project.gallery_title || '');
     setFormGalleryDescription(project.gallery_description || '');
+    setFormDetailGalleryLabel(project.detail_gallery_label || '');
+    setFormDetailGalleryTitle(project.detail_gallery_title || '');
+    setFormDetailGalleryDescription(project.detail_gallery_description || '');
     setFormSectionTitles(normalizeProjectSectionTitles(project.section_titles));
     setFormSchemaPrice(project.schema_price || '');
     setFormSchemaPriceCurrency(project.schema_price_currency || 'VND');
@@ -906,6 +926,7 @@ export default function AdminProjects() {
         }));
       const projectTimeline = cleanArray(formProjectTimeline, item => Boolean(item.date || item.title));
       const gallery = asStrings(formGallery);
+      const detailGallery = asStrings(formDetailGallery);
       const slugValue = formSlug.trim() || slugifyProjectName(formName);
       const shouldPublish = mode === 'publish' ? true : mode === 'draft' ? false : formIsPublished;
 
@@ -986,6 +1007,10 @@ export default function AdminProjects() {
         gallery_label: formGalleryLabel || null,
         gallery_title: formGalleryTitle || null,
         gallery_description: formGalleryDescription || null,
+        detail_gallery: detailGallery,
+        detail_gallery_label: formDetailGalleryLabel || null,
+        detail_gallery_title: formDetailGalleryTitle || null,
+        detail_gallery_description: formDetailGalleryDescription || null,
         section_titles: formSectionTitles,
         brochure_url: formBrochureUrl,
         video_url: formVideoUrl || null,
@@ -1158,6 +1183,9 @@ export default function AdminProjects() {
       const selectedArr = Array.isArray(url) ? url : [url];
       setFormGallery(asStrings(selectedArr));
       setActiveChecklistTarget({ tab: 'gallery', field: selectedArr.length ? undefined : 'gallery' });
+    } else if (mediaSelectorTarget === 'detailGallery') {
+      const selectedArr = Array.isArray(url) ? url : [url];
+      setFormDetailGallery(asStrings(selectedArr));
     }
     setMediaSelectorTarget(null);
   };
@@ -1453,37 +1481,53 @@ export default function AdminProjects() {
 
   const getShortUrl = (url: string) => url.length > 64 ? `${url.slice(0, 34)}...${url.slice(-22)}` : url;
 
-  const renderGalleryManager = (compact = false) => (
-    <div data-project-field="gallery" className={`space-y-3 rounded-xl border bg-[#FBF8F2]/60 p-4 ${highlightClass('gallery') || 'border-[#E8DCCB]'}`}>
+  const renderImageListManager = ({
+    field,
+    title,
+    description,
+    emptyText,
+    images,
+    setImages,
+    target,
+    compact = false,
+  }: {
+    field: string;
+    title: string;
+    description: string;
+    emptyText: string;
+    images: string[];
+    setImages: React.Dispatch<React.SetStateAction<string[]>>;
+    target: BaseMediaTarget;
+    compact?: boolean;
+  }) => (
+    <div data-project-field={field} className={`space-y-3 rounded-xl border bg-[#FBF8F2]/60 p-4 ${highlightClass(field) || 'border-[#E8DCCB]'}`}>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-xs font-bold text-[#1F1B16]">Album ảnh cuối trang chi tiết</p>
+          <p className="text-xs font-bold text-[#1F1B16]">{title}</p>
           <p className="mt-1 text-[11px] text-[#8C7A6B]">
-            {formGallery.length
-              ? `Đang chọn ${formGallery.length} ảnh. Thứ tự ảnh bên dưới sẽ được dùng cho album cuối trang chi tiết dự án.`
-              : 'Chưa có ảnh album cuối trang. Bấm "Thêm ảnh" để chọn ảnh từ Media Library.'}
+            {images.length ? `Đang chọn ${images.length} ảnh. ${description}` : emptyText}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          {formGallery.length ? (
+          {images.length ? (
             <button
               type="button"
-              onClick={() => setFormGallery([])}
+              onClick={() => setImages([])}
               className="px-3 py-1.5 border border-red-200 bg-white text-red-600 text-xs font-semibold rounded-lg hover:bg-red-50 transition-colors"
             >
               Bỏ chọn tất cả
             </button>
           ) : null}
-          <button type="button" onClick={() => setMediaSelectorTarget('gallery')} className={addButtonClass}>Thêm ảnh</button>
+          <button type="button" onClick={() => setMediaSelectorTarget(target)} className={addButtonClass}>Thêm ảnh</button>
         </div>
       </div>
 
-      {formGallery.length ? (
+      {images.length ? (
         <div className={`grid gap-3 ${compact ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3'}`}>
-          {formGallery.map((imgUrl, idx) => (
+          {images.map((imgUrl, idx) => (
             <div key={`${imgUrl}-${idx}`} className="overflow-hidden rounded-xl border border-[#E8DCCB] bg-white">
               <div className="aspect-video overflow-hidden bg-[#FBF8F2]">
-                <img src={imgUrl} alt={`Ảnh album cuối trang ${idx + 1}`} className="h-full w-full object-cover" />
+                <img src={imgUrl} alt={`${title} ${idx + 1}`} className="h-full w-full object-cover" />
               </div>
               <div className="space-y-2 p-3">
                 <div>
@@ -1495,11 +1539,11 @@ export default function AdminProjects() {
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-1">
-                  <button type="button" onClick={() => moveListItem(formGallery, setFormGallery, idx, -1)} disabled={idx === 0} className={removeButtonClass}>Đưa lên</button>
-                  <button type="button" onClick={() => moveListItem(formGallery, setFormGallery, idx, 1)} disabled={idx === formGallery.length - 1} className={removeButtonClass}>Đưa xuống</button>
+                  <button type="button" onClick={() => moveListItem(images, setImages, idx, -1)} disabled={idx === 0} className={removeButtonClass}>Đưa lên</button>
+                  <button type="button" onClick={() => moveListItem(images, setImages, idx, 1)} disabled={idx === images.length - 1} className={removeButtonClass}>Đưa xuống</button>
                   <button
                     type="button"
-                    onClick={() => setFormGallery(formGallery.filter((_, itemIndex) => itemIndex !== idx))}
+                    onClick={() => setImages(images.filter((_, itemIndex) => itemIndex !== idx))}
                     className="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-semibold text-red-600 hover:bg-red-50 rounded-lg"
                   >
                     <X className="h-3 w-3" />
@@ -1513,8 +1557,31 @@ export default function AdminProjects() {
       ) : null}
     </div>
   );
+
+  const renderGalleryManager = (compact = false) => renderImageListManager({
+    field: 'gallery',
+    title: 'Ảnh Không gian sống',
+    description: 'Thứ tự ảnh bên dưới sẽ dùng cho section Không gian sống phía trên trang chi tiết.',
+    emptyText: 'Chưa có ảnh Không gian sống. Bấm "Thêm ảnh" để chọn ảnh từ Media Library.',
+    images: formGallery,
+    setImages: setFormGallery,
+    target: 'gallery',
+    compact,
+  });
+
+  const renderDetailGalleryManager = (compact = false) => renderImageListManager({
+    field: 'detail_gallery',
+    title: 'Album ảnh cuối trang chi tiết',
+    description: 'Thứ tự ảnh bên dưới chỉ dùng cho album cuối trang chi tiết, không ảnh hưởng section Không gian sống.',
+    emptyText: 'Chưa có ảnh album cuối trang. Bấm "Thêm ảnh" để chọn ảnh từ Media Library.',
+    images: formDetailGallery,
+    setImages: setFormDetailGallery,
+    target: 'detailGallery',
+    compact,
+  });
   const getMediaSelectorSelectedUrls = () => {
     if (mediaSelectorTarget === 'gallery') return formGallery;
+    if (mediaSelectorTarget === 'detailGallery') return formDetailGallery;
     if (mediaSelectorTarget === 'thumbnail') return formThumbnail ? [formThumbnail] : [];
     if (mediaSelectorTarget === 'banner') return formBannerImage ? [formBannerImage] : [];
     if (mediaSelectorTarget === 'map') return formMapImageUrl ? [formMapImageUrl] : [];
@@ -3073,15 +3140,15 @@ export default function AdminProjects() {
                       <div>
                         <h3 className="text-sm font-bold text-[#1F1B16]">Album ảnh cuối trang chi tiết</h3>
                         <p className="mt-1 text-xs text-[#8C7A6B]">
-                          Ảnh ở đây sẽ hiển thị thành album ở gần cuối trang chi tiết dự án. Chọn ảnh bằng Media Library, có thể kéo thứ tự bằng nút đưa lên/đưa xuống.
+                          Ảnh ở đây chỉ hiển thị thành album ở gần cuối trang chi tiết dự án, không ảnh hưởng section Không gian sống phía trên.
                         </p>
                       </div>
                       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                         <div>
                           <label className="mb-1 block text-xs font-semibold text-[#8C7A6B]">Nhãn nhỏ của album</label>
                           <input
-                            value={formGalleryLabel}
-                            onChange={(e) => setFormGalleryLabel(e.target.value)}
+                            value={formDetailGalleryLabel}
+                            onChange={(e) => setFormDetailGalleryLabel(e.target.value)}
                             className={inputClass}
                             placeholder="Ví dụ: Thư viện hình ảnh"
                           />
@@ -3089,8 +3156,8 @@ export default function AdminProjects() {
                         <div>
                           <label className="mb-1 block text-xs font-semibold text-[#8C7A6B]">Tiêu đề album</label>
                           <input
-                            value={formGalleryTitle}
-                            onChange={(e) => setFormGalleryTitle(e.target.value)}
+                            value={formDetailGalleryTitle}
+                            onChange={(e) => setFormDetailGalleryTitle(e.target.value)}
                             className={inputClass}
                             placeholder="Ví dụ: Bộ sưu tập hình ảnh dự án"
                           />
@@ -3098,15 +3165,15 @@ export default function AdminProjects() {
                         <div className="md:col-span-2">
                           <label className="mb-1 block text-xs font-semibold text-[#8C7A6B]">Mô tả album</label>
                           <textarea
-                            value={formGalleryDescription}
-                            onChange={(e) => setFormGalleryDescription(e.target.value)}
+                            value={formDetailGalleryDescription}
+                            onChange={(e) => setFormDetailGalleryDescription(e.target.value)}
                             rows={3}
                             className={inputClass}
                             placeholder="Nhập mô tả ngắn cho album cuối trang chi tiết"
                           />
                         </div>
                       </div>
-                      {renderGalleryManager(true)}
+                      {renderDetailGalleryManager(true)}
                     </div>
 
                     <AdminMediaField

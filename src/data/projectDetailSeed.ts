@@ -50,6 +50,12 @@ export const projectDetail: ProjectDetail = {
       "https://images.unsplash.com/photo-1572331165267-854da2b10ccc?q=88&w=900&auto=format&fit=crop",
     ],
   },
+  detailGallery: {
+    label: "Thư viện hình ảnh",
+    title: "Album ảnh dự án",
+    description: "Khám phá hình ảnh thực tế, tiện ích, cảnh quan và những góc nhìn nổi bật của dự án.",
+    images: [],
+  },
   connectivity: [
     { time: "2 phút", label: "Đến đường Liên Phường" },
     { time: "5 phút", label: "Đến tuyến Metro Thủ Thiêm - Long Thành" },

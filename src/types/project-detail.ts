@@ -92,6 +92,12 @@ export type ProjectDetail = {
     description: string;
     images: string[];
   };
+  detailGallery: {
+    label: string;
+    title: string;
+    description: string;
+    images: string[];
+  };
   sectionTitles?: Record<string, { eyebrow?: string; title?: string }>;
   connectivity: { time: string; label: string }[];
   amenities: {
