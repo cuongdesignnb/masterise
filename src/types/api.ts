@@ -157,8 +157,25 @@ export interface Post {
   ai_prompt?: string | null;
   source_keyword?: string | null;
   scheduled_at?: string | null;
+  media_items?: PostMedia[];
   created_at: string;
   updated_at: string;
+}
+
+export interface PostMedia {
+  id?: number;
+  post_id?: number;
+  media_id?: number | null;
+  type: 'image' | 'video_upload' | 'youtube' | 'document';
+  title?: string | null;
+  url?: string | null;
+  thumbnail_url?: string | null;
+  mime_type?: string | null;
+  file_size?: number | null;
+  sort_order?: number;
+  meta?: Record<string, unknown> | null;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface Tag {

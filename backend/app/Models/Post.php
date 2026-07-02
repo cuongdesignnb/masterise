@@ -60,4 +60,9 @@ class Post extends Model
     {
         return $this->morphOne(SeoMeta::class, 'seoable');
     }
+
+    public function mediaItems()
+    {
+        return $this->hasMany(PostMedia::class)->orderBy('sort_order');
+    }
 }

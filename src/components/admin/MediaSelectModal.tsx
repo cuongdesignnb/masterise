@@ -59,7 +59,7 @@ export default function MediaSelectModal({
       }
     },
     onError: (err: unknown) => {
-      alert(err instanceof Error ? err.message : 'Lỗi khi tải ảnh lên.');
+      alert(err instanceof Error ? err.message : 'Lỗi khi tải file lên.');
       setUploading(false);
     },
   });
@@ -122,12 +122,12 @@ export default function MediaSelectModal({
         <div className="px-6 py-4 border-b border-[#E8DCCB] flex justify-between items-center bg-[#FBF8F2]">
           <div>
             <h3 className="font-heading font-medium text-lg text-[#1F1B16]">
-              {multiple ? 'Chọn nhiều ảnh từ Thư viện Media' : 'Chọn một ảnh từ Thư viện Media'}
+              {multiple ? 'Chọn nhiều file từ Thư viện Media' : 'Chọn một file từ Thư viện Media'}
             </h3>
             <p className="text-xs text-[#8C7A6B]">
               {multiple
-                ? 'Ảnh đang chọn sẽ có viền nổi bật và dấu tích. Bấm “Xác nhận chọn ảnh” để cập nhật danh sách.'
-                : 'Bấm vào một ảnh để chọn ngay hoặc tải ảnh mới lên.'}
+                ? 'File đang chọn sẽ có viền nổi bật và dấu tích. Bấm “Xác nhận chọn file” để cập nhật danh sách.'
+                : 'Bấm vào một file để chọn ngay hoặc tải file mới lên.'}
             </p>
           </div>
           <button
@@ -147,7 +147,7 @@ export default function MediaSelectModal({
             </div>
             <input
               type="text"
-              placeholder="Tìm kiếm hình ảnh..."
+              placeholder="Tìm kiếm file..."
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
@@ -165,11 +165,11 @@ export default function MediaSelectModal({
               ) : (
                 <Upload className="w-3.5 h-3.5" />
               )}
-              {uploading ? 'Đang tải...' : 'Tải ảnh mới lên'}
+              {uploading ? 'Đang tải...' : 'Tải file mới lên'}
               <input
                 type="file"
                 multiple
-                accept="image/*,application/pdf"
+                accept="image/*,video/mp4,video/webm,video/quicktime,application/pdf,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                 className="hidden"
                 onChange={handleFileUpload}
                 disabled={uploading}
@@ -211,7 +211,7 @@ export default function MediaSelectModal({
             </div>
           ) : mediaList.length === 0 ? (
             <div className="p-12 text-center text-[#8C7A6B] text-xs">
-              Chưa có file nào khớp trong thư viện. Vui lòng tải ảnh lên.
+              Chưa có file nào khớp trong thư viện. Vui lòng tải file lên.
             </div>
           ) : (
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
@@ -266,8 +266,8 @@ export default function MediaSelectModal({
         <div className="px-6 py-4 border-t border-[#E8DCCB] flex justify-between items-center bg-[#FBF8F2]">
           <div className="text-xs text-[#8C7A6B]">
             {multiple
-              ? `Đã chọn ${tempSelected.length} ảnh`
-              : 'Bấm vào ảnh để chọn ngay'}
+              ? `Đã chọn ${tempSelected.length} file`
+              : 'Bấm vào file để chọn ngay'}
           </div>
           <div className="flex gap-2">
             <button
@@ -289,7 +289,7 @@ export default function MediaSelectModal({
                   onClick={handleConfirmSelection}
                   className="px-5 py-2 bg-[#B88746] hover:bg-[#1F1B16] text-white rounded-xl text-xs font-semibold transition-colors shadow-sm"
                 >
-                  Xác nhận chọn ảnh ({tempSelected.length})
+                  Xác nhận chọn file ({tempSelected.length})
                 </button>
               </>
             )}

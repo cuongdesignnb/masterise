@@ -8,6 +8,7 @@ import Footer from "@/components/Footer";
 import MobileTabBar from "@/components/MobileTabBar";
 import Container from "@/components/Container";
 import GlobalContactForm from "@/components/lead/GlobalContactForm";
+import NewsMediaBlocks from "@/components/news-detail/NewsMediaBlocks";
 import { getServerApiUrl } from "@/lib/serverApi";
 import type { Post } from "@/types/api";
 
@@ -78,6 +79,7 @@ export default async function NewsArticleDetailPage({ params }: Props) {
   if (!data?.post) notFound();
 
   const { post, related = [] } = data;
+  const videos = (post.media_items || []).filter((item) => (item.type === "youtube" || item.type === "video_upload") && item.url);
   const publishedLabel = post.published_at ? new Date(post.published_at).toLocaleDateString("vi-VN") : null;
   const minutes = readingMinutes(post.content);
   const jsonLdArticle = {
@@ -96,10 +98,23 @@ export default async function NewsArticleDetailPage({ params }: Props) {
     },
     mainEntityOfPage: `${siteUrl}/tin-tuc/${post.slug}`,
   };
+  const jsonLdVideos = videos.map((video) => ({
+    "@context": "https://schema.org",
+    "@type": "VideoObject",
+    name: video.title || post.title,
+    description: post.summary || post.title,
+    thumbnailUrl: video.thumbnail_url || post.thumbnail || undefined,
+    uploadDate: post.published_at || post.created_at,
+    contentUrl: video.type === "video_upload" ? video.url : undefined,
+    embedUrl: video.type === "youtube" ? video.url : undefined,
+  }));
 
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdArticle) }} />
+      {jsonLdVideos.map((schema, index) => (
+        <script key={index} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
+      ))}
       <Header />
       <MobileTabBar />
       <main className="relative z-10 bg-[#FBF8F2] pb-16 lg:pb-0">
@@ -151,6 +166,9 @@ export default async function NewsArticleDetailPage({ params }: Props) {
             </div>
           </Container>
         )}
+        <Container>
+          <NewsMediaBlocks mediaItems={post.media_items} />
+        </Container>
         <Container className="pb-10">
           <article
             className="prose prose-neutral mx-auto max-w-3xl rounded-lg bg-white px-5 py-7 text-left text-[15px] leading-8 shadow-sm prose-headings:font-black prose-headings:text-ink prose-p:text-[#4B4238] prose-a:text-gold prose-img:rounded-lg sm:px-8 sm:py-9 sm:text-base"

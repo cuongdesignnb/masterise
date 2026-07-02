@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useToast } from '@/components/admin/Toast';
-import { Post, PostCategory } from '@/types/api';
+import { Post, PostCategory, PostMedia } from '@/types/api';
 import { useAuth } from '@/context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -21,10 +21,44 @@ import {
   Star,
   Eye,
   Calendar,
-  User
+  User,
+  FileText,
+  Play,
+  Video,
+  ArrowUp,
+  ArrowDown
 } from 'lucide-react';
 import MediaSelectModal from '@/components/admin/MediaSelectModal';
 import RichTextEditor from '@/components/admin/RichTextEditor';
+
+type NewsMediaDraft = Omit<PostMedia, 'id' | 'post_id' | 'created_at' | 'updated_at'> & {
+  id?: number;
+};
+
+type MediaSelectTarget =
+  | { mode: 'thumbnail' }
+  | { mode: 'gallery' }
+  | { mode: 'item'; index: number }
+  | null;
+
+const createMediaDraft = (type: NewsMediaDraft['type'], url = ''): NewsMediaDraft => ({
+  type,
+  title: '',
+  url,
+  thumbnail_url: '',
+  media_id: null,
+  mime_type: null,
+  file_size: null,
+  sort_order: 0,
+  meta: null,
+});
+
+function inferMediaTypeFromUrl(url: string): NewsMediaDraft['type'] {
+  const clean = url.split('?')[0].toLowerCase();
+  if (/\.(mp4|webm|mov)$/.test(clean)) return 'video_upload';
+  if (/\.(pdf|doc|docx)$/.test(clean)) return 'document';
+  return 'image';
+}
 
 function AdminNews() {
   const queryClient = useQueryClient();
@@ -67,6 +101,7 @@ function AdminNews() {
   
   // Media Selector state
   const [isMediaOpen, setIsMediaOpen] = useState(false);
+  const [mediaSelectTarget, setMediaSelectTarget] = useState<MediaSelectTarget>(null);
 
   // Form states
   const [formTitle, setFormTitle] = useState('');
@@ -74,6 +109,7 @@ function AdminNews() {
   const [formSummary, setFormSummary] = useState('');
   const [formContent, setFormContent] = useState('');
   const [formThumbnail, setFormThumbnail] = useState('');
+  const [formMediaItems, setFormMediaItems] = useState<NewsMediaDraft[]>([]);
   const [formPostType, setFormPostType] = useState<'news' | 'investment' | 'event'>('news');
   const [formEventStartAt, setFormEventStartAt] = useState('');
   const [formEventEndAt, setFormEventEndAt] = useState('');
@@ -151,6 +187,7 @@ function AdminNews() {
     setFormSummary('');
     setFormContent('');
     setFormThumbnail('');
+    setFormMediaItems([]);
     setFormPostType('news');
     setFormEventStartAt('');
     setFormEventEndAt('');
@@ -178,6 +215,18 @@ function AdminNews() {
     setFormSummary(post.summary || '');
     setFormContent(post.content || '');
     setFormThumbnail(post.thumbnail || '');
+    setFormMediaItems((post.media_items || []).map((item, index) => ({
+      id: item.id,
+      media_id: item.media_id || null,
+      type: item.type,
+      title: item.title || '',
+      url: item.url || '',
+      thumbnail_url: item.thumbnail_url || '',
+      mime_type: item.mime_type || null,
+      file_size: item.file_size || null,
+      sort_order: item.sort_order ?? index,
+      meta: item.meta || null,
+    })));
     setFormPostType(post.post_type || 'news');
     setFormEventStartAt(post.event_start_at ? post.event_start_at.slice(0, 16) : '');
     setFormEventEndAt(post.event_end_at ? post.event_end_at.slice(0, 16) : '');
@@ -211,6 +260,13 @@ function AdminNews() {
         status: formStatus,
         is_featured: formIsFeatured,
         post_category_id: Number(formCategoryId),
+        media_items: formMediaItems.map((item, index) => ({
+          ...item,
+          sort_order: index,
+          title: item.title || undefined,
+          thumbnail_url: item.thumbnail_url || undefined,
+          url: item.url || undefined,
+        })),
         seo_title: formSeoTitle || formTitle,
         seo_description: formSeoDescription || formSummary,
         seo_keywords: formSeoKeywords,
@@ -296,6 +352,33 @@ function AdminNews() {
     setFormError('');
     setFieldErrors({});
     savePostMutation.mutate();
+  };
+
+  const updateMediaItem = (index: number, patch: Partial<NewsMediaDraft>) => {
+    setFormMediaItems((items) => items.map((item, idx) => idx === index ? { ...item, ...patch } : item));
+  };
+
+  const addMediaItem = (type: NewsMediaDraft['type'], url = '') => {
+    setFormMediaItems((items) => [...items, { ...createMediaDraft(type, url), sort_order: items.length }]);
+  };
+
+  const removeMediaItem = (index: number) => {
+    setFormMediaItems((items) => items.filter((_, idx) => idx !== index));
+  };
+
+  const moveMediaItem = (index: number, direction: -1 | 1) => {
+    setFormMediaItems((items) => {
+      const next = [...items];
+      const target = index + direction;
+      if (target < 0 || target >= next.length) return items;
+      [next[index], next[target]] = [next[target], next[index]];
+      return next.map((item, idx) => ({ ...item, sort_order: idx }));
+    });
+  };
+
+  const openMediaSelector = (target: MediaSelectTarget) => {
+    setMediaSelectTarget(target);
+    setIsMediaOpen(true);
   };
 
   // Post Category Mutations
@@ -599,7 +682,7 @@ function AdminNews() {
               <div className="flex bg-[#FBF8F2]/60 px-6 border-b border-[#E8DCCB]/60 text-xs shrink-0 select-none">
                 {[
                   { id: 'content', label: 'Soạn thảo nội dung' },
-                  { id: 'media', label: 'Hình ảnh đại diện' },
+                  { id: 'media', label: 'Media & Tài liệu' },
                   { id: 'seo', label: 'Cấu hình SEO' }
                 ].map(tab => (
                   <button
@@ -781,35 +864,117 @@ function AdminNews() {
                   </div>
                 )}
 
-                {/* TAB 2: Thumbnail Selection */}
+                {/* TAB 2: Media Library */}
                 {activeTab === 'media' && (
-                  <div className="space-y-4">
-                    <label className="block text-xs font-semibold text-[#8C7A6B]">Ảnh đại diện bài viết</label>
-                    <div className="flex gap-4 items-center">
-                      <div className="w-32 h-20 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] overflow-hidden flex items-center justify-center shrink-0">
-                        {formThumbnail ? (
-                          <img src={formThumbnail} alt="Thumbnail Preview" className="w-full h-full object-cover" />
-                        ) : (
-                          <ImageIcon className="w-8 h-8 text-[#B88746]/40" />
-                        )}
+                  <div className="space-y-6">
+                    <section className="rounded-2xl border border-[#E8DCCB] bg-[#FBF8F2]/60 p-4">
+                      <label className="block text-xs font-semibold text-[#8C7A6B]">Ảnh đại diện bài viết</label>
+                      <div className="mt-3 flex gap-4 items-center">
+                        <div className="w-32 h-20 rounded-xl border border-[#E8DCCB] bg-white overflow-hidden flex items-center justify-center shrink-0">
+                          {formThumbnail ? (
+                            <img src={formThumbnail} alt="Thumbnail Preview" className="w-full h-full object-cover" />
+                          ) : (
+                            <ImageIcon className="w-8 h-8 text-[#B88746]/40" />
+                          )}
+                        </div>
+                        <div className="flex-1 space-y-2">
+                          <input
+                            type="text"
+                            value={formThumbnail}
+                            onChange={(e) => setFormThumbnail(e.target.value)}
+                            className="w-full px-3 py-1.5 border border-[#E8DCCB] rounded-xl bg-white text-xs focus:outline-none"
+                            placeholder="URL ảnh đại diện"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => openMediaSelector({ mode: 'thumbnail' })}
+                            className="px-3 py-1.5 bg-[#1F1B16] hover:bg-[#B88746] text-white text-xs font-semibold rounded-lg transition-colors"
+                          >
+                            Chọn từ Media Library
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex-1 space-y-2">
-                        <input
-                          type="text"
-                          value={formThumbnail}
-                          onChange={(e) => setFormThumbnail(e.target.value)}
-                          className="w-full px-3 py-1.5 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-xs focus:outline-none"
-                          placeholder="URL hình ảnh"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setIsMediaOpen(true)}
-                          className="px-3 py-1.5 bg-[#1F1B16] hover:bg-[#B88746] text-white text-xs font-semibold rounded-lg transition-colors"
-                        >
-                          Chọn từ Media Library
-                        </button>
+                    </section>
+
+                    <section className="space-y-3">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                          <h4 className="text-sm font-bold text-[#1F1B16]">Album ảnh, video và tài liệu</h4>
+                          <p className="text-[11px] text-[#8C7A6B]">Thêm nhiều ảnh dạng slider, video upload hoặc YouTube, PDF/DOC/DOCX tải về.</p>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <button type="button" onClick={() => openMediaSelector({ mode: 'gallery' })} className="inline-flex items-center gap-1.5 rounded-lg bg-[#1F1B16] px-3 py-1.5 text-[11px] font-bold text-white hover:bg-[#B88746]">
+                            <ImageIcon className="h-3.5 w-3.5" /> Thêm ảnh
+                          </button>
+                          <button type="button" onClick={() => addMediaItem('youtube')} className="inline-flex items-center gap-1.5 rounded-lg border border-[#E8DCCB] bg-white px-3 py-1.5 text-[11px] font-bold text-[#1F1B16] hover:border-[#B88746]">
+                            <Play className="h-3.5 w-3.5 text-red-500" /> YouTube
+                          </button>
+                          <button type="button" onClick={() => addMediaItem('video_upload')} className="inline-flex items-center gap-1.5 rounded-lg border border-[#E8DCCB] bg-white px-3 py-1.5 text-[11px] font-bold text-[#1F1B16] hover:border-[#B88746]">
+                            <Video className="h-3.5 w-3.5 text-[#B88746]" /> Video file
+                          </button>
+                          <button type="button" onClick={() => addMediaItem('document')} className="inline-flex items-center gap-1.5 rounded-lg border border-[#E8DCCB] bg-white px-3 py-1.5 text-[11px] font-bold text-[#1F1B16] hover:border-[#B88746]">
+                            <FileText className="h-3.5 w-3.5 text-[#B88746]" /> Tài liệu
+                          </button>
+                        </div>
                       </div>
-                    </div>
+
+                      {formMediaItems.length === 0 ? (
+                        <div className="rounded-2xl border border-dashed border-[#E8DCCB] bg-[#FBF8F2] p-6 text-center text-xs text-[#8C7A6B]">
+                          Chưa có media đính kèm. Bấm các nút phía trên để thêm ảnh, video hoặc tài liệu.
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          {formMediaItems.map((item, index) => (
+                            <div key={`${item.type}-${index}`} className="rounded-2xl border border-[#E8DCCB] bg-white p-4">
+                              <div className="mb-3 flex items-center justify-between gap-3">
+                                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#B88746]/10 px-3 py-1 text-[10px] font-bold uppercase text-[#B88746]">
+                                  {item.type === 'image' && <ImageIcon className="h-3 w-3" />}
+                                  {item.type === 'youtube' && <Play className="h-3 w-3" />}
+                                  {item.type === 'video_upload' && <Video className="h-3 w-3" />}
+                                  {item.type === 'document' && <FileText className="h-3 w-3" />}
+                                  {item.type === 'image' ? 'Ảnh' : item.type === 'youtube' ? 'YouTube' : item.type === 'video_upload' ? 'Video file' : 'Tài liệu'}
+                                </span>
+                                <div className="flex items-center gap-1">
+                                  <button type="button" onClick={() => moveMediaItem(index, -1)} disabled={index === 0} className="rounded-lg border border-[#E8DCCB] p-1.5 text-[#8C7A6B] disabled:opacity-30">
+                                    <ArrowUp className="h-3.5 w-3.5" />
+                                  </button>
+                                  <button type="button" onClick={() => moveMediaItem(index, 1)} disabled={index === formMediaItems.length - 1} className="rounded-lg border border-[#E8DCCB] p-1.5 text-[#8C7A6B] disabled:opacity-30">
+                                    <ArrowDown className="h-3.5 w-3.5" />
+                                  </button>
+                                  <button type="button" onClick={() => removeMediaItem(index)} className="rounded-lg border border-red-100 bg-red-50 px-2 py-1.5 text-[10px] font-bold text-red-600">
+                                    Xóa
+                                  </button>
+                                </div>
+                              </div>
+
+                              <div className="grid gap-3 md:grid-cols-2">
+                                <label className="text-[11px] font-semibold text-[#8C7A6B]">
+                                  Tiêu đề hiển thị
+                                  <input value={item.title || ''} onChange={(e) => updateMediaItem(index, { title: e.target.value })} className="mt-1 w-full rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] px-3 py-2 text-xs text-[#1F1B16] outline-none" placeholder="Ví dụ: Mặt bằng tổng thể, Brochure PDF..." />
+                                </label>
+                                <label className="text-[11px] font-semibold text-[#8C7A6B]">
+                                  URL {item.type === 'youtube' ? 'YouTube' : 'file'}
+                                  <div className="mt-1 flex gap-2">
+                                    <input value={item.url || ''} onChange={(e) => updateMediaItem(index, { url: e.target.value, type: item.type === 'youtube' ? 'youtube' : inferMediaTypeFromUrl(e.target.value) })} className="w-full rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] px-3 py-2 text-xs text-[#1F1B16] outline-none" placeholder={item.type === 'youtube' ? 'https://www.youtube.com/watch?v=...' : 'Chọn từ Media Library hoặc nhập URL'} />
+                                    {item.type !== 'youtube' && (
+                                      <button type="button" onClick={() => openMediaSelector({ mode: 'item', index })} className="shrink-0 rounded-xl bg-[#1F1B16] px-3 py-2 text-[10px] font-bold text-white hover:bg-[#B88746]">
+                                        Chọn
+                                      </button>
+                                    )}
+                                  </div>
+                                </label>
+                                {(item.type === 'video_upload' || item.type === 'youtube') && (
+                                  <label className="text-[11px] font-semibold text-[#8C7A6B] md:col-span-2">
+                                    Ảnh poster/thumbnail video
+                                    <input value={item.thumbnail_url || ''} onChange={(e) => updateMediaItem(index, { thumbnail_url: e.target.value })} className="mt-1 w-full rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] px-3 py-2 text-xs text-[#1F1B16] outline-none" placeholder="URL ảnh poster nếu có" />
+                                  </label>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </section>
                   </div>
                 )}
 
@@ -973,11 +1138,40 @@ function AdminNews() {
         {isMediaOpen && (
           <MediaSelectModal
             isOpen={isMediaOpen}
-            onClose={() => setIsMediaOpen(false)}
-            onSelect={(url) => {
-              const selectedUrl = Array.isArray(url) ? url[0] : url;
-              if (selectedUrl) setFormThumbnail(selectedUrl);
+            multiple={mediaSelectTarget?.mode === 'gallery'}
+            selectedUrls={mediaSelectTarget?.mode === 'gallery' ? formMediaItems.filter((item) => item.type === 'image').map((item) => item.url || '').filter((url): url is string => Boolean(url)) : []}
+            onClose={() => {
               setIsMediaOpen(false);
+              setMediaSelectTarget(null);
+            }}
+            onSelect={(url) => {
+              const urls = Array.isArray(url) ? url : [url];
+              const selectedUrl = urls[0];
+
+              if (mediaSelectTarget?.mode === 'thumbnail' && selectedUrl) {
+                setFormThumbnail(selectedUrl);
+              }
+
+              if (mediaSelectTarget?.mode === 'gallery') {
+                setFormMediaItems((items) => [
+                  ...items.filter((item) => item.type !== 'image'),
+                  ...urls.filter(Boolean).map((itemUrl, idx) => ({
+                    ...createMediaDraft('image', itemUrl),
+                    title: '',
+                    sort_order: items.length + idx,
+                  })),
+                ]);
+              }
+
+              if (mediaSelectTarget?.mode === 'item' && selectedUrl) {
+                updateMediaItem(mediaSelectTarget.index, {
+                  url: selectedUrl,
+                  type: inferMediaTypeFromUrl(selectedUrl),
+                });
+              }
+
+              setIsMediaOpen(false);
+              setMediaSelectTarget(null);
             }}
           />
         )}

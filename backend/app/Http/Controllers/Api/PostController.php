@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Post;
 use App\Models\PostCategory;
+use Illuminate\Support\Arr;
 use Illuminate\Http\Request;
 
 class PostController extends Controller
@@ -14,7 +15,7 @@ class PostController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Post::query()->with(['category', 'author', 'tags', 'seoMeta']);
+        $query = Post::query()->with(['category', 'author', 'tags', 'seoMeta', 'mediaItems']);
 
         // Staff can see draft posts, guests and customers can only see published ones
         $user = $request->user('sanctum');
@@ -83,7 +84,7 @@ class PostController extends Controller
         $limit = $request->get('limit', 4);
         $posts = Post::where('status', 'published')
             ->where('is_featured', true)
-            ->with(['category', 'author', 'seoMeta'])
+            ->with(['category', 'author', 'seoMeta', 'mediaItems'])
             ->when($request->filled('post_type'), function ($query) use ($request) {
                 $postTypes = is_array($request->post_type) ? $request->post_type : explode(',', $request->post_type);
                 $query->whereIn('post_type', $postTypes);
@@ -105,7 +106,7 @@ class PostController extends Controller
     {
         $post = Post::where('slug', $slug)
             ->where('status', 'published')
-            ->with(['category', 'author', 'tags', 'seoMeta'])
+            ->with(['category', 'author', 'tags', 'seoMeta', 'mediaItems'])
             ->first();
 
         if (!$post) {
@@ -119,6 +120,7 @@ class PostController extends Controller
         $relatedPosts = Post::where('id', '!=', $post->id)
             ->where('status', 'published')
             ->where('post_category_id', $post->post_category_id)
+            ->with(['category', 'author', 'mediaItems'])
             ->limit(3)
             ->get();
 
@@ -165,6 +167,16 @@ class PostController extends Controller
             'event_end_at' => 'nullable|date|after_or_equal:event_start_at',
             'event_location' => 'nullable|string|max:255',
             'event_register_url' => 'nullable|string|max:255',
+            'media_items' => 'nullable|array',
+            'media_items.*.type' => 'required_with:media_items|string|in:image,video_upload,youtube,document',
+            'media_items.*.title' => 'nullable|string|max:255',
+            'media_items.*.url' => 'nullable|string|max:2048',
+            'media_items.*.thumbnail_url' => 'nullable|string|max:2048',
+            'media_items.*.media_id' => 'nullable|integer|exists:media,id',
+            'media_items.*.mime_type' => 'nullable|string|max:255',
+            'media_items.*.file_size' => 'nullable|integer|min:0',
+            'media_items.*.sort_order' => 'nullable|integer|min:0',
+            'media_items.*.meta' => 'nullable|array',
             // SEO Meta
             'seo_title' => 'nullable|string|max:255',
             'seo_description' => 'nullable|string',
@@ -205,10 +217,12 @@ class PostController extends Controller
             'keywords' => $request->get('seo_keywords'),
         ]);
 
+        $this->syncMediaItems($post, $request->input('media_items', []));
+
         return response()->json([
             'success' => true,
             'message' => 'Post created successfully',
-            'data' => $post->load(['category', 'author', 'seoMeta'])
+            'data' => $post->load(['category', 'author', 'seoMeta', 'mediaItems'])
         ], 201);
     }
 
@@ -240,6 +254,16 @@ class PostController extends Controller
             'event_end_at' => 'nullable|date|after_or_equal:event_start_at',
             'event_location' => 'nullable|string|max:255',
             'event_register_url' => 'nullable|string|max:255',
+            'media_items' => 'nullable|array',
+            'media_items.*.type' => 'required_with:media_items|string|in:image,video_upload,youtube,document',
+            'media_items.*.title' => 'nullable|string|max:255',
+            'media_items.*.url' => 'nullable|string|max:2048',
+            'media_items.*.thumbnail_url' => 'nullable|string|max:2048',
+            'media_items.*.media_id' => 'nullable|integer|exists:media,id',
+            'media_items.*.mime_type' => 'nullable|string|max:255',
+            'media_items.*.file_size' => 'nullable|integer|min:0',
+            'media_items.*.sort_order' => 'nullable|integer|min:0',
+            'media_items.*.meta' => 'nullable|array',
             // SEO Meta
             'seo_title' => 'nullable|string|max:255',
             'seo_description' => 'nullable|string',
@@ -283,10 +307,12 @@ class PostController extends Controller
             ]
         );
 
+        $this->syncMediaItems($post, $request->input('media_items', []));
+
         return response()->json([
             'success' => true,
             'message' => 'Post updated successfully',
-            'data' => $post->load(['category', 'author', 'seoMeta'])
+            'data' => $post->load(['category', 'author', 'seoMeta', 'mediaItems'])
         ], 200);
     }
 
@@ -410,5 +436,31 @@ class PostController extends Controller
             'success' => true,
             'message' => 'Category deleted successfully'
         ], 200);
+    }
+
+    private function syncMediaItems(Post $post, array $items): void
+    {
+        $post->mediaItems()->delete();
+
+        foreach (array_values($items) as $index => $item) {
+            $type = Arr::get($item, 'type');
+            $url = Arr::get($item, 'url');
+
+            if (!$type || (!$url && !Arr::get($item, 'media_id'))) {
+                continue;
+            }
+
+            $post->mediaItems()->create([
+                'media_id' => Arr::get($item, 'media_id'),
+                'type' => $type,
+                'title' => Arr::get($item, 'title'),
+                'url' => $url,
+                'thumbnail_url' => Arr::get($item, 'thumbnail_url'),
+                'mime_type' => Arr::get($item, 'mime_type'),
+                'file_size' => Arr::get($item, 'file_size'),
+                'sort_order' => Arr::get($item, 'sort_order', $index),
+                'meta' => Arr::get($item, 'meta'),
+            ]);
+        }
     }
 }

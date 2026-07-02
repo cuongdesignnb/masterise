@@ -49,7 +49,7 @@ class MediaController extends Controller
     public function upload(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'file' => 'required|file|max:20480', // max 20MB
+            'file' => 'required|file|max:102400|mimes:jpg,jpeg,png,gif,webp,svg,pdf,doc,docx,mp4,webm,mov',
             'name' => 'nullable|string|max:255',
         ]);
 
