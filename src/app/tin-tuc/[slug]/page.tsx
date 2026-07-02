@@ -1,14 +1,17 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import Image from "next/image";
-import Link from "next/link";
-import { CalendarDays, Clock3, UserRound } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import MobileTabBar from "@/components/MobileTabBar";
 import Container from "@/components/Container";
 import GlobalContactForm from "@/components/lead/GlobalContactForm";
+import NewsArticleHero from "@/components/news-detail/NewsArticleHero";
+import NewsArticleMainContent from "@/components/news-detail/NewsArticleMainContent";
+import NewsArticleSidebar from "@/components/news-detail/NewsArticleSidebar";
+import NewsArticleMetaFooter from "@/components/news-detail/NewsArticleMetaFooter";
 import NewsMediaBlocks from "@/components/news-detail/NewsMediaBlocks";
+import NewsRelatedSection from "@/components/news-detail/NewsRelatedSection";
+import { extractTocFromHtml, formatArticleDate, readingMinutes } from "@/lib/articleContent";
 import { getServerApiUrl } from "@/lib/serverApi";
 import type { Post } from "@/types/api";
 
@@ -18,7 +21,14 @@ type Props = {
   params: Promise<{ slug: string }>;
 };
 
-async function getPost(slug: string) {
+type PostDetailResponse = {
+  post: Post;
+  related: Post[];
+  previous?: Post | null;
+  next?: Post | null;
+};
+
+async function getPost(slug: string): Promise<PostDetailResponse | null> {
   const res = await fetch(`${getServerApiUrl()}/posts/${slug}`, {
     cache: "no-store",
     headers: { Accept: "application/json" },
@@ -26,18 +36,25 @@ async function getPost(slug: string) {
 
   if (!res.ok) return null;
   const payload = await res.json().catch(() => null);
-  const data = payload?.data as { post: Post; related: Post[] } | undefined;
+  const data = payload?.data as PostDetailResponse | undefined;
   if (!data?.post || data.post.post_type !== "news") return null;
   return data;
 }
 
-function stripHtml(value?: string | null) {
-  return (value || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
-}
-
-function readingMinutes(value?: string | null) {
-  const words = stripHtml(value).split(" ").filter(Boolean).length;
-  return Math.max(1, Math.ceil(words / 220));
+function getYouTubeEmbedUrl(url?: string | null) {
+  if (!url) return undefined;
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.replace("www.", "");
+    let id = "";
+    if (host === "youtu.be") id = parsed.pathname.split("/").filter(Boolean)[0] || "";
+    if (!id && parsed.pathname.startsWith("/embed/")) id = parsed.pathname.split("/").filter(Boolean)[1] || "";
+    if (!id && parsed.pathname.startsWith("/shorts/")) id = parsed.pathname.split("/").filter(Boolean)[1] || "";
+    if (!id) id = parsed.searchParams.get("v") || "";
+    return id ? `https://www.youtube.com/embed/${id}` : url;
+  } catch {
+    return url;
+  }
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -78,10 +95,12 @@ export default async function NewsArticleDetailPage({ params }: Props) {
   const data = await getPost(slug);
   if (!data?.post) notFound();
 
-  const { post, related = [] } = data;
+  const { post, related = [], previous = null, next = null } = data;
+  const toc = extractTocFromHtml(post.content);
   const videos = (post.media_items || []).filter((item) => (item.type === "youtube" || item.type === "video_upload") && item.url);
-  const publishedLabel = post.published_at ? new Date(post.published_at).toLocaleDateString("vi-VN") : null;
-  const minutes = readingMinutes(post.content);
+  const publishedLabel = formatArticleDate(post.published_at);
+  const minutes = readingMinutes(post.content || post.summary);
+
   const jsonLdArticle = {
     "@context": "https://schema.org",
     "@type": "Article",
@@ -98,6 +117,7 @@ export default async function NewsArticleDetailPage({ params }: Props) {
     },
     mainEntityOfPage: `${siteUrl}/tin-tuc/${post.slug}`,
   };
+
   const jsonLdVideos = videos.map((video) => ({
     "@context": "https://schema.org",
     "@type": "VideoObject",
@@ -106,7 +126,7 @@ export default async function NewsArticleDetailPage({ params }: Props) {
     thumbnailUrl: video.thumbnail_url || post.thumbnail || undefined,
     uploadDate: post.published_at || post.created_at,
     contentUrl: video.type === "video_upload" ? video.url : undefined,
-    embedUrl: video.type === "youtube" ? video.url : undefined,
+    embedUrl: video.type === "youtube" ? getYouTubeEmbedUrl(video.url) : undefined,
   }));
 
   return (
@@ -118,80 +138,20 @@ export default async function NewsArticleDetailPage({ params }: Props) {
       <Header />
       <MobileTabBar />
       <main className="relative z-10 bg-[#FBF8F2] pb-16 lg:pb-0">
-        <section className="border-b border-line/60 bg-white pt-24 sm:pt-28">
-          <Container className="py-8 sm:py-10">
-            <nav className="mb-6 flex flex-wrap items-center gap-2 text-xs font-semibold text-muted">
-              <Link href="/" className="hover:text-gold">Trang chủ</Link>
-              <span>/</span>
-              <Link href="/tin-tuc" className="hover:text-gold">Tin tức</Link>
-              <span>/</span>
-              <span className="text-ink">{post.category?.name || "Bài viết"}</span>
-            </nav>
+        <NewsArticleHero post={post} publishedLabel={publishedLabel} minutes={minutes} />
 
-            <div className="max-w-4xl">
-              <div className="inline-flex rounded-full border border-gold/25 bg-gold/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-gold">
-                {post.category?.name || "Tin tức"}
-              </div>
-              <h1 className="mt-4 max-w-4xl text-2xl font-black leading-tight text-ink sm:text-4xl lg:text-[42px]">
-                {post.title}
-              </h1>
-              {post.summary && (
-                <p className="mt-4 max-w-3xl text-sm leading-7 text-muted sm:text-base">
-                  {post.summary}
-                </p>
-              )}
-              <div className="mt-5 flex flex-wrap items-center gap-4 text-xs font-semibold text-muted">
-                <span className="inline-flex items-center gap-1.5">
-                  <UserRound className="h-4 w-4 text-gold" />
-                  {post.author?.name || "Masterise Homes"}
-                </span>
-                {publishedLabel && (
-                  <span className="inline-flex items-center gap-1.5">
-                    <CalendarDays className="h-4 w-4 text-gold" />
-                    {publishedLabel}
-                  </span>
-                )}
-                <span className="inline-flex items-center gap-1.5">
-                  <Clock3 className="h-4 w-4 text-gold" />
-                  {minutes} phút đọc
-                </span>
-              </div>
-            </div>
-          </Container>
-        </section>
-        {post.thumbnail && (
-          <Container className="py-6 sm:py-8">
-            <div className="relative aspect-[16/9] overflow-hidden rounded-lg border border-line/60 bg-white shadow-sm">
-              <Image src={post.thumbnail} alt={post.title} fill priority className="object-cover" />
-            </div>
-          </Container>
-        )}
         <Container>
-          <NewsMediaBlocks mediaItems={post.media_items} />
+          <div className="grid gap-6 py-8 lg:grid-cols-[minmax(0,1fr)_330px] xl:grid-cols-[minmax(0,1fr)_360px]">
+            <div className="min-w-0 space-y-6">
+              <NewsArticleMainContent post={post} />
+              <NewsMediaBlocks mediaItems={post.media_items} />
+              <NewsArticleMetaFooter post={post} previous={previous} next={next} />
+            </div>
+            <NewsArticleSidebar toc={toc} related={related} />
+          </div>
         </Container>
-        <Container className="pb-10">
-          <article
-            className="prose prose-neutral mx-auto max-w-3xl rounded-lg bg-white px-5 py-7 text-left text-[15px] leading-8 shadow-sm prose-headings:font-black prose-headings:text-ink prose-p:text-[#4B4238] prose-a:text-gold prose-img:rounded-lg sm:px-8 sm:py-9 sm:text-base"
-            dangerouslySetInnerHTML={{ __html: post.content || "" }}
-          />
-          {related.length > 0 && (
-            <section className="mx-auto mt-8 max-w-5xl border-t border-line py-8 text-left">
-              <h2 className="text-lg font-black text-ink sm:text-xl">Bài viết liên quan</h2>
-              <div className="mt-5 grid gap-4 sm:grid-cols-3">
-                {related.map((item) => (
-                  <Link key={item.id} href={`/tin-tuc/${item.slug}`} className="rounded-lg border border-line bg-white p-4 transition hover:border-gold hover:shadow-sm">
-                    <p className="line-clamp-2 text-sm font-bold leading-6 text-ink">{item.title}</p>
-                    {item.published_at && (
-                      <p className="mt-3 text-[11px] font-semibold text-muted">
-                        {new Date(item.published_at).toLocaleDateString("vi-VN")}
-                      </p>
-                    )}
-                  </Link>
-                ))}
-              </div>
-            </section>
-          )}
-        </Container>
+
+        <NewsRelatedSection related={related} />
         <GlobalContactForm leadSourcePosition="news_detail_footer_form" />
       </main>
       <Footer />

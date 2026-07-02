@@ -57,8 +57,38 @@ const createMediaDraft = (type: NewsMediaDraft['type'], url = ''): NewsMediaDraf
 function inferMediaTypeFromUrl(url: string): NewsMediaDraft['type'] {
   const clean = url.split('?')[0].toLowerCase();
   if (/\.(mp4|webm|mov)$/.test(clean)) return 'video_upload';
-  if (/\.(pdf|doc|docx)$/.test(clean)) return 'document';
+  if (/\.(pdf|doc|docx|xls|xlsx|ppt|pptx|zip)$/.test(clean)) return 'document';
   return 'image';
+}
+
+function getYouTubeId(url: string) {
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.replace('www.', '');
+    if (host === 'youtu.be') return parsed.pathname.split('/').filter(Boolean)[0] || '';
+    if (parsed.pathname.startsWith('/embed/')) return parsed.pathname.split('/').filter(Boolean)[1] || '';
+    if (parsed.pathname.startsWith('/shorts/')) return parsed.pathname.split('/').filter(Boolean)[1] || '';
+    return parsed.searchParams.get('v') || '';
+  } catch {
+    return '';
+  }
+}
+
+function getYouTubeThumbnail(url: string) {
+  const id = getYouTubeId(url);
+  return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : '';
+}
+
+function getFileName(url?: string | null) {
+  if (!url) return '';
+  const clean = url.split('?')[0];
+  return decodeURIComponent(clean.split('/').filter(Boolean).pop() || clean);
+}
+
+function getFileExtension(url?: string | null) {
+  const name = getFileName(url).toLowerCase();
+  const match = name.match(/\.([a-z0-9]+)$/);
+  return match?.[1]?.toUpperCase() || 'FILE';
 }
 
 function AdminNews() {
@@ -953,6 +983,32 @@ function AdminNews() {
                                 </div>
                               </div>
 
+                              {(item.url || item.thumbnail_url) && (
+                                <div className="mb-3 flex items-center gap-3 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] p-2">
+                                  <div className="flex h-16 w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[#E8DCCB] bg-white">
+                                    {item.type === 'image' && item.url ? (
+                                      <img src={item.url} alt={item.title || 'Media preview'} className="h-full w-full object-cover" />
+                                    ) : (item.type === 'youtube' || item.type === 'video_upload') && item.thumbnail_url ? (
+                                      <img src={item.thumbnail_url} alt={item.title || 'Video preview'} className="h-full w-full object-cover" />
+                                    ) : item.type === 'video_upload' ? (
+                                      <Video className="h-6 w-6 text-[#B88746]" />
+                                    ) : item.type === 'youtube' ? (
+                                      <Play className="h-6 w-6 text-red-500" />
+                                    ) : (
+                                      <FileText className="h-6 w-6 text-[#B88746]" />
+                                    )}
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <p className="truncate text-xs font-bold text-[#1F1B16]">
+                                      {item.title || getFileName(item.url) || 'Media đã chọn'}
+                                    </p>
+                                    <p className="mt-1 truncate text-[11px] font-semibold text-[#8C7A6B]">
+                                      {item.type === 'document' ? `${getFileExtension(item.url)}${item.file_size ? ` - ${Math.round(item.file_size / 1024)} KB` : ''}` : item.type === 'youtube' ? 'YouTube' : item.type === 'video_upload' ? 'Video upload' : 'Ảnh từ Media Library'}
+                                    </p>
+                                  </div>
+                                </div>
+                              )}
+
                               <div className="grid gap-3 md:grid-cols-2">
                                 <label className="text-[11px] font-semibold text-[#8C7A6B]">
                                   Tiêu đề hiển thị
@@ -961,7 +1017,14 @@ function AdminNews() {
                                 <label className="text-[11px] font-semibold text-[#8C7A6B]">
                                   {item.type === 'youtube' ? 'Link YouTube' : 'File từ Media Library'}
                                   {item.type === 'youtube' ? (
-                                    <input value={item.url || ''} onChange={(e) => updateMediaItem(index, { url: e.target.value, type: 'youtube' })} className="mt-1 w-full rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] px-3 py-2 text-xs text-[#1F1B16] outline-none" placeholder="https://www.youtube.com/watch?v=..." />
+                                    <input value={item.url || ''} onChange={(e) => {
+                                      const nextUrl = e.target.value;
+                                      updateMediaItem(index, {
+                                        url: nextUrl,
+                                        type: 'youtube',
+                                        thumbnail_url: item.thumbnail_url || getYouTubeThumbnail(nextUrl),
+                                      });
+                                    }} className="mt-1 w-full rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] px-3 py-2 text-xs text-[#1F1B16] outline-none" placeholder="https://www.youtube.com/watch?v=..." />
                                   ) : (
                                     <div className="mt-1 flex gap-2">
                                       <div className="min-h-9 w-full rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] px-3 py-2 text-xs text-[#8C7A6B]">

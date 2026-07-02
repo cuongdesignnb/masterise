@@ -121,14 +121,49 @@ class PostController extends Controller
             ->where('status', 'published')
             ->where('post_category_id', $post->post_category_id)
             ->with(['category', 'author', 'mediaItems'])
-            ->limit(3)
+            ->orderBy('published_at', 'desc')
+            ->limit(6)
             ->get();
+
+        $publishedAt = $post->published_at ?: $post->created_at;
+
+        $previous = Post::where('id', '!=', $post->id)
+            ->where('status', 'published')
+            ->where('post_type', $post->post_type)
+            ->where(function ($query) use ($publishedAt, $post) {
+                $query->where('published_at', '<', $publishedAt)
+                    ->orWhere(function ($q) use ($publishedAt, $post) {
+                        $q->where('published_at', $publishedAt)
+                            ->where('id', '<', $post->id);
+                    });
+            })
+            ->with(['category', 'author', 'mediaItems'])
+            ->orderBy('published_at', 'desc')
+            ->orderBy('id', 'desc')
+            ->first();
+
+        $next = Post::where('id', '!=', $post->id)
+            ->where('status', 'published')
+            ->where('post_type', $post->post_type)
+            ->where(function ($query) use ($publishedAt, $post) {
+                $query->where('published_at', '>', $publishedAt)
+                    ->orWhere(function ($q) use ($publishedAt, $post) {
+                        $q->where('published_at', $publishedAt)
+                            ->where('id', '>', $post->id);
+                    });
+            })
+            ->with(['category', 'author', 'mediaItems'])
+            ->orderBy('published_at', 'asc')
+            ->orderBy('id', 'asc')
+            ->first();
 
         return response()->json([
             'success' => true,
             'data' => [
                 'post' => $post,
-                'related' => $relatedPosts
+                'related' => $relatedPosts,
+                'previous' => $previous,
+                'next' => $next
             ]
         ], 200);
     }

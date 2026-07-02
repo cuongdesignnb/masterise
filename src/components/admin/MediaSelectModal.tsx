@@ -169,7 +169,7 @@ export default function MediaSelectModal({
               <input
                 type="file"
                 multiple
-                accept="image/*,video/mp4,video/webm,video/quicktime,application/pdf,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                accept="image/*,video/mp4,video/webm,video/quicktime,application/pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/zip"
                 className="hidden"
                 onChange={handleFileUpload}
                 disabled={uploading}
