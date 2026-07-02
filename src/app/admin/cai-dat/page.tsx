@@ -1061,7 +1061,7 @@ export default function AdminSettings() {
             <div className="space-y-8">
               
               <div className="rounded-2xl border border-[#E8DCCB] bg-[#FBF8F2] p-4 text-sm text-[#8C7A6B]">
-                Banner hero trang ch? ?? ???c qu?n l? t?p trung t?i menu <strong className="text-[#1F1B16]">Banner trang ch?</strong>. Trang ch? l?y d? li?u tr?c ti?p t? API <code>/hero-banners</code>, kh?ng d?ng c?u h?nh banner trong m?c C?i ??t n?a.
+                Banner hero trang chủ được quản lý tập trung tại menu <strong className="text-[#1F1B16]">Banner trang chủ</strong>. Trang chủ lấy dữ liệu trực tiếp từ API <code>/hero-banners</code>, không dùng cấu hình banner trong mục Cài đặt nữa.
               </div>
 
               <div className="space-y-5">
