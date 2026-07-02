@@ -46,6 +46,7 @@ export type ProjectDetail = {
     description: string;
     images: string[];
   };
+  sectionTitles?: Record<string, { eyebrow?: string; title?: string }>;
   connectivity: { time: string; label: string }[];
   amenities: {
     title: string;

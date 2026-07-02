@@ -182,11 +182,11 @@ function SectionTitle({
   return (
     <div className="mb-5">
       {eyebrow ? (
-        <p className="mb-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-gold">
+        <p className="mb-1.5 text-[11px] font-bold tracking-[0.14em] text-gold normal-case">
           {eyebrow}
         </p>
       ) : null}
-      <h2 className="heading-font text-[24px] font-semibold uppercase leading-tight tracking-[0.02em] text-ink sm:text-[30px]">
+      <h2 className="heading-font text-[24px] font-semibold leading-tight tracking-[0.02em] text-ink normal-case sm:text-[30px]">
         {children}
       </h2>
     </div>
@@ -473,6 +473,22 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
     setFloorPlanImageModal({ images, index: Math.min(Math.max(index, 0), images.length - 1), title: plan.name });
   };
   const canToggleOverview = Boolean(project.content && project.content.replace(/<[^>]*>/g, '').trim().length > 520);
+  const ProjectSectionTitle = ({
+    sectionKey,
+    fallbackTitle,
+    fallbackEyebrow,
+  }: {
+    sectionKey: string;
+    fallbackTitle: string;
+    fallbackEyebrow?: string;
+  }) => {
+    const heading = project.sectionTitles?.[sectionKey];
+    return (
+      <SectionTitle eyebrow={heading?.eyebrow || fallbackEyebrow}>
+        {heading?.title || fallbackTitle}
+      </SectionTitle>
+    );
+  };
 
   return (
     <main className="overflow-hidden bg-ivory pb-0 pt-[76px] text-ink">
@@ -680,7 +696,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
         {project.content ? (
           <Reveal className="rounded-[22px] border border-line/80 bg-white p-5 shadow-soft sm:p-7">
             <section id="tong-quan">
-              <SectionTitle eyebrow="TỔNG QUAN DỰ ÁN">GIỚI THIỆU CHI TIẾT</SectionTitle>
+              <ProjectSectionTitle sectionKey="overview" fallbackEyebrow="Tổng quan dự án" fallbackTitle="Giới thiệu chi tiết" />
               <div className="relative mt-5">
                 <div
                   className={`prose prose-stone max-w-none text-left text-[15px] leading-7 text-ink prose-p:my-4 prose-headings:font-heading prose-headings:font-semibold prose-headings:text-[#1F1B16] prose-a:text-[#B88746] hover:prose-a:underline prose-img:rounded-2xl sm:text-base sm:leading-8 ${
@@ -757,7 +773,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
         {hasConnectivity ? <Reveal className="rounded-[22px] border border-line/80 bg-white p-5 shadow-soft sm:p-7">
           <section className={`grid items-center gap-8 ${project.mapImageUrl ? "lg:grid-cols-[310px_minmax(0,1fr)]" : ""}`}>
             <div>
-              <SectionTitle eyebrow="VỊ TRÍ CHIẾN LƯỢC">KẾT NỐI TOÀN DIỆN</SectionTitle>
+              <ProjectSectionTitle sectionKey="location" fallbackEyebrow="Vị trí chiến lược" fallbackTitle="Kết nối toàn diện" />
               {project.locationDescription ? (
                 <p className="mb-6 text-sm leading-6 text-muted sm:text-[15px] sm:leading-7">{project.locationDescription}</p>
               ) : null}
@@ -781,7 +797,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
 
         {hasAmenities ? <Reveal className="rounded-[22px] border border-line/80 bg-white p-5 shadow-soft sm:p-7">
           <section id="tien-ich">
-            <SectionTitle>TIỆN ÍCH NỔI BẬT</SectionTitle>
+            <ProjectSectionTitle sectionKey="amenities" fallbackTitle="Tiện ích nổi bật" />
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
               {project.amenities.map((amenity) => (
                 <article key={amenity.title} className="group min-w-0">
@@ -809,14 +825,14 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
 
         {hasFloorSection ? <Reveal>
           <section>
-            <SectionTitle eyebrow="MẶT BẰNG">MẶT BẰNG ĐIỂN HÌNH</SectionTitle>
+            <ProjectSectionTitle sectionKey="floorPlans" fallbackEyebrow="Mặt bằng" fallbackTitle="Mặt bằng điển hình" />
             {floorTabs.length ? <div className="mb-4 grid overflow-hidden rounded-[6px] border border-line bg-white sm:grid-cols-4">
               {floorTabs.map((tab) => (
                 <button
                   key={tab}
                   type="button"
                   onClick={() => setActiveTab(tab)}
-                  className={`border-b border-line px-4 py-2.5 text-[10px] font-bold uppercase transition last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0 ${
+                  className={`border-b border-line px-4 py-2.5 text-[10px] font-bold normal-case transition last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0 ${
                     activeTab === tab ? "gold-gradient text-white" : "text-muted hover:bg-beige/70"
                   }`}
                 >
@@ -861,7 +877,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                     )}
                   </div>
                   <div className="p-3 sm:p-4">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-gold">
+                    <p className="text-[10px] font-bold tracking-[0.08em] text-gold normal-case">
                       {plan.productType || activeTab || "Sản phẩm"} · Mẫu {String(index + 1).padStart(2, "0")}
                     </p>
                     <h3 className="mt-1 text-sm font-bold text-ink">{plan.name}</h3>
@@ -914,7 +930,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
 
         {hasHandoverStandards ? <Reveal>
           <section>
-            <SectionTitle eyebrow="BÀN GIAO">TIÊU CHUẨN BÀN GIAO</SectionTitle>
+            <ProjectSectionTitle sectionKey="handover" fallbackEyebrow="Bàn giao" fallbackTitle="Tiêu chuẩn bàn giao" />
             <div className="-mx-4 overflow-x-auto px-4 pb-2 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
               <div className="flex snap-x snap-mandatory gap-3">
               {project.handoverStandards.map((item, index) => (
@@ -950,8 +966,8 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
         {hasProductInfo || hasPolicies ? <Reveal>
           <section className={`grid gap-5 ${hasProductInfo && hasPolicies ? 'lg:grid-cols-[1.85fr_1fr]' : ''}`}>
             {hasProductInfo ? <div className="rounded-[18px] border border-line/80 bg-white p-3 shadow-soft sm:p-5">
-              <h2 className="mb-1 text-[12px] font-bold uppercase tracking-[0.06em] text-gold-dark sm:mb-2 sm:text-sm">
-                SẢN PHẨM &amp; BẢNG GIÁ
+              <h2 className="mb-1 text-[12px] font-bold tracking-[0.06em] text-gold-dark normal-case sm:mb-2 sm:text-sm">
+                {project.sectionTitles?.productInfo?.title || "Sản phẩm & Bảng giá"}
               </h2>
               <p className="mb-4 hidden text-[13px] leading-6 text-muted sm:block">
                 Thông tin loại hình, diện tích và giá tham khảo được cập nhật theo dữ liệu dự án.
@@ -979,7 +995,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                 <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4">
                   {project.productSummary.map((item) => (
                     <div key={item.label} className="rounded-[10px] border border-line/70 bg-[#fbf7f0] p-3 sm:rounded-[12px] sm:p-4">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.04em] text-muted sm:text-[11px] sm:tracking-[0.06em]">{item.label}</p>
+                      <p className="text-[10px] font-semibold tracking-[0.04em] text-muted normal-case sm:text-[11px] sm:tracking-[0.06em]">{item.label}</p>
                       <p className="mt-1 text-[13px] font-bold leading-5 text-ink sm:text-[15px]">{item.value}</p>
                     </div>
                   ))}
@@ -990,8 +1006,8 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
               </p>
             </div> : null}
             {hasPolicies ? <div className="rounded-[18px] border border-gold/35 bg-[#fffaf2] p-5 shadow-soft">
-              <h2 className="mb-5 text-sm font-bold uppercase tracking-[0.06em] text-gold-dark">
-                CHÍNH SÁCH BÁN HÀNG
+              <h2 className="mb-5 text-sm font-bold tracking-[0.06em] text-gold-dark normal-case">
+                {project.sectionTitles?.policies?.title || "Chính sách bán hàng"}
               </h2>
               <div className="space-y-4">
                 {project.policies.map((policy) => (
@@ -1018,7 +1034,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
 
         {hasTimeline ? <Reveal>
           <section className="py-2">
-            <SectionTitle>TIẾN ĐỘ THI CÔNG</SectionTitle>
+            <ProjectSectionTitle sectionKey="timeline" fallbackTitle="Tiến độ thi công" />
             <div className="relative grid gap-5 md:grid-cols-5 md:gap-0">
               <div className="absolute left-[10%] right-[10%] top-6 hidden h-px bg-gold/55 md:block" />
               {project.timeline.map((item, index) => {
@@ -1052,7 +1068,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
 
         {hasInvestmentReasons ? <Reveal>
           <section>
-            <SectionTitle>VÌ SAO NÊN ĐẦU TƯ {project.name}?</SectionTitle>
+            <ProjectSectionTitle sectionKey="investment" fallbackTitle={`Vì sao nên đầu tư ${project.name}?`} />
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
               {project.investmentReasons.map((reason) => (
                 <motion.article
@@ -1071,7 +1087,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
 
         {hasTestimonials ? <Reveal>
           <section>
-            <SectionTitle>KHÁCH HÀNG NÓI GÌ?</SectionTitle>
+            <ProjectSectionTitle sectionKey="testimonials" fallbackTitle="Khách hàng nói gì?" />
             <div className="grid gap-4 lg:grid-cols-3">
               {project.testimonials.map((testimonial) => (
                 <article
@@ -1117,7 +1133,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
 
         {hasFaqs ? <Reveal>
           <section>
-            <SectionTitle>CÂU HỎI THƯỜNG GẶP</SectionTitle>
+            <ProjectSectionTitle sectionKey="faq" fallbackTitle="Câu hỏi thường gặp" />
             <div className="grid gap-2 lg:grid-cols-2 xl:grid-cols-3">
               {project.faqs.map((faq, index) => {
                 const isOpen = openFaq === index;
@@ -1179,10 +1195,8 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
             />
             <div className="relative grid gap-7 p-6 sm:p-8 lg:grid-cols-[.75fr_1.6fr] lg:items-center lg:p-10">
               <div>
-                <p className="heading-font text-[24px] font-semibold uppercase leading-tight sm:text-[28px]">
-                  ĐĂNG KÝ TƯ VẤN
-                  <br />
-                  NHẬN THÔNG TIN DỰ ÁN
+                <p className="heading-font whitespace-pre-line text-[24px] font-semibold leading-tight normal-case sm:text-[28px]">
+                  {project.sectionTitles?.contact?.title || "Đăng ký tư vấn\nNhận thông tin dự án"}
                 </p>
                 <p className="mt-3 max-w-sm text-[13px] leading-6 text-muted">
                   Để lại thông tin, chuyên viên tư vấn sẽ liên hệ và gửi chính sách bán hàng mới nhất.

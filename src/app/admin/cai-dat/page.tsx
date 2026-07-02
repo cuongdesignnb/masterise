@@ -34,6 +34,7 @@ import { defaultCollections } from '@/data/collectionsSeed';
 import { pageService } from '@/services/pageService';
 import { postService } from '@/services/postService';
 import { projectService } from '@/services/projectService';
+import { defaultHomePageContent, type HomePageContent } from '@/providers/SiteSettingsProvider';
 
 // Interfaces for structured settings
 interface FaqItem {
@@ -135,6 +136,7 @@ export default function AdminSettings() {
   const [linkedinUrl, setLinkedinUrl] = useState('');
 
   const [faqs, setFaqs] = useState<FaqItem[]>([]);
+  const [homePageContent, setHomePageContent] = useState<HomePageContent>(defaultHomePageContent);
 
   const [aboutMission, setAboutMission] = useState('');
   const [aboutVision, setAboutVision] = useState('');
@@ -321,6 +323,17 @@ export default function AdminSettings() {
       setLinkedinUrl(social?.linkedin || '');
 
       setFaqs(getVal('homepage_faq', 'json') || []);
+      const dbHomePageContent = getVal('home_page_content', 'json');
+      setHomePageContent({
+        ...defaultHomePageContent,
+        ...(dbHomePageContent && typeof dbHomePageContent === 'object' ? dbHomePageContent : {}),
+        heroStats: Array.isArray(dbHomePageContent?.heroStats)
+          ? dbHomePageContent.heroStats
+          : defaultHomePageContent.heroStats,
+        aboutBullets: Array.isArray(dbHomePageContent?.aboutBullets)
+          ? dbHomePageContent.aboutBullets
+          : defaultHomePageContent.aboutBullets,
+      });
 
       setAboutMission(getVal('about_mission') || 'Masterise Homes cam kết mang đến những trải nghiệm sống khác biệt thông qua sản phẩm chất lượng, dịch vụ tận tâm và những giá trị bền vững cho khách hàng, đối tác và cộng đồng.');
       setAboutVision(getVal('about_vision') || 'Chúng tôi hướng đến việc kiến tạo những công trình biểu tượng, nâng tầm chất lượng sống và góp phần xây dựng các đô thị hiện đại, bền vững cho tương lai.');
@@ -564,6 +577,7 @@ export default function AdminSettings() {
             type: 'json' 
           },
           { key: 'homepage_faq', value: faqs, type: 'json' },
+          { key: 'home_page_content', value: homePageContent, type: 'json' },
           { key: 'about_mission', value: aboutMission, type: 'string' },
           { key: 'about_vision', value: aboutVision, type: 'string' },
           { key: 'about_timeline', value: timeline, type: 'json' },
@@ -1048,6 +1062,176 @@ export default function AdminSettings() {
               
               <div className="rounded-2xl border border-[#E8DCCB] bg-[#FBF8F2] p-4 text-sm text-[#8C7A6B]">
                 Banner hero trang ch? ?? ???c qu?n l? t?p trung t?i menu <strong className="text-[#1F1B16]">Banner trang ch?</strong>. Trang ch? l?y d? li?u tr?c ti?p t? API <code>/hero-banners</code>, kh?ng d?ng c?u h?nh banner trong m?c C?i ??t n?a.
+              </div>
+
+              <div className="space-y-5">
+                <div className="border-b border-[#E8DCCB]/60 pb-2">
+                  <h3 className="text-lg font-heading font-medium text-[#1F1B16] flex items-center gap-2">
+                    <BookOpen className="w-5 h-5 text-[#B88746]" />
+                    Nội dung chữ trang chủ
+                  </h3>
+                  <p className="mt-1 text-xs text-[#8C7A6B]">
+                    Các ô dưới đây hiển thị đúng chữ hoa/thường và xuống dòng như nội dung bạn nhập.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Nhãn nhỏ hero</label>
+                    <input
+                      value={homePageContent.heroEyebrow}
+                      onChange={(e) => setHomePageContent(prev => ({ ...prev, heroEyebrow: e.target.value }))}
+                      className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Nút hero chính</label>
+                    <input
+                      value={homePageContent.heroPrimaryCta}
+                      onChange={(e) => setHomePageContent(prev => ({ ...prev, heroPrimaryCta: e.target.value }))}
+                      className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Nút hero tư vấn</label>
+                    <input
+                      value={homePageContent.heroSecondaryCta}
+                      onChange={(e) => setHomePageContent(prev => ({ ...prev, heroSecondaryCta: e.target.value }))}
+                      className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                  {homePageContent.heroStats.map((item, idx) => (
+                    <div key={idx}>
+                      <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Nhãn nhanh {idx + 1}</label>
+                      <input
+                        value={item.label}
+                        onChange={(e) => setHomePageContent(prev => ({
+                          ...prev,
+                          heroStats: prev.heroStats.map((stat, i) => i === idx ? { ...stat, label: e.target.value } : stat)
+                        }))}
+                        className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                <div className="rounded-2xl border border-[#E8DCCB] p-4 space-y-4">
+                  <h4 className="text-sm font-bold text-[#1F1B16]">Section Dự án nổi bật</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input
+                      value={homePageContent.featuredProjectsEyebrow}
+                      onChange={(e) => setHomePageContent(prev => ({ ...prev, featuredProjectsEyebrow: e.target.value }))}
+                      className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                      placeholder="Nhãn section"
+                    />
+                    <input
+                      value={homePageContent.featuredProjectsTitle}
+                      onChange={(e) => setHomePageContent(prev => ({ ...prev, featuredProjectsTitle: e.target.value }))}
+                      className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                      placeholder="Tiêu đề section"
+                    />
+                  </div>
+                  <textarea
+                    value={homePageContent.featuredProjectsDescription}
+                    onChange={(e) => setHomePageContent(prev => ({ ...prev, featuredProjectsDescription: e.target.value }))}
+                    rows={3}
+                    className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                    placeholder="Mô tả section"
+                  />
+                  <input
+                    value={homePageContent.featuredProjectsCta}
+                    onChange={(e) => setHomePageContent(prev => ({ ...prev, featuredProjectsCta: e.target.value }))}
+                    className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                    placeholder="Chữ nút xem tất cả"
+                  />
+                </div>
+
+                <div className="rounded-2xl border border-[#E8DCCB] p-4 space-y-4">
+                  <h4 className="text-sm font-bold text-[#1F1B16]">Section Giới thiệu</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input
+                      value={homePageContent.aboutEyebrow}
+                      onChange={(e) => setHomePageContent(prev => ({ ...prev, aboutEyebrow: e.target.value }))}
+                      className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                      placeholder="Nhãn section"
+                    />
+                    <input
+                      value={homePageContent.aboutTitle}
+                      onChange={(e) => setHomePageContent(prev => ({ ...prev, aboutTitle: e.target.value }))}
+                      className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                      placeholder="Tiêu đề section"
+                    />
+                  </div>
+                  <textarea
+                    value={homePageContent.aboutDescription}
+                    onChange={(e) => setHomePageContent(prev => ({ ...prev, aboutDescription: e.target.value }))}
+                    rows={3}
+                    className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                    placeholder="Mô tả section"
+                  />
+                  <input
+                    value={homePageContent.aboutButton}
+                    onChange={(e) => setHomePageContent(prev => ({ ...prev, aboutButton: e.target.value }))}
+                    className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                    placeholder="Chữ nút"
+                  />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {homePageContent.aboutBullets.map((item, idx) => (
+                      <input
+                        key={idx}
+                        value={item}
+                        onChange={(e) => setHomePageContent(prev => ({
+                          ...prev,
+                          aboutBullets: prev.aboutBullets.map((bullet, i) => i === idx ? e.target.value : bullet)
+                        }))}
+                        className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                        placeholder={`Ý chính ${idx + 1}`}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="rounded-2xl border border-[#E8DCCB] p-4 space-y-3">
+                    <h4 className="text-sm font-bold text-[#1F1B16]">Section Đối tác</h4>
+                    <input
+                      value={homePageContent.partnersEyebrow}
+                      onChange={(e) => setHomePageContent(prev => ({ ...prev, partnersEyebrow: e.target.value }))}
+                      className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                      placeholder="Nhãn section"
+                    />
+                    <input
+                      value={homePageContent.partnersTitle}
+                      onChange={(e) => setHomePageContent(prev => ({ ...prev, partnersTitle: e.target.value }))}
+                      className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                      placeholder="Tiêu đề section"
+                    />
+                  </div>
+                  <div className="rounded-2xl border border-[#E8DCCB] p-4 space-y-3">
+                    <h4 className="text-sm font-bold text-[#1F1B16]">Section Tin tức & FAQ</h4>
+                    <input
+                      value={homePageContent.newsEyebrow}
+                      onChange={(e) => setHomePageContent(prev => ({ ...prev, newsEyebrow: e.target.value }))}
+                      className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                      placeholder="Nhãn tin tức"
+                    />
+                    <input
+                      value={homePageContent.newsTitle}
+                      onChange={(e) => setHomePageContent(prev => ({ ...prev, newsTitle: e.target.value }))}
+                      className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                      placeholder="Tiêu đề tin tức"
+                    />
+                    <input
+                      value={homePageContent.faqTitle}
+                      onChange={(e) => setHomePageContent(prev => ({ ...prev, faqTitle: e.target.value }))}
+                      className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                      placeholder="Tiêu đề FAQ"
+                    />
+                  </div>
+                </div>
               </div>
 
               {/* FAQs Builder */}

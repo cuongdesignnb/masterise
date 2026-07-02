@@ -155,6 +155,27 @@ export interface AboutPageContactCta {
   image: string;
 }
 
+export interface HomePageContent {
+  heroEyebrow: string;
+  heroPrimaryCta: string;
+  heroSecondaryCta: string;
+  heroStats: { label: string }[];
+  featuredProjectsEyebrow: string;
+  featuredProjectsTitle: string;
+  featuredProjectsDescription: string;
+  featuredProjectsCta: string;
+  aboutEyebrow: string;
+  aboutTitle: string;
+  aboutDescription: string;
+  aboutButton: string;
+  aboutBullets: string[];
+  partnersEyebrow: string;
+  partnersTitle: string;
+  newsEyebrow: string;
+  newsTitle: string;
+  faqTitle: string;
+}
+
 export interface SiteSettings {
   companyName: string;
   companyAddress: string;
@@ -182,9 +203,44 @@ export interface SiteSettings {
   aboutMission: string;
   aboutVision: string;
   aboutTimeline: { year: string; title: string }[];
+  homePageContent: HomePageContent;
   footerNavigation: FooterColumn[];
   isLoaded: boolean;
 }
+
+export const defaultHomePageContent: HomePageContent = {
+  heroEyebrow: "Masterise Homes",
+  heroPrimaryCta: "Khám phá dự án",
+  heroSecondaryCta: "Đăng ký tư vấn",
+  heroStats: [
+    { label: "BĐS cao cấp" },
+    { label: "Vị trí chiến lược" },
+    { label: "Tiện ích chuẩn quốc tế" },
+    { label: "Giá trị đầu tư bền vững" },
+  ],
+  featuredProjectsEyebrow: "Dự án nổi bật",
+  featuredProjectsTitle: "Khám phá bộ sưu tập dự án",
+  featuredProjectsDescription:
+    "Những dự án bất động sản cao cấp tại các vị trí chiến lược, mang đến không gian sống và giá trị đầu tư vượt trội.",
+  featuredProjectsCta: "Xem tất cả dự án",
+  aboutEyebrow: "Về Masterise Homes",
+  aboutTitle: "Nhà phát triển bất động sản hàng hiệu",
+  aboutDescription:
+    "Masterise Homes theo đuổi triết lý phát triển bất động sản cao cấp với trọng tâm là thiết kế, chất lượng sống, tiện ích đồng bộ và giá trị sở hữu bền vững cho cộng đồng cư dân tinh hoa.",
+  aboutButton: "Tìm hiểu thêm",
+  aboutBullets: [
+    "Định vị bất động sản cao cấp và hạng sang",
+    "Hợp tác cùng các đối tác quốc tế hàng đầu",
+    "Tập trung vào trải nghiệm sống tinh tế",
+    "Không gian sống hiện đại, tiện ích đồng bộ",
+    "Gia tăng giá trị khai thác và đầu tư dài hạn",
+  ],
+  partnersEyebrow: "Hệ sinh thái uy tín",
+  partnersTitle: "Đối tác chiến lược & Cộng đồng khách hàng",
+  newsEyebrow: "Tin tức & Sự kiện",
+  newsTitle: "Cập nhật mới nhất",
+  faqTitle: "Câu hỏi thường gặp",
+};
 
 const defaultSettings: SiteSettings = {
   companyName: "Masterise Homes",
@@ -222,6 +278,7 @@ const defaultSettings: SiteSettings = {
   aboutMission: visionMission[1]?.description || "",
   aboutVision: visionMission[0]?.description || "",
   aboutTimeline: timeline,
+  homePageContent: defaultHomePageContent,
   footerNavigation: publicFooterColumns,
   isLoaded: false,
 };
@@ -626,6 +683,30 @@ export default function SiteSettingsProvider({
           }
         }
 
+        let homePageContent = defaultHomePageContent;
+        if (data.home_page_content) {
+          try {
+            const parsed =
+              typeof data.home_page_content === "string"
+                ? JSON.parse(data.home_page_content)
+                : data.home_page_content;
+            if (parsed) {
+              homePageContent = {
+                ...defaultHomePageContent,
+                ...parsed,
+                heroStats: Array.isArray(parsed.heroStats)
+                  ? parsed.heroStats
+                  : defaultHomePageContent.heroStats,
+                aboutBullets: Array.isArray(parsed.aboutBullets)
+                  ? parsed.aboutBullets
+                  : defaultHomePageContent.aboutBullets,
+              };
+            }
+          } catch {
+            // keep default
+          }
+        }
+
         setSettings({
           companyName:
             (data.company_name as string) || defaultSettings.companyName,
@@ -654,6 +735,7 @@ export default function SiteSettingsProvider({
           aboutMission,
           aboutVision,
           aboutTimeline,
+          homePageContent,
           footerNavigation,
           isLoaded: true,
         });

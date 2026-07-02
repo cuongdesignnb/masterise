@@ -341,6 +341,7 @@ class ProjectController extends Controller
             'gallery_label' => 'nullable|string|max:255',
             'gallery_title' => 'nullable|string|max:255',
             'gallery_description' => 'nullable|string',
+            'section_titles' => 'nullable|array',
             'brochure_url' => 'nullable|string',
             'video_url' => 'nullable|string',
             'virtual_tour_url' => 'nullable|string',
@@ -388,7 +389,7 @@ class ProjectController extends Controller
             'booking_policy', 'policy_cards', 'project_timeline', 'investment_reasons',
             'project_testimonials', 'project_faqs', 'is_featured', 'is_hot',
             'is_published', 'sort_order', 'thumbnail', 'banner_image', 'gallery', 
-            'gallery_label', 'gallery_title', 'gallery_description',
+            'gallery_label', 'gallery_title', 'gallery_description', 'section_titles',
             'brochure_url', 'video_url', 'virtual_tour_url', 'map_image_url', 'location_description', 'lat', 'lng',
             'area_size', 'developer', 'scale', 'amenities', 'amenity_details', 'floor_tabs',
             'floor_plans', 'handover_standards', 'price_rows', 'schema_price', 'schema_price_currency', 'schema_availability'
@@ -489,6 +490,7 @@ class ProjectController extends Controller
             'gallery_label' => 'nullable|string|max:255',
             'gallery_title' => 'nullable|string|max:255',
             'gallery_description' => 'nullable|string',
+            'section_titles' => 'nullable|array',
             'brochure_url' => 'nullable|string',
             'video_url' => 'nullable|string',
             'virtual_tour_url' => 'nullable|string',
@@ -535,7 +537,7 @@ class ProjectController extends Controller
             'booking_policy', 'policy_cards', 'project_timeline', 'investment_reasons',
             'project_testimonials', 'project_faqs', 'is_featured', 'is_hot',
             'is_published', 'sort_order', 'thumbnail', 'banner_image', 'gallery', 
-            'gallery_label', 'gallery_title', 'gallery_description',
+            'gallery_label', 'gallery_title', 'gallery_description', 'section_titles',
             'brochure_url', 'video_url', 'virtual_tour_url', 'map_image_url', 'location_description', 'lat', 'lng',
             'area_size', 'developer', 'scale', 'amenities', 'amenity_details', 'floor_tabs',
             'floor_plans', 'handover_standards', 'price_rows', 'schema_price', 'schema_price_currency', 'schema_availability'

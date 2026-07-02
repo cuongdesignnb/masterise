@@ -31,6 +31,7 @@ import { projectService } from "@/services/projectService";
 import { postService } from "@/services/postService";
 import { unwrapData } from "@/adapters/apiResponseAdapter";
 import { getSalesStatusLabel, getSalesStatusColor } from "@/lib/salesStatus";
+import { useSiteSettings } from "@/providers/SiteSettingsProvider";
 import {
   fadeUp,
   fadeIn,
@@ -69,22 +70,10 @@ const fallbackHero: Required<
 
 // Sales status labels are now centralized in @/lib/salesStatus
 
-const heroStats = [
-  { icon: Building2, label: "BĐS cao cấp" },
-  { icon: MapPin, label: "Vị trí chiến lược" },
-  { icon: Globe, label: "Tiện ích chuẩn quốc tế" },
-  { icon: TrendingUp, label: "Giá trị đầu tư bền vững" },
-];
-
-const aboutBullets = [
-  "Định vị bất động sản cao cấp và hạng sang",
-  "Hợp tác cùng các đối tác quốc tế hàng đầu",
-  "Tập trung vào trải nghiệm sống tinh tế",
-  "Không gian sống hiện đại, tiện ích đồng bộ",
-  "Gia tăng giá trị khai thác và đầu tư dài hạn",
-];
+const heroStatIcons = [Building2, MapPin, Globe, TrendingUp];
 
 export default function HomePageClient() {
+  const { homePageContent } = useSiteSettings();
   const [heroSlides, setHeroSlides] = useState<HomepageHero[]>([fallbackHero]);
   const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
   const [heroAutoplay, setHeroAutoplay] = useState(true);
@@ -186,18 +175,20 @@ export default function HomePageClient() {
               {/* Eyebrow + accent line */}
               <motion.div variants={fadeUp} className="flex items-center gap-3">
                 <div className="accent-line" />
-                <p className="text-eyebrow text-champagne">Masterise Homes</p>
+                <p className="text-[11px] font-bold tracking-[0.22em] text-champagne normal-case">
+                  {homePageContent.heroEyebrow}
+                </p>
               </motion.div>
 
               {/* Title */}
-              <motion.h1 variants={fadeUp} className="text-hero mt-6 text-white">
+              <motion.h1 variants={fadeUp} className="text-hero mt-6 text-white normal-case">
                 {currentHeroTitle}
               </motion.h1>
 
               {/* Highlight */}
               <motion.p
                 variants={fadeUp}
-                className="mt-4 text-xl font-bold text-champagne sm:text-2xl lg:text-3xl"
+                className="mt-4 text-xl font-bold text-champagne sm:text-2xl lg:text-3xl normal-case"
               >
                 {currentHeroSubtitle}
               </motion.p>
@@ -205,7 +196,7 @@ export default function HomePageClient() {
               {/* Description */}
               <motion.p
                 variants={fadeUp}
-                className="mt-5 max-w-2xl text-[15px] leading-7 text-white/75 sm:text-base sm:leading-8"
+                className="mt-5 max-w-2xl whitespace-pre-line text-[15px] leading-7 text-white/75 sm:text-base sm:leading-8"
               >
                 {currentHeroDescription}
               </motion.p>
@@ -213,10 +204,10 @@ export default function HomePageClient() {
               {/* CTAs */}
               <motion.div variants={fadeUp} className="mt-9 flex flex-wrap gap-3">
                 <Link href={currentHeroLink} className="btn-primary">
-                  Khám phá dự án <ArrowRight size={16} />
+                  {homePageContent.heroPrimaryCta} <ArrowRight size={16} />
                 </Link>
                 <Link href="#global-contact-form" className="btn-outline">
-                  Đăng ký tư vấn
+                  {homePageContent.heroSecondaryCta}
                 </Link>
               </motion.div>
 
@@ -225,8 +216,8 @@ export default function HomePageClient() {
                 variants={fadeUp}
                 className="mt-14 flex flex-wrap gap-3"
               >
-                {heroStats.map((stat) => {
-                  const Icon = stat.icon;
+                {homePageContent.heroStats.map((stat, index) => {
+                  const Icon = heroStatIcons[index] || Sparkles;
                   return (
                     <div key={stat.label} className="stat-item">
                       <Icon size={15} className="text-champagne shrink-0" />
@@ -295,21 +286,22 @@ export default function HomePageClient() {
               <div>
                 <div className="flex items-center gap-3">
                   <div className="accent-line" />
-                  <p className="text-eyebrow">Dự án nổi bật</p>
+                  <p className="text-[11px] font-bold tracking-[0.22em] text-champagne normal-case">
+                    {homePageContent.featuredProjectsEyebrow}
+                  </p>
                 </div>
-                <h2 className="text-section-title mt-3">
-                  Khám phá bộ sưu tập dự án
+                <h2 className="text-section-title mt-3 normal-case">
+                  {homePageContent.featuredProjectsTitle}
                 </h2>
-                <p className="mt-3 max-w-xl text-sm leading-7 text-muted">
-                  Những dự án bất động sản cao cấp tại các vị trí chiến lược,
-                  mang đến không gian sống và giá trị đầu tư vượt trội.
+                <p className="mt-3 max-w-xl whitespace-pre-line text-sm leading-7 text-muted">
+                  {homePageContent.featuredProjectsDescription}
                 </p>
               </div>
               <Link
                 href="/du-an"
                 className="inline-flex items-center gap-2 text-sm font-bold text-champagne transition hover:gap-3"
               >
-                Xem tất cả dự án <ArrowRight size={16} />
+                {homePageContent.featuredProjectsCta} <ArrowRight size={16} />
               </Link>
             </motion.div>
 
@@ -409,20 +401,20 @@ export default function HomePageClient() {
               <motion.div variants={slideInLeft} className="text-left">
                 <div className="flex items-center gap-3">
                   <div className="accent-line" />
-                  <p className="text-eyebrow">Về Masterise Homes</p>
+                  <p className="text-[11px] font-bold tracking-[0.22em] text-champagne normal-case">
+                    {homePageContent.aboutEyebrow}
+                  </p>
                 </div>
-                <h2 className="text-section-title mt-4">
-                  Nhà phát triển bất động sản hàng hiệu
+                <h2 className="text-section-title mt-4 normal-case">
+                  {homePageContent.aboutTitle}
                 </h2>
-                <p className="mt-5 text-[15px] leading-7 text-muted sm:text-base sm:leading-8">
-                  Masterise Homes theo đuổi triết lý phát triển bất động sản cao
-                  cấp với trọng tâm là thiết kế, chất lượng sống, tiện ích đồng
-                  bộ và giá trị sở hữu bền vững cho cộng đồng cư dân tinh hoa.
+                <p className="mt-5 whitespace-pre-line text-[15px] leading-7 text-muted sm:text-base sm:leading-8">
+                  {homePageContent.aboutDescription}
                 </p>
 
                 {/* Bullet points */}
                 <div className="mt-8 grid gap-4">
-                  {aboutBullets.map((item, i) => (
+                  {homePageContent.aboutBullets.map((item, i) => (
                     <motion.div
                       key={item}
                       variants={fadeUp}
@@ -441,7 +433,7 @@ export default function HomePageClient() {
                   href="/gioi-thieu"
                   className="mt-8 inline-flex items-center gap-2 text-sm font-bold text-champagne transition hover:gap-3"
                 >
-                  Tìm hiểu thêm <ArrowRight size={16} />
+                  {homePageContent.aboutButton} <ArrowRight size={16} />
                 </Link>
               </motion.div>
 
@@ -477,10 +469,12 @@ export default function HomePageClient() {
             <motion.div variants={fadeUp} className="mb-10 text-left">
               <div className="flex items-center gap-3">
                 <div className="accent-line" />
-                <p className="text-eyebrow">Hệ sinh thái uy tín</p>
+                <p className="text-[11px] font-bold tracking-[0.22em] text-champagne normal-case">
+                  {homePageContent.partnersEyebrow}
+                </p>
               </div>
-              <h2 className="text-section-title mt-3">
-                Đối tác chiến lược &amp; Cộng đồng khách hàng
+              <h2 className="text-section-title mt-3 normal-case">
+                {homePageContent.partnersTitle}
               </h2>
             </motion.div>
             <motion.div variants={fadeUp} className="grid gap-8 lg:grid-cols-2">
@@ -506,10 +500,12 @@ export default function HomePageClient() {
               <motion.div variants={fadeUp} className="text-left">
                 <div className="flex items-center gap-3">
                   <div className="accent-line" />
-                  <p className="text-eyebrow">Tin tức &amp; Sự kiện</p>
+                  <p className="text-[11px] font-bold tracking-[0.22em] text-champagne normal-case">
+                    {homePageContent.newsEyebrow}
+                  </p>
                 </div>
-                <h2 className="text-section-title mt-3 mb-8">
-                  Cập nhật mới nhất
+                <h2 className="text-section-title mt-3 mb-8 normal-case">
+                  {homePageContent.newsTitle}
                 </h2>
 
                 {posts.length === 0 ? (

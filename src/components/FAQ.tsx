@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { ChevronDown } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { homepageService } from "@/services/homepageService";
 import { unwrapData } from "@/adapters/apiResponseAdapter";
+import { useSiteSettings } from "@/providers/SiteSettingsProvider";
 import MotionWrapper from "./MotionWrapper";
 
 interface FaqDisplayItem {
@@ -14,6 +15,7 @@ interface FaqDisplayItem {
 }
 
 export default function FAQ() {
+  const { homePageContent } = useSiteSettings();
   const [openId, setOpenId] = useState<number | null>(null);
   const [faqs, setFaqs] = useState<FaqDisplayItem[]>([]);
 
@@ -32,6 +34,7 @@ export default function FAQ() {
         setFaqs([]);
       }
     };
+
     fetchFaqs();
   }, []);
 
@@ -42,54 +45,52 @@ export default function FAQ() {
   if (faqs.length === 0) return null;
 
   return (
-    <div className="flex flex-col h-full text-left">
+    <div className="flex h-full flex-col text-left">
       <MotionWrapper>
-        {/* Gold Serif Title with Leaf Icon */}
         <div className="mb-6 flex items-center gap-2">
-          <span className="text-gold text-lg">🌿</span>
-          <h2 className="heading-font text-[20px] sm:text-[22px] font-bold text-[#B88746] uppercase tracking-[0.03em]">
-            CÂU HỎI THƯỜNG GẶP
+          <span className="text-lg text-gold">•</span>
+          <h2 className="heading-font text-[20px] font-bold tracking-[0.03em] text-[#B88746] normal-case sm:text-[22px]">
+            {homePageContent.faqTitle}
           </h2>
         </div>
       </MotionWrapper>
 
-      {/* Accordion List */}
-      <div className="flex flex-col gap-3.5 flex-grow">
+      <div className="flex flex-grow flex-col gap-3.5">
         {faqs.map((faq, idx) => {
           const isOpen = openId === faq.id;
 
           return (
             <MotionWrapper key={faq.id} delay={idx * 0.05}>
-              <div className="bg-white border border-[#E8DCCB]/60 rounded-2xl overflow-hidden shadow-soft transition-all duration-300 hover:border-[#B88746]">
+              <div className="overflow-hidden rounded-2xl border border-[#E8DCCB]/60 bg-white shadow-soft transition-all duration-300 hover:border-[#B88746]">
                 <button
                   onClick={() => handleToggle(faq.id)}
-                  className="w-full flex items-center justify-between p-4 sm:p-5 text-left cursor-pointer focus:outline-none select-none group"
+                  className="group flex w-full cursor-pointer select-none items-center justify-between p-4 text-left focus:outline-none sm:p-5"
                   aria-expanded={isOpen}
                 >
-                  <span className="text-[12.5px] sm:text-[13.5px] font-bold text-[#8F632F] group-hover:text-gold transition-colors duration-200 heading-font pr-4 leading-snug">
+                  <span className="heading-font pr-4 text-[12.5px] font-bold leading-snug text-[#8F632F] transition-colors duration-200 group-hover:text-gold sm:text-[13.5px]">
                     {faq.question}
                   </span>
                   <ChevronDown
                     size={16}
-                    className={`text-[#B88746] group-hover:text-gold transition-transform duration-300 flex-shrink-0 ${
+                    className={`flex-shrink-0 text-[#B88746] transition-transform duration-300 group-hover:text-gold ${
                       isOpen ? "rotate-180 text-gold" : ""
                     }`}
                   />
                 </button>
 
                 <AnimatePresence initial={false}>
-                  {isOpen && (
+                  {isOpen ? (
                     <motion.div
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: "auto", opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
                       transition={{ duration: 0.25, ease: "easeInOut" }}
                     >
-                      <div className="px-4 pb-4 sm:px-5 sm:pb-5 text-[11px] sm:text-xs text-muted leading-relaxed text-left border-t border-[#E8DCCB]/20 pt-3">
+                      <div className="border-t border-[#E8DCCB]/20 px-4 pb-4 pt-3 text-left text-[11px] leading-relaxed text-muted sm:px-5 sm:pb-5 sm:text-xs">
                         {faq.answer}
                       </div>
                     </motion.div>
-                  )}
+                  ) : null}
                 </AnimatePresence>
               </div>
             </MotionWrapper>

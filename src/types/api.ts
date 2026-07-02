@@ -80,6 +80,7 @@ export interface Project {
   gallery_label?: string | null;
   gallery_title?: string | null;
   gallery_description?: string | null;
+  section_titles?: Record<string, { eyebrow?: string; title?: string }> | null;
   connectivity?: unknown[] | null;
   amenity_details?: unknown[] | null;
   floor_tabs?: string[] | null;

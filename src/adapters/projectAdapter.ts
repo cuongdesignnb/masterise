@@ -365,6 +365,41 @@ function normalizeConnectivity(value: unknown, nearbyPlaces: string[] | null | u
     .filter(notNull);
 }
 
+const defaultProjectSectionTitles: Record<string, { eyebrow?: string; title?: string }> = {
+  overview: { eyebrow: "Tổng quan dự án", title: "Giới thiệu chi tiết" },
+  location: { eyebrow: "Vị trí chiến lược", title: "Kết nối toàn diện" },
+  amenities: { title: "Tiện ích nổi bật" },
+  floorPlans: { eyebrow: "Mặt bằng", title: "Mặt bằng điển hình" },
+  handover: { eyebrow: "Bàn giao", title: "Tiêu chuẩn bàn giao" },
+  productInfo: { title: "Sản phẩm & Bảng giá" },
+  policies: { title: "Chính sách bán hàng" },
+  timeline: { title: "Tiến độ thi công" },
+  investment: { title: "Vì sao nên đầu tư?" },
+  testimonials: { title: "Khách hàng nói gì?" },
+  faq: { title: "Câu hỏi thường gặp" },
+  contact: { title: "Đăng ký tư vấn\nNhận thông tin dự án" },
+};
+
+function normalizeSectionTitles(value: unknown): Record<string, { eyebrow?: string; title?: string }> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return defaultProjectSectionTitles;
+  }
+
+  const parsed = value as Record<string, { eyebrow?: unknown; title?: unknown }>;
+  return Object.fromEntries(
+    Object.entries(defaultProjectSectionTitles).map(([key, fallback]) => {
+      const item = parsed[key] || {};
+      return [
+        key,
+        {
+          eyebrow: typeof item.eyebrow === "string" ? item.eyebrow : fallback.eyebrow,
+          title: typeof item.title === "string" ? item.title : fallback.title,
+        },
+      ];
+    })
+  );
+}
+
 export function mapApiProjectToProjectCard(api: ApiProject): FrontendProject {
   const price = api.price_text || (api.price_min ? `Từ ${api.price_min} tỷ` : UPDATING);
   const location = api.location || api.address || UPDATING;
@@ -413,6 +448,7 @@ export function mapApiProjectToProjectDetail(api: ApiProject): ProjectDetail {
       description: api.gallery_description || '',
       images: galleryImages,
     },
+    sectionTitles: normalizeSectionTitles(api.section_titles),
     connectivity: normalizeConnectivity(api.connectivity, api.nearby_places),
     amenities: normalizeAmenities(api.amenity_details),
     floorTabs: asArray(api.floor_tabs),

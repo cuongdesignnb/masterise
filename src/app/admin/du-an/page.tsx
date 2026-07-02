@@ -46,6 +46,67 @@ type FloorPlanItem = { productType: string; name: string; area: string; totalAre
 type PriceRowItem = { productType: string; area: string; price: string };
 type PolicyItem = { title: string; description: string; icon: string };
 type TimelineItem = { date: string; title: string };
+type ProjectSectionTitleKey =
+  | 'overview'
+  | 'location'
+  | 'amenities'
+  | 'floorPlans'
+  | 'handover'
+  | 'productInfo'
+  | 'policies'
+  | 'timeline'
+  | 'investment'
+  | 'testimonials'
+  | 'faq'
+  | 'contact';
+type ProjectSectionTitles = Record<ProjectSectionTitleKey, { eyebrow: string; title: string }>;
+
+const defaultProjectSectionTitles: ProjectSectionTitles = {
+  overview: { eyebrow: 'Tổng quan dự án', title: 'Giới thiệu chi tiết' },
+  location: { eyebrow: 'Vị trí chiến lược', title: 'Kết nối toàn diện' },
+  amenities: { eyebrow: '', title: 'Tiện ích nổi bật' },
+  floorPlans: { eyebrow: 'Mặt bằng', title: 'Mặt bằng điển hình' },
+  handover: { eyebrow: 'Bàn giao', title: 'Tiêu chuẩn bàn giao' },
+  productInfo: { eyebrow: '', title: 'Sản phẩm & Bảng giá' },
+  policies: { eyebrow: '', title: 'Chính sách bán hàng' },
+  timeline: { eyebrow: '', title: 'Tiến độ thi công' },
+  investment: { eyebrow: '', title: 'Vì sao nên đầu tư?' },
+  testimonials: { eyebrow: '', title: 'Khách hàng nói gì?' },
+  faq: { eyebrow: '', title: 'Câu hỏi thường gặp' },
+  contact: { eyebrow: '', title: 'Đăng ký tư vấn\nNhận thông tin dự án' },
+};
+
+const projectSectionTitleLabels: { key: ProjectSectionTitleKey; label: string }[] = [
+  { key: 'overview', label: 'Tổng quan' },
+  { key: 'location', label: 'Vị trí & Kết nối' },
+  { key: 'amenities', label: 'Tiện ích nổi bật' },
+  { key: 'floorPlans', label: 'Mặt bằng' },
+  { key: 'handover', label: 'Tiêu chuẩn bàn giao' },
+  { key: 'productInfo', label: 'Sản phẩm & Bảng giá' },
+  { key: 'policies', label: 'Chính sách bán hàng' },
+  { key: 'timeline', label: 'Tiến độ thi công' },
+  { key: 'investment', label: 'Lý do đầu tư' },
+  { key: 'testimonials', label: 'Đánh giá khách hàng' },
+  { key: 'faq', label: 'FAQ dự án' },
+  { key: 'contact', label: 'Form tư vấn' },
+];
+
+const normalizeProjectSectionTitles = (value: unknown): ProjectSectionTitles => {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return defaultProjectSectionTitles;
+  }
+
+  const record = value as Record<string, { eyebrow?: unknown; title?: unknown }>;
+  return projectSectionTitleLabels.reduce((acc, item) => {
+    const current = record[item.key] || {};
+    acc[item.key] = {
+      eyebrow: typeof current.eyebrow === 'string' ? current.eyebrow : defaultProjectSectionTitles[item.key].eyebrow,
+      title: typeof current.title === 'string' ? current.title : defaultProjectSectionTitles[item.key].title,
+    };
+    return acc;
+  }, { ...defaultProjectSectionTitles } as ProjectSectionTitles);
+};
+
 type BaseMediaTarget = 'thumbnail' | 'banner' | 'gallery' | 'brochure' | 'map';
 type RepeaterMediaTarget =
   | { group: 'amenityDetails'; index: number; field: 'image' }
@@ -177,6 +238,7 @@ export default function AdminProjects() {
   const [formGalleryLabel, setFormGalleryLabel] = useState('');
   const [formGalleryTitle, setFormGalleryTitle] = useState('');
   const [formGalleryDescription, setFormGalleryDescription] = useState('');
+  const [formSectionTitles, setFormSectionTitles] = useState<ProjectSectionTitles>(defaultProjectSectionTitles);
   const [formSchemaPrice, setFormSchemaPrice] = useState('');
   const [formSchemaPriceCurrency, setFormSchemaPriceCurrency] = useState('VND');
   const [formSchemaAvailability, setFormSchemaAvailability] = useState('');
@@ -525,6 +587,7 @@ export default function AdminProjects() {
     setFormGalleryLabel('');
     setFormGalleryTitle('');
     setFormGalleryDescription('');
+    setFormSectionTitles(defaultProjectSectionTitles);
     setFormSchemaPrice('');
     setFormSchemaPriceCurrency('VND');
     setFormSchemaAvailability('');
@@ -611,6 +674,7 @@ export default function AdminProjects() {
     setFormGalleryLabel(project.gallery_label || '');
     setFormGalleryTitle(project.gallery_title || '');
     setFormGalleryDescription(project.gallery_description || '');
+    setFormSectionTitles(normalizeProjectSectionTitles(project.section_titles));
     setFormSchemaPrice(project.schema_price || '');
     setFormSchemaPriceCurrency(project.schema_price_currency || 'VND');
     setFormSchemaAvailability(project.schema_availability || '');
@@ -774,6 +838,7 @@ export default function AdminProjects() {
         gallery_label: formGalleryLabel || null,
         gallery_title: formGalleryTitle || null,
         gallery_description: formGalleryDescription || null,
+        section_titles: formSectionTitles,
         brochure_url: formBrochureUrl,
         video_url: formVideoUrl || null,
         virtual_tour_url: formVirtualTourUrl || null,
@@ -1819,6 +1884,42 @@ export default function AdminProjects() {
                   <div className="space-y-4">
                     {sectionNote('Phần này quản lý thông tin cơ bản của dự án, mô tả dùng cho card và nội dung giới thiệu chi tiết trên trang dự án.')}
                     {renderCompletionChecklist()}
+                    <div className="rounded-2xl border border-[#E8DCCB] bg-[#FBF8F2]/50 p-4">
+                      <div className="mb-3">
+                        <h3 className="text-sm font-bold text-[#1F1B16]">Tiêu đề section ngoài client</h3>
+                        <p className="mt-1 text-xs text-[#8C7A6B]">
+                          Nhập chữ hoa/thường thế nào thì trang chi tiết dự án hiển thị đúng như vậy. Ô nhãn nhỏ có thể bỏ trống.
+                        </p>
+                      </div>
+                      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                        {projectSectionTitleLabels.map((item) => (
+                          <div key={item.key} className="rounded-xl border border-[#E8DCCB] bg-white p-3">
+                            <p className="mb-2 text-xs font-bold text-[#1F1B16]">{item.label}</p>
+                            <div className="grid gap-2 sm:grid-cols-[0.8fr_1.2fr]">
+                              <input
+                                value={formSectionTitles[item.key]?.eyebrow || ''}
+                                onChange={(e) => setFormSectionTitles(prev => ({
+                                  ...prev,
+                                  [item.key]: { ...prev[item.key], eyebrow: e.target.value }
+                                }))}
+                                className={inputClass}
+                                placeholder="Nhãn nhỏ"
+                              />
+                              <textarea
+                                value={formSectionTitles[item.key]?.title || ''}
+                                onChange={(e) => setFormSectionTitles(prev => ({
+                                  ...prev,
+                                  [item.key]: { ...prev[item.key], title: e.target.value }
+                                }))}
+                                rows={item.key === 'contact' ? 2 : 1}
+                                className={inputClass}
+                                placeholder="Tiêu đề hiển thị"
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                     {/* Name, Slug, Code */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
