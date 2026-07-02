@@ -134,15 +134,27 @@ function buildFactsFromRealFields(api: ApiProject): IconDetail[] {
 }
 
 function buildPoliciesFromRealFields(api: ApiProject) {
+  const makePolicy = (title: string, description: string, icon: ProjectIconName) => ({
+    title,
+    description,
+    icon,
+    imageUrl: '',
+    badge: '',
+    bullets: [],
+    ctaLabel: '',
+    ctaUrl: '',
+    fileUrl: '',
+  });
+
   return [
     api.payment_policy
-      ? { title: 'Chính sách thanh toán', description: api.payment_policy, icon: 'CalendarDays' as const }
+      ? makePolicy('Chính sách thanh toán', api.payment_policy, 'CalendarDays')
       : null,
     api.sales_policy
-      ? { title: 'Chính sách bán hàng', description: api.sales_policy, icon: 'BadgeDollarSign' as const }
+      ? makePolicy('Chính sách bán hàng', api.sales_policy, 'BadgeDollarSign')
       : null,
     api.booking_policy
-      ? { title: 'Chính sách giữ chỗ', description: api.booking_policy, icon: 'ClipboardCheck' as const }
+      ? makePolicy('Chính sách giữ chỗ', api.booking_policy, 'ClipboardCheck')
       : null,
   ].filter(notNull);
 }
@@ -210,6 +222,15 @@ function normalizeFloorPlans(value: unknown) {
     .filter(notNull);
 }
 
+function inferFileType(url: string): "pdf" | "excel" | "word" | "image" | "other" {
+  const clean = url.split('?')[0].toLowerCase();
+  if (/\.(png|jpe?g|webp|gif|avif|svg)$/.test(clean)) return "image";
+  if (/\.pdf$/.test(clean)) return "pdf";
+  if (/\.(xls|xlsx|csv)$/.test(clean)) return "excel";
+  if (/\.(doc|docx)$/.test(clean)) return "word";
+  return "other";
+}
+
 function normalizePriceRows(value: unknown) {
   if (!Array.isArray(value)) return [];
   return value
@@ -217,24 +238,65 @@ function normalizePriceRows(value: unknown) {
       if (Array.isArray(row) && row.length >= 3) {
         const cells = row.slice(0, 3).map((cell) => String(cell || '').trim());
         return cells.some(Boolean)
-          ? { productType: cells[0] || 'Sản phẩm', area: cells[1] || 'Đang cập nhật', price: cells[2] || 'Liên hệ' }
+          ? { kind: "row" as const, productType: cells[0] || 'Sản phẩm', area: cells[1] || 'Đang cập nhật', price: cells[2] || 'Liên hệ' }
           : null;
       }
       if (row && typeof row === 'object') {
         const record = row as Record<string, unknown>;
+        const kind = String(record.kind || 'row').trim();
+
+        if (kind === 'image') {
+          const imageUrl = String(record.image_url || record.imageUrl || record.image || record.url || '').trim();
+          if (!imageUrl) return null;
+          return {
+            kind: "image" as const,
+            title: String(record.title || '').trim(),
+            description: String(record.description || '').trim(),
+            imageUrl,
+            buttonLabel: String(record.button_label || record.buttonLabel || 'Xem ảnh lớn').trim(),
+          };
+        }
+
+        if (kind === 'file') {
+          const fileUrl = String(record.file_url || record.fileUrl || record.url || '').trim();
+          if (!fileUrl) return null;
+          return {
+            kind: "file" as const,
+            title: String(record.title || '').trim(),
+            description: String(record.description || '').trim(),
+            fileUrl,
+            fileType: inferFileType(fileUrl),
+            fileSize: String(record.file_size || record.fileSize || '').trim(),
+            buttonLabel: String(record.button_label || record.buttonLabel || 'Tải xuống').trim(),
+          };
+        }
+
+        if (kind === 'note') {
+          const title = String(record.title || '').trim();
+          const description = String(record.description || record.note || '').trim();
+          if (!title && !description) return null;
+          return {
+            kind: "note" as const,
+            title,
+            description,
+            highlight: Boolean(record.highlight),
+          };
+        }
+
         const productType = String(record.product_type || record.productType || record.type || record.name || record.title || '').trim();
         const area = String(record.area || record.area_text || record.size || '').trim();
         const price = String(record.price || record.price_text || '').trim();
-        const bedrooms = String(record.bedrooms || record.bedroom || '').trim();
+        const payment = String(record.payment || '').trim();
         const status = String(record.status || '').trim();
         const note = String(record.note || '').trim();
         const description = String(record.description || '').trim();
-        if (!productType && !area && !price && !bedrooms && !status && !note && !description) return null;
+        if (!productType && !area && !price && !payment && !status && !note && !description) return null;
         return {
+          kind: "row" as const,
           productType: productType || 'Sản phẩm',
           area: area || 'Đang cập nhật',
           price: price || 'Liên hệ',
-          bedrooms,
+          payment,
           status,
           note,
           description,
@@ -244,7 +306,6 @@ function normalizePriceRows(value: unknown) {
     })
     .filter(notNull);
 }
-
 function buildProductSummary(api: ApiProject) {
   return [
     api.price_text || api.price_min || api.price_max
@@ -276,6 +337,36 @@ function normalizeTimeline(value: unknown) {
       const date = String(record.date || '').trim();
       const title = String(record.title || '').trim();
       return date && title ? { date, title } : null;
+    })
+    .filter(notNull);
+}
+
+function normalizePolicyCards(value: unknown, fallbackIcon: ProjectIconName) {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => {
+      if (!item || typeof item !== 'object') return null;
+      const record = item as Record<string, unknown>;
+      const title = String(record.title || record.name || '').trim();
+      const description = String(record.description || record.desc || '').trim();
+      if (!title && !description) return null;
+      const bullets = Array.isArray(record.bullets)
+        ? record.bullets.map((bullet) => String(bullet || '').trim()).filter(Boolean)
+        : String(record.bullets || '')
+          .split('\n')
+          .map((bullet) => bullet.trim())
+          .filter(Boolean);
+      return {
+        title: title || 'Chính sách bán hàng',
+        description,
+        imageUrl: String(record.image_url || record.imageUrl || record.image || record.thumbnail || '').trim(),
+        icon: normalizeIcon(record.icon, fallbackIcon),
+        badge: String(record.badge || '').trim(),
+        bullets,
+        ctaLabel: String(record.cta_label || record.ctaLabel || '').trim(),
+        ctaUrl: String(record.cta_url || record.ctaUrl || '').trim(),
+        fileUrl: String(record.file_url || record.fileUrl || '').trim(),
+      };
     })
     .filter(notNull);
 }
@@ -372,6 +463,7 @@ const defaultProjectSectionTitles: Record<string, { eyebrow?: string; title?: st
   floorPlans: { eyebrow: "Mặt bằng", title: "Mặt bằng điển hình" },
   handover: { eyebrow: "Bàn giao", title: "Tiêu chuẩn bàn giao" },
   productInfo: { title: "Sản phẩm & Bảng giá" },
+  pricingPolicy: { eyebrow: "Bảng giá", title: "Bảng giá & Chính sách" },
   policies: { title: "Chính sách bán hàng" },
   timeline: { title: "Tiến độ thi công" },
   investment: { title: "Vì sao nên đầu tư?" },
@@ -457,7 +549,7 @@ export function mapApiProjectToProjectDetail(api: ApiProject): ProjectDetail {
     priceRows: normalizePriceRows(api.price_rows),
     productSummary: buildProductSummary(api),
     policies: api.policy_cards && Array.isArray(api.policy_cards)
-      ? normalizeTextCards(api.policy_cards, 'ClipboardCheck')
+      ? normalizePolicyCards(api.policy_cards, 'ClipboardCheck')
       : buildPoliciesFromRealFields(api),
     timeline: normalizeTimeline(api.project_timeline),
     investmentReasons: normalizeTextCards(api.investment_reasons, 'TrendingUp'),

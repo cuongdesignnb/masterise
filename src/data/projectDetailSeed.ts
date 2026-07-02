@@ -156,13 +156,13 @@ export const projectDetail: ProjectDetail = {
     },
   ],
   priceRows: [
-    { productType: "Nhà phố liên kế", area: "80 - 120", price: "8,9" },
-    { productType: "Nhà phố vườn", area: "100 - 140", price: "11,5" },
-    { productType: "Nhà phố góc", area: "120 - 160", price: "13,8" },
-    { productType: "Nhà phố shophouse", area: "90 - 150", price: "16,5" },
-    { productType: "Biệt thự song lập", area: "160 - 200", price: "22,0" },
-    { productType: "Biệt thự đơn lập", area: "250 - 400", price: "35,0" },
-    { productType: "Căn hộ cao cấp", area: "50 - 120", price: "6,5" },
+    { kind: "row", productType: "Nhà phố liên kế", area: "80 - 120", price: "8,9" },
+    { kind: "row", productType: "Nhà phố vườn", area: "100 - 140", price: "11,5" },
+    { kind: "row", productType: "Nhà phố góc", area: "120 - 160", price: "13,8" },
+    { kind: "row", productType: "Nhà phố shophouse", area: "90 - 150", price: "16,5" },
+    { kind: "row", productType: "Biệt thự song lập", area: "160 - 200", price: "22,0" },
+    { kind: "row", productType: "Biệt thự đơn lập", area: "250 - 400", price: "35,0" },
+    { kind: "row", productType: "Căn hộ cao cấp", area: "50 - 120", price: "6,5" },
   ],
   productSummary: [
     { label: "Giá tham khảo", value: "Từ 6,5 tỷ/căn" },
@@ -174,24 +174,27 @@ export const projectDetail: ProjectDetail = {
       title: "Thanh toán linh hoạt",
       description: "Kéo dài đến 36 tháng",
       icon: "CalendarDays",
+      bullets: [],
     },
     {
       title: "Hỗ trợ vay tối đa 70%",
       description: "Lãi suất 0% đến 24 tháng",
       icon: "Building2",
+      bullets: [],
     },
     {
       title: "Chiết khấu lên đến 8%",
       description: "Dành cho khách hàng thân thiết",
       icon: "BadgeDollarSign",
+      bullets: [],
     },
     {
       title: "Quà tặng tân gia giá trị",
       description: "Khi nhận nhà đúng hạn",
       icon: "Sparkles",
+      bullets: [],
     },
-  ],
-  timeline: [
+  ],  timeline: [
     { date: "Q4/2023", title: "Khởi công dự án" },
     { date: "Q2/2024", title: "Hoàn thành hạ tầng phân khu 1" },
     { date: "Q4/2024", title: "Thi công xây dựng phần thô" },
@@ -279,4 +282,3 @@ export const projectDetail: ProjectDetail = {
   id: 1,
   virtualTourUrl: "https://kuula.co/share/collection/7K98F",
 };
-

@@ -35,6 +35,8 @@ import {
 } from "lucide-react";
 import { type FormEvent, useState, useEffect, useMemo, useRef } from "react";
 import type { ProjectIconName, ProjectDetail } from "@/types/project-detail";
+import ProjectGalleryAlbumSection from "@/components/project-detail/ProjectGalleryAlbumSection";
+import ProjectPricingPolicySection from "@/components/project-detail/ProjectPricingPolicySection";
 import VR360Section from "@/components/vr360/VR360Section";
 import { leadService } from "@/services/leadService";
 
@@ -84,12 +86,16 @@ function normalizeOption(value: unknown) {
   return String(value || "").trim();
 }
 
+function isAllOption(value: string) {
+  return value.toLocaleLowerCase("vi-VN") === "tất cả";
+}
+
 function getConsultInterestOptions(project: ProjectDetail) {
   const options = new Set<string>();
 
   project.floorTabs.forEach((tab) => {
     const label = normalizeOption(tab);
-    if (label && label !== "Tất cả" && label !== "Táº¥t cáº£") {
+    if (label && !isAllOption(label)) {
       options.add(label);
     }
   });
@@ -98,7 +104,7 @@ function getConsultInterestOptions(project: ProjectDetail) {
     const productType = normalizeOption(plan.productType);
     const name = normalizeOption(plan.name);
 
-    if (productType && productType !== "Tất cả" && productType !== "Táº¥t cáº£") {
+    if (productType && !isAllOption(productType)) {
       options.add(productType);
     } else if (name) {
       options.add(name);
@@ -106,8 +112,9 @@ function getConsultInterestOptions(project: ProjectDetail) {
   });
 
   project.priceRows.forEach((row) => {
+    if (row.kind !== "row") return;
     const productType = normalizeOption(row.productType);
-    if (productType && productType !== "Tất cả" && productType !== "Táº¥t cáº£") {
+    if (productType && !isAllOption(productType)) {
       options.add(productType);
     }
   });
@@ -543,7 +550,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
             ) : null}
             <div className="mt-5 grid gap-2">
               <Link
-                href="#dang-ky-tu-van"
+                href="#project-consult-form"
                 className="gold-gradient flex h-12 items-center justify-center rounded-[8px] text-[11px] font-bold uppercase tracking-[0.04em] text-white shadow-[0_12px_28px_rgba(143,99,47,.24)]"
               >
                 Đăng ký tư vấn
@@ -640,7 +647,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                 className="mt-6 flex flex-wrap gap-3"
               >
                 <Link
-                  href="#dang-ky-tu-van"
+                  href="#project-consult-form"
                   className="gold-gradient rounded-[6px] px-6 py-3.5 text-[11px] font-bold tracking-[0.05em] text-white shadow-[0_12px_28px_rgba(143,99,47,.25)] transition hover:-translate-y-0.5 hover:shadow-[0_16px_34px_rgba(143,99,47,.34)]"
                 >
                   ĐĂNG KÝ NHẬN THÔNG TIN
@@ -963,74 +970,9 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
           </section>
         </Reveal> : null}
 
-        {hasProductInfo || hasPolicies ? <Reveal>
-          <section className={`grid gap-5 ${hasProductInfo && hasPolicies ? 'lg:grid-cols-[1.85fr_1fr]' : ''}`}>
-            {hasProductInfo ? <div className="rounded-[18px] border border-line/80 bg-white p-3 shadow-soft sm:p-5">
-              <h2 className="mb-1 text-[12px] font-bold tracking-[0.06em] text-gold-dark normal-case sm:mb-2 sm:text-sm">
-                {project.sectionTitles?.productInfo?.title || "Sản phẩm & Bảng giá"}
-              </h2>
-              <p className="mb-4 hidden text-[13px] leading-6 text-muted sm:block">
-                Thông tin loại hình, diện tích và giá tham khảo được cập nhật theo dữ liệu dự án.
-              </p>
-              {hasPriceRows ? <div className="overflow-x-auto">
-                <table className="w-full min-w-[560px] border-collapse text-left text-[12px]">
-                  <thead>
-                    <tr className="bg-[#fbf7f0] text-muted">
-                      <th className="border border-line/70 px-4 py-2.5 font-semibold">LOẠI HÌNH</th>
-                      <th className="border border-line/70 px-4 py-2.5 text-center font-semibold">DIỆN TÍCH</th>
-                      <th className="border border-line/70 px-4 py-2.5 text-center font-semibold">GIÁ THAM KHẢO</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {project.priceRows.map((row) => (
-                      <tr key={`${row.productType}-${row.area}-${row.price}`} className="transition hover:bg-beige/35">
-                        <td className="border border-line/70 px-4 py-2.5 font-medium">{row.productType}</td>
-                        <td className="border border-line/70 px-4 py-2.5 text-center">{row.area}</td>
-                        <td className="border border-line/70 px-4 py-2.5 text-center font-semibold text-gold-dark">{row.price}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div> : (
-                <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4">
-                  {project.productSummary.map((item) => (
-                    <div key={item.label} className="rounded-[10px] border border-line/70 bg-[#fbf7f0] p-3 sm:rounded-[12px] sm:p-4">
-                      <p className="text-[10px] font-semibold tracking-[0.04em] text-muted normal-case sm:text-[11px] sm:tracking-[0.06em]">{item.label}</p>
-                      <p className="mt-1 text-[13px] font-bold leading-5 text-ink sm:text-[15px]">{item.value}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-              <p className="mt-2 text-[10px] italic leading-4 text-muted sm:mt-3 sm:text-[11px]">
-                * Giá dự kiến chưa bao gồm VAT và phí. Thông tin chỉ mang tính chất tham khảo.
-              </p>
-            </div> : null}
-            {hasPolicies ? <div className="rounded-[18px] border border-gold/35 bg-[#fffaf2] p-5 shadow-soft">
-              <h2 className="mb-5 text-sm font-bold tracking-[0.06em] text-gold-dark normal-case">
-                {project.sectionTitles?.policies?.title || "Chính sách bán hàng"}
-              </h2>
-              <div className="space-y-4">
-                {project.policies.map((policy) => (
-                  <div key={policy.title} className="flex gap-3">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-gold shadow-sm">
-                      <ProjectIcon name={policy.icon} size={18} />
-                    </div>
-                    <div>
-                      <h3 className="text-[13px] font-bold text-ink">{policy.title}</h3>
-                      <p className="mt-1 text-[12px] leading-5 text-muted">{policy.description}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <Link
-                href="#dang-ky-tu-van"
-                className="gold-gradient mt-6 block rounded-[5px] py-3 text-center text-[10px] font-bold text-white shadow-sm"
-              >
-                NHẬN CHÍNH SÁCH CHI TIẾT
-              </Link>
-            </div> : null}
-          </section>
-        </Reveal> : null}
+        <Reveal>
+          <ProjectPricingPolicySection project={project} />
+        </Reveal>
 
         {hasTimeline ? <Reveal>
           <section className="py-2">
@@ -1172,6 +1114,10 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
           </section>
         </Reveal> : null}
 
+        <Reveal>
+          <ProjectGalleryAlbumSection project={project} />
+        </Reveal>
+
         {project.virtualTourUrl ? (
           <VR360Section
             projectId={project.id || 1}
@@ -1183,7 +1129,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
 
         <Reveal>
           <section
-            id="dang-ky-tu-van"
+            id="project-consult-form"
             className="relative overflow-hidden rounded-[20px] border border-gold/30 bg-white shadow-soft"
           >
             <Image

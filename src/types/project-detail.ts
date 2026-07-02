@@ -24,6 +24,52 @@ export type IconDetail = {
   icon: ProjectIconName;
 };
 
+export type ProjectPriceItem =
+  | {
+      kind: "row";
+      productType: string;
+      area?: string;
+      price?: string;
+      payment?: string;
+      status?: string;
+      note?: string;
+      description?: string;
+    }
+  | {
+      kind: "image";
+      title?: string;
+      description?: string;
+      imageUrl: string;
+      buttonLabel?: string;
+    }
+  | {
+      kind: "file";
+      title?: string;
+      description?: string;
+      fileUrl: string;
+      fileType?: "pdf" | "excel" | "word" | "image" | "other";
+      fileSize?: string;
+      buttonLabel?: string;
+    }
+  | {
+      kind: "note";
+      title?: string;
+      description?: string;
+      highlight?: boolean;
+    };
+
+export type ProjectPolicyCard = {
+  title: string;
+  description?: string;
+  imageUrl?: string;
+  icon: ProjectIconName;
+  badge?: string;
+  bullets: string[];
+  ctaLabel?: string;
+  ctaUrl?: string;
+  fileUrl?: string;
+};
+
 export type ProjectDetail = {
   id?: number;
   slug: string;
@@ -73,17 +119,9 @@ export type ProjectDetail = {
     image?: string;
     icon: ProjectIconName;
   }[];
-  priceRows: {
-    productType: string;
-    area: string;
-    price: string;
-    bedrooms?: string;
-    status?: string;
-    note?: string;
-    description?: string;
-  }[];
+  priceRows: ProjectPriceItem[];
   productSummary: { label: string; value: string }[];
-  policies: { title: string; description: string; icon: ProjectIconName }[];
+  policies: ProjectPolicyCard[];
   timeline: { date: string; title: string }[];
   investmentReasons: {
     title: string;

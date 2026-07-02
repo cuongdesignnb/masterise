@@ -43,8 +43,34 @@ type ReasonItem = { title: string; description: string; icon: string };
 type TestimonialItem = { name: string; role: string; content: string; avatar: string };
 type FaqItem = { question: string; answer: string };
 type FloorPlanItem = { productType: string; name: string; area: string; totalArea: string; image: string; images: string[] };
-type PriceRowItem = { productType: string; area: string; price: string };
-type PolicyItem = { title: string; description: string; icon: string };
+type PriceRowItem = {
+  kind: 'row' | 'image' | 'file' | 'note';
+  productType: string;
+  area: string;
+  price: string;
+  payment: string;
+  status: string;
+  note: string;
+  title: string;
+  description: string;
+  image_url: string;
+  file_url: string;
+  file_type: 'pdf' | 'excel' | 'word' | 'image' | 'other';
+  file_size: string;
+  button_label: string;
+  highlight: boolean;
+};
+type PolicyItem = {
+  title: string;
+  description: string;
+  icon: string;
+  image_url: string;
+  badge: string;
+  bullets: string[];
+  cta_label: string;
+  cta_url: string;
+  file_url: string;
+};
 type TimelineItem = { date: string; title: string };
 type ProjectSectionTitleKey =
   | 'overview'
@@ -53,6 +79,7 @@ type ProjectSectionTitleKey =
   | 'floorPlans'
   | 'handover'
   | 'productInfo'
+  | 'pricingPolicy'
   | 'policies'
   | 'timeline'
   | 'investment'
@@ -68,6 +95,7 @@ const defaultProjectSectionTitles: ProjectSectionTitles = {
   floorPlans: { eyebrow: 'Mặt bằng', title: 'Mặt bằng điển hình' },
   handover: { eyebrow: 'Bàn giao', title: 'Tiêu chuẩn bàn giao' },
   productInfo: { eyebrow: '', title: 'Sản phẩm & Bảng giá' },
+  pricingPolicy: { eyebrow: 'Bảng giá', title: 'Bảng giá & Chính sách' },
   policies: { eyebrow: '', title: 'Chính sách bán hàng' },
   timeline: { eyebrow: '', title: 'Tiến độ thi công' },
   investment: { eyebrow: '', title: 'Vì sao nên đầu tư?' },
@@ -83,6 +111,7 @@ const projectSectionTitleLabels: { key: ProjectSectionTitleKey; label: string }[
   { key: 'floorPlans', label: 'Mặt bằng' },
   { key: 'handover', label: 'Tiêu chuẩn bàn giao' },
   { key: 'productInfo', label: 'Sản phẩm & Bảng giá' },
+  { key: 'pricingPolicy', label: 'Bảng giá & Chính sách' },
   { key: 'policies', label: 'Chính sách bán hàng' },
   { key: 'timeline', label: 'Tiến độ thi công' },
   { key: 'investment', label: 'Lý do đầu tư' },
@@ -112,7 +141,9 @@ type RepeaterMediaTarget =
   | { group: 'amenityDetails'; index: number; field: 'image' }
   | { group: 'handoverStandards'; index: number; field: 'image' }
   | { group: 'projectTestimonials'; index: number; field: 'avatar' }
-  | { group: 'floorPlans'; index: number; field: 'images' | 'image' };
+  | { group: 'floorPlans'; index: number; field: 'images' | 'image' }
+  | { group: 'priceRows'; index: number; field: 'image_url' | 'file_url' }
+  | { group: 'policyCards'; index: number; field: 'image_url' | 'file_url' };
 type MediaSelectorTarget = BaseMediaTarget | RepeaterMediaTarget | null;
 type ProjectAdminTab =
   | 'overview'
@@ -366,6 +397,44 @@ export default function AdminProjects() {
     .filter(Boolean);
   const uniqueStrings = (items: unknown[]) => Array.from(new Set(items.map((item) => String(item || '').trim()).filter(Boolean)));
   const textValue = (value: unknown) => String(value || '');
+  const inferFileType = (url: string): PriceRowItem['file_type'] => {
+    const clean = url.split('?')[0].toLowerCase();
+    if (/\.(png|jpe?g|webp|gif|avif|svg)$/.test(clean)) return 'image';
+    if (/\.pdf$/.test(clean)) return 'pdf';
+    if (/\.(xls|xlsx|csv)$/.test(clean)) return 'excel';
+    if (/\.(doc|docx)$/.test(clean)) return 'word';
+    return 'other';
+  };
+  const getFileName = (url: string) => decodeURIComponent(url.split('/').pop()?.split('?')[0] || 'Tài liệu');
+  const isImageUrl = (url?: string | null) => Boolean(url && /\.(png|jpe?g|webp|gif|avif|svg)(\?.*)?$/i.test(url));
+  const createPriceItem = (kind: PriceRowItem['kind'], url = ''): PriceRowItem => ({
+    kind,
+    productType: '',
+    area: '',
+    price: '',
+    payment: '',
+    status: '',
+    note: '',
+    title: '',
+    description: '',
+    image_url: kind === 'image' ? url : '',
+    file_url: kind === 'file' ? url : '',
+    file_type: kind === 'file' ? inferFileType(url) : 'other',
+    file_size: '',
+    button_label: kind === 'image' ? 'Xem ảnh lớn' : kind === 'file' ? 'Tải xuống' : '',
+    highlight: false,
+  });
+  const createPolicyItem = (): PolicyItem => ({
+    title: '',
+    description: '',
+    icon: 'CalendarDays',
+    image_url: '',
+    badge: '',
+    bullets: [],
+    cta_label: '',
+    cta_url: '',
+    file_url: '',
+  });
   const labelKey = (value: unknown) => textValue(value)
     .toLowerCase()
     .normalize('NFD')
@@ -439,14 +508,65 @@ export default function AdminProjects() {
     };
   });
   const loadPriceRowItems = (value: unknown): PriceRowItem[] => normalizeArray(value)
-    .map((row) => Array.isArray(row)
-      ? { productType: textValue(row[0]), area: textValue(row[1]), price: textValue(row[2]) }
-      : { productType: '', area: '', price: '' })
-    .filter(item => Boolean(item.productType || item.area || item.price));
+    .map((row) => {
+      if (Array.isArray(row)) {
+        return { ...createPriceItem('row'), productType: textValue(row[0]), area: textValue(row[1]), price: textValue(row[2]) };
+      }
+      if (!row || typeof row !== 'object') return null;
+      const item = row as Record<string, unknown>;
+      const kind = textValue(item.kind || 'row') as PriceRowItem['kind'];
+      if (kind === 'image') {
+        return {
+          ...createPriceItem('image', textValue(item.image_url || item.imageUrl || item.image || item.url)),
+          title: textValue(item.title),
+          description: textValue(item.description),
+          button_label: textValue(item.button_label || item.buttonLabel || 'Xem ảnh lớn'),
+        };
+      }
+      if (kind === 'file') {
+        const fileUrl = textValue(item.file_url || item.fileUrl || item.url);
+        return {
+          ...createPriceItem('file', fileUrl),
+          title: textValue(item.title),
+          description: textValue(item.description),
+          file_type: (textValue(item.file_type || item.fileType) as PriceRowItem['file_type']) || inferFileType(fileUrl),
+          file_size: textValue(item.file_size || item.fileSize),
+          button_label: textValue(item.button_label || item.buttonLabel || 'Tải xuống'),
+        };
+      }
+      if (kind === 'note') {
+        return {
+          ...createPriceItem('note'),
+          title: textValue(item.title),
+          description: textValue(item.description || item.note),
+          highlight: Boolean(item.highlight),
+        };
+      }
+      return {
+        ...createPriceItem('row'),
+        productType: textValue(item.productType || item.product_type || item.type || item.name || item.title),
+        area: textValue(item.area || item.area_text || item.size),
+        price: textValue(item.price || item.price_text),
+        payment: textValue(item.payment),
+        status: textValue(item.status),
+        note: textValue(item.note),
+        description: textValue(item.description),
+      };
+    })
+    .filter((item): item is PriceRowItem => Boolean(item && (
+      item.productType || item.area || item.price || item.payment || item.status || item.note || item.title || item.description || item.image_url || item.file_url
+    )));
   const loadPolicyItems = (value: unknown): PolicyItem[] => asRecords(value).map((item) => ({
-    title: textValue(item.title),
-    description: textValue(item.description),
+    ...createPolicyItem(),
+    title: textValue(item.title || item.name),
+    description: textValue(item.description || item.desc),
     icon: textValue(item.icon || 'CalendarDays'),
+    image_url: textValue(item.image_url || item.imageUrl || item.image || item.thumbnail),
+    badge: textValue(item.badge),
+    bullets: Array.isArray(item.bullets) ? item.bullets.map(textValue).filter(Boolean) : textValue(item.bullets).split('\n').map((line) => line.trim()).filter(Boolean),
+    cta_label: textValue(item.cta_label || item.ctaLabel),
+    cta_url: textValue(item.cta_url || item.ctaUrl),
+    file_url: textValue(item.file_url || item.fileUrl),
   }));
   const loadTimelineItems = (value: unknown): TimelineItem[] => asRecords(value).map((item) => ({
     date: textValue(item.date),
@@ -753,9 +873,37 @@ export default function AdminProjects() {
           };
         });
       const handoverStandards = cleanArray(formHandoverStandards, item => Boolean(item.title || item.description || item.image));
-      const priceRows = cleanArray(formPriceRows, item => Boolean(item.productType || item.area || item.price))
-        .map(item => [item.productType, item.area, item.price]);
-      const policyCards = cleanArray(formPolicyCards, item => Boolean(item.title || item.description));
+      const priceRows = cleanArray(formPriceRows, item => Boolean(
+        item.productType || item.area || item.price || item.payment || item.status || item.note || item.title || item.description || item.image_url || item.file_url
+      )).map(item => ({
+        kind: item.kind,
+        product_type: item.productType,
+        area: item.area,
+        price: item.price,
+        payment: item.payment,
+        status: item.status,
+        note: item.note,
+        title: item.title,
+        description: item.description,
+        image_url: item.image_url,
+        file_url: item.file_url,
+        file_type: item.file_type,
+        file_size: item.file_size,
+        button_label: item.button_label,
+        highlight: item.highlight,
+      }));
+      const policyCards = cleanArray(formPolicyCards, item => Boolean(item.title || item.description || item.image_url || item.file_url || item.bullets.length))
+        .map(item => ({
+          title: item.title,
+          description: item.description,
+          icon: item.icon,
+          image_url: item.image_url,
+          badge: item.badge,
+          bullets: item.bullets,
+          cta_label: item.cta_label,
+          cta_url: item.cta_url,
+          file_url: item.file_url,
+        }));
       const projectTimeline = cleanArray(formProjectTimeline, item => Boolean(item.date || item.title));
       const gallery = asStrings(formGallery);
       const slugValue = formSlug.trim() || slugifyProjectName(formName);
@@ -979,6 +1127,20 @@ export default function AdminProjects() {
                 images: selectedImages.length ? selectedImages : item.images,
               }
             : item
+        ));
+      } else if (mediaSelectorTarget.group === 'priceRows') {
+        setFormPriceRows(items => items.map((item, index) =>
+          index === mediaSelectorTarget.index
+            ? {
+                ...item,
+                [mediaSelectorTarget.field]: selectedUrl,
+                ...(mediaSelectorTarget.field === 'file_url' ? { file_type: inferFileType(selectedUrl) } : {}),
+              }
+            : item
+        ));
+      } else if (mediaSelectorTarget.group === 'policyCards') {
+        setFormPolicyCards(items => items.map((item, index) =>
+          index === mediaSelectorTarget.index ? { ...item, [mediaSelectorTarget.field]: selectedUrl } : item
         ));
       }
       setMediaSelectorTarget(null);
@@ -1372,6 +1534,16 @@ export default function AdminProjects() {
         const item = formFloorPlans[mediaSelectorTarget.index];
         return uniqueStrings([...(item?.images || []), item?.image]);
       }
+      if (mediaSelectorTarget.group === 'priceRows') {
+        const item = formPriceRows[mediaSelectorTarget.index];
+        const value = mediaSelectorTarget.field === 'image_url' ? item?.image_url : item?.file_url;
+        return value ? [value] : [];
+      }
+      if (mediaSelectorTarget.group === 'policyCards') {
+        const item = formPolicyCards[mediaSelectorTarget.index];
+        const value = mediaSelectorTarget.field === 'image_url' ? item?.image_url : item?.file_url;
+        return value ? [value] : [];
+      }
     }
     return [];
   };
@@ -1535,6 +1707,191 @@ export default function AdminProjects() {
           </div>
         </div>
       ))}
+    </div>
+  );
+
+  const renderPricingPolicyEditor = () => (
+    <div className="space-y-5">
+      {sectionNote('Quản lý bảng giá, ảnh bảng giá, tài liệu giá và chính sách bán hàng. Có thể nhập từng dòng hoặc chọn ảnh/PDF từ Media Library để tiết kiệm thời gian.')}
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Giá tối thiểu</label>
+          <input type="number" value={formPriceMin} onChange={(e) => setFormPriceMin(e.target.value !== '' ? Number(e.target.value) : '')} className={inputClass} placeholder="Ví dụ: 5000" />
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Giá tối đa</label>
+          <input type="number" value={formPriceMax} onChange={(e) => setFormPriceMax(e.target.value !== '' ? Number(e.target.value) : '')} className={inputClass} placeholder="Ví dụ: 15000" />
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Giá hiển thị</label>
+          <input value={formPriceText} onChange={(e) => setFormPriceText(e.target.value)} className={inputClass} placeholder="Ví dụ: Từ 8,9 tỷ/căn" />
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-[#E8DCCB] bg-white p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-bold text-[#1F1B16]">Bảng giá & tài liệu giá</h3>
+            <p className="mt-1 text-xs text-[#8C7A6B]">Thêm dòng giá thủ công hoặc chọn ảnh/PDF/Excel từ Media Library.</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button type="button" onClick={() => setFormPriceRows(items => [...items, createPriceItem('row')])} className={addButtonClass}>Thêm dòng giá</button>
+            <button type="button" onClick={() => setFormPriceRows(items => [...items, createPriceItem('image')])} className={addButtonClass}>Thêm ảnh bảng giá</button>
+            <button type="button" onClick={() => setFormPriceRows(items => [...items, createPriceItem('file')])} className={addButtonClass}>Thêm file</button>
+            <button type="button" onClick={() => setFormPriceRows(items => [...items, createPriceItem('note')])} className={addButtonClass}>Thêm ghi chú</button>
+          </div>
+        </div>
+
+        {formPriceRows.length === 0 ? (
+          <div className="mt-4 rounded-xl border border-dashed border-[#E8DCCB] bg-[#FBF8F2] p-5 text-center text-xs text-[#8C7A6B]">
+            Chưa có bảng giá. Bạn có thể nhập từng dòng hoặc upload ảnh/PDF bảng giá.
+          </div>
+        ) : (
+          <div className="mt-4 space-y-3">
+            {formPriceRows.map((item, index) => (
+              <div key={index} className={repeaterCardClass}>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="rounded-full bg-white px-3 py-1 text-[10px] font-bold text-[#B88746]">
+                    {item.kind === 'row' ? 'Dòng giá' : item.kind === 'image' ? 'Ảnh bảng giá' : item.kind === 'file' ? 'File bảng giá' : 'Ghi chú'}
+                  </span>
+                  <div className="flex gap-1">
+                    <button type="button" onClick={() => moveListItem(formPriceRows, setFormPriceRows, index, -1)} className={removeButtonClass}>Lên</button>
+                    <button type="button" onClick={() => moveListItem(formPriceRows, setFormPriceRows, index, 1)} className={removeButtonClass}>Xuống</button>
+                    <button type="button" onClick={() => removeListItem(formPriceRows, setFormPriceRows, index)} className={removeButtonClass}>Xóa</button>
+                  </div>
+                </div>
+
+                {item.kind === 'row' ? (
+                  <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
+                    <input value={item.productType} onChange={(e) => updateListItem(formPriceRows, setFormPriceRows, index, { productType: e.target.value })} className={inputClass} placeholder="Loại sản phẩm" />
+                    <input value={item.area} onChange={(e) => updateListItem(formPriceRows, setFormPriceRows, index, { area: e.target.value })} className={inputClass} placeholder="Diện tích" />
+                    <input value={item.price} onChange={(e) => updateListItem(formPriceRows, setFormPriceRows, index, { price: e.target.value })} className={inputClass} placeholder="Giá tham khảo" />
+                    <input value={item.payment} onChange={(e) => updateListItem(formPriceRows, setFormPriceRows, index, { payment: e.target.value })} className={inputClass} placeholder="Thanh toán" />
+                    <input value={item.status} onChange={(e) => updateListItem(formPriceRows, setFormPriceRows, index, { status: e.target.value })} className={inputClass} placeholder="Trạng thái" />
+                    <input value={item.note} onChange={(e) => updateListItem(formPriceRows, setFormPriceRows, index, { note: e.target.value })} className={inputClass} placeholder="Ghi chú" />
+                  </div>
+                ) : null}
+
+                {item.kind === 'image' ? (
+                  <div className="grid gap-3 md:grid-cols-[220px_1fr]">
+                    <div className="overflow-hidden rounded-xl border border-[#E8DCCB] bg-white">
+                      {item.image_url ? <img src={item.image_url} alt={item.title || 'Ảnh bảng giá'} className="h-36 w-full object-cover" /> : <div className="flex h-36 items-center justify-center text-xs text-[#8C7A6B]">Chưa chọn ảnh</div>}
+                      <div className="flex gap-2 p-2">
+                        <button type="button" onClick={() => setMediaSelectorTarget({ group: 'priceRows', index, field: 'image_url' })} className={addButtonClass}>Chọn ảnh</button>
+                        {item.image_url ? <a href={item.image_url} target="_blank" rel="noreferrer" className={removeButtonClass}>Mở</a> : null}
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <input value={item.title} onChange={(e) => updateListItem(formPriceRows, setFormPriceRows, index, { title: e.target.value })} className={inputClass} placeholder="Tiêu đề ảnh bảng giá" />
+                      <textarea value={item.description} onChange={(e) => updateListItem(formPriceRows, setFormPriceRows, index, { description: e.target.value })} rows={3} className={inputClass} placeholder="Mô tả ảnh bảng giá" />
+                      <input value={item.button_label} onChange={(e) => updateListItem(formPriceRows, setFormPriceRows, index, { button_label: e.target.value })} className={inputClass} placeholder="Nhãn nút, ví dụ: Xem ảnh lớn" />
+                    </div>
+                  </div>
+                ) : null}
+
+                {item.kind === 'file' ? (
+                  <div className="grid gap-3 md:grid-cols-[220px_1fr]">
+                    <div className="rounded-xl border border-[#E8DCCB] bg-white p-3">
+                      <p className="truncate text-xs font-bold text-[#1F1B16]">{item.file_url ? getFileName(item.file_url) : 'Chưa chọn file'}</p>
+                      <p className="mt-1 text-[10px] text-[#8C7A6B]">{item.file_type}</p>
+                      <div className="mt-3 flex gap-2">
+                        <button type="button" onClick={() => setMediaSelectorTarget({ group: 'priceRows', index, field: 'file_url' })} className={addButtonClass}>Chọn file</button>
+                        {item.file_url ? <a href={item.file_url} target="_blank" rel="noreferrer" className={removeButtonClass}>Mở</a> : null}
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <input value={item.title} onChange={(e) => updateListItem(formPriceRows, setFormPriceRows, index, { title: e.target.value })} className={inputClass} placeholder="Tiêu đề tài liệu" />
+                      <textarea value={item.description} onChange={(e) => updateListItem(formPriceRows, setFormPriceRows, index, { description: e.target.value })} rows={3} className={inputClass} placeholder="Mô tả tài liệu" />
+                      <input value={item.file_size} onChange={(e) => updateListItem(formPriceRows, setFormPriceRows, index, { file_size: e.target.value })} className={inputClass} placeholder="Dung lượng, ví dụ: 2.8MB" />
+                    </div>
+                  </div>
+                ) : null}
+
+                {item.kind === 'note' ? (
+                  <div className="space-y-2">
+                    <input value={item.title} onChange={(e) => updateListItem(formPriceRows, setFormPriceRows, index, { title: e.target.value })} className={inputClass} placeholder="Tiêu đề ghi chú" />
+                    <textarea value={item.description} onChange={(e) => updateListItem(formPriceRows, setFormPriceRows, index, { description: e.target.value })} rows={3} className={inputClass} placeholder="Nội dung ghi chú" />
+                    <label className="flex items-center gap-2 text-xs font-semibold text-[#1F1B16]">
+                      <input type="checkbox" checked={item.highlight} onChange={(e) => updateListItem(formPriceRows, setFormPriceRows, index, { highlight: e.target.checked })} />
+                      Làm nổi bật ghi chú
+                    </label>
+                  </div>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="rounded-2xl border border-[#E8DCCB] bg-white p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-bold text-[#1F1B16]">Chính sách bán hàng</h3>
+            <p className="mt-1 text-xs text-[#8C7A6B]">Mỗi chính sách có thể chọn ảnh, file đính kèm và nhập bullet dễ hiểu.</p>
+          </div>
+          <button type="button" onClick={() => setFormPolicyCards(items => [...items, createPolicyItem()])} className={addButtonClass}>Thêm chính sách</button>
+        </div>
+
+        {formPolicyCards.length === 0 ? (
+          <div className="mt-4 rounded-xl border border-dashed border-[#E8DCCB] bg-[#FBF8F2] p-5 text-center text-xs text-[#8C7A6B]">
+            Chưa có chính sách bán hàng. Thêm chính sách với ảnh minh họa để khách dễ hiểu hơn.
+          </div>
+        ) : (
+          <div className="mt-4 space-y-3">
+            {formPolicyCards.map((item, index) => (
+              <div key={index} className={repeaterCardClass}>
+                <div className="flex justify-between gap-2">
+                  <span className="text-xs font-bold text-[#1F1B16]">Chính sách {index + 1}</span>
+                  <div className="flex gap-1">
+                    <button type="button" onClick={() => moveListItem(formPolicyCards, setFormPolicyCards, index, -1)} className={removeButtonClass}>Lên</button>
+                    <button type="button" onClick={() => moveListItem(formPolicyCards, setFormPolicyCards, index, 1)} className={removeButtonClass}>Xuống</button>
+                    <button type="button" onClick={() => removeListItem(formPolicyCards, setFormPolicyCards, index)} className={removeButtonClass}>Xóa</button>
+                  </div>
+                </div>
+                <div className="grid gap-3 md:grid-cols-[220px_1fr]">
+                  <div className="overflow-hidden rounded-xl border border-[#E8DCCB] bg-white">
+                    {item.image_url ? <img src={item.image_url} alt={item.title || 'Ảnh chính sách'} className="h-36 w-full object-cover" /> : <div className="flex h-36 items-center justify-center text-xs text-[#8C7A6B]">Chưa chọn ảnh</div>}
+                    <div className="flex gap-2 p-2">
+                      <button type="button" onClick={() => setMediaSelectorTarget({ group: 'policyCards', index, field: 'image_url' })} className={addButtonClass}>Chọn ảnh</button>
+                      {item.image_url ? <a href={item.image_url} target="_blank" rel="noreferrer" className={removeButtonClass}>Mở</a> : null}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+                    <input value={item.badge} onChange={(e) => updateListItem(formPolicyCards, setFormPolicyCards, index, { badge: e.target.value })} className={inputClass} placeholder="Badge, ví dụ: Ưu đãi" />
+                    <input value={item.icon} onChange={(e) => updateListItem(formPolicyCards, setFormPolicyCards, index, { icon: e.target.value })} className={inputClass} placeholder="Icon" />
+                    <input value={item.title} onChange={(e) => updateListItem(formPolicyCards, setFormPolicyCards, index, { title: e.target.value })} className={inputClass} placeholder="Tiêu đề chính sách" />
+                    <input value={item.cta_label} onChange={(e) => updateListItem(formPolicyCards, setFormPolicyCards, index, { cta_label: e.target.value })} className={inputClass} placeholder="Nhãn CTA" />
+                    <textarea value={item.description} onChange={(e) => updateListItem(formPolicyCards, setFormPolicyCards, index, { description: e.target.value })} rows={3} className={`${inputClass} md:col-span-2`} placeholder="Mô tả chính sách" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-semibold text-[#8C7A6B]">Bullet chính sách</label>
+                    <button type="button" onClick={() => updateListItem(formPolicyCards, setFormPolicyCards, index, { bullets: [...item.bullets, ''] })} className={addButtonClass}>Thêm bullet</button>
+                  </div>
+                  {item.bullets.map((bullet, bulletIndex) => (
+                    <div key={bulletIndex} className="flex gap-2">
+                      <input
+                        value={bullet}
+                        onChange={(e) => updateListItem(formPolicyCards, setFormPolicyCards, index, { bullets: item.bullets.map((value, i) => i === bulletIndex ? e.target.value : value) })}
+                        className={inputClass}
+                        placeholder="Nội dung bullet"
+                      />
+                      <button type="button" onClick={() => updateListItem(formPolicyCards, setFormPolicyCards, index, { bullets: item.bullets.filter((_, i) => i !== bulletIndex) })} className={removeButtonClass}>Xóa</button>
+                    </div>
+                  ))}
+                </div>
+                <div className="grid gap-2 md:grid-cols-[1fr_auto_auto]">
+                  <input value={item.cta_url} onChange={(e) => updateListItem(formPolicyCards, setFormPolicyCards, index, { cta_url: e.target.value })} className={inputClass} placeholder="Link CTA nếu có" />
+                  <button type="button" onClick={() => setMediaSelectorTarget({ group: 'policyCards', index, field: 'file_url' })} className={addButtonClass}>Chọn file</button>
+                  {item.file_url ? <a href={item.file_url} target="_blank" rel="noreferrer" className={removeButtonClass}>{getFileName(item.file_url)}</a> : null}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 
@@ -2642,33 +2999,7 @@ export default function AdminProjects() {
                 )}
 
                 {activeTab === 'pricingPolicy' && (
-                  <div className="space-y-4">
-                    {sectionNote('Phần này quản lý riêng bảng giá dự kiến và chính sách bán hàng. Không nhập lẫn với mặt bằng để tránh trùng nội dung.')}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div>
-                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Giá tối thiểu</label>
-                        <input type="number" value={formPriceMin} onChange={(e) => setFormPriceMin(e.target.value !== '' ? Number(e.target.value) : '')} className={inputClass} placeholder="Ví dụ: 5000" />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Giá tối đa</label>
-                        <input type="number" value={formPriceMax} onChange={(e) => setFormPriceMax(e.target.value !== '' ? Number(e.target.value) : '')} className={inputClass} placeholder="Ví dụ: 15000" />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Giá hiển thị</label>
-                        <input value={formPriceText} onChange={(e) => setFormPriceText(e.target.value)} className={inputClass} placeholder="Ví dụ: Từ 8,9 tỷ/căn" />
-                      </div>
-                    </div>
-                    {renderTextPairRepeater('Dòng bảng giá', formPriceRows, setFormPriceRows, { productType: '', area: '', price: '' }, [
-                      { key: 'productType', label: 'Loại sản phẩm' },
-                      { key: 'area', label: 'Diện tích' },
-                      { key: 'price', label: 'Giá bán, ví dụ: Liên hệ' },
-                    ])}
-                    {renderTextPairRepeater('Chính sách bán hàng', formPolicyCards, setFormPolicyCards, { title: '', description: '', icon: 'CalendarDays' }, [
-                      { key: 'title', label: 'Tên chính sách' },
-                      { key: 'icon', label: 'Biểu tượng' },
-                      { key: 'description', label: 'Mô tả chính sách', wide: true },
-                    ])}
-                  </div>
+                  renderPricingPolicyEditor()
                 )}
 
                 {activeTab === 'timeline' && (
@@ -2704,39 +3035,6 @@ export default function AdminProjects() {
                     {renderTextPairRepeater('Câu hỏi thường gặp của dự án', formProjectFaqs, setFormProjectFaqs, { question: '', answer: '' }, [
                       { key: 'question', label: 'Câu hỏi' },
                       { key: 'answer', label: 'Câu trả lời', wide: true },
-                    ])}
-                  </div>
-                )}
-
-                {false && (
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <label className="text-xs font-semibold text-[#8C7A6B]">Tab loại sản phẩm</label>
-                        <button type="button" onClick={() => setFormFloorTabs([...formFloorTabs, ''])} className={addButtonClass}>Thêm tab</button>
-                      </div>
-                      {formFloorTabs.length === 0 ? <p className="text-xs text-[#8C7A6B]">Chưa có tab sản phẩm.</p> : null}
-                      {formFloorTabs.map((tab, index) => (
-                        <div key={index} className="flex gap-2">
-                          <input value={tab} onChange={(e) => setFormFloorTabs(formFloorTabs.map((item, itemIndex) => itemIndex === index ? e.target.value : item))} className={inputClass} placeholder="Ví dụ: Căn hộ" />
-                          <button type="button" onClick={() => setFormFloorTabs(formFloorTabs.filter((_, itemIndex) => itemIndex !== index))} className={removeButtonClass}>Xóa</button>
-                        </div>
-                      ))}
-                    </div>
-                    {renderFloorPlanRepeater()}
-                    {renderTextPairRepeater('Dòng bảng giá', formPriceRows, setFormPriceRows, { productType: '', area: '', price: '' }, [
-                      { key: 'productType', label: 'Loại sản phẩm' },
-                      { key: 'area', label: 'Diện tích' },
-                      { key: 'price', label: 'Giá bán, ví dụ: Liên hệ' },
-                    ])}
-                    {renderTextPairRepeater('Chính sách bán hàng', formPolicyCards, setFormPolicyCards, { title: '', description: '', icon: 'CalendarDays' }, [
-                      { key: 'title', label: 'Tên chính sách' },
-                      { key: 'icon', label: 'Icon' },
-                      { key: 'description', label: 'Mô tả chính sách', wide: true },
-                    ])}
-                    {renderTextPairRepeater('Tiến độ dự án', formProjectTimeline, setFormProjectTimeline, { date: '', title: '' }, [
-                      { key: 'date', label: 'Mốc thời gian, ví dụ: Quý 1/2026' },
-                      { key: 'title', label: 'Nội dung tiến độ' },
                     ])}
                   </div>
                 )}
