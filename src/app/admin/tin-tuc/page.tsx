@@ -38,6 +38,7 @@ type NewsMediaDraft = Omit<PostMedia, 'id' | 'post_id' | 'created_at' | 'updated
 type MediaSelectTarget =
   | { mode: 'thumbnail' }
   | { mode: 'gallery' }
+  | { mode: 'poster'; index: number }
   | { mode: 'item'; index: number }
   | null;
 
@@ -878,13 +879,9 @@ function AdminNews() {
                           )}
                         </div>
                         <div className="flex-1 space-y-2">
-                          <input
-                            type="text"
-                            value={formThumbnail}
-                            onChange={(e) => setFormThumbnail(e.target.value)}
-                            className="w-full px-3 py-1.5 border border-[#E8DCCB] rounded-xl bg-white text-xs focus:outline-none"
-                            placeholder="URL ảnh đại diện"
-                          />
+                          <div className="min-h-9 rounded-xl border border-[#E8DCCB] bg-white px-3 py-2 text-xs text-[#8C7A6B]">
+                            {formThumbnail ? 'Đã chọn ảnh từ Media Library' : 'Chưa chọn ảnh đại diện'}
+                          </div>
                           <button
                             type="button"
                             onClick={() => openMediaSelector({ mode: 'thumbnail' })}
@@ -892,6 +889,15 @@ function AdminNews() {
                           >
                             Chọn từ Media Library
                           </button>
+                          {formThumbnail && (
+                            <button
+                              type="button"
+                              onClick={() => setFormThumbnail('')}
+                              className="ml-2 px-3 py-1.5 border border-red-100 bg-red-50 text-red-600 text-xs font-semibold rounded-lg transition-colors"
+                            >
+                              Xóa ảnh
+                            </button>
+                          )}
                         </div>
                       </div>
                     </section>
@@ -953,21 +959,44 @@ function AdminNews() {
                                   <input value={item.title || ''} onChange={(e) => updateMediaItem(index, { title: e.target.value })} className="mt-1 w-full rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] px-3 py-2 text-xs text-[#1F1B16] outline-none" placeholder="Ví dụ: Mặt bằng tổng thể, Brochure PDF..." />
                                 </label>
                                 <label className="text-[11px] font-semibold text-[#8C7A6B]">
-                                  URL {item.type === 'youtube' ? 'YouTube' : 'file'}
-                                  <div className="mt-1 flex gap-2">
-                                    <input value={item.url || ''} onChange={(e) => updateMediaItem(index, { url: e.target.value, type: item.type === 'youtube' ? 'youtube' : inferMediaTypeFromUrl(e.target.value) })} className="w-full rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] px-3 py-2 text-xs text-[#1F1B16] outline-none" placeholder={item.type === 'youtube' ? 'https://www.youtube.com/watch?v=...' : 'Chọn từ Media Library hoặc nhập URL'} />
-                                    {item.type !== 'youtube' && (
+                                  {item.type === 'youtube' ? 'Link YouTube' : 'File từ Media Library'}
+                                  {item.type === 'youtube' ? (
+                                    <input value={item.url || ''} onChange={(e) => updateMediaItem(index, { url: e.target.value, type: 'youtube' })} className="mt-1 w-full rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] px-3 py-2 text-xs text-[#1F1B16] outline-none" placeholder="https://www.youtube.com/watch?v=..." />
+                                  ) : (
+                                    <div className="mt-1 flex gap-2">
+                                      <div className="min-h-9 w-full rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] px-3 py-2 text-xs text-[#8C7A6B]">
+                                        {item.url ? 'Đã chọn file từ Media Library' : 'Chưa chọn file'}
+                                      </div>
                                       <button type="button" onClick={() => openMediaSelector({ mode: 'item', index })} className="shrink-0 rounded-xl bg-[#1F1B16] px-3 py-2 text-[10px] font-bold text-white hover:bg-[#B88746]">
-                                        Chọn
+                                        Chọn file
                                       </button>
-                                    )}
-                                  </div>
+                                    </div>
+                                  )}
                                 </label>
                                 {(item.type === 'video_upload' || item.type === 'youtube') && (
-                                  <label className="text-[11px] font-semibold text-[#8C7A6B] md:col-span-2">
+                                  <div className="text-[11px] font-semibold text-[#8C7A6B] md:col-span-2">
                                     Ảnh poster/thumbnail video
-                                    <input value={item.thumbnail_url || ''} onChange={(e) => updateMediaItem(index, { thumbnail_url: e.target.value })} className="mt-1 w-full rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] px-3 py-2 text-xs text-[#1F1B16] outline-none" placeholder="URL ảnh poster nếu có" />
-                                  </label>
+                                    <div className="mt-1 flex flex-wrap items-center gap-3 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] p-2">
+                                      <div className="h-14 w-24 shrink-0 overflow-hidden rounded-lg border border-[#E8DCCB] bg-white flex items-center justify-center">
+                                        {item.thumbnail_url ? (
+                                          <img src={item.thumbnail_url} alt="Poster video" className="h-full w-full object-cover" />
+                                        ) : (
+                                          <ImageIcon className="h-5 w-5 text-[#B88746]/40" />
+                                        )}
+                                      </div>
+                                      <div className="min-w-0 flex-1 text-xs font-normal text-[#8C7A6B]">
+                                        {item.thumbnail_url ? 'Đã chọn ảnh poster từ Media Library' : 'Chưa chọn poster, có thể bỏ trống'}
+                                      </div>
+                                      <button type="button" onClick={() => openMediaSelector({ mode: 'poster', index })} className="rounded-xl bg-[#1F1B16] px-3 py-2 text-[10px] font-bold text-white hover:bg-[#B88746]">
+                                        Chọn ảnh
+                                      </button>
+                                      {item.thumbnail_url && (
+                                        <button type="button" onClick={() => updateMediaItem(index, { thumbnail_url: '' })} className="rounded-xl border border-red-100 bg-red-50 px-3 py-2 text-[10px] font-bold text-red-600">
+                                          Xóa
+                                        </button>
+                                      )}
+                                    </div>
+                                  </div>
                                 )}
                               </div>
                             </div>
@@ -1155,7 +1184,7 @@ function AdminNews() {
               if (mediaSelectTarget?.mode === 'gallery') {
                 setFormMediaItems((items) => [
                   ...items.filter((item) => item.type !== 'image'),
-                  ...urls.filter(Boolean).map((itemUrl, idx) => ({
+                  ...urls.filter((itemUrl): itemUrl is string => Boolean(itemUrl)).map((itemUrl, idx) => ({
                     ...createMediaDraft('image', itemUrl),
                     title: '',
                     sort_order: items.length + idx,
@@ -1167,6 +1196,12 @@ function AdminNews() {
                 updateMediaItem(mediaSelectTarget.index, {
                   url: selectedUrl,
                   type: inferMediaTypeFromUrl(selectedUrl),
+                });
+              }
+
+              if (mediaSelectTarget?.mode === 'poster' && selectedUrl) {
+                updateMediaItem(mediaSelectTarget.index, {
+                  thumbnail_url: selectedUrl,
                 });
               }
 
