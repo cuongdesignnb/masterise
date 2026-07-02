@@ -1,13 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowRight,
   BadgeCheck,
   CalendarDays,
+  ChevronLeft,
   ChevronDown,
+  ChevronRight,
   MapPin,
   Sparkles,
   Building2,
@@ -15,7 +17,7 @@ import {
   Shield,
   TrendingUp,
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import MobileTabBar from "@/components/MobileTabBar";
@@ -29,6 +31,7 @@ import { projectService } from "@/services/projectService";
 import { postService } from "@/services/postService";
 import { unwrapData } from "@/adapters/apiResponseAdapter";
 import { getSalesStatusLabel, getSalesStatusColor } from "@/lib/salesStatus";
+import { useSiteSettings } from "@/providers/SiteSettingsProvider";
 import {
   fadeUp,
   fadeIn,
@@ -40,22 +43,30 @@ import {
 import type { Post, Project } from "@/types/api";
 
 type HomepageHero = {
+  id?: string | number;
   title_lines?: string[];
+  title?: string;
+  subtitle?: string;
   highlight?: string;
   description?: string;
   image?: string;
   image_url?: string;
+  link?: string;
+  sort_order?: number;
+  is_active?: boolean;
 };
 
 const fallbackHero: Required<
-  Pick<HomepageHero, "title_lines" | "highlight" | "description" | "image">
+  Pick<HomepageHero, "id" | "title_lines" | "highlight" | "description" | "image" | "link">
 > = {
+  id: "fallback",
   title_lines: ["Masterise Homes"],
   highlight: "Kiến tạo chuẩn sống hàng hiệu",
   description:
     "Bộ sưu tập bất động sản cao cấp dành cho cộng đồng tinh hoa, nơi thiết kế, vị trí và trải nghiệm sống được nâng tầm theo chuẩn quốc tế.",
   image:
     "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1800&auto=format&fit=crop",
+  link: "/du-an",
 };
 
 // Sales status labels are now centralized in @/lib/salesStatus
@@ -76,19 +87,14 @@ const aboutBullets = [
 ];
 
 export default function HomePageClient() {
-  const [hero, setHero] = useState<HomepageHero>(fallbackHero);
+  const { homepageSlides, isLoaded } = useSiteSettings();
+  const [heroSlides, setHeroSlides] = useState<HomepageHero[]>([fallbackHero]);
+  const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
+  const [heroAutoplay, setHeroAutoplay] = useState(true);
   const [projects, setProjects] = useState<Project[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
 
   useEffect(() => {
-    homepageService
-      .getHeroBanners()
-      .then((response) => {
-        const banners = unwrapData<HomepageHero[]>(response) || [];
-        if (banners.length > 0) setHero(banners[0]);
-      })
-      .catch(() => setHero(fallbackHero));
-
     projectService
       .getFeaturedProjects({ limit: "6" })
       .then(setProjects)
@@ -100,6 +106,66 @@ export default function HomePageClient() {
       .catch(() => setPosts([]));
   }, []);
 
+  useEffect(() => {
+    if (!homepageSlides.length) return;
+    setHeroSlides(
+      homepageSlides.map((slide, index) => ({
+        id: `setting-${index}`,
+        title: slide.title,
+        subtitle: slide.subtitle,
+        image: slide.image,
+        link: slide.link || "/du-an",
+      }))
+    );
+    setCurrentHeroIndex(0);
+  }, [homepageSlides]);
+
+  useEffect(() => {
+    if (!isLoaded || homepageSlides.length > 0) return;
+
+    homepageService
+      .getHeroBanners()
+      .then((response) => {
+        const banners = unwrapData<HomepageHero[]>(response) || [];
+        const activeBanners = banners
+          .filter((banner) => banner.is_active !== false)
+          .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+          .filter((banner) => banner.image || banner.image_url);
+
+        if (activeBanners.length > 0) {
+          setHeroSlides(activeBanners);
+          setCurrentHeroIndex(0);
+        }
+      })
+      .catch(() => setHeroSlides([fallbackHero]));
+  }, [homepageSlides.length, isLoaded]);
+
+  useEffect(() => {
+    if (!heroAutoplay || heroSlides.length <= 1) return;
+    const interval = window.setInterval(() => {
+      setCurrentHeroIndex((index) => (index + 1) % heroSlides.length);
+    }, 6500);
+    return () => window.clearInterval(interval);
+  }, [heroAutoplay, heroSlides.length]);
+
+  const currentHero = heroSlides[currentHeroIndex] || fallbackHero;
+  const currentHeroTitle = useMemo(() => {
+    if (Array.isArray(currentHero.title_lines) && currentHero.title_lines.length) {
+      return currentHero.title_lines.join(" ");
+    }
+    return currentHero.title || "Masterise Homes";
+  }, [currentHero]);
+  const currentHeroSubtitle = currentHero.subtitle || currentHero.highlight || fallbackHero.highlight;
+  const currentHeroDescription = currentHero.description || fallbackHero.description;
+  const currentHeroImage = currentHero.image || currentHero.image_url || fallbackHero.image;
+  const currentHeroLink = currentHero.link || "/du-an";
+
+  const goToHeroSlide = (index: number) => {
+    if (heroSlides.length <= 1) return;
+    setHeroAutoplay(false);
+    setCurrentHeroIndex((index + heroSlides.length) % heroSlides.length);
+  };
+
   return (
     <>
       <Header />
@@ -110,14 +176,25 @@ export default function HomePageClient() {
             HERO SECTION — Full-screen immersive
         ═══════════════════════════════════════════ */}
         <section className="relative min-h-[680px] sm:min-h-[760px] lg:min-h-[860px] overflow-hidden bg-ink-deep text-white">
-          <Image
-            src={hero.image || hero.image_url || fallbackHero.image}
-            alt="Masterise Homes"
-            fill
-            priority
-            className="object-cover scale-[1.02]"
-            sizes="100vw"
-          />
+          <AnimatePresence mode="sync" initial={false}>
+            <motion.div
+              key={`${currentHero.id || currentHeroIndex}-${currentHeroImage}`}
+              className="absolute inset-0"
+              initial={{ opacity: 0, scale: 1.025 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 1.25, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <Image
+                src={currentHeroImage}
+                alt={currentHeroTitle}
+                fill
+                priority={currentHeroIndex === 0}
+                className="object-cover scale-[1.02]"
+                sizes="100vw"
+              />
+            </motion.div>
+          </AnimatePresence>
           <div className="hero-overlay" />
           <div className="hero-glow" />
 
@@ -137,9 +214,7 @@ export default function HomePageClient() {
 
               {/* Title */}
               <motion.h1 variants={fadeUp} className="text-hero mt-6 text-white">
-                {Array.isArray(hero.title_lines)
-                  ? hero.title_lines.join(" ")
-                  : "Masterise Homes"}
+                {currentHeroTitle}
               </motion.h1>
 
               {/* Highlight */}
@@ -147,7 +222,7 @@ export default function HomePageClient() {
                 variants={fadeUp}
                 className="mt-4 text-xl font-bold text-champagne sm:text-2xl lg:text-3xl"
               >
-                {hero.highlight || fallbackHero.highlight}
+                {currentHeroSubtitle}
               </motion.p>
 
               {/* Description */}
@@ -155,12 +230,12 @@ export default function HomePageClient() {
                 variants={fadeUp}
                 className="mt-5 max-w-2xl text-[15px] leading-7 text-white/75 sm:text-base sm:leading-8"
               >
-                {hero.description || fallbackHero.description}
+                {currentHeroDescription}
               </motion.p>
 
               {/* CTAs */}
               <motion.div variants={fadeUp} className="mt-9 flex flex-wrap gap-3">
-                <Link href="/du-an" className="btn-primary">
+                <Link href={currentHeroLink} className="btn-primary">
                   Khám phá dự án <ArrowRight size={16} />
                 </Link>
                 <Link href="#global-contact-form" className="btn-outline">
@@ -183,6 +258,38 @@ export default function HomePageClient() {
                   );
                 })}
               </motion.div>
+
+              {heroSlides.length > 1 && (
+                <motion.div variants={fadeUp} className="mt-8 flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => goToHeroSlide(currentHeroIndex - 1)}
+                    className="flex h-10 w-10 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white backdrop-blur transition hover:bg-white hover:text-ink"
+                    aria-label="Banner trước"
+                  >
+                    <ChevronLeft size={18} />
+                  </button>
+                  <div className="flex items-center gap-2 rounded-full border border-white/20 bg-black/20 px-3 py-2 backdrop-blur">
+                    {heroSlides.map((slide, index) => (
+                      <button
+                        key={slide.id || index}
+                        type="button"
+                        onClick={() => goToHeroSlide(index)}
+                        className={`h-2 rounded-full transition-all duration-500 ${index === currentHeroIndex ? "w-8 bg-champagne" : "w-2 bg-white/55 hover:bg-white"}`}
+                        aria-label={`Chọn banner ${index + 1}`}
+                      />
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => goToHeroSlide(currentHeroIndex + 1)}
+                    className="flex h-10 w-10 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white backdrop-blur transition hover:bg-white hover:text-ink"
+                    aria-label="Banner tiếp theo"
+                  >
+                    <ChevronRight size={18} />
+                  </button>
+                </motion.div>
+              )}
             </motion.div>
           </Container>
 
