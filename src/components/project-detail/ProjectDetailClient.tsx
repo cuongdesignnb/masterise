@@ -90,6 +90,71 @@ function isAllOption(value: string) {
   return value.toLocaleLowerCase("vi-VN") === "tất cả";
 }
 
+function getYouTubeEmbedUrl(url: string) {
+  const trimmedUrl = url.trim();
+
+  try {
+    const parsedUrl = new URL(trimmedUrl);
+    const hostname = parsedUrl.hostname.replace(/^www\./, "").replace(/^m\./, "");
+
+    if (hostname === "youtu.be") {
+      const id = parsedUrl.pathname.split("/").filter(Boolean)[0];
+      return id ? `https://www.youtube.com/embed/${id}` : trimmedUrl;
+    }
+
+    if (hostname === "youtube.com" || hostname === "youtube-nocookie.com") {
+      if (parsedUrl.pathname.startsWith("/embed/")) {
+        return trimmedUrl;
+      }
+
+      if (parsedUrl.pathname.startsWith("/shorts/")) {
+        const id = parsedUrl.pathname.split("/").filter(Boolean)[1];
+        return id ? `https://www.youtube.com/embed/${id}` : trimmedUrl;
+      }
+
+      const id = parsedUrl.searchParams.get("v");
+      return id ? `https://www.youtube.com/embed/${id}` : trimmedUrl;
+    }
+  } catch {
+    const match = trimmedUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)([A-Za-z0-9_-]{6,})/);
+    if (match?.[1]) {
+      return `https://www.youtube.com/embed/${match[1]}`;
+    }
+  }
+
+  return trimmedUrl;
+}
+
+function isVideoFileUrl(url: string) {
+  return /\.(mp4|webm|ogg|mov)(\?.*)?$/i.test(url);
+}
+
+function ProjectVideoFrame({
+  url,
+  embedUrl,
+  title,
+}: {
+  url: string;
+  embedUrl: string;
+  title: string;
+}) {
+  return (
+    <div className="aspect-video w-full bg-black">
+      {isVideoFileUrl(url) ? (
+        <video src={url} controls className="h-full w-full" />
+      ) : (
+        <iframe
+          src={embedUrl}
+          title={title}
+          className="h-full w-full"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowFullScreen
+        />
+      )}
+    </div>
+  );
+}
+
 function getConsultInterestOptions(project: ProjectDetail) {
   const options = new Set<string>();
 
@@ -268,10 +333,12 @@ function LocationMap({ projectName, mapImageUrl }: { projectName: string; mapIma
 export default function ProjectDetailClient({ project }: { project: ProjectDetail }) {
   const floorTabs = project.floorTabs.length ? ["Tất cả", ...project.floorTabs] : (project.floorPlans.length ? ["Sản phẩm"] : []);
   const consultInterestOptions = useMemo(() => getConsultInterestOptions(project), [project]);
+  const projectVideoEmbedUrl = useMemo(() => project.videoUrl ? getYouTubeEmbedUrl(project.videoUrl) : "", [project.videoUrl]);
   const [activeTab, setActiveTab] = useState(floorTabs[0] ?? "");
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState<number | null>(null);
   const [floorPlanImageModal, setFloorPlanImageModal] = useState<{ images: string[]; index: number; title: string } | null>(null);
+  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   const [heroTextExpanded, setHeroTextExpanded] = useState(false);
   const [canToggleHeroText, setCanToggleHeroText] = useState(false);
   const [overviewExpanded, setOverviewExpanded] = useState(false);
@@ -347,7 +414,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
 
   // Lock body scroll when modal is open
   useEffect(() => {
-    if (activeImageIndex !== null || floorPlanImageModal) {
+    if (activeImageIndex !== null || floorPlanImageModal || isVideoModalOpen) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "";
@@ -355,7 +422,22 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
     return () => {
       document.body.style.overflow = "";
     };
-  }, [activeImageIndex, floorPlanImageModal]);
+  }, [activeImageIndex, floorPlanImageModal, isVideoModalOpen]);
+
+  useEffect(() => {
+    if (!isVideoModalOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsVideoModalOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isVideoModalOpen]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -556,13 +638,14 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                 Đăng ký tư vấn
               </Link>
               {project.videoUrl ? (
-                <Link
-                  href={project.videoUrl}
+                <button
+                  type="button"
+                  onClick={() => setIsVideoModalOpen(true)}
                   className="flex h-12 items-center justify-center gap-2 rounded-[8px] border border-gold/45 bg-white text-[11px] font-bold uppercase tracking-[0.04em] text-gold-dark"
                 >
                   <Play size={12} fill="currentColor" />
                   Xem video dự án
-                </Link>
+                </button>
               ) : null}
             </div>
             {mobileHeroFacts.length ? (
@@ -652,15 +735,16 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                 >
                   ĐĂNG KÝ NHẬN THÔNG TIN
                 </Link>
-                {project.videoUrl ? <Link
-                  href={project.videoUrl}
+                {project.videoUrl ? <button
+                  type="button"
+                  onClick={() => setIsVideoModalOpen(true)}
                   className="flex items-center gap-2 rounded-[6px] border border-gold/50 bg-white/85 px-5 py-3 text-[11px] font-bold text-gold-dark shadow-sm backdrop-blur transition hover:border-gold hover:bg-white"
                 >
                   <span className="flex h-6 w-6 items-center justify-center rounded-full border border-gold/45">
                     <Play size={10} fill="currentColor" />
                   </span>
                   XEM VIDEO DỰ ÁN
-                </Link> : null}
+                </button> : null}
               </motion.div>
             </div>
           </div>
@@ -776,6 +860,36 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
             </div>
           </section>
         </Reveal> : null}
+
+        {project.videoUrl ? (
+          <Reveal className="rounded-[22px] border border-line/80 bg-white p-4 shadow-soft sm:p-5" delay={0.05}>
+            <section id="project-video">
+              <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+                <div>
+                  <p className="text-[11px] font-bold tracking-[0.16em] text-gold normal-case">Video giới thiệu</p>
+                  <h2 className="heading-font mt-2 text-2xl font-semibold text-ink sm:text-[30px]">
+                    Khám phá {project.name}
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsVideoModalOpen(true)}
+                  className="inline-flex items-center gap-2 rounded-full border border-gold/35 bg-[#fffaf2] px-4 py-2 text-[11px] font-bold text-gold-dark transition hover:border-gold hover:bg-white"
+                >
+                  Xem popup
+                  <Play size={12} fill="currentColor" />
+                </button>
+              </div>
+              <div className="overflow-hidden rounded-[18px] border border-line/80 bg-[#fbf7f0] shadow-[0_16px_40px_rgba(87,61,28,.08)]">
+                <ProjectVideoFrame
+                  url={project.videoUrl}
+                  embedUrl={projectVideoEmbedUrl}
+                  title={`Video giới thiệu ${project.name}`}
+                />
+              </div>
+            </section>
+          </Reveal>
+        ) : null}
 
         {hasConnectivity ? <Reveal className="rounded-[22px] border border-line/80 bg-white p-5 shadow-soft sm:p-7">
           <section className={`grid items-center gap-8 ${project.mapImageUrl ? "lg:grid-cols-[310px_minmax(0,1fr)]" : ""}`}>
@@ -1224,6 +1338,40 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
           </section>
         </Reveal>
       </ProjectContainer>
+
+      <AnimatePresence>
+        {isVideoModalOpen && project.videoUrl ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 p-4 backdrop-blur-md"
+            onClick={() => setIsVideoModalOpen(false)}
+          >
+            <button
+              type="button"
+              onClick={() => setIsVideoModalOpen(false)}
+              className="absolute right-5 top-5 z-[10000] flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/25"
+              aria-label="Đóng video"
+            >
+              <X size={20} />
+            </button>
+            <motion.div
+              initial={{ scale: 0.96, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.96, opacity: 0 }}
+              className="w-full max-w-5xl overflow-hidden rounded-[18px] border border-white/10 bg-black shadow-2xl"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <ProjectVideoFrame
+                url={project.videoUrl}
+                embedUrl={projectVideoEmbedUrl}
+                title={`Video giới thiệu ${project.name}`}
+              />
+            </motion.div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
 
       {/* Floor plan lightbox */}
       <AnimatePresence>
