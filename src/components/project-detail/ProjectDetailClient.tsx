@@ -125,6 +125,12 @@ function getYouTubeEmbedUrl(url: string) {
   return trimmedUrl;
 }
 
+function getYouTubeThumbnailUrl(url: string) {
+  const embedUrl = getYouTubeEmbedUrl(url);
+  const match = embedUrl.match(/youtube(?:-nocookie)?\.com\/embed\/([A-Za-z0-9_-]{6,})/);
+  return match?.[1] ? `https://img.youtube.com/vi/${match[1]}/hqdefault.jpg` : "";
+}
+
 function isVideoFileUrl(url: string) {
   return /\.(mp4|webm|ogg|mov)(\?.*)?$/i.test(url);
 }
@@ -334,6 +340,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
   const floorTabs = project.floorTabs.length ? ["Tất cả", ...project.floorTabs] : (project.floorPlans.length ? ["Sản phẩm"] : []);
   const consultInterestOptions = useMemo(() => getConsultInterestOptions(project), [project]);
   const projectVideoEmbedUrl = useMemo(() => project.videoUrl ? getYouTubeEmbedUrl(project.videoUrl) : "", [project.videoUrl]);
+  const projectVideoThumbnailUrl = useMemo(() => project.videoUrl ? getYouTubeThumbnailUrl(project.videoUrl) : "", [project.videoUrl]);
   const [activeTab, setActiveTab] = useState(floorTabs[0] ?? "");
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState<number | null>(null);
@@ -881,11 +888,57 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                 </button>
               </div>
               <div className="overflow-hidden rounded-[18px] border border-line/80 bg-[#fbf7f0] shadow-[0_16px_40px_rgba(87,61,28,.08)]">
-                <ProjectVideoFrame
-                  url={project.videoUrl}
-                  embedUrl={projectVideoEmbedUrl}
-                  title={`Video giới thiệu ${project.name}`}
-                />
+                <div className="grid gap-0 lg:grid-cols-[minmax(0,1.45fr)_360px]">
+                  <button
+                    type="button"
+                    onClick={() => setIsVideoModalOpen(true)}
+                    className="group relative block aspect-video overflow-hidden bg-black text-left"
+                    aria-label={`Xem video giới thiệu ${project.name}`}
+                  >
+                    <img
+                      src={projectVideoThumbnailUrl || project.heroImage}
+                      alt={`Video giới thiệu ${project.name}`}
+                      className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
+                    />
+                    <span className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/18 to-black/10" />
+                    <span className="absolute inset-0 flex items-center justify-center">
+                      <span className="flex h-16 w-16 items-center justify-center rounded-full border border-white/50 bg-white/20 text-white shadow-2xl backdrop-blur-md transition group-hover:scale-105 group-hover:bg-white/30 sm:h-20 sm:w-20">
+                        <Play size={26} fill="currentColor" />
+                      </span>
+                    </span>
+                    <span className="absolute bottom-4 left-4 right-4">
+                      <span className="inline-flex rounded-full bg-white/90 px-3 py-1 text-[10px] font-bold text-gold-dark shadow-sm">
+                        Video dự án
+                      </span>
+                      <span className="mt-2 block text-xl font-bold leading-tight text-white sm:text-2xl">
+                        {project.name}
+                      </span>
+                    </span>
+                  </button>
+                  <div className="flex flex-col justify-center gap-4 p-5 sm:p-6">
+                    <p className="text-sm leading-6 text-muted sm:text-[15px] sm:leading-7">
+                      Xem video giới thiệu tổng quan dự án, không gian sống và những điểm nổi bật ngay trên trang.
+                    </p>
+                    <div className="flex flex-wrap gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setIsVideoModalOpen(true)}
+                        className="gold-gradient inline-flex h-11 items-center justify-center gap-2 rounded-[8px] px-5 text-[11px] font-bold uppercase tracking-[0.04em] text-white shadow-[0_12px_28px_rgba(143,99,47,.22)]"
+                      >
+                        <Play size={13} fill="currentColor" />
+                        Xem video
+                      </button>
+                      <a
+                        href={project.videoUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex h-11 items-center justify-center rounded-[8px] border border-gold/35 bg-white px-5 text-[11px] font-bold uppercase tracking-[0.04em] text-gold-dark transition hover:border-gold"
+                      >
+                        Xem trên YouTube
+                      </a>
+                    </div>
+                  </div>
+                </div>
               </div>
             </section>
           </Reveal>
