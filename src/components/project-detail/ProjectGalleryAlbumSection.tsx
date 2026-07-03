@@ -9,6 +9,13 @@ type Props = {
   project: ProjectDetail;
 };
 
+const cellClassByIndex = [
+  "md:col-span-2 md:row-span-2",
+  "",
+  "",
+  "md:col-span-2",
+];
+
 export default function ProjectGalleryAlbumSection({ project }: Props) {
   const images = useMemo(
     () => Array.from(new Set(project.detailGallery.images.filter(Boolean))),
@@ -38,7 +45,7 @@ export default function ProjectGalleryAlbumSection({ project }: Props) {
 
   if (!images.length) return null;
 
-  const visibleImages = images.slice(0, 6);
+  const visibleImages = images.slice(0, Math.min(images.length, 4));
   const moreCount = Math.max(images.length - visibleImages.length, 0);
 
   return (
@@ -57,22 +64,21 @@ export default function ProjectGalleryAlbumSection({ project }: Props) {
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:auto-rows-[180px] md:grid-cols-4">
         {visibleImages.map((image, index) => {
-          const isFeature = index === 0;
           const showMore = index === visibleImages.length - 1 && moreCount > 0;
+          const sizes = index === 0 || index === 3 ? "(max-width: 768px) 100vw, 50vw" : "(max-width: 768px) 50vw, 25vw";
+
           return (
             <button
               key={`${image}-${index}`}
               type="button"
               onClick={() => setActiveIndex(index)}
-              className={`group relative min-h-[210px] overflow-hidden rounded-[16px] bg-beige text-left md:min-h-0 ${
-                isFeature ? "md:col-span-2 md:row-span-2" : index === 3 ? "md:col-span-2" : ""
-              }`}
+              className={`group relative min-h-[210px] overflow-hidden rounded-[16px] bg-beige text-left md:min-h-0 ${cellClassByIndex[index] || ""}`}
             >
               <Image
                 src={image}
                 alt={`${project.detailGallery.title || project.name} ${index + 1}`}
                 fill
-                sizes={isFeature ? "(max-width: 768px) 100vw, 50vw" : "(max-width: 768px) 50vw, 25vw"}
+                sizes={sizes}
                 className="object-cover transition duration-700 group-hover:scale-[1.04]"
               />
               <span className="absolute inset-0 bg-gradient-to-t from-black/35 via-black/5 to-transparent opacity-70" />
