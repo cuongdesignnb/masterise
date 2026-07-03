@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Image from "next/image";
 import {
   BadgeDollarSign,
   CheckCircle2,
@@ -101,15 +100,15 @@ export default function ProjectPricingPolicySection({ project }: Props) {
             </div>
 
             {imageItems.length > 0 ? (
-              <div className="mb-4 grid gap-3 sm:grid-cols-2">
+              <div className="mb-4 grid gap-4">
                 {imageItems.map((item, index) => (
                   <article key={`${item.imageUrl}-${index}`} className="overflow-hidden rounded-[16px] border border-line/80 bg-[#fbf7f0]">
                     <button
                       type="button"
                       onClick={() => setLightboxImage(item.imageUrl)}
-                      className="group relative block aspect-[16/10] w-full overflow-hidden bg-beige text-left"
+                      className="group relative block w-full overflow-hidden bg-[#fbf7f0] text-left"
                     >
-                      <Image src={item.imageUrl} alt={item.title || "Bảng giá dự án"} fill sizes="(max-width: 1024px) 100vw, 50vw" className="object-cover transition duration-700 group-hover:scale-105" />
+                      <img src={item.imageUrl} alt={item.title || "Bảng giá dự án"} className="h-auto w-full object-contain" />
                       <span className="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1 text-[10px] font-bold text-gold-dark shadow-sm">Bảng giá</span>
                       <span className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 transition group-hover:opacity-100">
                         <span className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-[11px] font-bold text-ink shadow-lg">
@@ -208,8 +207,8 @@ export default function ProjectPricingPolicySection({ project }: Props) {
             {project.policies.map((policy, index) => (
               <article key={`${policy.title}-${index}`} className="overflow-hidden rounded-[20px] border border-line/80 bg-white shadow-[0_12px_35px_rgba(87,61,28,.06)] transition hover:-translate-y-0.5 hover:border-gold/50">
                 {policy.imageUrl ? (
-                  <button type="button" onClick={() => setLightboxImage(policy.imageUrl || null)} className="relative block aspect-[16/8] w-full overflow-hidden bg-beige sm:aspect-[16/7]">
-                    <Image src={policy.imageUrl} alt={policy.title} fill sizes="(max-width: 1024px) 100vw, 40vw" className="object-cover transition duration-700 hover:scale-105" />
+                  <button type="button" onClick={() => setLightboxImage(policy.imageUrl || null)} className="relative block w-full overflow-hidden bg-[#fbf7f0]">
+                    <img src={policy.imageUrl} alt={policy.title} className="h-auto w-full object-contain" />
                   </button>
                 ) : null}
                 <div className="p-4">

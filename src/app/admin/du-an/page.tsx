@@ -3424,6 +3424,7 @@ export default function AdminProjects() {
             onSelect={handleMediaSelected}
             multiple={
               mediaSelectorTarget === 'gallery'
+              || mediaSelectorTarget === 'detailGallery'
               || (typeof mediaSelectorTarget === 'object' && mediaSelectorTarget?.group === 'floorPlans' && mediaSelectorTarget.field === 'images')
             }
             selectedUrls={getMediaSelectorSelectedUrls()}
