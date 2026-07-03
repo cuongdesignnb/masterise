@@ -30,6 +30,10 @@ function getFileName(url: string) {
   return decodeURIComponent(url.split("/").pop()?.split("?")[0] || "Tài liệu");
 }
 
+function isImageFile(item: Extract<ProjectPriceItem, { kind: "file" }>) {
+  return item.fileType === "image" || /\.(png|jpe?g|webp|gif|avif|svg)(\?.*)?$/i.test(item.fileUrl);
+}
+
 export default function ProjectPricingPolicySection({ project }: Props) {
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
 
@@ -129,8 +133,35 @@ export default function ProjectPricingPolicySection({ project }: Props) {
             ) : null}
 
             {fileItems.length > 0 ? (
-              <div className="mb-4 grid gap-2 sm:grid-cols-2">
+              <div className="mb-4 grid gap-4">
                 {fileItems.map((item, index) => {
+                  if (isImageFile(item)) {
+                    return (
+                      <article key={`${item.fileUrl}-${index}`} className="overflow-hidden rounded-[16px] border border-line/80 bg-[#fbf7f0]">
+                        <button
+                          type="button"
+                          onClick={() => setLightboxImage(item.fileUrl)}
+                          className="group relative block w-full overflow-hidden bg-[#fbf7f0] text-left"
+                        >
+                          <img src={item.fileUrl} alt={item.title || "Bảng giá dự án"} className="h-auto w-full object-contain" />
+                          <span className="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1 text-[10px] font-bold text-gold-dark shadow-sm">Bảng giá</span>
+                          <span className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 transition group-hover:opacity-100">
+                            <span className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-[11px] font-bold text-ink shadow-lg">
+                              <ZoomIn className="h-4 w-4" /> {item.buttonLabel || "Xem ảnh lớn"}
+                            </span>
+                          </span>
+                        </button>
+                        <div className="p-3">
+                          {item.title ? <h4 className="text-[13px] font-bold text-ink">{item.title}</h4> : null}
+                          {item.description ? <p className="mt-1 text-[12px] leading-5 text-muted">{item.description}</p> : null}
+                          <a href={item.fileUrl} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-1.5 text-[11px] font-bold text-gold-dark">
+                            Mở ảnh gốc <ExternalLink className="h-3.5 w-3.5" />
+                          </a>
+                        </div>
+                      </article>
+                    );
+                  }
+
                   const Icon = fileIconMap[item.fileType || "other"] || FileText;
                   return (
                     <a key={`${item.fileUrl}-${index}`} href={item.fileUrl} target="_blank" rel="noreferrer" className="flex gap-3 rounded-[14px] border border-line/80 bg-[#fcfaf6] p-3 transition hover:border-gold/50 hover:bg-white">
