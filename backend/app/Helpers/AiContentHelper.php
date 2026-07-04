@@ -108,6 +108,66 @@ class AiContentHelper
     }
 
     /**
+     * Ensure AI generated article content has a usable editor/client structure.
+     */
+    public static function ensureArticleStructure(string $html, ?string $title = null): string
+    {
+        $html = trim($html);
+        if ($html === '') {
+            return '';
+        }
+
+        $h2Count = preg_match_all('/<h2\b[^>]*>/i', $html);
+        $paragraphCount = preg_match_all('/<p\b[^>]*>/i', $html);
+
+        if ($h2Count >= 3 && $paragraphCount >= 4) {
+            return $html;
+        }
+
+        $text = html_entity_decode(trim(strip_tags($html)), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $text = preg_replace('/\s+/u', ' ', $text) ?: '';
+
+        if ($text === '') {
+            return $html;
+        }
+
+        $sentences = preg_split('/(?<=[.!?。！？])\s+/u', $text, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        if (count($sentences) < 6) {
+            $sentences = preg_split('/(?<=\.)\s+|(?<=;)\s+|(?<=:)\s+/u', $text, -1, PREG_SPLIT_NO_EMPTY) ?: [$text];
+        }
+
+        $sectionTitles = [
+            'Tổng quan nổi bật',
+            'Những yếu tố đáng chú ý',
+            'Góc nhìn thị trường',
+            'Lưu ý khi tìm hiểu',
+            'Câu hỏi thường gặp',
+        ];
+
+        $chunks = array_chunk($sentences, max(2, (int) ceil(count($sentences) / 4)));
+        $structured = '';
+
+        foreach ($chunks as $index => $chunk) {
+            $heading = $sectionTitles[$index] ?? 'Nội dung chi tiết';
+            $paragraph = trim(implode(' ', $chunk));
+            if ($paragraph === '') {
+                continue;
+            }
+
+            $structured .= '<h2>' . e($heading) . '</h2>';
+            $structured .= '<p>' . e($paragraph) . '</p>';
+        }
+
+        if (!str_contains(mb_strtolower($structured), 'câu hỏi thường gặp')) {
+            $structured .= '<h2>Câu hỏi thường gặp</h2>';
+            $structured .= '<h3>Thông tin trong bài viết có phải là thông tin chính thức không?</h3>';
+            $structured .= '<p>Nội dung được biên tập theo hướng tham khảo. Vui lòng liên hệ đội ngũ tư vấn để nhận thông tin cập nhật và chính thức nhất.</p>';
+        }
+
+        return $structured ?: $html;
+    }
+
+    /**
      * Validate OpenAI JSON output matches schema.
      */
     public static function validateJsonSchema(array $data): bool

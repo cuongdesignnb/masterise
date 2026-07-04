@@ -106,8 +106,9 @@ class GenerateAiArticleWithImageJob implements ShouldQueue
                 throw new \Exception('OpenAI JSON response is missing required schema fields.');
             }
 
-            // Sanitize content
-            $cleanContent = AiContentHelper::sanitizeHtml($articleData['content_html']);
+            // Normalize and sanitize content for the rich text editor/client.
+            $structuredContent = AiContentHelper::ensureArticleStructure($articleData['content_html'], $articleData['title'] ?? null);
+            $cleanContent = AiContentHelper::sanitizeHtml($structuredContent);
             if (empty($cleanContent)) {
                 throw new \Exception('Article content was empty after HTML sanitization.');
             }

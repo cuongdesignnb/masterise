@@ -26,7 +26,7 @@ You must structure the response as a single valid JSON object containing exactly
 4. "seo_title": An SEO optimized title tag (under 60 characters).
 5. "seo_description": An SEO meta description (under 160 characters).
 6. "seo_keywords": An array of 5-8 relevant search keywords.
-7. "content_html": The full article body in clean HTML format. Use proper H2 and H3 header tags, paragraphs, and list items where appropriate. Make sure the content has a clear introduction, body, conclusion, useful CTA, and a short FAQ section. Do NOT wrap the HTML inside a markdown code block, just output the HTML as a plain JSON string.
+7. "content_html": The full article body in clean HTML format. It MUST start with an <h2> section heading, include at least 4 <h2> headings, use <h3> for FAQ questions, use <p> for paragraphs, and use <ul><li> lists where useful. Do not return one long paragraph. Do NOT wrap the HTML inside a markdown code block, just output the HTML as a plain JSON string.
 8. "image_prompt": A highly descriptive prompt in English to be used with an AI image generator to create a premium featured image for this article.
 9. "cta": A prominent final call to action string.
 
@@ -34,6 +34,8 @@ Content Constraints & Safety Guidelines:
 - If language is "vi", write natural Vietnamese with full diacritics.
 - Include at least 4 useful H2 sections and optional H3 subsections.
 - Include a short FAQ section at the end with 4 questions and answers.
+- The first visible HTML element inside content_html must be <h2>, not a plain paragraph.
+- Never use markdown headings such as ## or ### inside content_html. Use real HTML tags only.
 - Write specifically from the perspective of Masterise Homes, reflecting premium quality, luxury, and professional branding.
 - Do not invent exact prices, legal status, launch dates, payment policies, or investment returns unless they are provided in the source input. Use neutral wording and invite readers to contact the sales team for official updates.
 - Do not make absolute guarantees of investment return or promises of profit.

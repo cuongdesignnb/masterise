@@ -16,6 +16,15 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
   const isUpdatingRef = useRef<boolean>(false);
   const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
 
+  const applyHtmlToEditor = (quill: any, html: string) => {
+    const normalizedHtml = html || '<p><br></p>';
+    try {
+      quill.clipboard.dangerouslyPasteHTML(normalizedHtml, 'silent');
+    } catch {
+      quill.root.innerHTML = normalizedHtml;
+    }
+  };
+
   useEffect(() => {
     let active = true;
 
@@ -58,7 +67,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
 
         // Set initial value
         if (value) {
-          quill.root.innerHTML = value;
+          applyHtmlToEditor(quill, value);
         }
 
         // Handle changes
@@ -99,7 +108,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
       const normalizedValue = value === '' ? '<p><br></p>' : value;
       if (currentVal !== normalizedValue) {
         isUpdatingRef.current = true;
-        quillRef.current.root.innerHTML = value;
+        applyHtmlToEditor(quillRef.current, normalizedValue);
         isUpdatingRef.current = false;
       }
     }
