@@ -134,16 +134,16 @@ export default function AiWritePage() {
 
   // Loading phase messages
   const steps = [
-    'Äang phÃ¢n tÃ­ch tiÃªu Ä‘á» vÃ  tá»« khÃ³a...',
-    'Äang khá»Ÿi táº¡o káº¿t ná»‘i OpenAI API...',
-    'Äang láº­p dÃ n Ã½ bÃ i viáº¿t chuáº©n SEO...',
-    'Äang viáº¿t ná»™i dung chi tiáº¿t tá»«ng pháº§n (QuÃ¡ trÃ¬nh nÃ y cÃ³ thá»ƒ máº¥t 15-30 giÃ¢y)...',
-    'Äang tá»‘i Æ°u hÃ³a tháº» heading H2/H3 vÃ  cáº¥u trÃºc bÃ i viáº¿t...',
-    'Äang táº¡o prompt sinh áº£nh Ä‘áº¡i diá»‡n phÃ¹ há»£p...',
-    'Äang cháº¡y OpenAI Image API sinh áº£nh minh há»a...',
-    'Äang táº£i áº£nh, giáº£i mÃ£ base64 vÃ  lÆ°u trá»¯ cá»¥c bá»™...',
-    'Äang lÃ m sáº¡ch vÃ  lá»c tháº» HTML Ä‘á»™c háº¡i...',
-    'HoÃ n táº¥t! Äang chuyá»ƒn hÆ°á»›ng sang TrÃ¬nh biÃªn táº­p tin tá»©c...'
+    'Đang phân tích tiêu đề và từ khóa...',
+    'Đang khởi tạo kết nối OpenAI API...',
+    'Đang lập dàn ý bài viết chuẩn SEO...',
+    'Đang viết nội dung chi tiết từng phần (Quá trình này có thể mất 15-30 giây)...',
+    'Đang tối ưu hóa thẻ heading H2/H3 và cấu trúc bài viết...',
+    'Đang tạo prompt sinh ảnh đại diện phù hợp...',
+    'Đang chạy OpenAI Image API sinh ảnh minh họa...',
+    'Đang tải ảnh, giải mã base64 và lưu trữ cục bộ...',
+    'Đang làm sạch và lọc thẻ HTML độc hại...',
+    'Hoàn tất! Đang chuyển hướng sang Trình biên tập tin tức...'
   ];
 
   // Simulated stepper when loading
@@ -180,14 +180,14 @@ export default function AiWritePage() {
         if (res.data?.id) {
           router.push(`/admin/tin-tuc?edit=${res.data.id}`);
         } else {
-          setErrorMessage('TÃ¡c vá»¥ hoÃ n thÃ nh nhÆ°ng khÃ´ng nháº­n Ä‘Æ°á»£c ID bÃ i viáº¿t.');
+          setErrorMessage('Tác vụ hoàn thành nhưng không nhận được ID bài viết.');
           setGenStep(0);
         }
       }, 1500);
     },
     onError: (err: any) => {
       console.error(err);
-      setErrorMessage(err.message || err.details || 'ÄÃ£ xáº£y ra lá»—i trong quÃ¡ trÃ¬nh xá»­ lÃ½ cá»§a AI. Vui lÃ²ng kiá»ƒm tra láº¡i cáº¥u hÃ¬nh hoáº·c API key.');
+      setErrorMessage(err.message || err.details || 'Đã xảy ra lỗi trong quá trình xử lý của AI. Vui lòng kiểm tra lại cấu hình hoặc API key.');
       setGenStep(0);
     }
   });
@@ -195,11 +195,11 @@ export default function AiWritePage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title) {
-      toast.warning('Vui lÃ²ng nháº­p tiÃªu Ä‘á» hoáº·c tá»« khÃ³a bÃ i viáº¿t!');
+      toast.warning('Vui lòng nhập tiêu đề hoặc từ khóa bài viết!');
       return;
     }
     if (!categoryId) {
-      toast.warning('Vui lÃ²ng chá»n chuyÃªn má»¥c bÃ i viáº¿t!');
+      toast.warning('Vui lòng chọn chuyên mục bài viết!');
       return;
     }
     generateMutation.mutate();
@@ -208,7 +208,7 @@ export default function AiWritePage() {
   if (!isWritable) {
     return (
       <div className="p-6 bg-red-50 border border-red-200 text-red-700 rounded-xl">
-        Báº¡n khÃ´ng cÃ³ quyá»n truy cáº­p chá»©c nÄƒng nÃ y.
+        Bạn không có quyền truy cập chức năng này.
       </div>
     );
   }
@@ -217,7 +217,7 @@ export default function AiWritePage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
         <Loader2 className="w-10 h-10 text-[#B88746] animate-spin" />
-        <p className="text-sm text-[#8C7A6B]">Äang táº£i cáº¥u hÃ¬nh...</p>
+        <p className="text-sm text-[#8C7A6B]">Đang tải cấu hình...</p>
       </div>
     );
   }
@@ -228,9 +228,9 @@ export default function AiWritePage() {
       <div>
         <h1 className="text-3xl font-heading font-medium text-[#1F1B16] flex items-center gap-3">
           <Sparkles className="w-8 h-8 text-[#B88746]" />
-          Viáº¿t bÃ i báº±ng AI
+          Viết bài bằng AI
         </h1>
-        <p className="text-sm text-[#8C7A6B]">Sinh má»™t bÃ i viáº¿t nhÃ¡p duy nháº¥t tá»©c thÃ¬ dá»±a trÃªn tiÃªu Ä‘á» hoáº·c tá»« khÃ³a</p>
+        <p className="text-sm text-[#8C7A6B]">Sinh một bài viết nháp duy nhất tức thì dựa trên tiêu đề hoặc từ khóa</p>
       </div>
 
       {/* Main Form & Options */}
@@ -238,12 +238,12 @@ export default function AiWritePage() {
         <div className="lg:col-span-2">
           <form onSubmit={handleSubmit} className="bg-white border border-[#E8DCCB] rounded-2xl p-6 space-y-6">
             <div>
-              <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">TiÃªu Ä‘á» bÃ i viáº¿t hoáº·c tá»« khÃ³a</label>
+              <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Tiêu đề bài viết hoặc từ khóa</label>
               <input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="VÃ­ dá»¥: Xu hÆ°á»›ng báº¥t Ä‘á»™ng sáº£n cÄƒn há»™ háº¡ng sang táº¡i TP.HCM nÄƒm 2026"
+                placeholder="Ví dụ: Xu hướng bất động sản căn hộ hạng sang tại TP.HCM năm 2026"
                 className="w-full px-4 py-4 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] text-[#1F1B16] focus:outline-none focus:border-[#B88746] text-lg transition-all"
                 required
               />
@@ -253,7 +253,7 @@ export default function AiWritePage() {
               <div>
                 <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2 flex items-center gap-1.5">
                   <FolderOpen className="w-4 h-4 text-[#B88746]" />
-                  ChuyÃªn má»¥c bÃ i viáº¿t
+                  Chuyên mục bài viết
                 </label>
                 <select
                   value={categoryId}
@@ -261,7 +261,7 @@ export default function AiWritePage() {
                   className="w-full px-4 py-3.5 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] text-[#1F1B16] focus:outline-none focus:border-[#B88746] transition-all"
                   required
                 >
-                  <option value="">-- Chá»n chuyÃªn má»¥c --</option>
+                  <option value="">-- Chọn chuyên mục --</option>
                   {categories.map((c) => (
                     <option key={c.id} value={c.id}>{c.name}</option>
                   ))}
@@ -271,7 +271,7 @@ export default function AiWritePage() {
               <div>
                 <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2 flex items-center gap-1.5">
                   <UserIcon className="w-4 h-4 text-[#B88746]" />
-                  TÃ¡c giáº£ bÃ i viáº¿t
+                  Tác giả bài viết
                 </label>
                 {hasRole(['super_admin', 'admin']) ? (
                   <select
@@ -279,7 +279,7 @@ export default function AiWritePage() {
                     onChange={(e) => setAuthorId(e.target.value ? Number(e.target.value) : '')}
                     className="w-full px-4 py-3.5 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] text-[#1F1B16] focus:outline-none focus:border-[#B88746] transition-all"
                   >
-                    <option value="">-- Chá»n tÃ¡c giáº£ --</option>
+                    <option value="">-- Chọn tác giả --</option>
                     {users.map((u) => (
                       <option key={u.id} value={u.id}>{u.name}</option>
                     ))}
@@ -299,28 +299,28 @@ export default function AiWritePage() {
               <div>
                 <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2 flex items-center gap-1.5">
                   <PenTool className="w-4 h-4 text-[#B88746]" />
-                  Giá»ng Ä‘iá»‡u vÄƒn phong
+                  Giọng điệu văn phong
                 </label>
                 <input
                   type="text"
                   value={tone}
                   onChange={(e) => setTone(e.target.value)}
-                  placeholder="VÃ­ dá»¥: Sang trá»ng, chuáº©n SEO báº¥t Ä‘á»™ng sáº£n"
+                  placeholder="Ví dụ: Sang trọng, chuẩn SEO bất động sản"
                   className="w-full px-4 py-3 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] text-[#1F1B16] focus:outline-none focus:border-[#B88746] transition-all"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Äá»™ dÃ i bÃ i viáº¿t</label>
+                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Độ dài bài viết</label>
                 <select
                   value={articleLength}
                   onChange={(e) => setArticleLength(e.target.value)}
                   className="w-full px-4 py-3.5 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] text-[#1F1B16] focus:outline-none focus:border-[#B88746] transition-all"
                 >
-                  <option value="600-800 words">Ngáº¯n (600 - 800 tá»«)</option>
-                  <option value="800-1200 words">Vá»«a (800 - 1200 tá»«)</option>
-                  <option value="1200-1800 words">DÃ i chuáº©n SEO (1200 - 1800 tá»«)</option>
-                  <option value="1800-2500 words">ChuyÃªn sÃ¢u (1800 - 2500 tá»«)</option>
+                  <option value="600-800 words">Ngắn (600 - 800 từ)</option>
+                  <option value="800-1200 words">Vừa (800 - 1200 từ)</option>
+                  <option value="1200-1800 words">Dài chuẩn SEO (1200 - 1800 từ)</option>
+                  <option value="1800-2500 words">Chuyên sâu (1800 - 2500 từ)</option>
                 </select>
               </div>
             </div>
@@ -332,7 +332,7 @@ export default function AiWritePage() {
                 disabled={generateMutation.isPending}
                 className="bg-[#B88746] hover:bg-[#1F1B16] text-white px-8 py-4 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all flex items-center gap-2 text-base disabled:opacity-50"
               >
-                Sinh bÃ i viáº¿t báº±ng AI
+                Sinh bài viết bằng AI
                 <ArrowRight className="w-5 h-5" />
               </button>
             </div>
@@ -345,7 +345,7 @@ export default function AiWritePage() {
             <div className="flex items-center justify-between border-b border-[#FBF8F2] pb-4">
               <div className="flex items-center gap-2">
                 <ImageIcon className="w-5 h-5 text-[#B88746]" />
-                <h3 className="font-heading font-semibold text-base text-[#1F1B16]">áº¢nh minh há»a AI</h3>
+                <h3 className="font-heading font-semibold text-base text-[#1F1B16]">Ảnh minh họa AI</h3>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
@@ -361,7 +361,7 @@ export default function AiWritePage() {
             {enableImage ? (
               <div className="space-y-4 animate-fadeIn">
                 <div>
-                  <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">KÃ­ch thÆ°á»›c áº£nh</label>
+                  <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Kích thước ảnh</label>
                   <select
                     value={imageSize}
                     onChange={(e) => setImageSize(e.target.value)}
@@ -373,7 +373,7 @@ export default function AiWritePage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Cháº¥t lÆ°á»£ng áº£nh</label>
+                  <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Chất lượng ảnh</label>
                   <select
                     value={imageQuality}
                     onChange={(e) => setImageQuality(e.target.value)}
@@ -385,16 +385,16 @@ export default function AiWritePage() {
                 </div>
               </div>
             ) : (
-              <p className="text-xs text-[#8C7A6B]">ÄÃ£ táº¯t tÃ­nh nÄƒng tá»± Ä‘á»™ng sinh áº£nh. BÃ i viáº¿t Ä‘Æ°á»£c táº¡o ra sáº½ khÃ´ng cÃ³ áº£nh Ä‘áº¡i diá»‡n máº·c Ä‘á»‹nh.</p>
+              <p className="text-xs text-[#8C7A6B]">Đã tắt tính năng tự động sinh ảnh. Bài viết được tạo ra sẽ không có ảnh đại diện mặc định.</p>
             )}
           </div>
 
           <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-xs text-amber-800 space-y-2">
             <div className="font-semibold flex items-center gap-1.5">
               <AlertCircle className="w-4 h-4 shrink-0" />
-              LÆ°u Ã½ chi phÃ­ API
+              Lưu ý chi phí API
             </div>
-            <p className="text-amber-700">Sinh bÃ i viáº¿t & áº£nh báº±ng cÃ¡c model OpenAI cÃ³ phÃ¡t sinh chi phÃ­ trá»±c tiáº¿p trÃªn API Key cá»§a báº¡n. Vui lÃ²ng theo dÃµi lá»‹ch sá»­ vÃ  cáº¥u hÃ¬nh giá»›i háº¡n trong pháº§n Cáº¥u hÃ¬nh AI.</p>
+            <p className="text-amber-700">Sinh bài viết & ảnh bằng các model OpenAI có phát sinh chi phí trực tiếp trên API Key của bạn. Vui lòng theo dõi lịch sử và cấu hình giới hạn trong phần Cấu hình AI.</p>
           </div>
         </div>
       </div>
@@ -410,8 +410,8 @@ export default function AiWritePage() {
             </div>
 
             <div className="space-y-2 w-full">
-              <h3 className="font-heading font-semibold text-xl text-white">AI Äang Táº¡o BÃ i Viáº¿t</h3>
-              <p className="text-xs text-[#8C7A6B]">Vui lÃ²ng giá»¯ nguyÃªn trÃ¬nh duyá»‡t. QuÃ¡ trÃ¬nh nÃ y diá»…n ra hoÃ n toÃ n tá»± Ä‘á»™ng.</p>
+              <h3 className="font-heading font-semibold text-xl text-white">AI Đang Tạo Bài Viết</h3>
+              <p className="text-xs text-[#8C7A6B]">Vui lòng giữ nguyên trình duyệt. Quá trình này diễn ra hoàn toàn tự động.</p>
             </div>
 
             {/* Step Indicators */}
@@ -454,13 +454,13 @@ export default function AiWritePage() {
         <div className="p-4 bg-red-50 border border-red-200 text-red-800 rounded-xl flex items-start gap-3 mt-6">
           <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
           <div className="space-y-1">
-            <h4 className="font-semibold text-sm">Lá»—i sinh bÃ i viáº¿t</h4>
+            <h4 className="font-semibold text-sm">Lỗi sinh bài viết</h4>
             <p className="text-xs text-red-700">{errorMessage}</p>
             <button
               onClick={() => setErrorMessage(null)}
               className="text-xs font-semibold text-red-800 underline hover:text-red-950 mt-1 block"
             >
-              ÄÃ³ng thÃ´ng bÃ¡o
+              Đóng thông báo
             </button>
           </div>
         </div>

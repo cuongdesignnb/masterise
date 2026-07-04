@@ -228,7 +228,7 @@ export default function AiSettingsPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
         <Loader2 className="w-10 h-10 text-[#B88746] animate-spin" />
-        <p className="text-sm text-[#8C7A6B]">Äang táº£i cáº¥u hÃ¬nh AI...</p>
+        <p className="text-sm text-[#8C7A6B]">Đang tải cấu hình AI...</p>
       </div>
     );
   }
@@ -240,9 +240,9 @@ export default function AiSettingsPage() {
         <div>
           <h1 className="text-3xl font-heading font-medium text-[#1F1B16] flex items-center gap-3">
             <Wrench className="w-8 h-8 text-[#B88746]" />
-            Cáº¥u hÃ¬nh AI Content Automation
+            Cấu hình AI Content Automation
           </h1>
-          <p className="text-sm text-[#8C7A6B]">Quáº£n lÃ½ thÃ´ng tin káº¿t ná»‘i API OpenAI, cáº¥u hÃ¬nh model vÃ  cÃ¡c thÃ´ng sá»‘ viáº¿t bÃ i máº·c Ä‘á»‹nh</p>
+          <p className="text-sm text-[#8C7A6B]">Quản lý thông tin kết nối API OpenAI, cấu hình model và các thông số viết bài mặc định</p>
         </div>
       </div>
 
@@ -250,8 +250,8 @@ export default function AiSettingsPage() {
         <div className="p-4 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl flex items-start gap-3">
           <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
           <div>
-            <h4 className="font-semibold text-sm">Cháº¿ Ä‘á»™ Xem (Chá»‰ Ä‘á»c)</h4>
-            <p className="text-xs text-amber-700 mt-1">TÃ i khoáº£n Marketing chá»‰ cÃ³ quyá»n xem cáº¥u hÃ¬nh. Chá»‰ Super Admin hoáº·c Admin há»‡ thá»‘ng má»›i cÃ³ thá»ƒ chá»‰nh sá»­a thÃ´ng tin API Key vÃ  Model.</p>
+            <h4 className="font-semibold text-sm">Chế độ Xem (Chỉ đọc)</h4>
+            <p className="text-xs text-amber-700 mt-1">Tài khoản Marketing chỉ có quyền xem cấu hình. Chỉ Super Admin hoặc Admin hệ thống mới có thể chỉnh sửa thông tin API Key và Model.</p>
           </div>
         </div>
       )}
@@ -266,14 +266,14 @@ export default function AiSettingsPage() {
                 <Key className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-heading font-semibold text-lg text-[#1F1B16]">Káº¿t ná»‘i OpenAI API</h3>
-                <p className="text-xs text-[#8C7A6B]">Cung cáº¥p mÃ£ káº¿t ná»‘i OpenAI API Ä‘á»ƒ kÃ­ch hoáº¡t cÃ¡c tÃ­nh nÄƒng AI</p>
+                <h3 className="font-heading font-semibold text-lg text-[#1F1B16]">Kết nối OpenAI API</h3>
+                <p className="text-xs text-[#8C7A6B]">Cung cấp mã kết nối OpenAI API để kích hoạt các tính năng AI</p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">NhÃ  cung cáº¥p AI</label>
+                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Nhà cung cấp AI</label>
                 <select
                   name="ai_provider"
                   value={formData.ai_provider || 'openai'}
@@ -315,17 +315,17 @@ export default function AiSettingsPage() {
                   {testConnectionMutation.isPending ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      Äang kiá»ƒm tra...
+                      Đang kiểm tra...
                     </>
                   ) : (
-                    'Kiá»ƒm tra káº¿t ná»‘i API'
+                    'Kiểm tra kết nối API'
                   )}
                 </button>
 
                 {formData.api_key_configured && (
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-medium border border-emerald-200">
                     <CheckCircle2 className="w-3.5 h-3.5" />
-                    ÄÃ£ cáº¥u hÃ¬nh API Key trong há»‡ thá»‘ng
+                    Đã cấu hình API Key trong hệ thống
                   </span>
                 )}
               </div>
@@ -341,9 +341,9 @@ export default function AiSettingsPage() {
                   {testStatus === 'error' && <XCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />}
                   <div>
                     <span className="font-semibold">
-                      {testStatus === 'testing' ? 'Äang kiá»ƒm tra...' :
-                       testStatus === 'success' ? 'Káº¿t ná»‘i thÃ nh cÃ´ng!' :
-                       'Lá»—i káº¿t ná»‘i API'}
+                      {testStatus === 'testing' ? 'Đang kiểm tra...' :
+                       testStatus === 'success' ? 'Kết nối thành công!' :
+                       'Lỗi kết nối API'}
                     </span>
                     <p className="text-xs mt-1 text-inherit">{testMessage}</p>
                   </div>
@@ -359,14 +359,14 @@ export default function AiSettingsPage() {
                 <Cpu className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-heading font-semibold text-lg text-[#1F1B16]">Cáº¥u hÃ¬nh Model AI</h3>
-                <p className="text-xs text-[#8C7A6B]">TÃ¹y chá»n Model Ä‘á»ƒ sinh vÄƒn báº£n vÃ  áº£nh Ä‘áº¡i diá»‡n bÃ i viáº¿t</p>
+                <h3 className="font-heading font-semibold text-lg text-[#1F1B16]">Cấu hình Model AI</h3>
+                <p className="text-xs text-[#8C7A6B]">Tùy chọn Model để sinh văn bản và ảnh đại diện bài viết</p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Model viáº¿t bÃ i (Máº·c Ä‘á»‹nh)</label>
+                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Model viết bài (Mặc định)</label>
                 <select
                   name="ai_text_model"
                   value={formData.ai_text_model || 'gpt-4o-mini'}
@@ -382,7 +382,7 @@ export default function AiSettingsPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Model sinh áº£nh (Máº·c Ä‘á»‹nh)</label>
+                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Model sinh ảnh (Mặc định)</label>
                 <select
                   name="ai_image_model"
                   value={formData.ai_image_model || 'gpt-image-1'}
@@ -402,8 +402,8 @@ export default function AiSettingsPage() {
             <div className="border-t border-[#FBF8F2] pt-6 space-y-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <label className="block text-sm font-semibold text-[#1F1B16]">KÃ­ch hoáº¡t Model dá»± phÃ²ng (Fallback)</label>
-                  <p className="text-xs text-[#8C7A6B]">T\u1ef1 \u0111\u1ed9ng chuyá»ƒn Ä‘á»•i sang model khÃ¡c khi model máº·c Ä‘á»‹nh bá»‹ quÃ¡ táº£i hoáº·c chÆ°a Ä‘Æ°á»£c cáº¥p quyá»n</p>
+                  <label className="block text-sm font-semibold text-[#1F1B16]">Kích hoạt Model dự phòng (Fallback)</label>
+                  <p className="text-xs text-[#8C7A6B]">T\u1ef1 \u0111\u1ed9ng chuyển đổi sang model khác khi model mặc định bị quá tải hoặc chưa được cấp quyền</p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input
@@ -421,7 +421,7 @@ export default function AiSettingsPage() {
               {formData.ai_enable_model_fallback && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 rounded-xl bg-[#FBF8F2] border border-[#E8DCCB] transition-all animate-fadeIn">
                   <div>
-                    <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Model viáº¿t bÃ i dá»± phÃ²ng</label>
+                    <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Model viết bài dự phòng</label>
                     <input
                       type="text"
                       name="ai_fallback_text_model"
@@ -434,7 +434,7 @@ export default function AiSettingsPage() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Model sinh áº£nh dá»± phÃ²ng</label>
+                    <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Model sinh ảnh dự phòng</label>
                     <input
                       type="text"
                       name="ai_fallback_image_model"
@@ -457,14 +457,14 @@ export default function AiSettingsPage() {
                 <Sparkles className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-heading font-semibold text-lg text-[#1F1B16]">Cáº¥u hÃ¬nh sinh bÃ i viáº¿t máº·c Ä‘á»‹nh</h3>
-                <p className="text-xs text-[#8C7A6B]">CÃ¡c tÃ¹y chá»‰nh máº·c Ä‘á»‹nh khi gá»­i yÃªu cáº§u viáº¿t bÃ i</p>
+                <h3 className="font-heading font-semibold text-lg text-[#1F1B16]">Cấu hình sinh bài viết mặc định</h3>
+                <p className="text-xs text-[#8C7A6B]">Các tùy chỉnh mặc định khi gửi yêu cầu viết bài</p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
-                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">NgÃ´n ngá»¯ máº·c Ä‘á»‹nh</label>
+                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Ngôn ngữ mặc định</label>
                 <select
                   name="ai_default_language"
                   value={formData.ai_default_language || 'vi'}
@@ -472,13 +472,13 @@ export default function AiSettingsPage() {
                   disabled={!isWritable}
                   className="w-full px-4 py-3 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] text-[#1F1B16] focus:outline-none focus:border-[#B88746]"
                 >
-                  <option value="vi">Tiáº¿ng Viá»‡t (vi)</option>
-                  <option value="en">Tiáº¿ng Anh (en)</option>
+                  <option value="vi">Tiếng Việt (vi)</option>
+                  <option value="en">Tiếng Anh (en)</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Äá»™ dÃ i bÃ i viáº¿t máº·c Ä‘á»‹nh</label>
+                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Độ dài bài viết mặc định</label>
                 <select
                   name="ai_default_article_length"
                   value={formData.ai_default_article_length || '1200-1800 words'}
@@ -486,15 +486,15 @@ export default function AiSettingsPage() {
                   disabled={!isWritable}
                   className="w-full px-4 py-3 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] text-[#1F1B16] focus:outline-none focus:border-[#B88746]"
                 >
-                  <option value="600-800 words">Ngáº¯n (600 - 800 tá»«)</option>
-                  <option value="800-1200 words">Vá»«a (800 - 1200 tá»«)</option>
-                  <option value="1200-1800 words">DÃ i chuáº©n SEO (1200 - 1800 tá»«)</option>
-                  <option value="1800-2500 words">ChuyÃªn sÃ¢u (1800 - 2500 tá»«)</option>
+                  <option value="600-800 words">Ngắn (600 - 800 từ)</option>
+                  <option value="800-1200 words">Vừa (800 - 1200 từ)</option>
+                  <option value="1200-1800 words">Dài chuẩn SEO (1200 - 1800 từ)</option>
+                  <option value="1800-2500 words">Chuyên sâu (1800 - 2500 từ)</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">TÃªn tráº¡ng thÃ¡i khi táº¡o</label>
+                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Tên trạng thái khi tạo</label>
                 <select
                   name="ai_default_post_status"
                   value={formData.ai_default_post_status || 'draft'}
@@ -502,14 +502,14 @@ export default function AiSettingsPage() {
                   disabled={true} // Locked to draft
                   className="w-full px-4 py-3 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] text-[#1F1B16] opacity-80"
                 >
-                  <option value="draft">Báº£n nhÃ¡p (draft)</option>
+                  <option value="draft">Bản nháp (draft)</option>
                 </select>
-                <span className="text-[10px] text-[#8C7A6B] mt-1 block">Táº¥t cáº£ bÃ i viáº¿t sinh bá»Ÿi AI máº·c Ä‘á»‹nh á»Ÿ dáº¡ng Báº£n nhÃ¡p Ä‘á»ƒ biÃªn táº­p láº¡i</span>
+                <span className="text-[10px] text-[#8C7A6B] mt-1 block">Tất cả bài viết sinh bởi AI mặc định ở dạng Bản nháp để biên tập lại</span>
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Giá»ng Ä‘iá»‡u vÄƒn phong máº·c Ä‘á»‹nh</label>
+              <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Giọng điệu văn phong mặc định</label>
               <input
                 type="text"
                 name="ai_default_tone"
@@ -523,8 +523,8 @@ export default function AiSettingsPage() {
             <div className="border-t border-[#FBF8F2] pt-6 space-y-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <label className="block text-sm font-semibold text-[#1F1B16]">T\u1ef1 \u0111\u1ed9ng sinh áº£nh minh há»a</label>
-                  <p className="text-xs text-[#8C7A6B]">T\u1ef1 \u0111\u1ed9ng gá»i OpenAI Image API Ä‘á»ƒ sinh áº£nh minh há»a cho bÃ i viáº¿t</p>
+                  <label className="block text-sm font-semibold text-[#1F1B16]">T\u1ef1 \u0111\u1ed9ng sinh ảnh minh họa</label>
+                  <p className="text-xs text-[#8C7A6B]">T\u1ef1 \u0111\u1ed9ng gọi OpenAI Image API để sinh ảnh minh họa cho bài viết</p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input
@@ -542,7 +542,7 @@ export default function AiSettingsPage() {
               {formData.ai_enable_image_generation && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 rounded-xl bg-[#FBF8F2] border border-[#E8DCCB] animate-fadeIn">
                   <div>
-                    <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">KÃ­ch thÆ°á»›c áº£nh Ä‘áº¡i diá»‡n</label>
+                    <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Kích thước ảnh đại diện</label>
                     <select
                       name="ai_default_image_size"
                       value={formData.ai_default_image_size || (formData.ai_image_model?.startsWith('gpt-image') ? '1536x1024' : '1024x1024')}
@@ -557,7 +557,7 @@ export default function AiSettingsPage() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Cháº¥t lÆ°á»£ng áº£nh</label>
+                    <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Chất lượng ảnh</label>
                     <select
                       name="ai_default_image_quality"
                       value={formData.ai_default_image_quality || (formData.ai_image_model?.startsWith('gpt-image') ? 'medium' : 'standard')}
@@ -585,14 +585,14 @@ export default function AiSettingsPage() {
                 <Folder className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-heading font-semibold text-lg text-[#1F1B16]">PhÃ¢n má»¥c & TÃ¡c giáº£</h3>
-                <p className="text-xs text-[#8C7A6B]">GÃ¡n máº·c Ä‘á»‹nh khi viáº¿t bÃ i tá»± Ä‘á»™ng</p>
+                <h3 className="font-heading font-semibold text-lg text-[#1F1B16]">Phân mục & Tác giả</h3>
+                <p className="text-xs text-[#8C7A6B]">Gán mặc định khi viết bài tự động</p>
               </div>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">ChuyÃªn má»¥c máº·c Ä‘á»‹nh</label>
+                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Chuyên mục mặc định</label>
                 <select
                   name="ai_default_category_id"
                   value={formData.ai_default_category_id || ''}
@@ -600,7 +600,7 @@ export default function AiSettingsPage() {
                   disabled={!isWritable}
                   className="w-full px-4 py-3 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] text-[#1F1B16] focus:outline-none focus:border-[#B88746]"
                 >
-                  <option value="">-- Chá»n chuyÃªn má»¥c --</option>
+                  <option value="">-- Chọn chuyên mục --</option>
                   {categories.map((c) => (
                     <option key={c.id} value={c.id}>{c.name}</option>
                   ))}
@@ -608,7 +608,7 @@ export default function AiSettingsPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">TÃ¡c giáº£ máº·c Ä‘á»‹nh</label>
+                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Tác giả mặc định</label>
                 {isWritable && !usersError ? (
                   <select
                     name="ai_default_author_id"
@@ -617,7 +617,7 @@ export default function AiSettingsPage() {
                     disabled={!isWritable}
                     className="w-full px-4 py-3 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] text-[#1F1B16] focus:outline-none focus:border-[#B88746]"
                   >
-                    <option value="">-- Chá»n tÃ¡c giáº£ --</option>
+                    <option value="">-- Chọn tác giả --</option>
                     {users.map((u) => (
                       <option key={u.id} value={u.id}>{u.name} ({u.email})</option>
                     ))}
@@ -630,16 +630,16 @@ export default function AiSettingsPage() {
                       value={formData.ai_default_author_id || ''}
                       onChange={handleInputChange}
                       disabled={!isWritable}
-                      placeholder="ID tÃ¡c giáº£ (vÃ­ dá»¥: 1)"
+                      placeholder="ID tác giả (ví dụ: 1)"
                       className="w-full px-4 py-3 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] text-[#1F1B16] focus:outline-none focus:border-[#B88746]"
                     />
-                    <span className="text-[10px] text-[#8C7A6B] mt-1 block">TÃ i khoáº£n cá»§a báº¡n khÃ´ng Ä‘Æ°á»£c phÃ¢n quyá»n táº£i danh sÃ¡ch thÃ nh viÃªn. Vui lÃ²ng nháº­p ID thá»§ cÃ´ng.</span>
+                    <span className="text-[10px] text-[#8C7A6B] mt-1 block">Tài khoản của bạn không được phân quyền tải danh sách thành viên. Vui lòng nhập ID thủ công.</span>
                   </div>
                 )}
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">MÃºi giá» Ä‘áº·t lá»‹ch Ä‘Äƒng</label>
+                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Múi giờ đặt lịch đăng</label>
                 <input
                   type="text"
                   name="ai_schedule_timezone"
@@ -659,14 +659,14 @@ export default function AiSettingsPage() {
                 <Globe className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-heading font-semibold text-lg text-[#1F1B16]">Giá»›i háº¡n há»‡ thá»‘ng</h3>
-                <p className="text-xs text-[#8C7A6B]">TrÃ¡nh láº¡m dá»¥ng tÃ i nguyÃªn hoáº·c chi phÃ­ API</p>
+                <h3 className="font-heading font-semibold text-lg text-[#1F1B16]">Giới hạn hệ thống</h3>
+                <p className="text-xs text-[#8C7A6B]">Tránh lạm dụng tài nguyên hoặc chi phí API</p>
               </div>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Sá»‘ bÃ i tá»‘i Ä‘a trong 1 Batch</label>
+                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Số bài tối đa trong 1 Batch</label>
                 <input
                   type="number"
                   name="ai_max_articles_per_batch"
@@ -677,11 +677,11 @@ export default function AiSettingsPage() {
                   max={50}
                   className="w-full px-4 py-3 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] text-[#1F1B16] focus:outline-none focus:border-[#B88746]"
                 />
-                <span className="text-[10px] text-[#8C7A6B] mt-1 block">Tá»‘i Ä‘a 50 bÃ i viáº¿t/batch</span>
+                <span className="text-[10px] text-[#8C7A6B] mt-1 block">Tối đa 50 bài viết/batch</span>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Sá»‘ Jobs cháº¡y tá»‘i Ä‘a trong 1 giá»</label>
+                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Số Jobs chạy tối đa trong 1 giờ</label>
                 <input
                   type="number"
                   name="ai_max_jobs_per_hour"
@@ -692,7 +692,7 @@ export default function AiSettingsPage() {
                   max={100}
                   className="w-full px-4 py-3 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] text-[#1F1B16] focus:outline-none focus:border-[#B88746]"
                 />
-                <span className="text-[10px] text-[#8C7A6B] mt-1 block">Tá»‘i Ä‘a 100 tÃ¡c vá»¥/giá» Ä‘á»ƒ trÃ¡nh rate-limit API</span>
+                <span className="text-[10px] text-[#8C7A6B] mt-1 block">Tối đa 100 tác vụ/giờ để tránh rate-limit API</span>
               </div>
             </div>
           </div>
@@ -707,12 +707,12 @@ export default function AiSettingsPage() {
               {saveMutation.isPending ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  Äang lÆ°u cáº¥u hÃ¬nh...
+                  Đang lưu cấu hình...
                 </>
               ) : (
                 <>
                   <Save className="w-5 h-5" />
-                  LÆ°u cáº¥u hÃ¬nh
+                  Lưu cấu hình
                 </>
               )}
             </button>
@@ -720,9 +720,9 @@ export default function AiSettingsPage() {
 
           {formData.last_scheduler_run_at && (
             <div className="p-4 rounded-xl bg-gray-50 border border-gray-200 text-xs text-gray-600 space-y-1">
-              <div className="font-semibold text-gray-700">Tráº¡ng thÃ¡i Scheduler:</div>
-              <div>Láº§n cháº¡y gáº§n nháº¥t: <code className="bg-gray-100 px-1 py-0.5 rounded text-[#B88746]">{formData.last_scheduler_run_at}</code></div>
-              <p className="text-[10px] text-gray-500 mt-1">Há»‡ thá»‘ng láº­p lá»‹ch tá»± Ä‘á»™ng kÃ­ch hoáº¡t má»—i phÃºt Ä‘á»ƒ kiá»ƒm tra vÃ  Ä‘Äƒng cÃ¡c bÃ i viáº¿t Ä‘Ã£ háº¹n giá».</p>
+              <div className="font-semibold text-gray-700">Trạng thái Scheduler:</div>
+              <div>Lần chạy gần nhất: <code className="bg-gray-100 px-1 py-0.5 rounded text-[#B88746]">{formData.last_scheduler_run_at}</code></div>
+              <p className="text-[10px] text-gray-500 mt-1">Hệ thống lập lịch tự động kích hoạt mỗi phút để kiểm tra và đăng các bài viết đã hẹn giờ.</p>
             </div>
           )}
         </div>

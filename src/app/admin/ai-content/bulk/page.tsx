@@ -169,7 +169,7 @@ export default function AiBulkPage() {
         }
       }
     } catch (err) {
-      console.error('Lá»—i khi táº£i chi tiáº¿t chiáº¿n dá»‹ch:', err);
+      console.error('Lỗi khi tải chi tiết chiến dịch:', err);
       stopPolling();
     }
   };
@@ -218,7 +218,7 @@ export default function AiBulkPage() {
       });
     },
     onSuccess: (res) => {
-      toast.success('ÄÃ£ khá»Ÿi táº¡o chiáº¿n dá»‹ch viáº¿t bÃ i hÃ ng loáº¡t thÃ nh cÃ´ng! Tiáº¿n trÃ¬nh Ä‘ang Ä‘Æ°á»£c xá»­ lÃ½ ngáº§m.');
+      toast.success('Đã khởi tạo chiến dịch viết bài hàng loạt thành công! Tiến trình đang được xử lý ngầm.');
       // Switch view to detail
       if (res.data?.id) {
         setSelectedBatchId(res.data.id);
@@ -231,7 +231,7 @@ export default function AiBulkPage() {
       queryClient.invalidateQueries({ queryKey: ['admin-ai-batches'] });
     },
     onError: (err: any) => {
-      toast.error(err.message || 'Lá»—i khi táº¡o chiáº¿n dá»‹ch hÃ ng loáº¡t. Vui lÃ²ng kiá»ƒm tra láº¡i quota hoáº·c API.');
+      toast.error(err.message || 'Lỗi khi tạo chiến dịch hàng loạt. Vui lòng kiểm tra lại quota hoặc API.');
     }
   });
 
@@ -239,12 +239,12 @@ export default function AiBulkPage() {
   const cancelBatchMutation = useMutation({
     mutationFn: (id: number) => aiContentService.cancelBatch(id),
     onSuccess: (res, id) => {
-      toast.success(res.message || 'ÄÃ£ gá»­i yÃªu cáº§u há»§y chiáº¿n dá»‹ch.');
+      toast.success(res.message || 'Đã gửi yêu cầu hủy chiến dịch.');
       fetchBatchDetail(id);
       queryClient.invalidateQueries({ queryKey: ['admin-ai-batches'] });
     },
     onError: (err: any) => {
-      toast.error(err.message || 'Lá»—i khi há»§y chiáº¿n dá»‹ch.');
+      toast.error(err.message || 'Lỗi khi hủy chiến dịch.');
     }
   });
 
@@ -259,28 +259,28 @@ export default function AiBulkPage() {
       });
     },
     onSuccess: () => {
-      toast.success('ÄÃ£ lÃªn lá»‹ch Ä‘Äƒng bÃ i viáº¿t hÃ ng loáº¡t thÃ nh cÃ´ng!');
+      toast.success('Đã lên lịch đăng bài viết hàng loạt thành công!');
       setIsSchedulingOpen(false);
       if (selectedBatchId) fetchBatchDetail(selectedBatchId);
       queryClient.invalidateQueries({ queryKey: ['admin-ai-batches'] });
     },
     onError: (err: any) => {
-      toast.error(err.message || 'Lá»—i khi Ä‘áº·t lá»‹ch Ä‘Äƒng bÃ i.');
+      toast.error(err.message || 'Lỗi khi đặt lịch đăng bài.');
     }
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!batchTitle) {
-      toast.warning('Vui lÃ²ng nháº­p tÃªn chiáº¿n dá»‹ch!');
+      toast.warning('Vui lòng nhập tên chiến dịch!');
       return;
     }
     if (!keywordsText.trim()) {
-      toast.warning('Vui lÃ²ng nháº­p danh sÃ¡ch tá»« khÃ³a!');
+      toast.warning('Vui lòng nhập danh sách từ khóa!');
       return;
     }
     if (!categoryId) {
-      toast.warning('Vui lÃ²ng chá»n chuyÃªn má»¥c máº·c Ä‘á»‹nh!');
+      toast.warning('Vui lòng chọn chuyên mục mặc định!');
       return;
     }
     createBatchMutation.mutate();
@@ -289,7 +289,7 @@ export default function AiBulkPage() {
   const handleScheduleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!scheduleStart) {
-      toast.warning('Vui lÃ²ng chá»n thá»i gian báº¯t Ä‘áº§u Ä‘Äƒng!');
+      toast.warning('Vui lòng chọn thời gian bắt đầu đăng!');
       return;
     }
     scheduleBatchMutation.mutate();
@@ -310,13 +310,13 @@ export default function AiBulkPage() {
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'draft': return 'Báº£n nhÃ¡p';
-      case 'queued': return 'Chá» cháº¡y';
-      case 'processing': return 'Äang xá»­ lÃ½';
-      case 'completed': return 'ÄÃ£ xong';
-      case 'partially_failed': return 'Lá»—i má»™t pháº§n';
-      case 'failed': return 'Tháº¥t báº¡i';
-      case 'cancelled': return 'ÄÃ£ há»§y';
+      case 'draft': return 'Bản nháp';
+      case 'queued': return 'Chờ chạy';
+      case 'processing': return 'Đang xử lý';
+      case 'completed': return 'Đã xong';
+      case 'partially_failed': return 'Lỗi một phần';
+      case 'failed': return 'Thất bại';
+      case 'cancelled': return 'Đã hủy';
       default: return status;
     }
   };
@@ -324,7 +324,7 @@ export default function AiBulkPage() {
   if (!isWritable) {
     return (
       <div className="p-6 bg-red-50 border border-red-200 text-red-700 rounded-xl">
-        Báº¡n khÃ´ng cÃ³ quyá»n truy cáº­p chá»©c nÄƒng viáº¿t bÃ i hÃ ng loáº¡t.
+        Bạn không có quyền truy cập chức năng viết bài hàng loạt.
       </div>
     );
   }
@@ -335,9 +335,9 @@ export default function AiBulkPage() {
       <div>
         <h1 className="text-3xl font-heading font-medium text-[#1F1B16] flex items-center gap-3">
           <Layers className="w-8 h-8 text-[#B88746]" />
-          Quáº£n lÃ½ Chiáº¿n dá»‹ch viáº¿t bÃ i hÃ ng loáº¡t
+          Quản lý Chiến dịch viết bài hàng loạt
         </h1>
-        <p className="text-sm text-[#8C7A6B]">Sinh nhiá»u bÃ i viáº¿t tá»± Ä‘á»™ng theo lÃ´ tá»« danh sÃ¡ch tá»« khÃ³a vÃ  lÃªn lá»‹ch Ä‘Äƒng bÃ i hÃ ng loáº¡t</p>
+        <p className="text-sm text-[#8C7A6B]">Sinh nhiều bài viết tự động theo lô từ danh sách từ khóa và lên lịch đăng bài hàng loạt</p>
       </div>
 
       {selectedBatchId ? (
@@ -351,13 +351,13 @@ export default function AiBulkPage() {
             className="inline-flex items-center gap-2 text-[#B88746] hover:text-[#1F1B16] font-semibold text-sm transition-all"
           >
             <ChevronLeft className="w-4 h-4" />
-            Quay láº¡i danh sÃ¡ch
+            Quay lại danh sách
           </button>
 
           {isDetailLoading || !batchDetail ? (
             <div className="flex flex-col items-center justify-center min-h-[300px] gap-4">
               <Loader2 className="w-8 h-8 text-[#B88746] animate-spin" />
-              <p className="text-xs text-[#8C7A6B]">Äang táº£i chi tiáº¿t chiáº¿n dá»‹ch...</p>
+              <p className="text-xs text-[#8C7A6B]">Đang tải chi tiết chiến dịch...</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -367,10 +367,10 @@ export default function AiBulkPage() {
                   {/* Title & Status */}
                   <div className="flex justify-between items-start flex-wrap gap-4 border-b border-[#FBF8F2] pb-4">
                     <div>
-                      <span className="text-[10px] text-[#8C7A6B] uppercase font-semibold tracking-wider">Chi tiáº¿t chiáº¿n dá»‹ch</span>
+                      <span className="text-[10px] text-[#8C7A6B] uppercase font-semibold tracking-wider">Chi tiết chiến dịch</span>
                       <h3 className="text-xl font-heading font-bold text-[#1F1B16] mt-0.5">{batchDetail.batch.title}</h3>
                       <p className="text-xs text-[#8C7A6B] mt-1">
-                        Khá»Ÿi táº¡o lÃºc: {new Date(batchDetail.batch.created_at || '').toLocaleString('vi-VN')}
+                        Khởi tạo lúc: {new Date(batchDetail.batch.created_at || '').toLocaleString('vi-VN')}
                       </p>
                     </div>
                     <div className="flex items-center gap-3">
@@ -383,7 +383,7 @@ export default function AiBulkPage() {
                           disabled={cancelBatchMutation.isPending}
                           className="px-3 py-1 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-xs font-semibold border border-red-200 transition-all disabled:opacity-50"
                         >
-                          Há»§y chiáº¿n dá»‹ch
+                          Hủy chiến dịch
                         </button>
                       )}
                     </div>
@@ -392,7 +392,7 @@ export default function AiBulkPage() {
                   {/* Progress Bar widget */}
                   <div className="space-y-4">
                     <div className="flex justify-between items-center text-sm">
-                      <span className="font-semibold text-[#1F1B16]">Tiáº¿n Ä‘á»™ sinh bÃ i viáº¿t</span>
+                      <span className="font-semibold text-[#1F1B16]">Tiến độ sinh bài viết</span>
                       <span className="font-heading font-bold text-[#B88746]">{batchDetail.batch.progress_percent}%</span>
                     </div>
 
@@ -405,15 +405,15 @@ export default function AiBulkPage() {
 
                     <div className="grid grid-cols-3 gap-4 text-center">
                       <div className="p-3 bg-[#FBF8F2] border border-[#E8DCCB]/60 rounded-xl">
-                        <span className="text-[10px] uppercase font-bold text-[#8C7A6B] tracking-wider block">Tá»•ng sá»‘ tá»« khÃ³a</span>
+                        <span className="text-[10px] uppercase font-bold text-[#8C7A6B] tracking-wider block">Tổng số từ khóa</span>
                         <span className="text-xl font-heading font-bold text-[#1F1B16]">{batchDetail.batch.keywords_count}</span>
                       </div>
                       <div className="p-3 bg-emerald-50/50 border border-emerald-100 rounded-xl">
-                        <span className="text-[10px] uppercase font-bold text-emerald-700 tracking-wider block">ThÃ nh cÃ´ng (nhÃ¡p)</span>
+                        <span className="text-[10px] uppercase font-bold text-emerald-700 tracking-wider block">Thành công (nháp)</span>
                         <span className="text-xl font-heading font-bold text-emerald-800">{batchDetail.batch.generated_count}</span>
                       </div>
                       <div className="p-3 bg-red-50/50 border border-red-100 rounded-xl">
-                        <span className="text-[10px] uppercase font-bold text-red-700 tracking-wider block">Tháº¥t báº¡i</span>
+                        <span className="text-[10px] uppercase font-bold text-red-700 tracking-wider block">Thất bại</span>
                         <span className="text-xl font-heading font-bold text-red-800">{batchDetail.batch.failed_count}</span>
                       </div>
                     </div>
@@ -422,15 +422,15 @@ export default function AiBulkPage() {
 
                 {/* Job lists Table */}
                 <div className="bg-white border border-[#E8DCCB] rounded-2xl p-6 space-y-4">
-                  <h4 className="font-heading font-semibold text-base text-[#1F1B16]">Danh sÃ¡ch chi tiáº¿t bÃ i viáº¿t (Jobs)</h4>
+                  <h4 className="font-heading font-semibold text-base text-[#1F1B16]">Danh sách chi tiết bài viết (Jobs)</h4>
 
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm border-collapse">
                       <thead>
                         <tr className="border-b border-[#E8DCCB]">
-                          <th className="py-3 px-4 font-semibold text-[#8C7A6B] text-xs uppercase tracking-wider">Tá»« khÃ³a / TiÃªu Ä‘á»</th>
-                          <th className="py-3 px-4 font-semibold text-[#8C7A6B] text-xs uppercase tracking-wider">Tráº¡ng thÃ¡i</th>
-                          <th className="py-3 px-4 font-semibold text-[#8C7A6B] text-xs uppercase tracking-wider text-right">TÃ¹y chá»n</th>
+                          <th className="py-3 px-4 font-semibold text-[#8C7A6B] text-xs uppercase tracking-wider">Từ khóa / Tiêu đề</th>
+                          <th className="py-3 px-4 font-semibold text-[#8C7A6B] text-xs uppercase tracking-wider">Trạng thái</th>
+                          <th className="py-3 px-4 font-semibold text-[#8C7A6B] text-xs uppercase tracking-wider text-right">Tùy chọn</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -441,7 +441,7 @@ export default function AiBulkPage() {
                                 {job.input_keywords}
                                 {job.error_message && (
                                   <p className="text-xs text-red-600 mt-1 max-w-md break-words">
-                                    âš ï¸ Lá»—i: {job.error_message}
+                                    âš ï¸ Lỗi: {job.error_message}
                                   </p>
                                 )}
                               </div>
@@ -466,7 +466,7 @@ export default function AiBulkPage() {
                                   href={`/admin/tin-tuc?edit=${job.post_id}`}
                                   className="text-[#B88746] hover:underline inline-flex items-center gap-1 font-semibold text-xs"
                                 >
-                                  Má»Ÿ Editor
+                                  Mở Editor
                                   <ExternalLink className="w-3 h-3" />
                                 </Link>
                               )}
@@ -482,30 +482,30 @@ export default function AiBulkPage() {
               {/* Right Column: Details parameters & Scheduling form */}
               <div className="space-y-6">
                 <div className="bg-white border border-[#E8DCCB] rounded-2xl p-6 space-y-4">
-                  <h4 className="font-heading font-semibold text-base text-[#1F1B16] border-b border-[#FBF8F2] pb-3">ThÃ´ng sá»‘ lÃ´ bÃ i viáº¿t</h4>
+                  <h4 className="font-heading font-semibold text-base text-[#1F1B16] border-b border-[#FBF8F2] pb-3">Thông số lô bài viết</h4>
                   <div className="space-y-3 text-xs">
                     <div className="flex justify-between">
-                      <span className="text-[#8C7A6B]">ChuyÃªn má»¥c máº·c Ä‘á»‹nh:</span>
+                      <span className="text-[#8C7A6B]">Chuyên mục mặc định:</span>
                       <span className="font-semibold text-[#1F1B16]">{batchDetail.batch.category?.name || 'N/A'}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-[#8C7A6B]">TÃ¡c giáº£ máº·c Ä‘á»‹nh:</span>
+                      <span className="text-[#8C7A6B]">Tác giả mặc định:</span>
                       <span className="font-semibold text-[#1F1B16]">{batchDetail.batch.author?.name || 'N/A'}</span>
                     </div>
                     {batchDetail.batch.schedule_mode && (
                       <>
                         <div className="border-t border-[#FBF8F2] my-2 pt-2" />
                         <div className="flex justify-between">
-                          <span className="text-[#8C7A6B]">Cháº¿ Ä‘á»™ Ä‘áº·t lá»‹ch:</span>
+                          <span className="text-[#8C7A6B]">Chế độ đặt lịch:</span>
                           <span className="font-semibold text-[#B88746] capitalize">{batchDetail.batch.schedule_mode}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-[#8C7A6B]">Báº¯t Ä‘áº§u tá»«:</span>
+                          <span className="text-[#8C7A6B]">Bắt đầu từ:</span>
                           <span className="font-semibold text-[#1F1B16]">{batchDetail.batch.schedule_start_at}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-[#8C7A6B]">Khoáº£ng giÃ£n cÃ¡ch:</span>
-                          <span className="font-semibold text-[#1F1B16]">{batchDetail.batch.schedule_interval_minutes} phÃºt</span>
+                          <span className="text-[#8C7A6B]">Khoảng giãn cách:</span>
+                          <span className="font-semibold text-[#1F1B16]">{batchDetail.batch.schedule_interval_minutes} phút</span>
                         </div>
                       </>
                     )}
@@ -522,7 +522,7 @@ export default function AiBulkPage() {
                     >
                       <span className="flex items-center gap-2">
                         <Calendar className="w-5 h-5 text-[#B88746]" />
-                        Äáº·t lá»‹ch bÃ i viáº¿t trong lÃ´
+                        Đặt lịch bài viết trong lô
                       </span>
                       <ChevronRight className={`w-5 h-5 text-[#8C7A6B] transition-transform ${isSchedulingOpen ? 'rotate-90' : ''}`} />
                     </button>
@@ -530,11 +530,11 @@ export default function AiBulkPage() {
                     {isSchedulingOpen && (
                       <form onSubmit={handleScheduleSubmit} className="space-y-4 pt-2 animate-fadeIn">
                         <p className="text-xs text-[#8C7A6B]">
-                          PhÃ¢n phá»‘i lá»‹ch Ä‘Äƒng bÃ i viáº¿t cá»§a lÃ´ nÃ y tá»± Ä‘á»™ng cÃ¡ch Ä‘á»u nhau theo thá»i gian cÃ i Ä‘áº·t.
+                          Phân phối lịch đăng bài viết của lô này tự động cách đều nhau theo thời gian cài đặt.
                         </p>
 
                         <div>
-                          <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Báº¯t Ä‘áº§u tá»« thá»i Ä‘iá»ƒm</label>
+                          <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Bắt đầu từ thời điểm</label>
                           <input
                             type="datetime-local"
                             value={scheduleStart}
@@ -545,23 +545,23 @@ export default function AiBulkPage() {
                         </div>
 
                         <div>
-                          <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Khoáº£ng giÃ£n cÃ¡ch (phÃºt)</label>
+                          <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Khoảng giãn cách (phút)</label>
                           <select
                             value={scheduleInterval}
                             onChange={(e) => setScheduleInterval(Number(e.target.value))}
                             className="w-full px-4 py-3 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] text-[#1F1B16]"
                           >
-                            <option value={30}>30 phÃºt (Nhanh)</option>
-                            <option value={60}>1 tiáº¿ng</option>
-                            <option value={120}>2 tiáº¿ng</option>
-                            <option value={240}>4 tiáº¿ng</option>
-                            <option value={720}>12 tiáº¿ng</option>
-                            <option value={1440}>1 ngÃ y (24 tiáº¿ng)</option>
+                            <option value={30}>30 phút (Nhanh)</option>
+                            <option value={60}>1 tiếng</option>
+                            <option value={120}>2 tiếng</option>
+                            <option value={240}>4 tiếng</option>
+                            <option value={720}>12 tiếng</option>
+                            <option value={1440}>1 ngày (24 tiếng)</option>
                           </select>
                         </div>
 
                         <div>
-                          <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Sá»‘ bÃ i Ä‘Äƒng má»—i lÆ°á»£t</label>
+                          <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Số bài đăng mỗi lượt</label>
                           <input
                             type="number"
                             value={postsPerSlot}
@@ -581,12 +581,12 @@ export default function AiBulkPage() {
                           {scheduleBatchMutation.isPending ? (
                             <>
                               <Loader2 className="w-4 h-4 animate-spin" />
-                              Äang Ä‘áº·t lá»‹ch...
+                              Đang đặt lịch...
                             </>
                           ) : (
                             <>
                               <Clock className="w-4 h-4" />
-                              Ãp dá»¥ng lá»‹ch Ä‘Äƒng bÃ i
+                              Áp dụng lịch đăng bài
                             </>
                           )}
                         </button>
@@ -608,7 +608,7 @@ export default function AiBulkPage() {
                 activeTab === 'create' ? 'border-[#B88746] text-[#B88746] font-semibold' : 'border-transparent text-[#8C7A6B] hover:text-[#1F1B16]'
               }`}
             >
-              Táº¡o chiáº¿n dá»‹ch má»›i
+              Tạo chiến dịch mới
             </button>
             <button
               onClick={() => setActiveTab('list')}
@@ -616,7 +616,7 @@ export default function AiBulkPage() {
                 activeTab === 'list' ? 'border-[#B88746] text-[#B88746] font-semibold' : 'border-transparent text-[#8C7A6B] hover:text-[#1F1B16]'
               }`}
             >
-              Lá»‹ch sá»­ chiáº¿n dá»‹ch hÃ ng loáº¡t
+              Lịch sử chiến dịch hàng loạt
             </button>
           </div>
 
@@ -626,12 +626,12 @@ export default function AiBulkPage() {
               <div className="lg:col-span-2">
                 <form onSubmit={handleSubmit} className="bg-white border border-[#E8DCCB] rounded-2xl p-6 space-y-6">
                   <div>
-                    <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">TÃªn chiáº¿n dá»‹ch lÃ´ bÃ i viáº¿t</label>
+                    <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Tên chiến dịch lô bài viết</label>
                     <input
                       type="text"
                       value={batchTitle}
                       onChange={(e) => setBatchTitle(e.target.value)}
-                      placeholder="VÃ­ dá»¥: Chiáº¿n dá»‹ch giá»›i thiá»‡u dá»± Ã¡n Masterise The Global City - ThÃ¡ng 6"
+                      placeholder="Ví dụ: Chiến dịch giới thiệu dự án Masterise The Global City - Tháng 6"
                       required
                       className="w-full px-4 py-3 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] text-[#1F1B16] focus:outline-none focus:border-[#B88746] transition-all font-medium"
                     />
@@ -639,31 +639,31 @@ export default function AiBulkPage() {
 
                   <div>
                     <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">
-                      Danh sÃ¡ch tá»« khÃ³a bÃ i viáº¿t (Má»—i tá»« khÃ³a 1 dÃ²ng)
+                      Danh sách từ khóa bài viết (Mỗi từ khóa 1 dòng)
                     </label>
                     <textarea
                       value={keywordsText}
                       onChange={(e) => setKeywordsText(e.target.value)}
                       rows={8}
-                      placeholder="Nháº­p danh sÃ¡ch tá»« khÃ³a viáº¿t bÃ i táº¡i Ä‘Ã¢y.&#10;VÃ­ dá»¥:&#10;Vá»‹ trÃ­ dá»± Ã¡n The Global City á»Ÿ Ä‘Ã¢u&#10;Tiá»‡n Ã­ch Masterise Homes Global City cÃ³ gÃ¬ Ä‘áº·c biá»‡t&#10;Báº£ng giÃ¡ bÃ¡n shophouse The Global City 2026"
+                      placeholder="Nhập danh sách từ khóa viết bài tại đây.&#10;Ví dụ:&#10;Vị trí dự án The Global City ở đâu&#10;Tiện ích Masterise Homes Global City có gì đặc biệt&#10;Bảng giá bán shophouse The Global City 2026"
                       required
                       className="w-full px-4 py-3 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] text-[#1F1B16] focus:outline-none focus:border-[#B88746] transition-all font-mono text-sm leading-relaxed"
                     />
                     <span className="text-[10px] text-[#8C7A6B] block mt-1">
-                      Giá»›i háº¡n tá»‘i Ä‘a {settings?.ai_max_articles_per_batch || 20} tá»« khÃ³a cho má»—i lÃ´. Vui lÃ²ng nháº­p má»—i dÃ²ng tÆ°Æ¡ng á»©ng má»™t tiÃªu Ä‘á» bÃ i viáº¿t.
+                      Giới hạn tối đa {settings?.ai_max_articles_per_batch || 20} từ khóa cho mỗi lô. Vui lòng nhập mỗi dòng tương ứng một tiêu đề bài viết.
                     </span>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">ChuyÃªn má»¥c máº·c Ä‘á»‹nh</label>
+                      <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Chuyên mục mặc định</label>
                       <select
                         value={categoryId}
                         onChange={(e) => setCategoryId(e.target.value ? Number(e.target.value) : '')}
                         required
                         className="w-full px-4 py-3 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] text-[#1F1B16] focus:outline-none focus:border-[#B88746]"
                       >
-                        <option value="">-- Chá»n chuyÃªn má»¥c --</option>
+                        <option value="">-- Chọn chuyên mục --</option>
                         {categories.map((c) => (
                           <option key={c.id} value={c.id}>{c.name}</option>
                         ))}
@@ -671,14 +671,14 @@ export default function AiBulkPage() {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">TÃ¡c giáº£ máº·c Ä‘á»‹nh</label>
+                      <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Tác giả mặc định</label>
                       {hasRole(['super_admin', 'admin']) ? (
                         <select
                           value={authorId}
                           onChange={(e) => setAuthorId(e.target.value ? Number(e.target.value) : '')}
                           className="w-full px-4 py-3 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] text-[#1F1B16] focus:outline-none focus:border-[#B88746]"
                         >
-                          <option value="">-- Chá»n tÃ¡c giáº£ --</option>
+                          <option value="">-- Chọn tác giả --</option>
                           {users.map((u) => (
                             <option key={u.id} value={u.id}>{u.name}</option>
                           ))}
@@ -703,12 +703,12 @@ export default function AiBulkPage() {
                       {createBatchMutation.isPending ? (
                         <>
                           <Loader2 className="w-5 h-5 animate-spin" />
-                          Äang khá»Ÿi táº¡o hÃ ng Ä‘á»£i...
+                          Đang khởi tạo hàng đợi...
                         </>
                       ) : (
                         <>
                           <Play className="w-5 h-5" />
-                          Khá»Ÿi cháº¡y hÃ ng loáº¡t
+                          Khởi chạy hàng loạt
                         </>
                       )}
                     </button>
@@ -719,7 +719,7 @@ export default function AiBulkPage() {
               <div className="space-y-6">
                 <div className="bg-white border border-[#E8DCCB] rounded-2xl p-6 space-y-6">
                   <div className="flex items-center justify-between border-b border-[#FBF8F2] pb-4">
-                    <h3 className="font-heading font-semibold text-base text-[#1F1B16]">CÃ i Ä‘áº·t áº£nh minh há»a lÃ´</h3>
+                    <h3 className="font-heading font-semibold text-base text-[#1F1B16]">Cài đặt ảnh minh họa lô</h3>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
                         type="checkbox"
@@ -734,7 +734,7 @@ export default function AiBulkPage() {
                   {enableImage ? (
                     <div className="space-y-4 animate-fadeIn">
                       <div>
-                        <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">KÃ­ch thÆ°á»›c áº£nh Ä‘áº¡i diá»‡n</label>
+                        <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Kích thước ảnh đại diện</label>
                         <select
                           value={imageSize}
                           onChange={(e) => setImageSize(e.target.value)}
@@ -746,7 +746,7 @@ export default function AiBulkPage() {
                       </div>
 
                       <div>
-                        <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Cháº¥t lÆ°á»£ng áº£nh</label>
+                        <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Chất lượng ảnh</label>
                         <select
                           value={imageQuality}
                           onChange={(e) => setImageQuality(e.target.value)}
@@ -758,20 +758,20 @@ export default function AiBulkPage() {
                       </div>
                     </div>
                   ) : (
-                    <p className="text-xs text-[#8C7A6B]">Táº¥t cáº£ bÃ i viáº¿t trong lÃ´ sáº½ bá» qua bÆ°á»›c sinh áº£nh Ä‘á»ƒ tÄƒng tá»‘c thá»i gian táº¡o bÃ i.</p>
+                    <p className="text-xs text-[#8C7A6B]">Tất cả bài viết trong lô sẽ bỏ qua bước sinh ảnh để tăng tốc thời gian tạo bài.</p>
                   )}
                 </div>
 
                 <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl text-xs text-amber-800 space-y-2">
                   <div className="font-semibold flex items-center gap-1">
                     <AlertCircle className="w-4 h-4 shrink-0" />
-                    LÆ°u Ã½ vá» tiáº¿n trÃ¬nh xá»­ lÃ½ (Queue)
+                    Lưu ý về tiến trình xử lý (Queue)
                   </div>
                   <p className="text-amber-700 leading-relaxed">
-                    TÃ¡c vá»¥ hÃ ng loáº¡t Ä‘Æ°á»£c Ä‘Æ°a vÃ o hÃ ng Ä‘á»£i báº¥t Ä‘á»“ng bá»™ (Queue) cá»§a Laravel Ä‘á»ƒ khÃ´ng lÃ m Ä‘Æ¡ giao diá»‡n.
+                    Tác vụ hàng loạt được đưa vào hàng đợi bất đồng bộ (Queue) của Laravel để không làm đơ giao diện.
                   </p>
                   <p className="text-amber-700 leading-relaxed font-semibold">
-                    á»ž mÃ´i trÆ°á»ng local, báº¡n cáº§n Ä‘áº£m báº£o Docker Container mh_php Ä‘ang cháº¡y queue worker báº±ng cÃ¢u lá»‡nh:
+                    Ở môi trường local, bạn cần đảm bảo Docker Container mh_php đang chạy queue worker bằng câu lệnh:
                   </p>
                   <code className="block p-2 bg-black/5 text-[#E8DCCB] rounded font-mono text-[10px] break-all select-all">
                     docker exec -it mh_php php artisan queue:work --queue=default --tries=3 --timeout=180
@@ -785,24 +785,24 @@ export default function AiBulkPage() {
               {isBatchesLoading ? (
                 <div className="flex flex-col items-center justify-center min-h-[200px] gap-4">
                   <Loader2 className="w-8 h-8 text-[#B88746] animate-spin" />
-                  <p className="text-xs text-[#8C7A6B]">Äang táº£i danh sÃ¡ch chiáº¿n dá»‹ch...</p>
+                  <p className="text-xs text-[#8C7A6B]">Đang tải danh sách chiến dịch...</p>
                 </div>
               ) : batches.length === 0 ? (
                 <div className="text-center py-12 space-y-3">
                   <Layers className="w-12 h-12 text-[#E8DCCB] mx-auto" />
-                  <h4 className="font-medium text-[#1F1B16]">ChÆ°a cÃ³ chiáº¿n dá»‹ch nÃ o Ä‘Æ°á»£c táº¡o</h4>
-                  <p className="text-xs text-[#8C7A6B]">Táº¡o chiáº¿n dá»‹ch viáº¿t bÃ i hÃ ng loáº¡t Ä‘áº§u tiÃªn á»Ÿ tab bÃªn cáº¡nh.</p>
+                  <h4 className="font-medium text-[#1F1B16]">Chưa có chiến dịch nào được tạo</h4>
+                  <p className="text-xs text-[#8C7A6B]">Tạo chiến dịch viết bài hàng loạt đầu tiên ở tab bên cạnh.</p>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-sm border-collapse">
                     <thead>
                       <tr className="border-b border-[#E8DCCB]">
-                        <th className="py-3 px-4 font-semibold text-[#8C7A6B] text-xs uppercase tracking-wider">TÃªn chiáº¿n dá»‹ch</th>
-                        <th className="py-3 px-4 font-semibold text-[#8C7A6B] text-xs uppercase tracking-wider">Quy mÃ´</th>
-                        <th className="py-3 px-4 font-semibold text-[#8C7A6B] text-xs uppercase tracking-wider">Tráº¡ng thÃ¡i</th>
-                        <th className="py-3 px-4 font-semibold text-[#8C7A6B] text-xs uppercase tracking-wider">Tiáº¿n Ä‘á»™</th>
-                        <th className="py-3 px-4 font-semibold text-[#8C7A6B] text-xs uppercase tracking-wider text-right">Lá»±a chá»n</th>
+                        <th className="py-3 px-4 font-semibold text-[#8C7A6B] text-xs uppercase tracking-wider">Tên chiến dịch</th>
+                        <th className="py-3 px-4 font-semibold text-[#8C7A6B] text-xs uppercase tracking-wider">Quy mô</th>
+                        <th className="py-3 px-4 font-semibold text-[#8C7A6B] text-xs uppercase tracking-wider">Trạng thái</th>
+                        <th className="py-3 px-4 font-semibold text-[#8C7A6B] text-xs uppercase tracking-wider">Tiến độ</th>
+                        <th className="py-3 px-4 font-semibold text-[#8C7A6B] text-xs uppercase tracking-wider text-right">Lựa chọn</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -816,7 +816,7 @@ export default function AiBulkPage() {
                               </span>
                             </div>
                           </td>
-                          <td className="py-4 px-4 text-[#8C7A6B] font-semibold">{batch.keywords_count} bÃ i viáº¿t</td>
+                          <td className="py-4 px-4 text-[#8C7A6B] font-semibold">{batch.keywords_count} bài viết</td>
                           <td className="py-4 px-4">
                             <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wider ${getStatusBadgeClass(batch.status)}`}>
                               {getStatusText(batch.status)}
@@ -835,7 +835,7 @@ export default function AiBulkPage() {
                               onClick={() => setSelectedBatchId(batch.id)}
                               className="text-[#B88746] hover:text-[#1F1B16] font-semibold text-xs inline-flex items-center"
                             >
-                              Xem tiáº¿n Ä‘á»™
+                              Xem tiến độ
                               <ChevronRight className="w-4 h-4" />
                             </button>
                           </td>
