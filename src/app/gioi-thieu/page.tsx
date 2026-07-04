@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
+import { SITE_URL } from "@/config/seo";
 import { aboutFaqs } from "@/data/aboutSeed";
 import AboutClient from "./AboutClient";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://masterisehomes.com";
+const siteUrl = SITE_URL;
 
 export const metadata: Metadata = {
   title:

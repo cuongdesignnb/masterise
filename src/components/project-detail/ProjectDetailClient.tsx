@@ -550,6 +550,45 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
   const hasFaqs = project.faqs.length > 0;
   const productSummaryLabels = new Set(project.productSummary.map((item) => normalizeInfoLabel(item.label)));
   const mobileHeroFactsSource = project.facts.length ? project.facts : project.quickCard;
+  const projectInfoPool = [...project.quickCard, ...project.facts, ...project.productSummary];
+  const findInfoValue = (labels: string[]) => {
+    const normalizedLabels = labels.map(normalizeInfoLabel);
+    return projectInfoPool.find((item) => normalizedLabels.includes(normalizeInfoLabel(item.label)))?.value || "";
+  };
+  const quickAnswerItems = [
+    {
+      question: `${project.name} là dự án gì?`,
+      answer: project.description || project.subtitle,
+    },
+    {
+      question: `${project.name} ở đâu?`,
+      answer: project.address,
+    },
+    {
+      question: `Chủ đầu tư ${project.name} là ai?`,
+      answer: findInfoValue(["Chủ đầu tư", "Developer"]) || "Masterise Homes",
+    },
+    {
+      question: `Quy mô ${project.name} bao nhiêu?`,
+      answer: findInfoValue(["Quy mô", "Tổng quy mô", "Tổng diện tích", "Diện tích"]) || findInfoValue(["Số lượng sản phẩm", "Số block", "Số tầng"]),
+    },
+    {
+      question: `Sở hữu và pháp lý như thế nào?`,
+      answer: findInfoValue(["Sở hữu", "Pháp lý", "Pháp lý sở hữu"]) || "Thông tin pháp lý và sở hữu được cập nhật theo dữ liệu dự án.",
+    },
+    {
+      question: `Thời gian bàn giao khi nào?`,
+      answer: findInfoValue(["Bàn giao", "Thời gian bàn giao"]) || "Thời gian bàn giao được cập nhật theo tiến độ công bố của dự án.",
+    },
+    {
+      question: `Giá bán tham khảo ra sao?`,
+      answer: findInfoValue(["Giá tham khảo", "Giá bán", "Sở hữu lâu dài"]) || project.priceFrom,
+    },
+    {
+      question: `Có nên quan tâm ${project.name} không?`,
+      answer: project.investmentReasons[0]?.description || project.subtitle,
+    },
+  ].filter((item) => item.answer);
   const mobileHeroFacts = mobileHeroFactsSource
     .filter((fact) => {
       const label = normalizeInfoLabel(fact.label);
@@ -789,6 +828,27 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
             ))}
           </div>
         </Reveal> : null}
+
+        {quickAnswerItems.length ? (
+          <Reveal className="rounded-[22px] border border-line/80 bg-white p-5 shadow-soft sm:p-7">
+            <section aria-labelledby="project-quick-summary-title">
+              <p className="text-[11px] font-bold tracking-[0.16em] text-gold normal-case">
+                Tóm tắt nhanh cho AI & người đọc
+              </p>
+              <h2 id="project-quick-summary-title" className="heading-font mt-2 text-2xl font-semibold text-ink sm:text-[30px]">
+                Những điều cần biết về {project.name}
+              </h2>
+              <dl className="mt-5 grid gap-3 md:grid-cols-2">
+                {quickAnswerItems.map((item) => (
+                  <div key={item.question} className="rounded-[16px] border border-line/80 bg-[#fcfaf6] p-4">
+                    <dt className="text-[13px] font-bold leading-5 text-ink">{item.question}</dt>
+                    <dd className="mt-2 text-[13px] leading-6 text-muted sm:text-sm sm:leading-7">{item.answer}</dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
+          </Reveal>
+        ) : null}
 
         {/* TỔNG QUAN DỰ ÁN */}
         {project.content ? (

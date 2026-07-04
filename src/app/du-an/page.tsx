@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { SITE_URL } from "@/config/seo";
 import ProjectsClient from "./ProjectsClient";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://masterisehomes.com";
+const siteUrl = SITE_URL;
 
 export const metadata: Metadata = {
   title: "Dự án Masterise Homes | Bộ sưu tập bất động sản hàng hiệu",

@@ -14,8 +14,9 @@ import NewsRelatedSection from "@/components/news-detail/NewsRelatedSection";
 import { extractTocFromHtml, formatArticleDate, readingMinutes } from "@/lib/articleContent";
 import { getServerApiUrl } from "@/lib/serverApi";
 import type { Post } from "@/types/api";
+import { absoluteUrl, SITE_NAME, SITE_URL } from "@/config/seo";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://masterisehomes.com";
+const siteUrl = SITE_URL;
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -70,11 +71,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: post.seo_meta?.title || `${post.title} | Masterise Homes`,
     description: post.seo_meta?.description || post.summary || undefined,
     keywords: post.seo_meta?.keywords || undefined,
-    alternates: { canonical: `/tin-tuc/${post.slug}` },
+    alternates: { canonical: absoluteUrl(`/tin-tuc/${post.slug}`) },
     openGraph: {
       title: post.seo_meta?.og_title || post.title,
       description: post.seo_meta?.og_description || post.summary || undefined,
-      images: post.thumbnail ? [post.thumbnail] : undefined,
+      url: absoluteUrl(`/tin-tuc/${post.slug}`),
+      siteName: SITE_NAME,
+      images: post.thumbnail ? [absoluteUrl(post.thumbnail)] : undefined,
       type: "article",
       locale: "vi_VN",
       publishedTime: post.published_at || undefined,
@@ -85,7 +88,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       card: "summary_large_image",
       title: post.seo_meta?.title || post.title,
       description: post.seo_meta?.description || post.summary || undefined,
-      images: post.thumbnail ? [post.thumbnail] : undefined,
+      images: post.thumbnail ? [absoluteUrl(post.thumbnail)] : undefined,
     },
   };
 }
@@ -96,6 +99,7 @@ export default async function NewsArticleDetailPage({ params }: Props) {
   if (!data?.post) notFound();
 
   const { post, related = [], previous = null, next = null } = data;
+  const postUrl = `${siteUrl}/tin-tuc/${post.slug}`;
   const toc = extractTocFromHtml(post.content);
   const videos = (post.media_items || []).filter((item) => (item.type === "youtube" || item.type === "video_upload") && item.url);
   const publishedLabel = formatArticleDate(post.published_at);
@@ -104,18 +108,32 @@ export default async function NewsArticleDetailPage({ params }: Props) {
   const jsonLdArticle = {
     "@context": "https://schema.org",
     "@type": "Article",
+    "@id": `${postUrl}#article`,
     headline: post.title,
     description: post.summary,
-    image: post.thumbnail,
+    image: post.thumbnail ? [absoluteUrl(post.thumbnail)] : undefined,
     datePublished: post.published_at,
     dateModified: post.updated_at,
     author: { "@type": "Person", name: post.author?.name || "Masterise Homes" },
     publisher: {
       "@type": "Organization",
-      name: "Masterise Homes",
+      name: SITE_NAME,
       logo: { "@type": "ImageObject", url: `${siteUrl}/logo.png` },
     },
-    mainEntityOfPage: `${siteUrl}/tin-tuc/${post.slug}`,
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": postUrl,
+    },
+  };
+
+  const jsonLdBreadcrumb = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Trang chủ", item: siteUrl },
+      { "@type": "ListItem", position: 2, name: "Tin tức", item: `${siteUrl}/tin-tuc` },
+      { "@type": "ListItem", position: 3, name: post.title, item: postUrl },
+    ],
   };
 
   const jsonLdVideos = videos.map((video) => ({
@@ -131,9 +149,10 @@ export default async function NewsArticleDetailPage({ params }: Props) {
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdArticle) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdArticle).replace(/</g, "\\u003c") }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBreadcrumb).replace(/</g, "\\u003c") }} />
       {jsonLdVideos.map((schema, index) => (
-        <script key={index} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
+        <script key={index} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema).replace(/</g, "\\u003c") }} />
       ))}
       <Header />
       <MobileTabBar />

@@ -36,7 +36,7 @@ export const contactInfoCards = [
   },
   {
     title: "Email",
-    value: "info@masterisehomes.com",
+    value: "info@masterise-homes.net.vn",
     description: "Phản hồi trong 24h",
     icon: "Mail",
   },
@@ -58,7 +58,7 @@ export const officeInfo = {
   title: "Thông tin văn phòng",
   address: "Tầng 23, Masteri Centre Point, 106 Nguyễn Văn Linh, Quận 7, TP. Hồ Chí Minh",
   hotline: "1900 232 389",
-  email: "info@masterisehomes.com",
+  email: "info@masterise-homes.net.vn",
   mapLabel: "Bản đồ chỉ đường",
   socials: [
     { label: "Facebook", icon: "Globe" },
@@ -78,7 +78,7 @@ export const supportDepartments = [
     description:
       "Tư vấn thông tin dự án, bảng giá, chính sách bán hàng và hỗ trợ đặt chỗ ưu tiên cho khách hàng.",
     phone: "1800 6868",
-    email: "sales@masterisehomes.com",
+    email: "sales@masterise-homes.net.vn",
     time: "T2 – T7 | 08:00 – 20:00",
     icon: "Building2",
   },
@@ -87,7 +87,7 @@ export const supportDepartments = [
     description:
       "Hỗ trợ thông tin, giải đáp thắc mắc và chăm sóc sau mua.",
     phone: "1900 988 998 (Nhánh 2)",
-    email: "care@masterisehomes.com",
+    email: "care@masterise-homes.net.vn",
     time: "08:30 – 18:00 (Thứ 2 – Chủ nhật)",
     icon: "Headphones",
   },
@@ -96,7 +96,7 @@ export const supportDepartments = [
     description:
       "Hợp tác chiến lược, truyền thông và các đề xuất hợp tác.",
     phone: "1900 988 998 (Nhánh 3)",
-    email: "partnerships@masterisehomes.com",
+    email: "partnerships@masterise-homes.net.vn",
     time: "08:30 – 18:00 (Thứ 2 – Thứ 6)",
     icon: "Megaphone",
   },

@@ -453,7 +453,7 @@ export default function AdminDevelopers() {
                   </label>
                   <input
                     type="url"
-                    placeholder="VD: https://masterisehomes.com"
+                    placeholder="VD: https://masterise-homes.net.vn"
                     value={formWebsite}
                     onChange={(e) => setFormWebsite(e.target.value)}
                     className="w-full px-4 py-2 border border-[#E8DCCB] rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746] focus:border-[#B88746]"

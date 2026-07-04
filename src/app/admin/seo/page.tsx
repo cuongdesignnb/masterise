@@ -197,7 +197,7 @@ export default function AdminSeo() {
                       </h4>
                       <div className="space-y-1">
                         <span className="text-xs text-gray-500 block font-sans truncate">
-                          http://masterisehomes.com{activePath}
+                          https://masterise-homes.net.vn{activePath}
                         </span>
                         <span className="text-lg text-blue-800 font-sans hover:underline block font-semibold cursor-pointer truncate">
                           {formTitle || 'Vui lòng nhập tiêu đề SEO...'}

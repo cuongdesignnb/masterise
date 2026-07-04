@@ -513,6 +513,6 @@ export const footerColumns: FooterColumn[] = [
 
 export const contactInfo = {
   phone: "1900 888 999",
-  email: "info@masterisehomes.com",
+  email: "info@masterise-homes.net.vn",
   address: "Tòa nhà Masterise, 41-45 Lê Duẩn, P. Bến Nghé, Quận 1, TP. HCM",
 };

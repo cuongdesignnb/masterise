@@ -955,7 +955,7 @@ export default function AdminSettings() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
-                    placeholder="info@masterisehomes.com"
+                    placeholder="info@masterise-homes.net.vn"
                   />
                 </div>
               </div>
@@ -2315,7 +2315,7 @@ export default function AdminSettings() {
                             value={dept.email}
                             onChange={(e) => handleDepartmentChange(idx, 'email', e.target.value)}
                             className="w-full px-3 py-1.5 border border-[#E8DCCB] rounded-lg text-xs bg-white focus:outline-none"
-                            placeholder="sales@masterisehomes.com"
+                            placeholder="sales@masterise-homes.net.vn"
                           />
                         </div>
                       </div>
@@ -2779,7 +2779,7 @@ export default function AdminSettings() {
                           value={mailFromAddress}
                           onChange={(e) => setMailFromAddress(e.target.value)}
                           className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
-                          placeholder="Ví dụ: no-reply@masterisehomes.com"
+                          placeholder="Ví dụ: no-reply@masterise-homes.net.vn"
                         />
                       </div>
 
