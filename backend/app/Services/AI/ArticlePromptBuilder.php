@@ -22,18 +22,22 @@ Language: {$language}.
 You must structure the response as a single valid JSON object containing exactly the following keys:
 1. "title": The title of the article.
 2. "slug_suggestion": A URL-friendly slug suggestion based on the title (lowercase, hyphens, ASCII only).
-3. "excerpt": A short summaries of 2-3 sentences.
+3. "excerpt": A short summary of 2-3 sentences.
 4. "seo_title": An SEO optimized title tag (under 60 characters).
 5. "seo_description": An SEO meta description (under 160 characters).
 6. "seo_keywords": An array of 5-8 relevant search keywords.
-7. "content_html": The full article body in clean HTML format. Use proper H2 and H3 header tags, paragraphs, and list items where appropriate. Make sure the content has a clear introduction, body, and conclusion. Add call-to-actions (CTAs) for project consultations or showroom appointments. Do NOT wrap the HTML inside a markdown code block, just output the HTML as a plain JSON string.
-8. "image_prompt": A highly descriptive prompt in English to be used with an AI image generator (like DALL-E) to create a premium featured image for this article. The prompt should specify luxury real estate styles, natural lighting, high-end architecture, no text, and no logos.
+7. "content_html": The full article body in clean HTML format. Use proper H2 and H3 header tags, paragraphs, and list items where appropriate. Make sure the content has a clear introduction, body, conclusion, useful CTA, and a short FAQ section. Do NOT wrap the HTML inside a markdown code block, just output the HTML as a plain JSON string.
+8. "image_prompt": A highly descriptive prompt in English to be used with an AI image generator to create a premium featured image for this article.
 9. "cta": A prominent final call to action string.
 
 Content Constraints & Safety Guidelines:
+- If language is "vi", write natural Vietnamese with full diacritics.
+- Include at least 4 useful H2 sections and optional H3 subsections.
+- Include a short FAQ section at the end with 4 questions and answers.
 - Write specifically from the perspective of Masterise Homes, reflecting premium quality, luxury, and professional branding.
-- Avoid hallucinating or inventing specific pricing details, launch dates, or legal approvals unless they are universally verified. Keep statements neutral, e.g. "Vui lòng liên hệ Hotline để nhận bảng giá chính thức mới nhất".
-- Do NOT make absolute guarantees of investment return or absolute promises of profit.
+- Do not invent exact prices, legal status, launch dates, payment policies, or investment returns unless they are provided in the source input. Use neutral wording and invite readers to contact the sales team for official updates.
+- Do not make absolute guarantees of investment return or promises of profit.
+- Make image_prompt suitable for a premium real estate editorial thumbnail: photorealistic luxury architecture, natural lighting, high-end atmosphere, no text, no logo, no watermark, no brand mark.
 - Do NOT output any conversational text or markdown wrappers around the JSON object (e.g. do not wrap in ```json ... ```). Output ONLY the raw JSON object.
 PROMPT;
     }
@@ -43,6 +47,6 @@ PROMPT;
      */
     public function buildFallbackImagePrompt(string $title): string
     {
-        return "Premium featured image illustrating luxury real estate for the article titled: '{$title}'. Architectural rendering, modern building design, high-end editorial style, cinematic natural lighting, golden champagne and warm white color palette, 8k resolution, no text, no logo.";
+        return "Premium featured image illustrating luxury real estate for the article titled: '{$title}'. Photorealistic modern architecture, high-end editorial style, cinematic natural lighting, warm champagne and white palette, no text, no logo, no watermark.";
     }
 }

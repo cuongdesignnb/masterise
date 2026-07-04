@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -8,34 +8,112 @@ import { aiContentService } from '@/services/aiContentService';
 import { AiSettingsPublic } from '@/types/aiContent';
 import { useToast } from '@/components/admin/Toast';
 import { PostCategory, User } from '@/types/api';
-import { 
-  Wrench, 
-  Key, 
-  Cpu, 
-  Sparkles, 
-  CheckCircle2, 
-  XCircle, 
-  AlertTriangle, 
-  Loader2, 
-  Save, 
-  Globe, 
-  User as UserIcon, 
-  Folder, 
-  Eye, 
-  EyeOff 
+import {
+  Wrench,
+  Key,
+  Cpu,
+  Sparkles,
+  CheckCircle2,
+  XCircle,
+  AlertTriangle,
+  Loader2,
+  Save,
+  Globe,
+  User as UserIcon,
+  Folder
 } from 'lucide-react';
+
+const TEXT_MODEL_OPTIONS = [
+  { value: 'gpt-4o-mini', label: 'gpt-4o-mini - \u1ed5n \u0111\u1ecbnh, ti\u1ebft ki\u1ec7m' },
+  { value: 'gpt-4o', label: 'gpt-4o - ch\u1ea5t l\u01b0\u1ee3ng cao' },
+  { value: 'gpt-5-mini', label: 'gpt-5-mini - model m\u1edbi' },
+  { value: 'gpt-5', label: 'gpt-5 - ch\u1ea5t l\u01b0\u1ee3ng cao' },
+];
+
+const IMAGE_MODEL_OPTIONS = [
+  { value: 'gpt-image-1', label: 'gpt-image-1 - khuy\u1ebfn ngh\u1ecb' },
+  { value: 'dall-e-3', label: 'dall-e-3 - legacy' },
+  { value: 'dall-e-2', label: 'dall-e-2 - c\u0169, ch\u1ec9 n\u00ean d\u00f9ng 1024x1024' },
+];
+
+function normalizeImageOptionsForModel(model: string, current: Partial<AiSettingsPublic>): Partial<AiSettingsPublic> {
+  if (model.startsWith('gpt-image')) {
+    const size = current.ai_default_image_size;
+    const quality = current.ai_default_image_quality;
+    return {
+      ...current,
+      ai_image_model: model,
+      ai_default_image_size: size && ['1024x1024', '1536x1024', '1024x1536', 'auto'].includes(size) ? size : '1536x1024',
+      ai_default_image_quality: quality && ['low', 'medium', 'high', 'auto'].includes(quality) ? quality : 'medium',
+    };
+  }
+
+  if (model === 'dall-e-3') {
+    const size = current.ai_default_image_size;
+    const quality = current.ai_default_image_quality;
+    return {
+      ...current,
+      ai_image_model: model,
+      ai_default_image_size: size && ['1024x1024', '1792x1024', '1024x1792'].includes(size) ? size : '1792x1024',
+      ai_default_image_quality: quality && ['standard', 'hd'].includes(quality) ? quality : 'standard',
+    };
+  }
+
+  return {
+    ...current,
+    ai_image_model: model,
+    ai_default_image_size: '1024x1024',
+    ai_default_image_quality: 'standard',
+  };
+}
+
+function imageSizeOptions(model?: string) {
+  if ((model || '').startsWith('gpt-image')) {
+    return [
+      { value: '1024x1024', label: 'H\u00ecnh vu\u00f4ng (1024x1024)' },
+      { value: '1536x1024', label: 'Ch\u1eef nh\u1eadt ngang (1536x1024)' },
+      { value: '1024x1536', label: 'Ch\u1eef nh\u1eadt \u0111\u1ee9ng (1024x1536)' },
+      { value: 'auto', label: 'T\u1ef1 \u0111\u1ed9ng' },
+    ];
+  }
+
+  if (model === 'dall-e-3') {
+    return [
+      { value: '1024x1024', label: 'H\u00ecnh vu\u00f4ng (1024x1024)' },
+      { value: '1792x1024', label: 'Ch\u1eef nh\u1eadt ngang (1792x1024)' },
+      { value: '1024x1792', label: 'Ch\u1eef nh\u1eadt \u0111\u1ee9ng (1024x1792)' },
+    ];
+  }
+
+  return [{ value: '1024x1024', label: 'H\u00ecnh vu\u00f4ng (1024x1024)' }];
+}
+
+function imageQualityOptions(model?: string) {
+  if ((model || '').startsWith('gpt-image')) {
+    return [
+      { value: 'low', label: 'Th\u1ea5p - ti\u1ebft ki\u1ec7m' },
+      { value: 'medium', label: 'Trung b\u00ecnh - khuy\u1ebfn ngh\u1ecb' },
+      { value: 'high', label: 'Cao' },
+      { value: 'auto', label: 'T\u1ef1 \u0111\u1ed9ng' },
+    ];
+  }
+
+  return [
+    { value: 'standard', label: 'Ti\u00eau chu\u1ea9n (Standard)' },
+    { value: 'hd', label: '\u0110\u1ed9 ph\u00e2n gi\u1ea3i cao (HD)' },
+  ];
+}
 
 export default function AiSettingsPage() {
   const queryClient = useQueryClient();
   const { user, hasRole } = useAuth();
   const toast = useToast();
-  
+
   const isWritable = hasRole(['super_admin', 'admin']);
-  
-  // Custom API key show/hide state
-  const [showApiKey, setShowApiKey] = useState(false);
+
+  // API key is write-only after saving.
   const [apiKeyInput, setApiKeyInput] = useState('');
-  
+
   // Test connection state
   const [testStatus, setTestStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
   const [testMessage, setTestMessage] = useState('');
@@ -71,21 +149,16 @@ export default function AiSettingsPage() {
   useEffect(() => {
     if (settingsResponse?.data) {
       setFormData(settingsResponse.data);
-      if (settingsResponse.data.api_key_configured && settingsResponse.data.api_key_masked) {
-        setApiKeyInput(settingsResponse.data.api_key_masked);
-      }
+      setApiKeyInput('');
     }
   }, [settingsResponse]);
 
   // Save Settings Mutation
   const saveMutation = useMutation({
     mutationFn: (payload: Partial<AiSettingsPublic>) => {
-      // Include api key if it is dirty (changed from masked and not empty)
       const dataToSave = { ...payload };
-      if (apiKeyInput && !apiKeyInput.includes('••••')) {
+      if (apiKeyInput.trim()) {
         dataToSave.ai_openai_api_key = apiKeyInput;
-      } else if (apiKeyInput === '') {
-        dataToSave.ai_openai_api_key = '';
       }
       return aiContentService.updateAiSettings(dataToSave);
     },
@@ -101,15 +174,17 @@ export default function AiSettingsPage() {
   // Test Connection Mutation
   const testConnectionMutation = useMutation({
     mutationFn: () => {
-      const payload: { ai_openai_api_key?: string } = {};
-      if (apiKeyInput && !apiKeyInput.includes('••••')) {
+      const payload: { ai_openai_api_key?: string; ai_text_model?: string } = {
+        ai_text_model: formData.ai_text_model || 'gpt-4o-mini',
+      };
+      if (apiKeyInput.trim()) {
         payload.ai_openai_api_key = apiKeyInput;
       }
       return aiContentService.testAiConnection(payload);
     },
     onMutate: () => {
       setTestStatus('testing');
-      setTestMessage('Đang kết nối thử đến OpenAI API...');
+      setTestMessage(`Đang kiểm tra model ${formData.ai_text_model || 'gpt-4o-mini'}...`);
     },
     onSuccess: (res) => {
       setTestStatus('success');
@@ -117,24 +192,30 @@ export default function AiSettingsPage() {
     },
     onError: (err: any) => {
       setTestStatus('error');
-      setTestMessage(err.message || 'Kết nối thất bại. Vui lòng kiểm tra lại API Key.');
+      setTestMessage(err.message || 'Kết nối thất bại. Vui lòng kiểm tra lại API Key và model đang chọn.');
     }
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     let val: any = value;
-    
+
     if (type === 'checkbox') {
       val = (e.target as HTMLInputElement).checked;
     } else if (type === 'number') {
       val = parseInt(value, 10);
     }
 
-    setFormData(prev => ({
-      ...prev,
-      [name]: val
-    }));
+    setFormData(prev => {
+      if (name === 'ai_image_model') {
+        return normalizeImageOptionsForModel(String(val), prev);
+      }
+
+      return {
+        ...prev,
+        [name]: val
+      };
+    });
   };
 
   const handleSave = (e: React.FormEvent) => {
@@ -147,7 +228,7 @@ export default function AiSettingsPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
         <Loader2 className="w-10 h-10 text-[#B88746] animate-spin" />
-        <p className="text-sm text-[#8C7A6B]">Đang tải cấu hình AI...</p>
+        <p className="text-sm text-[#8C7A6B]">Äang táº£i cáº¥u hÃ¬nh AI...</p>
       </div>
     );
   }
@@ -159,9 +240,9 @@ export default function AiSettingsPage() {
         <div>
           <h1 className="text-3xl font-heading font-medium text-[#1F1B16] flex items-center gap-3">
             <Wrench className="w-8 h-8 text-[#B88746]" />
-            Cấu hình AI Content Automation
+            Cáº¥u hÃ¬nh AI Content Automation
           </h1>
-          <p className="text-sm text-[#8C7A6B]">Quản lý thông tin kết nối API OpenAI, cấu hình model và các thông số viết bài mặc định</p>
+          <p className="text-sm text-[#8C7A6B]">Quáº£n lÃ½ thÃ´ng tin káº¿t ná»‘i API OpenAI, cáº¥u hÃ¬nh model vÃ  cÃ¡c thÃ´ng sá»‘ viáº¿t bÃ i máº·c Ä‘á»‹nh</p>
         </div>
       </div>
 
@@ -169,8 +250,8 @@ export default function AiSettingsPage() {
         <div className="p-4 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl flex items-start gap-3">
           <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
           <div>
-            <h4 className="font-semibold text-sm">Chế độ Xem (Chỉ đọc)</h4>
-            <p className="text-xs text-amber-700 mt-1">Tài khoản Marketing chỉ có quyền xem cấu hình. Chỉ Super Admin hoặc Admin hệ thống mới có thể chỉnh sửa thông tin API Key và Model.</p>
+            <h4 className="font-semibold text-sm">Cháº¿ Ä‘á»™ Xem (Chá»‰ Ä‘á»c)</h4>
+            <p className="text-xs text-amber-700 mt-1">TÃ i khoáº£n Marketing chá»‰ cÃ³ quyá»n xem cáº¥u hÃ¬nh. Chá»‰ Super Admin hoáº·c Admin há»‡ thá»‘ng má»›i cÃ³ thá»ƒ chá»‰nh sá»­a thÃ´ng tin API Key vÃ  Model.</p>
           </div>
         </div>
       )}
@@ -185,17 +266,17 @@ export default function AiSettingsPage() {
                 <Key className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-heading font-semibold text-lg text-[#1F1B16]">Kết nối OpenAI API</h3>
-                <p className="text-xs text-[#8C7A6B]">Cung cấp mã kết nối OpenAI API để kích hoạt các tính năng AI</p>
+                <h3 className="font-heading font-semibold text-lg text-[#1F1B16]">Káº¿t ná»‘i OpenAI API</h3>
+                <p className="text-xs text-[#8C7A6B]">Cung cáº¥p mÃ£ káº¿t ná»‘i OpenAI API Ä‘á»ƒ kÃ­ch hoáº¡t cÃ¡c tÃ­nh nÄƒng AI</p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Nhà cung cấp AI</label>
-                <select 
-                  name="ai_provider" 
-                  value={formData.ai_provider || 'openai'} 
+                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">NhÃ  cung cáº¥p AI</label>
+                <select
+                  name="ai_provider"
+                  value={formData.ai_provider || 'openai'}
                   onChange={handleInputChange}
                   disabled={true} // Locked to openai
                   className="w-full px-4 py-3 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] text-[#1F1B16] opacity-80"
@@ -206,22 +287,18 @@ export default function AiSettingsPage() {
 
               <div>
                 <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">OpenAI API Key</label>
-                <div className="relative">
-                  <input 
-                    type={showApiKey ? 'text' : 'password'}
+                <div className="space-y-2">
+                  <input
+                    type="password"
                     value={apiKeyInput}
                     onChange={(e) => setApiKeyInput(e.target.value)}
                     disabled={!isWritable}
-                    placeholder={formData.api_key_configured ? 'sk-••••...••••' : 'Nhập sk-...'}
-                    className={`w-full pl-4 pr-10 py-3 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] text-[#1F1B16] focus:outline-none focus:border-[#B88746] transition-all ${!isWritable ? 'opacity-85 cursor-not-allowed' : ''}`}
+                    placeholder={formData.api_key_configured ? 'Nhập API key mới nếu muốn thay đổi' : 'Nhập sk-...'}
+                    className={`w-full px-4 py-3 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] text-[#1F1B16] focus:outline-none focus:border-[#B88746] transition-all ${!isWritable ? 'opacity-85 cursor-not-allowed' : ''}`}
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowApiKey(!showApiKey)}
-                    className="absolute right-3 top-3.5 text-[#8C7A6B] hover:text-[#1F1B16]"
-                  >
-                    {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
+                  <p className="text-[11px] leading-relaxed text-[#8C7A6B]">
+                    Vì lý do bảo mật, hệ thống không hiển thị lại API key đã lưu. Nếu key bị lộ, hãy tạo key mới trong OpenAI Dashboard rồi dán lại vào đây.
+                  </p>
                 </div>
               </div>
             </div>
@@ -238,17 +315,17 @@ export default function AiSettingsPage() {
                   {testConnectionMutation.isPending ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      Đang kiểm tra...
+                      Äang kiá»ƒm tra...
                     </>
                   ) : (
-                    'Kiểm tra kết nối API'
+                    'Kiá»ƒm tra káº¿t ná»‘i API'
                   )}
                 </button>
-                
+
                 {formData.api_key_configured && (
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-medium border border-emerald-200">
                     <CheckCircle2 className="w-3.5 h-3.5" />
-                    Đã cấu hình API Key trong hệ thống
+                    ÄÃ£ cáº¥u hÃ¬nh API Key trong há»‡ thá»‘ng
                   </span>
                 )}
               </div>
@@ -264,9 +341,9 @@ export default function AiSettingsPage() {
                   {testStatus === 'error' && <XCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />}
                   <div>
                     <span className="font-semibold">
-                      {testStatus === 'testing' ? 'Đang kiểm tra...' :
-                       testStatus === 'success' ? 'Kết nối thành công!' :
-                       'Lỗi kết nối API'}
+                      {testStatus === 'testing' ? 'Äang kiá»ƒm tra...' :
+                       testStatus === 'success' ? 'Káº¿t ná»‘i thÃ nh cÃ´ng!' :
+                       'Lá»—i káº¿t ná»‘i API'}
                     </span>
                     <p className="text-xs mt-1 text-inherit">{testMessage}</p>
                   </div>
@@ -282,38 +359,42 @@ export default function AiSettingsPage() {
                 <Cpu className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-heading font-semibold text-lg text-[#1F1B16]">Cấu hình Model AI</h3>
-                <p className="text-xs text-[#8C7A6B]">Tùy chọn Model để sinh văn bản và ảnh đại diện bài viết</p>
+                <h3 className="font-heading font-semibold text-lg text-[#1F1B16]">Cáº¥u hÃ¬nh Model AI</h3>
+                <p className="text-xs text-[#8C7A6B]">TÃ¹y chá»n Model Ä‘á»ƒ sinh vÄƒn báº£n vÃ  áº£nh Ä‘áº¡i diá»‡n bÃ i viáº¿t</p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Model viết bài (Mặc định)</label>
-                <input 
-                  type="text" 
+                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Model viáº¿t bÃ i (Máº·c Ä‘á»‹nh)</label>
+                <select
                   name="ai_text_model"
-                  value={formData.ai_text_model || ''} 
+                  value={formData.ai_text_model || 'gpt-4o-mini'}
                   onChange={handleInputChange}
                   disabled={!isWritable}
-                  placeholder="gpt-4o-mini"
                   className="w-full px-4 py-3 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] text-[#1F1B16] focus:outline-none focus:border-[#B88746] transition-all"
-                />
-                <span className="text-[10px] text-[#8C7A6B] mt-1 block">Gợi ý: <code>gpt-4o-mini</code> (Mặc định), <code>gpt-4o</code></span>
+                >
+                  {TEXT_MODEL_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </select>
+                <span className="text-[10px] text-[#8C7A6B] mt-1 block">Test kết nối sẽ dùng đúng model đang chọn tại đây.</span>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Model sinh ảnh (Mặc định)</label>
-                <input 
-                  type="text" 
+                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Model sinh áº£nh (Máº·c Ä‘á»‹nh)</label>
+                <select
                   name="ai_image_model"
-                  value={formData.ai_image_model || ''} 
+                  value={formData.ai_image_model || 'gpt-image-1'}
                   onChange={handleInputChange}
                   disabled={!isWritable}
-                  placeholder="dall-e-2"
                   className="w-full px-4 py-3 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] text-[#1F1B16] focus:outline-none focus:border-[#B88746] transition-all"
-                />
-                <span className="text-[10px] text-[#8C7A6B] mt-1 block">Gợi ý: <code>dall-e-2</code> (Mặc định), <code>dall-e-3</code></span>
+                >
+                  {IMAGE_MODEL_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </select>
+                <span className="text-[10px] text-[#8C7A6B] mt-1 block">Kích thước và chất lượng ảnh phía dưới sẽ tự đổi theo model này.</span>
               </div>
             </div>
 
@@ -321,11 +402,11 @@ export default function AiSettingsPage() {
             <div className="border-t border-[#FBF8F2] pt-6 space-y-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <label className="block text-sm font-semibold text-[#1F1B16]">Kích hoạt Model dự phòng (Fallback)</label>
-                  <p className="text-xs text-[#8C7A6B]">Tự động chuyển đổi sang model khác khi model mặc định bị quá tải hoặc chưa được cấp quyền</p>
+                  <label className="block text-sm font-semibold text-[#1F1B16]">KÃ­ch hoáº¡t Model dá»± phÃ²ng (Fallback)</label>
+                  <p className="text-xs text-[#8C7A6B]">T\u1ef1 \u0111\u1ed9ng chuyá»ƒn Ä‘á»•i sang model khÃ¡c khi model máº·c Ä‘á»‹nh bá»‹ quÃ¡ táº£i hoáº·c chÆ°a Ä‘Æ°á»£c cáº¥p quyá»n</p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
-                  <input 
+                  <input
                     type="checkbox"
                     name="ai_enable_model_fallback"
                     checked={formData.ai_enable_model_fallback || false}
@@ -340,11 +421,11 @@ export default function AiSettingsPage() {
               {formData.ai_enable_model_fallback && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 rounded-xl bg-[#FBF8F2] border border-[#E8DCCB] transition-all animate-fadeIn">
                   <div>
-                    <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Model viết bài dự phòng</label>
-                    <input 
-                      type="text" 
+                    <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Model viáº¿t bÃ i dá»± phÃ²ng</label>
+                    <input
+                      type="text"
                       name="ai_fallback_text_model"
-                      value={formData.ai_fallback_text_model || ''} 
+                      value={formData.ai_fallback_text_model || ''}
                       onChange={handleInputChange}
                       disabled={!isWritable}
                       placeholder="gpt-4o-mini"
@@ -353,11 +434,11 @@ export default function AiSettingsPage() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Model sinh ảnh dự phòng</label>
-                    <input 
-                      type="text" 
+                    <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Model sinh áº£nh dá»± phÃ²ng</label>
+                    <input
+                      type="text"
                       name="ai_fallback_image_model"
-                      value={formData.ai_fallback_image_model || ''} 
+                      value={formData.ai_fallback_image_model || ''}
                       onChange={handleInputChange}
                       disabled={!isWritable}
                       placeholder="dall-e-3"
@@ -376,63 +457,63 @@ export default function AiSettingsPage() {
                 <Sparkles className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-heading font-semibold text-lg text-[#1F1B16]">Cấu hình sinh bài viết mặc định</h3>
-                <p className="text-xs text-[#8C7A6B]">Các tùy chỉnh mặc định khi gửi yêu cầu viết bài</p>
+                <h3 className="font-heading font-semibold text-lg text-[#1F1B16]">Cáº¥u hÃ¬nh sinh bÃ i viáº¿t máº·c Ä‘á»‹nh</h3>
+                <p className="text-xs text-[#8C7A6B]">CÃ¡c tÃ¹y chá»‰nh máº·c Ä‘á»‹nh khi gá»­i yÃªu cáº§u viáº¿t bÃ i</p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
-                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Ngôn ngữ mặc định</label>
-                <select 
-                  name="ai_default_language" 
-                  value={formData.ai_default_language || 'vi'} 
+                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">NgÃ´n ngá»¯ máº·c Ä‘á»‹nh</label>
+                <select
+                  name="ai_default_language"
+                  value={formData.ai_default_language || 'vi'}
                   onChange={handleInputChange}
                   disabled={!isWritable}
                   className="w-full px-4 py-3 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] text-[#1F1B16] focus:outline-none focus:border-[#B88746]"
                 >
-                  <option value="vi">Tiếng Việt (vi)</option>
-                  <option value="en">Tiếng Anh (en)</option>
+                  <option value="vi">Tiáº¿ng Viá»‡t (vi)</option>
+                  <option value="en">Tiáº¿ng Anh (en)</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Độ dài bài viết mặc định</label>
-                <select 
-                  name="ai_default_article_length" 
-                  value={formData.ai_default_article_length || '1200-1800 words'} 
+                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Äá»™ dÃ i bÃ i viáº¿t máº·c Ä‘á»‹nh</label>
+                <select
+                  name="ai_default_article_length"
+                  value={formData.ai_default_article_length || '1200-1800 words'}
                   onChange={handleInputChange}
                   disabled={!isWritable}
                   className="w-full px-4 py-3 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] text-[#1F1B16] focus:outline-none focus:border-[#B88746]"
                 >
-                  <option value="600-800 words">Ngắn (600 - 800 từ)</option>
-                  <option value="800-1200 words">Vừa (800 - 1200 từ)</option>
-                  <option value="1200-1800 words">Dài chuẩn SEO (1200 - 1800 từ)</option>
-                  <option value="1800-2500 words">Chuyên sâu (1800 - 2500 từ)</option>
+                  <option value="600-800 words">Ngáº¯n (600 - 800 tá»«)</option>
+                  <option value="800-1200 words">Vá»«a (800 - 1200 tá»«)</option>
+                  <option value="1200-1800 words">DÃ i chuáº©n SEO (1200 - 1800 tá»«)</option>
+                  <option value="1800-2500 words">ChuyÃªn sÃ¢u (1800 - 2500 tá»«)</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Tên trạng thái khi tạo</label>
-                <select 
-                  name="ai_default_post_status" 
-                  value={formData.ai_default_post_status || 'draft'} 
+                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">TÃªn tráº¡ng thÃ¡i khi táº¡o</label>
+                <select
+                  name="ai_default_post_status"
+                  value={formData.ai_default_post_status || 'draft'}
                   onChange={handleInputChange}
                   disabled={true} // Locked to draft
                   className="w-full px-4 py-3 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] text-[#1F1B16] opacity-80"
                 >
-                  <option value="draft">Bản nháp (draft)</option>
+                  <option value="draft">Báº£n nhÃ¡p (draft)</option>
                 </select>
-                <span className="text-[10px] text-[#8C7A6B] mt-1 block">Tất cả bài viết sinh bởi AI mặc định ở dạng Bản nháp để biên tập lại</span>
+                <span className="text-[10px] text-[#8C7A6B] mt-1 block">Táº¥t cáº£ bÃ i viáº¿t sinh bá»Ÿi AI máº·c Ä‘á»‹nh á»Ÿ dáº¡ng Báº£n nhÃ¡p Ä‘á»ƒ biÃªn táº­p láº¡i</span>
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Giọng điệu văn phong mặc định</label>
-              <input 
-                type="text" 
+              <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Giá»ng Ä‘iá»‡u vÄƒn phong máº·c Ä‘á»‹nh</label>
+              <input
+                type="text"
                 name="ai_default_tone"
-                value={formData.ai_default_tone || ''} 
+                value={formData.ai_default_tone || ''}
                 onChange={handleInputChange}
                 disabled={!isWritable}
                 className="w-full px-4 py-3 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] text-[#1F1B16] focus:outline-none focus:border-[#B88746] transition-all"
@@ -442,11 +523,11 @@ export default function AiSettingsPage() {
             <div className="border-t border-[#FBF8F2] pt-6 space-y-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <label className="block text-sm font-semibold text-[#1F1B16]">Tự động sinh ảnh minh họa</label>
-                  <p className="text-xs text-[#8C7A6B]">Tự động gọi OpenAI Image API để sinh ảnh minh họa cho bài viết</p>
+                  <label className="block text-sm font-semibold text-[#1F1B16]">T\u1ef1 \u0111\u1ed9ng sinh áº£nh minh há»a</label>
+                  <p className="text-xs text-[#8C7A6B]">T\u1ef1 \u0111\u1ed9ng gá»i OpenAI Image API Ä‘á»ƒ sinh áº£nh minh há»a cho bÃ i viáº¿t</p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
-                  <input 
+                  <input
                     type="checkbox"
                     name="ai_enable_image_generation"
                     checked={formData.ai_enable_image_generation || false}
@@ -461,31 +542,32 @@ export default function AiSettingsPage() {
               {formData.ai_enable_image_generation && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 rounded-xl bg-[#FBF8F2] border border-[#E8DCCB] animate-fadeIn">
                   <div>
-                    <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Kích thước ảnh đại diện</label>
-                    <select 
-                      name="ai_default_image_size" 
-                      value={formData.ai_default_image_size || '1024x1024'} 
+                    <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">KÃ­ch thÆ°á»›c áº£nh Ä‘áº¡i diá»‡n</label>
+                    <select
+                      name="ai_default_image_size"
+                      value={formData.ai_default_image_size || (formData.ai_image_model?.startsWith('gpt-image') ? '1536x1024' : '1024x1024')}
                       onChange={handleInputChange}
                       disabled={!isWritable}
                       className="w-full px-4 py-3 rounded-xl border border-[#E8DCCB] bg-white text-[#1F1B16] focus:outline-none focus:border-[#B88746]"
                     >
-                      <option value="1024x1024">Hình vuông (1024x1024)</option>
-                      <option value="1792x1024">Hình chữ nhật ngang (1792x1024)</option>
-                      <option value="1024x1792">Hình chữ nhật đứng (1024x1792)</option>
+                      {imageSizeOptions(formData.ai_image_model || 'gpt-image-1').map((option) => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
                     </select>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Chất lượng ảnh</label>
-                    <select 
-                      name="ai_default_image_quality" 
-                      value={formData.ai_default_image_quality || 'standard'} 
+                    <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Cháº¥t lÆ°á»£ng áº£nh</label>
+                    <select
+                      name="ai_default_image_quality"
+                      value={formData.ai_default_image_quality || (formData.ai_image_model?.startsWith('gpt-image') ? 'medium' : 'standard')}
                       onChange={handleInputChange}
                       disabled={!isWritable}
                       className="w-full px-4 py-3 rounded-xl border border-[#E8DCCB] bg-white text-[#1F1B16] focus:outline-none focus:border-[#B88746]"
                     >
-                      <option value="standard">Tiêu chuẩn (Standard)</option>
-                      <option value="hd">Độ phân giải cao (HD)</option>
+                      {imageQualityOptions(formData.ai_image_model || 'gpt-image-1').map((option) => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
                     </select>
                   </div>
                 </div>
@@ -503,14 +585,14 @@ export default function AiSettingsPage() {
                 <Folder className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-heading font-semibold text-lg text-[#1F1B16]">Phân mục & Tác giả</h3>
-                <p className="text-xs text-[#8C7A6B]">Gán mặc định khi viết bài tự động</p>
+                <h3 className="font-heading font-semibold text-lg text-[#1F1B16]">PhÃ¢n má»¥c & TÃ¡c giáº£</h3>
+                <p className="text-xs text-[#8C7A6B]">GÃ¡n máº·c Ä‘á»‹nh khi viáº¿t bÃ i tá»± Ä‘á»™ng</p>
               </div>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Chuyên mục mặc định</label>
+                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">ChuyÃªn má»¥c máº·c Ä‘á»‹nh</label>
                 <select
                   name="ai_default_category_id"
                   value={formData.ai_default_category_id || ''}
@@ -518,7 +600,7 @@ export default function AiSettingsPage() {
                   disabled={!isWritable}
                   className="w-full px-4 py-3 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] text-[#1F1B16] focus:outline-none focus:border-[#B88746]"
                 >
-                  <option value="">-- Chọn chuyên mục --</option>
+                  <option value="">-- Chá»n chuyÃªn má»¥c --</option>
                   {categories.map((c) => (
                     <option key={c.id} value={c.id}>{c.name}</option>
                   ))}
@@ -526,7 +608,7 @@ export default function AiSettingsPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Tác giả mặc định</label>
+                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">TÃ¡c giáº£ máº·c Ä‘á»‹nh</label>
                 {isWritable && !usersError ? (
                   <select
                     name="ai_default_author_id"
@@ -535,7 +617,7 @@ export default function AiSettingsPage() {
                     disabled={!isWritable}
                     className="w-full px-4 py-3 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] text-[#1F1B16] focus:outline-none focus:border-[#B88746]"
                   >
-                    <option value="">-- Chọn tác giả --</option>
+                    <option value="">-- Chá»n tÃ¡c giáº£ --</option>
                     {users.map((u) => (
                       <option key={u.id} value={u.id}>{u.name} ({u.email})</option>
                     ))}
@@ -548,16 +630,16 @@ export default function AiSettingsPage() {
                       value={formData.ai_default_author_id || ''}
                       onChange={handleInputChange}
                       disabled={!isWritable}
-                      placeholder="ID tác giả (ví dụ: 1)"
+                      placeholder="ID tÃ¡c giáº£ (vÃ­ dá»¥: 1)"
                       className="w-full px-4 py-3 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] text-[#1F1B16] focus:outline-none focus:border-[#B88746]"
                     />
-                    <span className="text-[10px] text-[#8C7A6B] mt-1 block">Tài khoản của bạn không được phân quyền tải danh sách thành viên. Vui lòng nhập ID thủ công.</span>
+                    <span className="text-[10px] text-[#8C7A6B] mt-1 block">TÃ i khoáº£n cá»§a báº¡n khÃ´ng Ä‘Æ°á»£c phÃ¢n quyá»n táº£i danh sÃ¡ch thÃ nh viÃªn. Vui lÃ²ng nháº­p ID thá»§ cÃ´ng.</span>
                   </div>
                 )}
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Múi giờ đặt lịch đăng</label>
+                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">MÃºi giá» Ä‘áº·t lá»‹ch Ä‘Äƒng</label>
                 <input
                   type="text"
                   name="ai_schedule_timezone"
@@ -577,15 +659,15 @@ export default function AiSettingsPage() {
                 <Globe className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-heading font-semibold text-lg text-[#1F1B16]">Giới hạn hệ thống</h3>
-                <p className="text-xs text-[#8C7A6B]">Tránh lạm dụng tài nguyên hoặc chi phí API</p>
+                <h3 className="font-heading font-semibold text-lg text-[#1F1B16]">Giá»›i háº¡n há»‡ thá»‘ng</h3>
+                <p className="text-xs text-[#8C7A6B]">TrÃ¡nh láº¡m dá»¥ng tÃ i nguyÃªn hoáº·c chi phÃ­ API</p>
               </div>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Số bài tối đa trong 1 Batch</label>
-                <input 
+                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Sá»‘ bÃ i tá»‘i Ä‘a trong 1 Batch</label>
+                <input
                   type="number"
                   name="ai_max_articles_per_batch"
                   value={formData.ai_max_articles_per_batch || 20}
@@ -595,12 +677,12 @@ export default function AiSettingsPage() {
                   max={50}
                   className="w-full px-4 py-3 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] text-[#1F1B16] focus:outline-none focus:border-[#B88746]"
                 />
-                <span className="text-[10px] text-[#8C7A6B] mt-1 block">Tối đa 50 bài viết/batch</span>
+                <span className="text-[10px] text-[#8C7A6B] mt-1 block">Tá»‘i Ä‘a 50 bÃ i viáº¿t/batch</span>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Số Jobs chạy tối đa trong 1 giờ</label>
-                <input 
+                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Sá»‘ Jobs cháº¡y tá»‘i Ä‘a trong 1 giá»</label>
+                <input
                   type="number"
                   name="ai_max_jobs_per_hour"
                   value={formData.ai_max_jobs_per_hour || 30}
@@ -610,7 +692,7 @@ export default function AiSettingsPage() {
                   max={100}
                   className="w-full px-4 py-3 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] text-[#1F1B16] focus:outline-none focus:border-[#B88746]"
                 />
-                <span className="text-[10px] text-[#8C7A6B] mt-1 block">Tối đa 100 tác vụ/giờ để tránh rate-limit API</span>
+                <span className="text-[10px] text-[#8C7A6B] mt-1 block">Tá»‘i Ä‘a 100 tÃ¡c vá»¥/giá» Ä‘á»ƒ trÃ¡nh rate-limit API</span>
               </div>
             </div>
           </div>
@@ -625,12 +707,12 @@ export default function AiSettingsPage() {
               {saveMutation.isPending ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  Đang lưu cấu hình...
+                  Äang lÆ°u cáº¥u hÃ¬nh...
                 </>
               ) : (
                 <>
                   <Save className="w-5 h-5" />
-                  Lưu cấu hình
+                  LÆ°u cáº¥u hÃ¬nh
                 </>
               )}
             </button>
@@ -638,9 +720,9 @@ export default function AiSettingsPage() {
 
           {formData.last_scheduler_run_at && (
             <div className="p-4 rounded-xl bg-gray-50 border border-gray-200 text-xs text-gray-600 space-y-1">
-              <div className="font-semibold text-gray-700">Trạng thái Scheduler:</div>
-              <div>Lần chạy gần nhất: <code className="bg-gray-100 px-1 py-0.5 rounded text-[#B88746]">{formData.last_scheduler_run_at}</code></div>
-              <p className="text-[10px] text-gray-500 mt-1">Hệ thống lập lịch tự động kích hoạt mỗi phút để kiểm tra và đăng các bài viết đã hẹn giờ.</p>
+              <div className="font-semibold text-gray-700">Tráº¡ng thÃ¡i Scheduler:</div>
+              <div>Láº§n cháº¡y gáº§n nháº¥t: <code className="bg-gray-100 px-1 py-0.5 rounded text-[#B88746]">{formData.last_scheduler_run_at}</code></div>
+              <p className="text-[10px] text-gray-500 mt-1">Há»‡ thá»‘ng láº­p lá»‹ch tá»± Ä‘á»™ng kÃ­ch hoáº¡t má»—i phÃºt Ä‘á»ƒ kiá»ƒm tra vÃ  Ä‘Äƒng cÃ¡c bÃ i viáº¿t Ä‘Ã£ háº¹n giá».</p>
             </div>
           )}
         </div>

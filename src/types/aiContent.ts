@@ -40,6 +40,7 @@ export interface AiSettingsPublic {
   ai_schedule_timezone: string;
   last_scheduler_run_at?: string | null;
   ai_openai_api_key?: string;
+  clear_ai_openai_api_key?: boolean;
 }
 
 export interface AiContentBatch {

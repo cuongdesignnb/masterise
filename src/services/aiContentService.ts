@@ -13,7 +13,7 @@ export const aiContentService = {
     return api.post<void>('/admin/ai-content/settings', payload);
   },
 
-  testAiConnection: async (payload: { ai_openai_api_key?: string }): Promise<ApiResponse<void>> => {
+  testAiConnection: async (payload: { ai_openai_api_key?: string; ai_text_model?: string }): Promise<ApiResponse<void>> => {
     return api.post<void>('/admin/ai-content/settings/test-connection', payload);
   },
 

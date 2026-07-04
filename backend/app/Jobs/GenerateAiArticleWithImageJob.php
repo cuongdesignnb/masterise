@@ -63,7 +63,7 @@ class GenerateAiArticleWithImageJob implements ShouldQueue
             'status' => 'processing',
             'provider' => 'openai',
             'text_model' => Setting::get('ai_text_model', 'gpt-4o-mini'),
-            'image_model' => Setting::get('ai_image_model', 'dall-e-2'),
+            'image_model' => Setting::get('ai_image_model', 'gpt-image-1'),
             'input_keywords' => $this->keyword,
             'batch_id' => $this->batchId,
             'created_by' => $this->createdBy,
@@ -81,11 +81,18 @@ class GenerateAiArticleWithImageJob implements ShouldQueue
             $prompt = $promptBuilder->buildArticlePrompt($this->keyword, $this->settings);
             $jobRecord->update(['prompt' => $prompt]);
 
-            $textResponse = $openai->generateArticleWithResponsesApi($prompt);
+            $textResponse = $openai->generateArticleWithResponsesApi($prompt, $this->settings);
             $jsonString = $textResponse['data']['choices'][0]['message']['content'] ?? null;
 
             if (!$jsonString) {
                 throw new \Exception('No content returned from OpenAI API.');
+            }
+
+            $jsonString = trim($jsonString);
+            if (str_starts_with($jsonString, '```')) {
+                $jsonString = preg_replace('/^```(?:json)?\s*/', '', $jsonString);
+                $jsonString = preg_replace('/\s*```$/', '', $jsonString);
+                $jsonString = trim((string) $jsonString);
             }
 
             // Parse response
@@ -103,6 +110,10 @@ class GenerateAiArticleWithImageJob implements ShouldQueue
             $cleanContent = AiContentHelper::sanitizeHtml($articleData['content_html']);
             if (empty($cleanContent)) {
                 throw new \Exception('Article content was empty after HTML sanitization.');
+            }
+            if (!empty($articleData['cta'])) {
+                $cleanContent .= '<blockquote><p><strong>' . e($articleData['cta']) . '</strong></p></blockquote>';
+                $cleanContent = AiContentHelper::sanitizeHtml($cleanContent);
             }
 
             // 3. Handle image generation if enabled
@@ -156,10 +167,13 @@ class GenerateAiArticleWithImageJob implements ShouldQueue
             $post = Post::create([
                 'title' => $articleData['title'],
                 'slug' => $uniqueSlug,
+                'post_type' => 'news',
                 'summary' => $articleData['excerpt'],
                 'content' => $cleanContent,
                 'thumbnail' => $thumbnailUrl,
                 'status' => 'draft',
+                'published_at' => null,
+                'scheduled_at' => null,
                 'post_category_id' => $this->categoryId,
                 'author_id' => $this->authorId ?? $this->createdBy,
                 'ai_generated' => true,
@@ -188,7 +202,7 @@ class GenerateAiArticleWithImageJob implements ShouldQueue
                 'tokens_output' => $tokensOutput,
                 'response_metadata' => [
                     'model_used' => $textResponse['model_used'] ?? null,
-                    'image_model' => $enableImage ? Setting::get('ai_image_model') : null,
+                    'image_model' => $enableImage ? Setting::get('ai_image_model', 'gpt-image-1') : null,
                     'image_status' => $enableImage ? ($imageJobFailed ? 'failed' : 'completed') : 'disabled'
                 ],
                 'finished_at' => now(),

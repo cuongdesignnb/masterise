@@ -138,7 +138,7 @@ class DatabaseSeeder extends Seeder
             Setting::set('ai_text_model', 'gpt-4o-mini');
         }
         if (!Setting::get('ai_image_model') || Setting::get('ai_image_model') === 'gpt-image-2') {
-            Setting::set('ai_image_model', 'dall-e-2');
+            Setting::set('ai_image_model', 'gpt-image-1');
         }
 
         // 11. Seed SEO Meta for Static pages (Idempotent)

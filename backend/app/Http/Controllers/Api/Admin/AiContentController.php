@@ -75,7 +75,7 @@ class AiContentController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Validation error',
+                'message' => $validator->errors()->first() ?: 'Dữ liệu tạo bài AI chưa hợp lệ.',
                 'errors' => $validator->errors()
             ], 422);
         }
@@ -99,6 +99,7 @@ class AiContentController extends Controller
         }
 
         // Run synchronously to return results immediately for single generator
+        $startedAt = now();
         $job = new GenerateAiArticleWithImageJob(
             $request->title,
             null, // batchId
@@ -121,6 +122,7 @@ class AiContentController extends Controller
         // Fetch the created job to see if it failed or completed
         $jobRecord = AiGenerationJob::where('created_by', $user->id)
             ->where('input_keywords', $request->title)
+            ->where('created_at', '>=', $startedAt->copy()->subSecond())
             ->orderBy('created_at', 'desc')
             ->first();
 
@@ -171,7 +173,7 @@ class AiContentController extends Controller
             'type' => 'regenerate_image',
             'status' => 'processing',
             'provider' => 'openai',
-            'image_model' => Setting::get('ai_image_model', 'dall-e-2'),
+            'image_model' => Setting::get('ai_image_model', 'gpt-image-1'),
             'post_id' => $post->id,
             'created_by' => $user->id,
             'started_at' => now(),
@@ -185,8 +187,8 @@ class AiContentController extends Controller
 
             $base64Image = $this->openai->generateImageWithImageApi(
                 $imagePrompt,
-                Setting::get('ai_default_image_size', '1024x1024'),
-                Setting::get('ai_default_image_quality', 'standard')
+                Setting::get('ai_default_image_size', '1536x1024'),
+                Setting::get('ai_default_image_quality', 'medium')
             );
 
             $imageData = base64_decode($base64Image);
