@@ -5,25 +5,30 @@ import type { Post } from "@/types/api";
 import { formatArticleDate, readingMinutes } from "@/lib/articleContent";
 import { CalendarDays, Clock3 } from "lucide-react";
 
-export default function NewsRelatedSection({ related }: { related: Post[] }) {
+export default function NewsRelatedSection({ related, postType = "news" }: { related: Post[]; postType?: "news" | "investment" | "event" }) {
   if (!related.length) return null;
+
+  const isNews = postType === "news";
+  const path = isNews ? "/tin-tuc" : "/dau-tu";
+  const categoryLabel = isNews ? "Góc nhìn liên quan" : "Tìm hiểu thêm";
+  const sectionTitle = isNews ? "Bài viết liên quan" : (postType === "event" ? "Sự kiện liên quan" : "Bài viết đầu tư liên quan");
 
   return (
     <section className="border-t border-[#E8DCCB]/70 bg-[#FBF8F2] py-10 sm:py-14">
       <Container>
         <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.16em] text-[#B88746]">Góc nhìn liên quan</p>
-            <h2 className="mt-2 text-2xl font-black text-[#1F1B16] sm:text-3xl">Bài viết liên quan</h2>
+            <p className="text-xs font-black uppercase tracking-[0.16em] text-[#B88746]">{categoryLabel}</p>
+            <h2 className="mt-2 text-2xl font-black text-[#1F1B16] sm:text-3xl">{sectionTitle}</h2>
           </div>
-          <Link href="/tin-tuc" className="rounded-full border border-[#E8DCCB] bg-white px-4 py-2 text-xs font-bold text-[#1F1B16] transition hover:border-[#B88746] hover:text-[#B88746]">
+          <Link href={path} className="rounded-full border border-[#E8DCCB] bg-white px-4 py-2 text-xs font-bold text-[#1F1B16] transition hover:border-[#B88746] hover:text-[#B88746]">
             Xem tất cả
           </Link>
         </div>
 
         <div className="grid gap-5 md:grid-cols-3">
           {related.slice(0, 3).map((item) => (
-            <Link key={item.id} href={`/tin-tuc/${item.slug}`} className="group overflow-hidden rounded-[22px] border border-[#E8DCCB]/80 bg-white shadow-[0_18px_50px_rgba(31,27,22,0.06)] transition hover:-translate-y-1 hover:border-[#B88746]">
+            <Link key={item.id} href={`${path}/${item.slug}`} className="group overflow-hidden rounded-[22px] border border-[#E8DCCB]/80 bg-white shadow-[0_18px_50px_rgba(31,27,22,0.06)] transition hover:-translate-y-1 hover:border-[#B88746]">
               <div className="relative aspect-[16/10] bg-[#FBF8F2]">
                 {item.thumbnail ? (
                   <Image src={item.thumbnail} alt={item.title} fill className="object-cover transition duration-500 group-hover:scale-105" sizes="(max-width: 768px) 100vw, 33vw" />

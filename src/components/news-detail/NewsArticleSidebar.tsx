@@ -8,9 +8,15 @@ import { formatArticleDate } from "@/lib/articleContent";
 type Props = {
   toc: ArticleTocItem[];
   related: Post[];
+  postType?: "news" | "investment" | "event";
 };
 
-export default function NewsArticleSidebar({ toc, related }: Props) {
+export default function NewsArticleSidebar({ toc, related, postType = "news" }: Props) {
+  const isNews = postType === "news";
+  const basePath = isNews ? "/tin-tuc" : "/dau-tu";
+  const sectionTitle = isNews ? "Tin tức liên quan" : (postType === "event" ? "Sự kiện liên quan" : "Đầu tư liên quan");
+  const allBtnLabel = isNews ? "Xem tất cả tin tức" : "Xem tất cả";
+
   return (
     <aside className="space-y-5 lg:sticky lg:top-24 lg:self-start">
       {toc.length > 0 && (
@@ -32,10 +38,10 @@ export default function NewsArticleSidebar({ toc, related }: Props) {
 
       {related.length > 0 && (
         <section className="rounded-[22px] border border-[#E8DCCB]/80 bg-white p-5 shadow-[0_18px_50px_rgba(31,27,22,0.06)]">
-          <h2 className="text-sm font-black uppercase tracking-[0.12em] text-[#B88746]">Tin tức liên quan</h2>
+          <h2 className="text-sm font-black uppercase tracking-[0.12em] text-[#B88746]">{sectionTitle}</h2>
           <div className="mt-4 space-y-4">
             {related.slice(0, 4).map((item) => (
-              <Link key={item.id} href={`/tin-tuc/${item.slug}`} className="group grid grid-cols-[88px_1fr] gap-3">
+              <Link key={item.id} href={`${basePath}/${item.slug}`} className="group grid grid-cols-[88px_1fr] gap-3">
                 <div className="relative aspect-[4/3] overflow-hidden rounded-xl border border-[#E8DCCB] bg-[#FBF8F2]">
                   {item.thumbnail ? (
                     <Image src={item.thumbnail} alt={item.title} fill className="object-cover transition duration-300 group-hover:scale-105" sizes="88px" />
@@ -55,8 +61,8 @@ export default function NewsArticleSidebar({ toc, related }: Props) {
               </Link>
             ))}
           </div>
-          <Link href="/tin-tuc" className="mt-5 inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-[#E8DCCB] text-xs font-bold text-[#1F1B16] transition hover:border-[#B88746] hover:text-[#B88746]">
-            Xem tất cả tin tức <ArrowRight className="h-3.5 w-3.5" />
+          <Link href={basePath} className="mt-5 inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-[#E8DCCB] text-xs font-bold text-[#1F1B16] transition hover:border-[#B88746] hover:text-[#B88746]">
+            {allBtnLabel} <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </section>
       )}

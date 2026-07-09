@@ -17,7 +17,7 @@ type NewsArticleHeroProps = {
 
 export default function NewsArticleHero({ post, publishedLabel, minutes }: NewsArticleHeroProps) {
   const [copied, setCopied] = useState(false);
-  const shareUrl = typeof window !== "undefined" ? window.location.href : `/tin-tuc/${post.slug}`;
+  const shareUrl = typeof window !== "undefined" ? window.location.href : (post.post_type === "news" ? `/tin-tuc/${post.slug}` : `/dau-tu/${post.slug}`);
   const encodedUrl = encodeURIComponent(shareUrl);
   const encodedTitle = encodeURIComponent(post.title);
 
@@ -37,15 +37,17 @@ export default function NewsArticleHero({ post, publishedLabel, minutes }: NewsA
         <nav className="mb-5 flex flex-wrap items-center gap-2 text-xs font-semibold text-[#8C7A6B]">
           <Link href="/" className="transition hover:text-[#B88746]">Trang chủ</Link>
           <span>/</span>
-          <Link href="/tin-tuc" className="transition hover:text-[#B88746]">Tin tức</Link>
+          <Link href={post.post_type === "news" ? "/tin-tuc" : "/dau-tu"} className="transition hover:text-[#B88746]">
+            {post.post_type === "news" ? "Tin tức" : "Đầu tư"}
+          </Link>
           <span>/</span>
-          <span className="text-[#1F1B16]">{post.category?.name || "Chi tiết tin tức"}</span>
+          <span className="text-[#1F1B16]">{post.category?.name || (post.post_type === "event" ? "Sự kiện" : post.post_type === "investment" ? "Cơ hội đầu tư" : "Chi tiết tin tức")}</span>
         </nav>
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(420px,1.1fr)] lg:items-center">
           <div className="min-w-0">
             <div className="inline-flex rounded-full border border-[#B88746]/25 bg-[#B88746]/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-[#B88746]">
-              {post.category?.name || "Tin tức"}
+              {post.category?.name || (post.post_type === "event" ? "Sự kiện" : post.post_type === "investment" ? "Cơ hội đầu tư" : "Tin tức")}
             </div>
             <h1 className="mt-4 text-balance text-3xl font-black leading-[1.08] text-[#1F1B16] sm:text-5xl lg:text-[56px]">
               {post.title}
