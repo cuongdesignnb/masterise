@@ -12,6 +12,7 @@ import NewsArticleMetaFooter from "@/components/news-detail/NewsArticleMetaFoote
 import NewsMediaBlocks from "@/components/news-detail/NewsMediaBlocks";
 import NewsRelatedSection from "@/components/news-detail/NewsRelatedSection";
 import { extractTocFromHtml, formatArticleDate, readingMinutes } from "@/lib/articleContent";
+import ArticleToc from "@/components/news-detail/ArticleToc";
 import { fetchApi } from "@/lib/serverApi";
 import type { Post } from "@/types/api";
 import { absoluteUrl, SITE_NAME, SITE_URL } from "@/config/seo";
@@ -165,6 +166,7 @@ export default async function InvestmentDetailPage({ params }: Props) {
                   )}
                 </div>
               )}
+              <ArticleToc toc={toc} className="lg:hidden" />
               <NewsArticleMainContent post={post} />
               <NewsMediaBlocks mediaItems={post.media_items} />
               <NewsArticleMetaFooter post={post} previous={previous} next={next} />

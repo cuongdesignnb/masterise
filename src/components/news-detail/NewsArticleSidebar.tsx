@@ -20,7 +20,7 @@ export default function NewsArticleSidebar({ toc, related, postType = "news" }: 
   return (
     <aside className="space-y-5 lg:sticky lg:top-24 lg:self-start">
       {toc.length > 0 && (
-        <section className="rounded-[22px] border border-[#E8DCCB]/80 bg-white p-5 shadow-[0_18px_50px_rgba(31,27,22,0.06)]">
+        <section className="hidden rounded-[22px] border border-[#E8DCCB]/80 bg-white p-5 shadow-[0_18px_50px_rgba(31,27,22,0.06)] lg:block">
           <h2 className="text-sm font-black uppercase tracking-[0.12em] text-[#B88746]">Mục lục</h2>
           <div className="mt-4 space-y-1 border-l border-[#E8DCCB] pl-4">
             {toc.map((item) => (

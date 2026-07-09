@@ -12,6 +12,7 @@ import NewsArticleMetaFooter from "@/components/news-detail/NewsArticleMetaFoote
 import NewsMediaBlocks from "@/components/news-detail/NewsMediaBlocks";
 import NewsRelatedSection from "@/components/news-detail/NewsRelatedSection";
 import { extractTocFromHtml, formatArticleDate, readingMinutes } from "@/lib/articleContent";
+import ArticleToc from "@/components/news-detail/ArticleToc";
 import { getServerApiUrl } from "@/lib/serverApi";
 import type { Post } from "@/types/api";
 import { absoluteUrl, SITE_NAME, SITE_URL } from "@/config/seo";
@@ -162,6 +163,7 @@ export default async function NewsArticleDetailPage({ params }: Props) {
         <Container>
           <div className="grid gap-6 py-8 lg:grid-cols-[minmax(0,1fr)_330px] xl:grid-cols-[minmax(0,1fr)_360px]">
             <div className="min-w-0 space-y-6">
+              <ArticleToc toc={toc} className="lg:hidden" />
               <NewsArticleMainContent post={post} />
               <NewsMediaBlocks mediaItems={post.media_items} />
               <NewsArticleMetaFooter post={post} previous={previous} next={next} />
