@@ -47,8 +47,8 @@ export function initVisitorTracking() {
   const utmContent = urlParams.get('utm_content');
   const utmTerm = urlParams.get('utm_term');
 
-  let savedUtm = localStorage.getItem(STORAGE_KEYS.UTM_DATA);
-  let utmData: UtmData = savedUtm ? JSON.parse(savedUtm) : {
+  const savedUtm = localStorage.getItem(STORAGE_KEYS.UTM_DATA);
+  const utmData: UtmData = savedUtm ? JSON.parse(savedUtm) : {
     utm_source: null,
     utm_medium: null,
     utm_campaign: null,

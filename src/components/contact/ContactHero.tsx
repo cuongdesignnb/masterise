@@ -90,13 +90,16 @@ export default function ContactHero() {
             {/* CTAs */}
             <div className="mt-5 flex flex-wrap gap-3">
               <Button
+                href="#global-contact-form"
                 variant="gold-gradient"
                 icon={<ArrowRight className="w-4 h-4" />}
               >
                 {contactHero.primaryCta}
               </Button>
 
-              <Button variant="outline">{contactHero.secondaryCta}</Button>
+              <Button href="/du-an#du-an-noi-bat" variant="outline">
+                {contactHero.secondaryCta}
+              </Button>
             </div>
           </motion.div>
 

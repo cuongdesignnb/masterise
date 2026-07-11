@@ -1,12 +1,23 @@
 import type { Post } from "@/types/api";
-import { enhanceArticleHtmlWithHeadingIds } from "@/lib/articleContent";
+import { enhanceArticleHtmlWithHeadingIds, splitArticleHtmlForInlineLinks } from "@/lib/articleContent";
+import InlineRelatedArticleLinks from "@/components/news-detail/InlineRelatedArticleLinks";
 
 type Props = {
   post: Post;
+  related?: Post[];
 };
 
-export default function NewsArticleMainContent({ post }: Props) {
+export default function NewsArticleMainContent({ post, related = [] }: Props) {
   const html = enhanceArticleHtmlWithHeadingIds(post.content || "");
+  const inlineRelated = related
+    .filter((item, index, items) =>
+      item.status === "published" &&
+      Boolean(item.slug) &&
+      item.id !== post.id &&
+      items.findIndex((candidate) => candidate.id === item.id) === index,
+    )
+    .slice(0, 3);
+  const { before, after } = splitArticleHtmlForInlineLinks(html);
 
   if (!html) {
     return (
@@ -19,9 +30,12 @@ export default function NewsArticleMainContent({ post }: Props) {
   return (
     <section className="rounded-[24px] border border-[#E8DCCB]/80 bg-white px-5 py-7 shadow-[0_18px_50px_rgba(31,27,22,0.06)] sm:px-8 sm:py-9">
       <article
-        className="prose prose-stone max-w-none text-[15px] leading-8 prose-headings:scroll-mt-28 prose-headings:font-black prose-headings:tracking-normal prose-headings:text-[#1F1B16] prose-h2:mt-10 prose-h2:text-2xl prose-h3:text-xl prose-p:text-[#4B4238] prose-a:font-bold prose-a:text-[#B88746] prose-blockquote:rounded-2xl prose-blockquote:border-l-4 prose-blockquote:border-[#B88746] prose-blockquote:bg-[#FBF8F2] prose-blockquote:px-5 prose-blockquote:py-4 prose-blockquote:text-[#6E5F51] prose-img:rounded-2xl prose-img:border prose-img:border-[#E8DCCB] sm:text-base"
-        dangerouslySetInnerHTML={{ __html: html }}
-      />
+        className="prose prose-stone max-w-none text-[15px] leading-8 prose-headings:scroll-mt-28 prose-headings:font-black prose-headings:tracking-normal prose-headings:text-[#1F1B16] prose-h2:mt-10 prose-h2:text-2xl prose-h3:text-xl prose-p:text-[#4B4238] prose-a:font-bold prose-a:text-[#B88746] prose-a:underline-offset-4 hover:prose-a:underline focus-visible:prose-a:rounded-sm focus-visible:prose-a:outline-none focus-visible:prose-a:ring-2 focus-visible:prose-a:ring-[#B88746]/50 prose-blockquote:rounded-2xl prose-blockquote:border-l-4 prose-blockquote:border-[#B88746] prose-blockquote:bg-[#FBF8F2] prose-blockquote:px-5 prose-blockquote:py-4 prose-blockquote:text-[#6E5F51] prose-img:rounded-2xl prose-img:border prose-img:border-[#E8DCCB] sm:text-base"
+      >
+        <div dangerouslySetInnerHTML={{ __html: before }} />
+        {after && inlineRelated.length ? <InlineRelatedArticleLinks posts={inlineRelated} /> : null}
+        {after ? <div dangerouslySetInnerHTML={{ __html: after }} /> : null}
+      </article>
     </section>
   );
 }

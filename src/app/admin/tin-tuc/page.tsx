@@ -890,6 +890,7 @@ function AdminNews() {
                         value={formContent}
                         onChange={setFormContent}
                         placeholder="Nhập nội dung bài viết đầy đủ..."
+                        enableProjectLinks
                       />
                     </div>
                   </div>

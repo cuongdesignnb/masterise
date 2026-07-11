@@ -18,7 +18,6 @@ import {
   Network,
   PanelsTopLeft,
   Play,
-  Plus,
   Quote,
   ShieldCheck,
   Sparkles,
@@ -342,7 +341,6 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
   const projectVideoEmbedUrl = useMemo(() => project.videoUrl ? getYouTubeEmbedUrl(project.videoUrl) : "", [project.videoUrl]);
   const projectVideoThumbnailUrl = useMemo(() => project.videoUrl ? getYouTubeThumbnailUrl(project.videoUrl) : "", [project.videoUrl]);
   const [activeTab, setActiveTab] = useState(floorTabs[0] ?? "");
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState<number | null>(null);
   const [floorPlanImageModal, setFloorPlanImageModal] = useState<{ images: string[]; index: number; title: string } | null>(null);
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
@@ -548,6 +546,59 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
   const hasInvestmentReasons = project.investmentReasons.length > 0;
   const hasTestimonials = project.testimonials.length > 0;
   const hasFaqs = project.faqs.length > 0;
+  const projectSectionNavItems = useMemo(() => [
+    project.content ? { id: "tong-quan", label: "Tổng quan" } : null,
+    hasGallery ? { id: "khong-gian-song", label: "Không gian sống" } : null,
+    hasConnectivity ? { id: "vi-tri", label: "Vị trí" } : null,
+    hasAmenities ? { id: "tien-ich", label: "Tiện ích" } : null,
+    hasFloorSection ? { id: "mat-bang", label: "Mặt bằng" } : null,
+    hasHandoverStandards ? { id: "tieu-chuan-ban-giao", label: "Tiêu chuẩn bàn giao" } : null,
+    hasProductInfo || hasPolicies ? { id: "gia-va-chinh-sach", label: "Giá và chính sách" } : null,
+    hasTimeline ? { id: "tien-do", label: "Tiến độ" } : null,
+    hasInvestmentReasons ? { id: "ly-do-dau-tu", label: "Lý do đầu tư" } : null,
+    hasFaqs ? { id: "cau-hoi-thuong-gap", label: "Câu hỏi thường gặp" } : null,
+    { id: "project-consult-form", label: "Nhận tư vấn" },
+  ].filter((item): item is { id: string; label: string } => Boolean(item)), [
+    project.content,
+    hasGallery,
+    hasConnectivity,
+    hasAmenities,
+    hasFloorSection,
+    hasHandoverStandards,
+    hasProductInfo,
+    hasPolicies,
+    hasTimeline,
+    hasInvestmentReasons,
+    hasFaqs,
+  ]);
+  const [activeSectionId, setActiveSectionId] = useState(projectSectionNavItems[0]?.id || "");
+
+  useEffect(() => {
+    const sectionIds = projectSectionNavItems.map((item) => item.id);
+    const hashId = window.location.hash.slice(1);
+    const frame = window.requestAnimationFrame(() => {
+      setActiveSectionId(sectionIds.includes(hashId) ? hashId : sectionIds[0] || "");
+    });
+
+    const sections = sectionIds
+      .map((id) => document.getElementById(id))
+      .filter((section): section is HTMLElement => Boolean(section));
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (visible?.target.id) setActiveSectionId(visible.target.id);
+      },
+      { rootMargin: "-24% 0px -64% 0px", threshold: [0, 0.1, 0.4] },
+    );
+
+    sections.forEach((section) => observer.observe(section));
+    return () => {
+      window.cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
+  }, [projectSectionNavItems]);
   const productSummaryLabels = new Set(project.productSummary.map((item) => normalizeInfoLabel(item.label)));
   const mobileHeroFactsSource = project.facts.length ? project.facts : project.quickCard;
   const projectInfoPool = [...project.quickCard, ...project.facts, ...project.productSummary];
@@ -607,7 +658,10 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
     if (!images.length) return;
     setFloorPlanImageModal({ images, index: Math.min(Math.max(index, 0), images.length - 1), title: plan.name });
   };
-  const canToggleOverview = Boolean(project.content && project.content.replace(/<[^>]*>/g, '').trim().length > 520);
+  const overviewHtml = project.content
+    ? project.content.replace(/<h1\b/gi, "<h2").replace(/<\/h1\s*>/gi, "</h2>")
+    : "";
+  const canToggleOverview = Boolean(overviewHtml && overviewHtml.replace(/<[^>]*>/g, '').trim().length > 520);
   const ProjectSectionTitle = ({
     sectionKey,
     fallbackTitle,
@@ -618,15 +672,19 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
     fallbackEyebrow?: string;
   }) => {
     const heading = project.sectionTitles?.[sectionKey];
+    const configuredTitle = heading?.title?.trim();
+    const title = sectionKey === "overview" && configuredTitle?.toLocaleLowerCase("vi-VN") === "giới thiệu chi tiết"
+      ? fallbackTitle
+      : configuredTitle || fallbackTitle;
     return (
       <SectionTitle eyebrow={heading?.eyebrow || fallbackEyebrow}>
-        {heading?.title || fallbackTitle}
+        {title}
       </SectionTitle>
     );
   };
 
   return (
-    <main className="overflow-hidden bg-ivory pb-0 pt-[76px] text-ink">
+    <main className="overflow-x-clip bg-ivory pb-0 pt-[76px] text-ink">
       <ProjectContainer className="space-y-5 pb-10 pt-4 sm:space-y-7 lg:pt-6">
         <motion.section
           initial={{ opacity: 0, y: 14 }}
@@ -658,9 +716,9 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                 </span>
               ) : null}
             </div>
-            <h1 className="heading-font mt-4 text-[38px] font-medium leading-[1.08] text-ink">
+            <h2 className="heading-font mt-4 text-[38px] font-medium leading-[1.08] text-ink">
               {project.name}
-            </h1>
+            </h2>
             <p
               ref={(element) => { heroSubtitleRefs.current[0] = element; }}
               className={`mt-3 text-[14px] font-medium leading-6 text-muted ${heroTextExpanded ? '' : 'line-clamp-3'}`}
@@ -796,6 +854,29 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
           </div>
         </motion.section>
 
+        <nav
+          aria-label="Điều hướng nội dung dự án"
+          className="sticky top-[72px] z-40 -mx-4 border-y border-line/80 bg-white/95 shadow-sm backdrop-blur-md sm:-mx-6 lg:-mx-8"
+        >
+          <div className="scrollbar-none flex snap-x snap-mandatory gap-1 overflow-x-auto px-4 py-2 sm:px-6 lg:px-8">
+            {projectSectionNavItems.map((item) => (
+              <Link
+                key={item.id}
+                href={`#${item.id}`}
+                onClick={() => setActiveSectionId(item.id)}
+                aria-current={activeSectionId === item.id ? "location" : undefined}
+                className={`shrink-0 snap-start rounded-full px-3.5 py-2 text-[11px] font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50 ${
+                  activeSectionId === item.id
+                    ? "bg-gold text-white shadow-sm"
+                    : "text-muted hover:bg-beige hover:text-gold-dark"
+                }`}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </div>
+        </nav>
+
         {hasFacts ? <Reveal className="-mt-1 hidden rounded-[18px] border border-line/80 bg-white/90 px-4 py-4 shadow-soft md:block">
           <div className="grid grid-cols-2 gap-y-5 sm:grid-cols-3 lg:grid-cols-6 lg:gap-0">
             {project.facts.map((fact, index) => (
@@ -853,14 +934,14 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
         {/* TỔNG QUAN DỰ ÁN */}
         {project.content ? (
           <Reveal className="rounded-[22px] border border-line/80 bg-white p-5 shadow-soft sm:p-7">
-            <section id="tong-quan">
-              <ProjectSectionTitle sectionKey="overview" fallbackEyebrow="Tổng quan dự án" fallbackTitle="Giới thiệu chi tiết" />
+            <section id="tong-quan" className="scroll-mt-32">
+              <ProjectSectionTitle sectionKey="overview" fallbackEyebrow="Tổng quan dự án" fallbackTitle={`Tổng quan ${project.name}`} />
               <div className="relative mt-5">
                 <div
                   className={`prose prose-stone max-w-none text-left text-[15px] leading-7 text-ink prose-p:my-4 prose-headings:font-heading prose-headings:font-semibold prose-headings:text-[#1F1B16] prose-a:text-[#B88746] hover:prose-a:underline prose-img:rounded-2xl sm:text-base sm:leading-8 ${
                     !overviewExpanded && canToggleOverview ? 'max-h-[360px] overflow-hidden sm:max-h-[430px]' : ''
                   }`}
-                  dangerouslySetInnerHTML={{ __html: project.content }}
+                  dangerouslySetInnerHTML={{ __html: overviewHtml }}
                 />
                 {!overviewExpanded && canToggleOverview ? (
                   <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-white via-white/90 to-white/0 backdrop-blur-[1px]" />
@@ -885,7 +966,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
           className="rounded-[22px] border border-line/80 bg-white p-4 shadow-soft sm:p-5"
           delay={0.04}
         >
-          <section id="khong-gian-song" className={`grid gap-5 ${hasGalleryCopy ? "lg:grid-cols-[320px_minmax(0,1fr)]" : ""}`}>
+          <section id="khong-gian-song" className={`scroll-mt-32 grid gap-5 ${hasGalleryCopy ? "lg:grid-cols-[320px_minmax(0,1fr)]" : ""}`}>
             {hasGalleryCopy ? (
               <div className="flex flex-col justify-center rounded-[18px] bg-[#fcfaf6] p-6 lg:p-8">
                 {project.gallery.label ? (
@@ -1005,7 +1086,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
         ) : null}
 
         {hasConnectivity ? <Reveal className="rounded-[22px] border border-line/80 bg-white p-5 shadow-soft sm:p-7">
-          <section className={`grid items-center gap-8 ${project.mapImageUrl ? "lg:grid-cols-[310px_minmax(0,1fr)]" : ""}`}>
+          <section id="vi-tri" className={`scroll-mt-32 grid items-center gap-8 ${project.mapImageUrl ? "lg:grid-cols-[310px_minmax(0,1fr)]" : ""}`}>
             <div>
               <ProjectSectionTitle sectionKey="location" fallbackEyebrow="Vị trí chiến lược" fallbackTitle="Kết nối toàn diện" />
               {project.locationDescription ? (
@@ -1030,7 +1111,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
         </Reveal> : null}
 
         {hasAmenities ? <Reveal className="rounded-[22px] border border-line/80 bg-white p-5 shadow-soft sm:p-7">
-          <section id="tien-ich">
+          <section id="tien-ich" className="scroll-mt-32">
             <ProjectSectionTitle sectionKey="amenities" fallbackTitle="Tiện ích nổi bật" />
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
               {project.amenities.map((amenity) => (
@@ -1058,7 +1139,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
         </Reveal> : null}
 
         {hasFloorSection ? <Reveal>
-          <section>
+          <section id="mat-bang" className="scroll-mt-32">
             <ProjectSectionTitle sectionKey="floorPlans" fallbackEyebrow="Mặt bằng" fallbackTitle="Mặt bằng điển hình" />
             {floorTabs.length ? <div className="mb-4 grid overflow-hidden rounded-[6px] border border-line bg-white sm:grid-cols-4">
               {floorTabs.map((tab) => (
@@ -1163,7 +1244,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
         </Reveal> : null}
 
         {hasHandoverStandards ? <Reveal>
-          <section>
+          <section id="tieu-chuan-ban-giao" className="scroll-mt-32">
             <ProjectSectionTitle sectionKey="handover" fallbackEyebrow="Bàn giao" fallbackTitle="Tiêu chuẩn bàn giao" />
             <div className="-mx-4 overflow-x-auto px-4 pb-2 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
               <div className="flex snap-x snap-mandatory gap-3">
@@ -1197,12 +1278,14 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
           </section>
         </Reveal> : null}
 
-        <Reveal>
-          <ProjectPricingPolicySection project={project} />
-        </Reveal>
+        <div id="gia-va-chinh-sach" className="scroll-mt-32">
+          <Reveal>
+            <ProjectPricingPolicySection project={project} />
+          </Reveal>
+        </div>
 
         {hasTimeline ? <Reveal>
-          <section className="py-2">
+          <section id="tien-do" className="scroll-mt-32 py-2">
             <ProjectSectionTitle sectionKey="timeline" fallbackTitle="Tiến độ thi công" />
             <div className="relative grid gap-5 md:grid-cols-5 md:gap-0">
               <div className="absolute left-[10%] right-[10%] top-6 hidden h-px bg-gold/55 md:block" />
@@ -1236,7 +1319,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
         </Reveal> : null}
 
         {hasInvestmentReasons ? <Reveal>
-          <section>
+          <section id="ly-do-dau-tu" className="scroll-mt-32">
             <ProjectSectionTitle sectionKey="investment" fallbackTitle={`Vì sao nên đầu tư ${project.name}?`} />
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
               {project.investmentReasons.map((reason) => (
@@ -1301,43 +1384,16 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
         </Reveal> : null}
 
         {hasFaqs ? <Reveal>
-          <section>
+          <section id="cau-hoi-thuong-gap" className="scroll-mt-32">
             <ProjectSectionTitle sectionKey="faq" fallbackTitle="Câu hỏi thường gặp" />
-            <div className="grid gap-2 lg:grid-cols-2 xl:grid-cols-3">
-              {project.faqs.map((faq, index) => {
-                const isOpen = openFaq === index;
-                return (
-                  <div key={faq.question} className="overflow-hidden rounded-[10px] border border-line/80 bg-white">
-                    <button
-                      type="button"
-                      onClick={() => setOpenFaq(isOpen ? null : index)}
-                      aria-expanded={isOpen}
-                      className="flex w-full items-center justify-between gap-4 px-4 py-3 text-left"
-                    >
-                      <span className="text-[12px] font-semibold leading-5 text-ink">{faq.question}</span>
-                      <Plus
-                        size={15}
-                        className={`shrink-0 text-gold transition-transform ${isOpen ? "rotate-45" : ""}`}
-                      />
-                    </button>
-                    <AnimatePresence initial={false}>
-                      {isOpen ? (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: "auto", opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.28, ease }}
-                        >
-                          <p className="border-t border-line/60 px-4 py-3 text-[12px] leading-6 text-muted">
-                            {faq.answer}
-                          </p>
-                        </motion.div>
-                      ) : null}
-                    </AnimatePresence>
-                  </div>
-                );
-              })}
-            </div>
+            <dl className="grid gap-2 lg:grid-cols-2 xl:grid-cols-3">
+              {project.faqs.map((faq) => (
+                <div key={faq.question} className="rounded-[10px] border border-line/80 bg-white px-4 py-3">
+                  <dt className="text-[12px] font-semibold leading-5 text-ink">{faq.question}</dt>
+                  <dd className="mt-3 border-t border-line/60 pt-3 text-[12px] leading-6 text-muted">{faq.answer}</dd>
+                </div>
+              ))}
+            </dl>
           </section>
         </Reveal> : null}
 
@@ -1357,7 +1413,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
         <Reveal>
           <section
             id="project-consult-form"
-            className="relative overflow-hidden rounded-[20px] border border-gold/30 bg-white shadow-soft"
+            className="relative scroll-mt-32 overflow-hidden rounded-[20px] border border-gold/30 bg-white shadow-soft"
           >
             <Image
               src={project.heroImage}

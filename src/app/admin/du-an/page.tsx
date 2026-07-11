@@ -89,7 +89,7 @@ type ProjectSectionTitleKey =
 type ProjectSectionTitles = Record<ProjectSectionTitleKey, { eyebrow: string; title: string }>;
 
 const defaultProjectSectionTitles: ProjectSectionTitles = {
-  overview: { eyebrow: 'Tổng quan dự án', title: 'Giới thiệu chi tiết' },
+  overview: { eyebrow: 'Tổng quan dự án', title: '' },
   location: { eyebrow: 'Vị trí chiến lược', title: 'Kết nối toàn diện' },
   amenities: { eyebrow: '', title: 'Tiện ích nổi bật' },
   floorPlans: { eyebrow: 'Mặt bằng', title: 'Mặt bằng điển hình' },

@@ -19,7 +19,10 @@ export default function ArticleGrid() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    setIsLoading(true);
+    let active = true;
+    Promise.resolve().then(() => {
+      if (active) setIsLoading(true);
+    });
     postService
       .getPosts({
         per_page: 9,
@@ -28,16 +31,23 @@ export default function ArticleGrid() {
         q: searchQuery || undefined,
         status: "published",
       })
-      .then((response) => setArticles(unwrapData<Post[]>(response) || []))
+      .then((response) => {
+        if (active) setArticles(unwrapData<Post[]>(response) || []);
+      })
       .catch((err) => {
         console.error("Failed to fetch posts:", err);
-        setArticles([]);
+        if (active) setArticles([]);
       })
-      .finally(() => setIsLoading(false));
+      .finally(() => {
+        if (active) setIsLoading(false);
+      });
+    return () => {
+      active = false;
+    };
   }, [categoryQuery, searchQuery]);
 
   return (
-    <section>
+    <section id="bai-viet-moi-nhat" className="scroll-mt-28">
       <MotionWrapper className="mb-6">
         <h2 className="heading-font text-lg sm:text-xl font-bold text-ink">
           {searchQuery || categoryQuery

@@ -1,6 +1,8 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { SITE_URL } from "@/config/seo";
+import { getServerApiUrl } from "@/lib/serverApi";
+import type { Post } from "@/types/api";
 import NewsClient from "./NewsClient";
 
 const siteUrl = SITE_URL;
@@ -30,7 +32,30 @@ export const metadata: Metadata = {
   alternates: { canonical: "/tin-tuc" },
 };
 
-export default function NewsPage() {
+async function getHeroPost(): Promise<{ post: Post | null; label: string }> {
+  const readFirstPost = async (path: string) => {
+    const response = await fetch(`${getServerApiUrl()}${path}`, {
+      cache: "no-store",
+      headers: { Accept: "application/json" },
+    });
+    if (!response.ok) return null;
+    const payload = await response.json().catch(() => null);
+    const post = payload?.data?.[0] as Post | undefined;
+    return post?.slug && post.status === "published" ? post : null;
+  };
+
+  try {
+    const featured = await readFirstPost("/posts/featured?limit=1&post_type=news");
+    if (featured) return { post: featured, label: "Bài viết nổi bật" };
+    const latest = await readFirstPost("/posts?per_page=1&post_type=news&status=published");
+    return { post: latest, label: "Bài viết mới nhất" };
+  } catch {
+    return { post: null, label: "" };
+  }
+}
+
+export default async function NewsPage() {
+  const heroPost = await getHeroPost();
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
@@ -62,7 +87,7 @@ export default function NewsPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <Suspense fallback={<div className="text-center py-20 text-sm text-muted bg-cream">Đang tải trang tin tức...</div>}>
-        <NewsClient />
+        <NewsClient heroPost={heroPost.post} heroPostLabel={heroPost.label} />
       </Suspense>
     </>
   );

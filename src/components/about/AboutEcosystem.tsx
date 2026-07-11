@@ -30,7 +30,7 @@ export default function AboutEcosystem() {
           </MotionWrapper>
           <MotionWrapper delay={0.05}>
             <h2 className="heading-font text-3xl md:text-4xl font-bold text-[#1F1B16] leading-tight mb-4">
-              Các Dòng Sản Phẩm Cốt Lõi
+              Các dòng sản phẩm cốt lõi
             </h2>
           </MotionWrapper>
           <MotionWrapper delay={0.1}>

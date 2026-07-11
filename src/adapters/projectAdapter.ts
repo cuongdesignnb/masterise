@@ -457,7 +457,7 @@ function normalizeConnectivity(value: unknown, nearbyPlaces: string[] | null | u
 }
 
 const defaultProjectSectionTitles: Record<string, { eyebrow?: string; title?: string }> = {
-  overview: { eyebrow: "Tổng quan dự án", title: "Giới thiệu chi tiết" },
+  overview: { eyebrow: "Tổng quan dự án", title: "" },
   location: { eyebrow: "Vị trí chiến lược", title: "Kết nối toàn diện" },
   amenities: { title: "Tiện ích nổi bật" },
   floorPlans: { eyebrow: "Mặt bằng", title: "Mặt bằng điển hình" },

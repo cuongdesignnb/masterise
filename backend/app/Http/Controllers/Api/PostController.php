@@ -119,11 +119,28 @@ class PostController extends Controller
         // Get related articles in same category
         $relatedPosts = Post::where('id', '!=', $post->id)
             ->where('status', 'published')
+            ->where('post_type', $post->post_type)
             ->where('post_category_id', $post->post_category_id)
+            ->whereNotNull('slug')
+            ->where('slug', '!=', '')
             ->with(['category', 'author', 'mediaItems'])
             ->orderBy('published_at', 'desc')
             ->limit(6)
             ->get();
+
+        if ($relatedPosts->count() < 6) {
+            $excludedIds = $relatedPosts->pluck('id')->push($post->id);
+            $latestPosts = Post::where('status', 'published')
+                ->where('post_type', $post->post_type)
+                ->whereNotIn('id', $excludedIds)
+                ->whereNotNull('slug')
+                ->where('slug', '!=', '')
+                ->with(['category', 'author', 'mediaItems'])
+                ->orderBy('published_at', 'desc')
+                ->limit(6 - $relatedPosts->count())
+                ->get();
+            $relatedPosts = $relatedPosts->concat($latestPosts)->values();
+        }
 
         $publishedAt = $post->published_at ?: $post->created_at;
 

@@ -214,7 +214,7 @@ export default function LeadManager() {
   const handleExportExcel = async () => {
     try {
       const token = localStorage.getItem('mh_token');
-      let url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8747/api/v1'}/leads/export?`;
+      const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8747/api/v1'}/leads/export?`;
       const params = new URLSearchParams();
       if (search) params.append('q', search);
       if (statusFilter) params.append('status', statusFilter);

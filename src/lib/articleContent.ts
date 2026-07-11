@@ -70,6 +70,27 @@ export function enhanceArticleHtmlWithHeadingIds(content?: string | null) {
   });
 }
 
+export function splitArticleHtmlForInlineLinks(content?: string | null) {
+  const html = content || "";
+  if (!html) return { before: "", after: "" };
+
+  const paragraphEnd = /<\/p\s*>/i.exec(html);
+  const firstH2 = /<h2\b[^>]*>/i.exec(html);
+  const paragraphSplit = paragraphEnd ? paragraphEnd.index + paragraphEnd[0].length : -1;
+  const h2Split = firstH2?.index ?? -1;
+  const splitAt = paragraphSplit > 0 && paragraphSplit < html.length * 0.82
+    ? paragraphSplit
+    : h2Split > 80 && h2Split < html.length * 0.9
+      ? h2Split
+      : -1;
+
+  if (splitAt < 0 || stripHtml(html.slice(splitAt)).length < 80) {
+    return { before: html, after: "" };
+  }
+
+  return { before: html.slice(0, splitAt), after: html.slice(splitAt) };
+}
+
 export function formatArticleDate(value?: string | null) {
   if (!value) return null;
   return new Date(value).toLocaleDateString("vi-VN", {

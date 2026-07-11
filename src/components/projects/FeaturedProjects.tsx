@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, MapPin, Heart, Star } from "lucide-react";
@@ -24,8 +24,16 @@ export default function FeaturedProjects() {
     },
   });
 
+  useEffect(() => {
+    if (window.location.hash !== "#du-an-noi-bat") return;
+    const timeout = window.setTimeout(() => {
+      document.getElementById("du-an-noi-bat")?.scrollIntoView({ block: "start", behavior: "smooth" });
+    }, 250);
+    return () => window.clearTimeout(timeout);
+  }, []);
+
   return (
-    <section className="py-10">
+    <section id="du-an-noi-bat" className="scroll-mt-28 py-10">
       <Container>
         {/* Header row */}
         <MotionWrapper delay={0}>
@@ -38,7 +46,7 @@ export default function FeaturedProjects() {
                 </span>
               </div>
               <h2 className="heading-font text-2xl sm:text-3xl font-bold text-ink">
-                Danh Mục Dự Án Tiêu Biểu
+                Danh mục dự án tiêu biểu
               </h2>
             </div>
             <Link

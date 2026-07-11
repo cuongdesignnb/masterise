@@ -8,6 +8,7 @@ import { ChevronRight, Mail, ArrowRight } from "lucide-react";
 import { useSiteSettings } from "@/providers/SiteSettingsProvider";
 import Container from "@/components/Container";
 import Button from "@/components/Button";
+import type { Post } from "@/types/api";
 
 const stagger: Variants = {
   hidden: { opacity: 0 },
@@ -26,8 +27,9 @@ const fadeUp: Variants = {
   },
 };
 
-export default function NewsHero() {
+export default function NewsHero({ post, postLabel }: { post: Post | null; postLabel: string }) {
   const { newsPageHero: hero } = useSiteSettings();
+  const postHref = post?.slug ? `/tin-tuc/${post.slug}` : "";
 
   return (
     <section className="relative w-full overflow-hidden bg-cream pt-[72px] min-h-[420px] lg:min-h-[460px]">
@@ -98,7 +100,7 @@ export default function NewsHero() {
                 className="mt-7 flex flex-wrap gap-3 sm:gap-4 items-center"
               >
                 <Button
-                  href="/tin-tuc"
+                  href="#bai-viet-moi-nhat"
                   variant="solid"
                   size="md"
                   icon={<ArrowRight size={14} />}
@@ -128,34 +130,41 @@ export default function NewsHero() {
               className="relative w-full max-w-lg lg:max-w-none"
             >
               {/* Main hero image */}
-              <div className="relative rounded-[22px] overflow-hidden shadow-soft aspect-[4/3]">
+              <Link
+                href={postHref || "#bai-viet-moi-nhat"}
+                aria-label={post ? `Đọc bài viết ${post.title}` : "Khám phá bài viết mới nhất"}
+                className="relative block rounded-[22px] overflow-hidden shadow-soft aspect-[4/3] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/70"
+              >
                 <Image
-                  src={hero.image}
-                  alt={hero.title}
+                  src={post?.thumbnail || hero.image}
+                  alt={post?.title || hero.title}
                   fill
                   className="object-cover"
                   sizes="(max-width: 1024px) 100vw, 50vw"
                   priority
                 />
-              </div>
+              </Link>
 
               {/* Highlight overlay card */}
-              {hero.highlight && (
-                <div className="absolute bottom-4 right-4 left-4 sm:left-auto sm:w-72 bg-white/90 backdrop-blur-sm rounded-[16px] p-4 shadow-soft border border-line/30">
+              {post && postHref && (
+                <Link
+                  href={postHref}
+                  className="group absolute bottom-4 right-4 left-4 rounded-[16px] border border-line/30 bg-white/90 p-4 shadow-soft backdrop-blur-sm transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/70 sm:left-auto sm:w-72"
+                >
                   <span className="text-[10px] font-bold text-gold uppercase tracking-wider">
-                    {hero.highlight.label}
+                    {postLabel}
                   </span>
                   <h3 className="text-sm font-semibold text-ink mt-1 leading-snug line-clamp-2">
-                    {hero.highlight.title}
+                    {post.title}
                   </h3>
-                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-gold mt-2 hover:text-gold-dark transition-colors group cursor-pointer">
-                    {hero.highlight.cta}
+                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-gold mt-2 group-hover:text-gold-dark transition-colors">
+                    Đọc ngay
                     <ArrowRight
                       size={12}
                       className="transition-transform group-hover:translate-x-1"
                     />
                   </span>
-                </div>
+                </Link>
               )}
             </motion.div>
           </div>

@@ -164,7 +164,7 @@ export default async function NewsArticleDetailPage({ params }: Props) {
           <div className="grid gap-6 py-8 lg:grid-cols-[minmax(0,1fr)_330px] xl:grid-cols-[minmax(0,1fr)_360px]">
             <div className="min-w-0 space-y-6">
               <ArticleToc toc={toc} className="lg:hidden" />
-              <NewsArticleMainContent post={post} />
+              <NewsArticleMainContent post={post} related={related} />
               <NewsMediaBlocks mediaItems={post.media_items} />
               <NewsArticleMetaFooter post={post} previous={previous} next={next} />
             </div>

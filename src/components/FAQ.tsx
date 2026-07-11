@@ -1,9 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { ChevronDown } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
-import { homepageService } from "@/services/homepageService";
+import { homepageService, type HomepageFaq } from "@/services/homepageService";
 import { unwrapData } from "@/adapters/apiResponseAdapter";
 import { useSiteSettings } from "@/providers/SiteSettingsProvider";
 import MotionWrapper from "./MotionWrapper";
@@ -16,15 +14,14 @@ interface FaqDisplayItem {
 
 export default function FAQ() {
   const { homePageContent } = useSiteSettings();
-  const [openId, setOpenId] = useState<number | null>(null);
   const [faqs, setFaqs] = useState<FaqDisplayItem[]>([]);
 
   useEffect(() => {
     const fetchFaqs = async () => {
       try {
         const response = await homepageService.getFaqs();
-        const data = unwrapData<any[]>(response) || [];
-        const mapped: FaqDisplayItem[] = data.map((item: any) => ({
+        const data = unwrapData<HomepageFaq[]>(response) || [];
+        const mapped: FaqDisplayItem[] = data.map((item) => ({
           id: item.id,
           question: item.question,
           answer: item.answer,
@@ -37,10 +34,6 @@ export default function FAQ() {
 
     fetchFaqs();
   }, []);
-
-  const handleToggle = (id: number) => {
-    setOpenId((prev) => (prev === id ? null : id));
-  };
 
   if (faqs.length === 0) return null;
 
@@ -55,48 +48,20 @@ export default function FAQ() {
         </div>
       </MotionWrapper>
 
-      <div className="flex flex-grow flex-col gap-3.5">
-        {faqs.map((faq, idx) => {
-          const isOpen = openId === faq.id;
-
-          return (
+      <dl className="flex flex-grow flex-col gap-3.5">
+        {faqs.map((faq, idx) => (
             <MotionWrapper key={faq.id} delay={idx * 0.05}>
-              <div className="overflow-hidden rounded-2xl border border-[#E8DCCB]/60 bg-white shadow-soft transition-all duration-300 hover:border-[#B88746]">
-                <button
-                  onClick={() => handleToggle(faq.id)}
-                  className="group flex w-full cursor-pointer select-none items-center justify-between p-4 text-left focus:outline-none sm:p-5"
-                  aria-expanded={isOpen}
-                >
-                  <span className="heading-font pr-4 text-[12.5px] font-bold leading-snug text-[#8F632F] transition-colors duration-200 group-hover:text-gold sm:text-[13.5px]">
+              <div className="rounded-2xl border border-[#E8DCCB]/60 bg-white p-4 shadow-soft transition-colors duration-300 hover:border-[#B88746] sm:p-5">
+                  <dt className="heading-font text-[12.5px] font-bold leading-snug text-[#8F632F] sm:text-[13.5px]">
                     {faq.question}
-                  </span>
-                  <ChevronDown
-                    size={16}
-                    className={`flex-shrink-0 text-[#B88746] transition-transform duration-300 group-hover:text-gold ${
-                      isOpen ? "rotate-180 text-gold" : ""
-                    }`}
-                  />
-                </button>
-
-                <AnimatePresence initial={false}>
-                  {isOpen ? (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.25, ease: "easeInOut" }}
-                    >
-                      <div className="border-t border-[#E8DCCB]/20 px-4 pb-4 pt-3 text-left text-[11px] leading-relaxed text-muted sm:px-5 sm:pb-5 sm:text-xs">
+                  </dt>
+                  <dd className="mt-3 border-t border-[#E8DCCB]/20 pt-3 text-left text-[11px] leading-relaxed text-muted sm:text-xs">
                         {faq.answer}
-                      </div>
-                    </motion.div>
-                  ) : null}
-                </AnimatePresence>
+                  </dd>
               </div>
             </MotionWrapper>
-          );
-        })}
-      </div>
+        ))}
+      </dl>
     </div>
   );
 }

@@ -118,7 +118,7 @@ export default function GlobalContactForm({
   return (
     <motion.section
       id="global-contact-form"
-      className={`bg-ink-deep text-white ${compact ? "py-10" : "py-14 sm:py-20"}`}
+      className={`scroll-mt-28 bg-ink-deep text-white ${compact ? "py-10" : "py-14 sm:py-20"}`}
       variants={fadeUp}
       initial={false}
       whileInView="visible"
