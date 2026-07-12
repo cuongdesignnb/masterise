@@ -4,6 +4,7 @@ import Container from "@/components/Container";
 import type { Post } from "@/types/api";
 import { formatArticleDate, readingMinutes } from "@/lib/articleContent";
 import { CalendarDays, Clock3 } from "lucide-react";
+import { getPostDetailHref } from "@/lib/postRoutes";
 
 export default function NewsRelatedSection({ related, postType = "news" }: { related: Post[]; postType?: "news" | "investment" | "event" }) {
   if (!related.length) return null;
@@ -28,7 +29,7 @@ export default function NewsRelatedSection({ related, postType = "news" }: { rel
 
         <div className="grid gap-5 md:grid-cols-3">
           {related.slice(0, 3).map((item) => (
-            <Link key={item.id} href={`${path}/${item.slug}`} className="group overflow-hidden rounded-[22px] border border-[#E8DCCB]/80 bg-white shadow-[0_18px_50px_rgba(31,27,22,0.06)] transition hover:-translate-y-1 hover:border-[#B88746]">
+            <Link key={item.id} href={getPostDetailHref(item)} className="group overflow-hidden rounded-[22px] border border-[#E8DCCB]/80 bg-white shadow-[0_18px_50px_rgba(31,27,22,0.06)] transition hover:-translate-y-1 hover:border-[#B88746]">
               <div className="relative aspect-[16/10] bg-[#FBF8F2]">
                 {item.thumbnail ? (
                   <Image src={item.thumbnail} alt={item.title} fill className="object-cover transition duration-500 group-hover:scale-105" sizes="(max-width: 768px) 100vw, 33vw" />

@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, Tag as TagIcon } from "lucide-react";
 import type { Post } from "@/types/api";
+import { getPostDetailHref } from "@/lib/postRoutes";
 
 type Props = {
   post: Post;
@@ -11,7 +12,7 @@ type Props = {
 
 function NavCard({ post, direction }: { post: Post; direction: "previous" | "next" }) {
   const isNews = post.post_type === "news";
-  const path = isNews ? `/tin-tuc/${post.slug}` : `/dau-tu/${post.slug}`;
+  const path = getPostDetailHref(post);
   const label = direction === "previous"
     ? (isNews ? "Tin trước" : "Bài trước")
     : (isNews ? "Tin tiếp theo" : "Bài tiếp theo");
@@ -50,7 +51,7 @@ export default function NewsArticleMetaFooter({ post, previous, next }: Props) {
               <TagIcon className="h-4 w-4" /> Tags
             </span>
             {tags.map((tag) => (
-              <Link key={tag.id} href={post.post_type === "news" ? `/tin-tuc?tag=${tag.slug}` : `/dau-tu`} className="rounded-full border border-[#E8DCCB] bg-[#FBF8F2] px-3 py-1.5 text-xs font-bold text-[#6E5F51] transition hover:border-[#B88746] hover:text-[#B88746]">
+              <Link key={tag.id} href={post.post_type === "news" ? `/tin-tuc?tag=${tag.slug}` : `/dau-tu?tag=${tag.slug}`} className="rounded-full border border-[#E8DCCB] bg-[#FBF8F2] px-3 py-1.5 text-xs font-bold text-[#6E5F51] transition hover:border-[#B88746] hover:text-[#B88746]">
                 #{tag.name}
               </Link>
             ))}

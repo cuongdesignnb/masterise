@@ -25,6 +25,12 @@ class PostController extends Controller
             $query->where('status', $request->status);
         }
 
+        // Manual relations may contain drafts. They are only needed by the editor,
+        // so do not expose them from public collection endpoints.
+        if ($user && $user->hasAnyRole(['super_admin', 'admin', 'marketing'])) {
+            $query->with('manualRelatedPosts');
+        }
+
         // Filter by id
         if ($request->has('id') && !empty($request->id)) {
             $query->where('id', $request->id);
@@ -61,8 +67,13 @@ class PostController extends Controller
             });
         }
 
-        $perPage = $request->get('per_page', 9);
-        $posts = $query->orderBy('published_at', 'desc')->paginate($perPage);
+        $sort = $request->get('sort', 'latest');
+        if ($sort === 'oldest') $query->orderBy('published_at')->orderBy('id');
+        elseif ($sort === 'title') $query->orderBy('title')->orderBy('id');
+        else $query->orderBy('published_at', 'desc')->orderBy('id', 'desc');
+
+        $perPage = min(100, max(1, (int) $request->get('per_page', 9)));
+        $posts = $query->paginate($perPage);
 
         return response()->json([
             'success' => true,
@@ -84,7 +95,7 @@ class PostController extends Controller
         $limit = $request->get('limit', 4);
         $posts = Post::where('status', 'published')
             ->where('is_featured', true)
-            ->with(['category', 'author', 'seoMeta', 'mediaItems'])
+            ->with(['category', 'author', 'tags', 'seoMeta', 'mediaItems'])
             ->when($request->filled('post_type'), function ($query) use ($request) {
                 $postTypes = is_array($request->post_type) ? $request->post_type : explode(',', $request->post_type);
                 $query->whereIn('post_type', $postTypes);
@@ -106,7 +117,7 @@ class PostController extends Controller
     {
         $post = Post::where('slug', $slug)
             ->where('status', 'published')
-            ->with(['category', 'author', 'tags', 'seoMeta', 'mediaItems'])
+            ->with(['category', 'author', 'tags', 'seoMeta', 'mediaItems', 'manualRelatedPosts'])
             ->first();
 
         if (!$post) {
@@ -116,31 +127,17 @@ class PostController extends Controller
             ], 404);
         }
 
-        // Get related articles in same category
-        $relatedPosts = Post::where('id', '!=', $post->id)
-            ->where('status', 'published')
-            ->where('post_type', $post->post_type)
-            ->where('post_category_id', $post->post_category_id)
-            ->whereNotNull('slug')
-            ->where('slug', '!=', '')
-            ->with(['category', 'author', 'mediaItems'])
-            ->orderBy('published_at', 'desc')
-            ->limit(6)
-            ->get();
-
-        if ($relatedPosts->count() < 6) {
-            $excludedIds = $relatedPosts->pluck('id')->push($post->id);
-            $latestPosts = Post::where('status', 'published')
-                ->where('post_type', $post->post_type)
-                ->whereNotIn('id', $excludedIds)
-                ->whereNotNull('slug')
-                ->where('slug', '!=', '')
-                ->with(['category', 'author', 'mediaItems'])
-                ->orderBy('published_at', 'desc')
-                ->limit(6 - $relatedPosts->count())
-                ->get();
-            $relatedPosts = $relatedPosts->concat($latestPosts)->values();
-        }
+        $manualInline = $post->manualRelatedPosts
+            ->filter(fn (Post $item) => $item->status === 'published'
+                && $item->post_type === $post->post_type
+                && filled($item->slug))
+            ->take(3)
+            ->values();
+        $inlineRelated = $manualInline->concat(
+            $this->findRelatedPosts($post, 3 - $manualInline->count(), $manualInline->pluck('id')->all())
+        )->take(3)->values();
+        $post->setRelation('manualRelatedPosts', $manualInline);
+        $relatedPosts = $this->findRelatedPosts($post, 6);
 
         $publishedAt = $post->published_at ?: $post->created_at;
 
@@ -154,7 +151,7 @@ class PostController extends Controller
                             ->where('id', '<', $post->id);
                     });
             })
-            ->with(['category', 'author', 'mediaItems'])
+            ->with(['category', 'author', 'tags', 'mediaItems'])
             ->orderBy('published_at', 'desc')
             ->orderBy('id', 'desc')
             ->first();
@@ -169,7 +166,7 @@ class PostController extends Controller
                             ->where('id', '>', $post->id);
                     });
             })
-            ->with(['category', 'author', 'mediaItems'])
+            ->with(['category', 'author', 'tags', 'mediaItems'])
             ->orderBy('published_at', 'asc')
             ->orderBy('id', 'asc')
             ->first();
@@ -178,6 +175,7 @@ class PostController extends Controller
             'success' => true,
             'data' => [
                 'post' => $post,
+                'inline_related' => $inlineRelated,
                 'related' => $relatedPosts,
                 'previous' => $previous,
                 'next' => $next
@@ -188,10 +186,18 @@ class PostController extends Controller
     /**
      * Get list of post categories.
      */
-    public function categories()
+    public function categories(Request $request)
     {
-        $categories = PostCategory::withCount(['posts' => function($q) {
+        $postTypes = $request->filled('post_type')
+            ? (is_array($request->post_type) ? $request->post_type : explode(',', $request->post_type))
+            : null;
+        $excludedTypes = $request->filled('exclude_post_type')
+            ? (is_array($request->exclude_post_type) ? $request->exclude_post_type : explode(',', $request->exclude_post_type))
+            : [];
+        $categories = PostCategory::withCount(['posts' => function($q) use ($postTypes, $excludedTypes) {
             $q->where('status', 'published');
+            if ($postTypes) $q->whereIn('post_type', $postTypes);
+            if ($excludedTypes) $q->whereNotIn('post_type', $excludedTypes);
         }])->get();
 
         return response()->json([
@@ -229,6 +235,10 @@ class PostController extends Controller
             'media_items.*.file_size' => 'nullable|integer|min:0',
             'media_items.*.sort_order' => 'nullable|integer|min:0',
             'media_items.*.meta' => 'nullable|array',
+            'tag_ids' => 'nullable|array|distinct',
+            'tag_ids.*' => 'integer|exists:tags,id',
+            'related_post_ids' => 'nullable|array|max:3|distinct',
+            'related_post_ids.*' => 'integer|exists:posts,id',
             // SEO Meta
             'seo_title' => 'nullable|string|max:255',
             'seo_description' => 'nullable|string',
@@ -241,6 +251,10 @@ class PostController extends Controller
                 'message' => 'Validation error',
                 'errors' => $validator->errors()
             ], 422);
+        }
+
+        if ($message = $this->relatedIdsError($request->input('related_post_ids', []), $request->get('post_type', 'news'))) {
+            return response()->json(['success' => false, 'message' => 'Validation error', 'errors' => ['related_post_ids' => [$message]]], 422);
         }
 
         // Create post
@@ -270,11 +284,13 @@ class PostController extends Controller
         ]);
 
         $this->syncMediaItems($post, $request->input('media_items', []));
+        if ($request->has('tag_ids')) $post->tags()->sync($request->input('tag_ids', []));
+        if ($request->has('related_post_ids')) $this->syncManualRelatedPosts($post, $request->input('related_post_ids', []));
 
         return response()->json([
             'success' => true,
             'message' => 'Post created successfully',
-            'data' => $post->load(['category', 'author', 'seoMeta', 'mediaItems'])
+            'data' => $post->load(['category', 'author', 'tags', 'seoMeta', 'mediaItems', 'manualRelatedPosts'])
         ], 201);
     }
 
@@ -316,6 +332,10 @@ class PostController extends Controller
             'media_items.*.file_size' => 'nullable|integer|min:0',
             'media_items.*.sort_order' => 'nullable|integer|min:0',
             'media_items.*.meta' => 'nullable|array',
+            'tag_ids' => 'nullable|array|distinct',
+            'tag_ids.*' => 'integer|exists:tags,id',
+            'related_post_ids' => 'nullable|array|max:3|distinct',
+            'related_post_ids.*' => 'integer|exists:posts,id',
             // SEO Meta
             'seo_title' => 'nullable|string|max:255',
             'seo_description' => 'nullable|string',
@@ -328,6 +348,10 @@ class PostController extends Controller
                 'message' => 'Validation error',
                 'errors' => $validator->errors()
             ], 422);
+        }
+
+        if ($message = $this->relatedIdsError($request->input('related_post_ids', []), $request->get('post_type', 'news'), $post->id)) {
+            return response()->json(['success' => false, 'message' => 'Validation error', 'errors' => ['related_post_ids' => [$message]]], 422);
         }
 
         $oldStatus = $post->status;
@@ -360,11 +384,13 @@ class PostController extends Controller
         );
 
         $this->syncMediaItems($post, $request->input('media_items', []));
+        if ($request->has('tag_ids')) $post->tags()->sync($request->input('tag_ids', []));
+        if ($request->has('related_post_ids')) $this->syncManualRelatedPosts($post, $request->input('related_post_ids', []));
 
         return response()->json([
             'success' => true,
             'message' => 'Post updated successfully',
-            'data' => $post->load(['category', 'author', 'seoMeta', 'mediaItems'])
+            'data' => $post->load(['category', 'author', 'tags', 'seoMeta', 'mediaItems', 'manualRelatedPosts'])
         ], 200);
     }
 
@@ -386,6 +412,9 @@ class PostController extends Controller
         if ($post->seoMeta) {
             $post->seoMeta->delete();
         }
+
+        $post->tags()->detach();
+        $post->manualRelatedPosts()->detach();
 
         $post->delete();
 
@@ -514,5 +543,65 @@ class PostController extends Controller
                 'meta' => Arr::get($item, 'meta'),
             ]);
         }
+    }
+
+    private function syncManualRelatedPosts(Post $post, array $ids): void
+    {
+        $sync = [];
+        foreach (array_values($ids) as $index => $id) {
+            $sync[(int) $id] = ['sort_order' => $index];
+        }
+        $post->manualRelatedPosts()->sync($sync);
+    }
+
+    private function relatedIdsError(array $ids, string $postType, ?int $currentId = null): ?string
+    {
+        if ($currentId && in_array($currentId, array_map('intval', $ids), true)) {
+            return 'Bài viết không thể tự liên kết chính nó.';
+        }
+
+        if (!$ids) return null;
+
+        $validCount = Post::query()
+            ->whereIn('id', $ids)
+            ->where('status', 'published')
+            ->where('post_type', $postType)
+            ->whereNotNull('slug')
+            ->where('slug', '!=', '')
+            ->count();
+
+        return $validCount === count($ids)
+            ? null
+            : 'Chỉ được chọn bài đã xuất bản, có slug và cùng loại nội dung.';
+    }
+
+    private function findRelatedPosts(Post $post, int $limit, array $extraExcludedIds = [])
+    {
+        if ($limit <= 0) return collect();
+
+        $excludedIds = collect($extraExcludedIds)->push($post->id)->unique()->values();
+        $base = fn () => Post::query()
+            ->where('status', 'published')
+            ->where('post_type', $post->post_type)
+            ->whereNotIn('id', $excludedIds)
+            ->whereNotNull('slug')
+            ->where('slug', '!=', '')
+            ->with(['category', 'author', 'tags', 'mediaItems']);
+
+        $sameCategory = $base()
+            ->where('post_category_id', $post->post_category_id)
+            ->orderBy('published_at', 'desc')
+            ->limit($limit)
+            ->get();
+
+        if ($sameCategory->count() >= $limit) return $sameCategory;
+
+        $latest = $base()
+            ->whereNotIn('id', $sameCategory->pluck('id'))
+            ->orderBy('published_at', 'desc')
+            ->limit($limit - $sameCategory->count())
+            ->get();
+
+        return $sameCategory->concat($latest)->values();
     }
 }

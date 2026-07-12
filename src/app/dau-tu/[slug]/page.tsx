@@ -14,7 +14,7 @@ import NewsRelatedSection from "@/components/news-detail/NewsRelatedSection";
 import { extractTocFromHtml, formatArticleDate, readingMinutes } from "@/lib/articleContent";
 import ArticleToc from "@/components/news-detail/ArticleToc";
 import { fetchApi } from "@/lib/serverApi";
-import type { Post } from "@/types/api";
+import type { Post, PostDetailData } from "@/types/api";
 import { absoluteUrl, SITE_NAME, SITE_URL } from "@/config/seo";
 
 const siteUrl = SITE_URL;
@@ -23,12 +23,7 @@ type Props = {
   params: Promise<{ slug: string }>;
 };
 
-type PostDetailResponse = {
-  post: Post;
-  related: Post[];
-  previous?: Post | null;
-  next?: Post | null;
-};
+type PostDetailResponse = PostDetailData;
 
 async function getInvestmentPost(slug: string): Promise<PostDetailResponse | null> {
   const data = await fetchApi<PostDetailResponse>(`/posts/${slug}`);
@@ -78,7 +73,7 @@ export default async function InvestmentDetailPage({ params }: Props) {
   const data = await getInvestmentPost(slug);
   if (!data?.post) notFound();
 
-  const { post, related = [], previous = null, next = null } = data;
+  const { post, inline_related = [], related = [], previous = null, next = null } = data;
   const postUrl = `${siteUrl}/dau-tu/${post.slug}`;
   const toc = extractTocFromHtml(post.content);
   const publishedLabel = formatArticleDate(post.published_at);
@@ -167,7 +162,7 @@ export default async function InvestmentDetailPage({ params }: Props) {
                 </div>
               )}
               <ArticleToc toc={toc} className="lg:hidden" />
-              <NewsArticleMainContent post={post} />
+              <NewsArticleMainContent post={post} related={inline_related} />
               <NewsMediaBlocks mediaItems={post.media_items} />
               <NewsArticleMetaFooter post={post} previous={previous} next={next} />
             </div>

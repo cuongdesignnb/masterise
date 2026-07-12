@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useToast } from '@/components/admin/Toast';
-import { Post, PostCategory, PostMedia } from '@/types/api';
+import { Post, PostCategory, PostMedia, Tag } from '@/types/api';
 import { useAuth } from '@/context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -30,6 +30,8 @@ import {
 } from 'lucide-react';
 import MediaSelectModal from '@/components/admin/MediaSelectModal';
 import RichTextEditor from '@/components/admin/RichTextEditor';
+import { tagService } from '@/services/tagService';
+import { getPostDetailHref } from '@/lib/postRoutes';
 
 type NewsMediaDraft = Omit<PostMedia, 'id' | 'post_id' | 'created_at' | 'updated_at'> & {
   id?: number;
@@ -149,6 +151,10 @@ function AdminNews() {
   const [formStatus, setFormStatus] = useState<'draft' | 'published' | 'scheduled'>('draft');
   const [formIsFeatured, setFormIsFeatured] = useState(false);
   const [formCategoryId, setFormCategoryId] = useState<number | ''>('');
+  const [formTagIds, setFormTagIds] = useState<number[]>([]);
+  const [formRelatedPostIds, setFormRelatedPostIds] = useState<number[]>([]);
+  const [tagSearch, setTagSearch] = useState('');
+  const [relatedSearch, setRelatedSearch] = useState('');
   
   const [formSeoTitle, setFormSeoTitle] = useState('');
   const [formSeoDescription, setFormSeoDescription] = useState('');
@@ -185,6 +191,16 @@ function AdminNews() {
       const response = await api.get<PostCategory[]>('/post-categories');
       return response.data;
     },
+  });
+
+  const { data: tagsData = [] } = useQuery({
+    queryKey: ['tags'],
+    queryFn: async () => (await tagService.getTags({ with_count: true })).data,
+  });
+  const { data: relatedCandidates = [] } = useQuery({
+    queryKey: ['related-post-candidates', formPostType],
+    queryFn: async () => (await api.get<Post[]>(`/posts?per_page=100&status=published&post_type=${formPostType}`)).data,
+    enabled: isFormOpen,
   });
 
   // Slug auto generation
@@ -227,6 +243,10 @@ function AdminNews() {
     setFormStatus('draft');
     setFormIsFeatured(false);
     setFormCategoryId(categoriesData && categoriesData.length > 0 ? categoriesData[0].id : '');
+    setFormTagIds([]);
+    setFormRelatedPostIds([]);
+    setTagSearch('');
+    setRelatedSearch('');
     setFormSeoTitle('');
     setFormSeoDescription('');
     setFormSeoKeywords('');
@@ -266,6 +286,10 @@ function AdminNews() {
     setFormStatus(post.status);
     setFormIsFeatured(post.is_featured);
     setFormCategoryId(post.post_category_id);
+    setFormTagIds((post.tags || []).map((tag) => tag.id));
+    setFormRelatedPostIds((post.manual_related_posts || []).map((item) => item.id));
+    setTagSearch('');
+    setRelatedSearch('');
     
     setFormSeoTitle(post.seo_meta?.title || '');
     setFormSeoDescription(post.seo_meta?.description || '');
@@ -291,6 +315,8 @@ function AdminNews() {
         status: formStatus,
         is_featured: formIsFeatured,
         post_category_id: Number(formCategoryId),
+        tag_ids: formTagIds,
+        related_post_ids: formRelatedPostIds,
         media_items: formMediaItems.map((item, index) => ({
           ...item,
           sort_order: index,
@@ -384,6 +410,39 @@ function AdminNews() {
     setFieldErrors({});
     savePostMutation.mutate();
   };
+
+  const createAndSelectTag = async () => {
+    const name = tagSearch.trim();
+    if (!name) return;
+    const existing = tagsData.find((tag) => tag.name.toLocaleLowerCase('vi-VN') === name.toLocaleLowerCase('vi-VN'));
+    if (existing) {
+      setFormTagIds((ids) => ids.includes(existing.id) ? ids : [...ids, existing.id]);
+      setTagSearch('');
+      return;
+    }
+    try {
+      const response = await tagService.createTag(name);
+      setFormTagIds((ids) => [...ids, response.data.id]);
+      await queryClient.invalidateQueries({ queryKey: ['tags'] });
+      setTagSearch('');
+    } catch (error) {
+      toast.error(getApiErrorMessage(error));
+    }
+  };
+
+  const moveRelatedPost = (index: number, direction: -1 | 1) => {
+    const target = index + direction;
+    if (target < 0 || target >= formRelatedPostIds.length) return;
+    setFormRelatedPostIds((ids) => {
+      const next = [...ids];
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
+  };
+  const selectedTags = tagsData.filter((tag) => formTagIds.includes(tag.id));
+  const filteredTags = tagsData.filter((tag) => !formTagIds.includes(tag.id) && (!tagSearch.trim() || tag.name.toLocaleLowerCase('vi-VN').includes(tagSearch.trim().toLocaleLowerCase('vi-VN'))));
+  const selectedRelatedPosts = formRelatedPostIds.map((id) => relatedCandidates.find((post) => post.id === id)).filter((post): post is Post => Boolean(post));
+  const filteredRelatedCandidates = relatedCandidates.filter((post) => post.id !== editingPost?.id && !formRelatedPostIds.includes(post.id) && (!relatedSearch.trim() || post.title.toLocaleLowerCase('vi-VN').includes(relatedSearch.trim().toLocaleLowerCase('vi-VN'))));
 
   const updateMediaItem = (index: number, patch: Partial<NewsMediaDraft>) => {
     setFormMediaItems((items) => items.map((item, idx) => idx === index ? { ...item, ...patch } : item));
@@ -616,7 +675,7 @@ function AdminNews() {
                     <td className="px-6 py-4 text-right space-x-1 whitespace-nowrap">
                       {post.status === 'published' && (
                         <a
-                          href={`/tin-tuc/${post.slug}`}
+                          href={getPostDetailHref(post)}
                           target="_blank"
                           rel="noreferrer"
                           className="p-1.5 hover:bg-gray-100 text-[#8C7A6B] rounded-lg transition-colors inline-flex items-center"
@@ -790,7 +849,7 @@ function AdminNews() {
                         <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Loại nội dung *</label>
                         <select
                           value={formPostType}
-                          onChange={(e: any) => setFormPostType(e.target.value)}
+                          onChange={(e: React.ChangeEvent<HTMLSelectElement>) => { setFormPostType(e.target.value as 'news' | 'investment' | 'event'); setFormRelatedPostIds([]); }}
                           className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
                         >
                           <option value="news">Tin tức</option>
@@ -892,6 +951,23 @@ function AdminNews() {
                         placeholder="Nhập nội dung bài viết đầy đủ..."
                         enableProjectLinks
                       />
+                    </div>
+
+                    <div className="grid gap-5 lg:grid-cols-2">
+                      <section className="rounded-2xl border border-[#E8DCCB] bg-[#FBF8F2] p-4">
+                        <label className="block text-xs font-bold text-[#6E5F51]">Tags</label>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {selectedTags.map((tag) => <button type="button" key={tag.id} onClick={() => setFormTagIds((ids) => ids.filter((id) => id !== tag.id))} className="inline-flex items-center gap-1 rounded-full bg-[#B88746] px-3 py-1.5 text-xs font-bold text-white">#{tag.name}<X className="h-3 w-3" /></button>)}
+                        </div>
+                        <div className="mt-3 flex gap-2"><input value={tagSearch} onChange={(event) => setTagSearch(event.target.value)} placeholder="Tìm hoặc tạo tag..." className="h-10 min-w-0 flex-1 rounded-xl border border-[#E8DCCB] bg-white px-3 text-sm outline-none focus:border-[#B88746]" /><button type="button" onClick={createAndSelectTag} className="rounded-xl bg-[#1F1B16] px-3 text-xs font-bold text-white">Thêm tag</button></div>
+                        {tagSearch && <div className="mt-2 max-h-36 space-y-1 overflow-y-auto">{filteredTags.slice(0, 8).map((tag) => <button type="button" key={tag.id} onClick={() => { setFormTagIds((ids) => [...ids, tag.id]); setTagSearch(''); }} className="block w-full rounded-lg bg-white px-3 py-2 text-left text-xs font-semibold hover:text-[#B88746]">{tag.name} {tag.posts_count !== undefined ? `(${tag.posts_count})` : ''}</button>)}</div>}
+                      </section>
+
+                      <section className="rounded-2xl border border-[#E8DCCB] bg-[#FBF8F2] p-4">
+                        <div className="flex items-center justify-between"><label className="text-xs font-bold text-[#6E5F51]">Bài viết liên quan</label><span className="text-[11px] text-[#8C7A6B]">{formRelatedPostIds.length}/3</span></div>
+                        <div className="mt-2 space-y-2">{selectedRelatedPosts.map((post, index) => <div key={post.id} className="flex items-center gap-2 rounded-xl border border-[#E8DCCB] bg-white p-2"><span className="min-w-0 flex-1 truncate text-xs font-bold">{post.title}</span><button type="button" disabled={index === 0} onClick={() => moveRelatedPost(index, -1)} aria-label="Đưa bài lên" className="p-1 disabled:opacity-30"><ArrowUp className="h-3.5 w-3.5" /></button><button type="button" disabled={index === selectedRelatedPosts.length - 1} onClick={() => moveRelatedPost(index, 1)} aria-label="Đưa bài xuống" className="p-1 disabled:opacity-30"><ArrowDown className="h-3.5 w-3.5" /></button><button type="button" onClick={() => setFormRelatedPostIds((ids) => ids.filter((id) => id !== post.id))} aria-label="Xóa bài liên quan" className="p-1 text-red-600"><X className="h-3.5 w-3.5" /></button></div>)}</div>
+                        {formRelatedPostIds.length < 3 && <><input value={relatedSearch} onChange={(event) => setRelatedSearch(event.target.value)} placeholder="Tìm bài đã xuất bản..." className="mt-3 h-10 w-full rounded-xl border border-[#E8DCCB] bg-white px-3 text-sm outline-none focus:border-[#B88746]" />{relatedSearch && <div className="mt-2 max-h-40 space-y-1 overflow-y-auto">{filteredRelatedCandidates.slice(0, 10).map((post) => <button type="button" key={post.id} onClick={() => { setFormRelatedPostIds((ids) => [...ids, post.id]); setRelatedSearch(''); }} className="block w-full rounded-lg bg-white px-3 py-2 text-left text-xs font-semibold hover:text-[#B88746]">{post.title}</button>)}</div>}</>}
+                      </section>
                     </div>
                   </div>
                 )}

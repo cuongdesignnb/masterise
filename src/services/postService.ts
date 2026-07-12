@@ -1,4 +1,5 @@
 import { api } from '@/lib/api';
+import type { Post, PostDetailData } from '@/types/api';
 
 export const postService = {
   async getPosts(params?: {
@@ -10,6 +11,8 @@ export const postService = {
     category?: string;
     status?: string;
     q?: string;
+    tag?: string;
+    sort?: string;
   }) {
     const searchParams = new URLSearchParams();
     if (params?.limit) searchParams.append('limit', String(params.limit));
@@ -20,17 +23,19 @@ export const postService = {
     if (params?.category) searchParams.append('category', params.category);
     if (params?.status) searchParams.append('status', params.status);
     if (params?.q) searchParams.append('q', params.q);
+    if (params?.tag) searchParams.append('tag', params.tag);
+    if (params?.sort) searchParams.append('sort', params.sort);
     const query = searchParams.toString();
-    return api.get(`/posts${query ? `?${query}` : ''}`);
+    return api.get<Post[]>(`/posts${query ? `?${query}` : ''}`);
   },
   async getFeaturedPosts(params?: { limit?: number; post_type?: string }) {
     const searchParams = new URLSearchParams();
     if (params?.limit) searchParams.append('limit', String(params.limit));
     if (params?.post_type) searchParams.append('post_type', params.post_type);
     const query = searchParams.toString();
-    return api.get(`/posts/featured${query ? `?${query}` : ''}`);
+    return api.get<Post[]>(`/posts/featured${query ? `?${query}` : ''}`);
   },
   async getPostBySlug(slug: string) {
-    return api.get(`/posts/${slug}`);
+    return api.get<PostDetailData>(`/posts/${slug}`);
   },
 };

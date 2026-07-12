@@ -6,6 +6,7 @@ import Link from "next/link";
 import { CalendarDays, Check, Clock3, Copy, Link2, MessageCircle, Share2, UserRound } from "lucide-react";
 import Container from "@/components/Container";
 import type { Post } from "@/types/api";
+import { getPostDetailHref } from "@/lib/postRoutes";
 
 const fallbackImage = "/file.svg";
 
@@ -17,7 +18,7 @@ type NewsArticleHeroProps = {
 
 export default function NewsArticleHero({ post, publishedLabel, minutes }: NewsArticleHeroProps) {
   const [copied, setCopied] = useState(false);
-  const shareUrl = typeof window !== "undefined" ? window.location.href : (post.post_type === "news" ? `/tin-tuc/${post.slug}` : `/dau-tu/${post.slug}`);
+  const shareUrl = typeof window !== "undefined" ? window.location.href : getPostDetailHref(post);
   const encodedUrl = encodeURIComponent(shareUrl);
   const encodedTitle = encodeURIComponent(post.title);
 

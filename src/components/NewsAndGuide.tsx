@@ -2,6 +2,7 @@
 
 import React, { useRef, useState, useEffect } from "react";
 import Link from "next/link";
+import { getPostDetailHref } from "@/lib/postRoutes";
 import Image from "next/image";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
@@ -16,6 +17,7 @@ interface NewsDisplayItem {
   tag: string;
   image: string;
   slug?: string;
+  post_type: 'news' | 'investment' | 'event';
 }
 
 const getTagStyles = (tag: string) => {
@@ -47,7 +49,7 @@ export default function NewsAndGuide() {
   useEffect(() => {
     const fetchNews = async () => {
       try {
-        const response = await postService.getPosts({ limit: 6 });
+        const response = await postService.getPosts({ per_page: 6, post_type: 'news,investment', status: 'published' });
         const posts = unwrapData<any[]>(response) || [];
         const mapped: NewsDisplayItem[] = posts.map((post: any) => ({
           id: post.id,
@@ -58,6 +60,7 @@ export default function NewsAndGuide() {
           tag: post.category_name || post.category?.name || "Tin tức",
           image: post.thumbnail_url || post.image || "",
           slug: post.slug,
+          post_type: post.post_type || 'news',
         }));
         setNews(mapped);
       } catch (error) {
@@ -136,7 +139,7 @@ export default function NewsAndGuide() {
             className="flex-shrink-0 snap-start min-w-[82%] md:min-w-[calc((100%-12px)/2)] lg:min-w-[calc((100%-24px)/3)] w-[82%] md:w-[calc((100%-12px)/2)] lg:w-[calc((100%-24px)/3)] h-full"
           >
             <MotionWrapper delay={idx * 0.04} className="h-full">
-              <Link href={item.slug ? `/tin-tuc/${item.slug}` : "/tin-tuc"} className="block h-full group">
+              <Link href={item.slug ? getPostDetailHref({ post_type: item.post_type, slug: item.slug }) : "/tin-tuc"} className="block h-full group">
                 <motion.div
                   whileHover={{ y: -4 }}
                   transition={{ duration: 0.3 }}

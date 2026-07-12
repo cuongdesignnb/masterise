@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { homepageService } from "@/services/homepageService";
 import { unwrapData } from "@/adapters/apiResponseAdapter";
@@ -14,6 +14,9 @@ interface PartnerDisplayItem {
 
 export default function Partners() {
   const [partners, setPartners] = useState<PartnerDisplayItem[]>([]);
+  const sliderRef = useRef<HTMLDivElement>(null);
+  const [canScrollPrev, setCanScrollPrev] = useState(false);
+  const [canScrollNext, setCanScrollNext] = useState(false);
 
   useEffect(() => {
     const fetchPartners = async () => {
@@ -32,6 +35,34 @@ export default function Partners() {
     };
     fetchPartners();
   }, []);
+  const updateScrollState = () => {
+    const slider = sliderRef.current;
+    if (!slider) return;
+    // Scroll snap aligns the first card after the horizontal padding, so the
+    // browser may report an initial scrollLeft equal to that padding. Treat
+    // that position as the logical start of the slider.
+    const startOffset = Number.parseFloat(getComputedStyle(slider).paddingLeft || '0');
+    setCanScrollPrev(slider.scrollLeft > startOffset + 2);
+    setCanScrollNext(slider.scrollLeft + slider.clientWidth < slider.scrollWidth - 2);
+  };
+  useEffect(() => {
+    const slider = sliderRef.current;
+    if (!slider) return;
+    updateScrollState();
+    slider.addEventListener('scroll', updateScrollState, { passive: true });
+    window.addEventListener('resize', updateScrollState);
+    return () => {
+      slider.removeEventListener('scroll', updateScrollState);
+      window.removeEventListener('resize', updateScrollState);
+    };
+  }, [partners]);
+  const scrollPartners = (direction: -1 | 1) => {
+    const slider = sliderRef.current;
+    const card = slider?.querySelector<HTMLElement>('[data-partner-card]');
+    if (!slider || !card) return;
+    const gap = Number.parseFloat(getComputedStyle(slider).columnGap || '0');
+    slider.scrollBy({ left: direction * (card.offsetWidth + gap), behavior: 'smooth' });
+  };
   const renderPartnerName = (name: string) => {
     if (name.toLowerCase() === "savills") {
       // Keep the lowercase partner wordmark without switching font family.
@@ -51,7 +82,7 @@ export default function Partners() {
   if (partners.length === 0) return null;
 
   return (
-    <div className="flex flex-col h-full text-left">
+    <div className="flex min-w-0 max-w-full flex-col h-full text-left overflow-x-clip">
       <MotionWrapper>
         {/* Gold Serif Title with Leaf Icon */}
         <div className="mb-6 flex items-center gap-2">
@@ -65,16 +96,17 @@ export default function Partners() {
       {/* Horizontal row centered vertically to match Testimonials height */}
       <div className="flex-grow flex items-center w-full relative">
         {/* Left Arrow Button */}
-        <button className="absolute left-0 z-10 w-6 h-6 flex items-center justify-center text-muted/40 hover:text-gold transition-colors cursor-pointer select-none" aria-label="Đối tác trước">
+        <button type="button" disabled={!canScrollPrev} onClick={() => scrollPartners(-1)} className="absolute left-0 z-10 w-7 h-7 flex items-center justify-center rounded-full bg-white/90 text-muted hover:text-gold transition disabled:cursor-not-allowed disabled:opacity-30 shadow-sm" aria-label="Đối tác trước">
           <ChevronLeft size={16} className="stroke-[2.5]" />
         </button>
 
         {/* 6 Logo Cards */}
-        <div className="grid grid-cols-6 gap-2 w-full px-5">
+        <div ref={sliderRef} className="flex w-full snap-x snap-mandatory gap-2 overflow-x-auto scroll-smooth px-9 pb-2 hide-scrollbar lg:grid lg:grid-cols-6 lg:overflow-visible lg:px-5 lg:pb-0">
           {partners.map((partner) => (
             <div
               key={partner.id}
-              className="bg-white border border-[#E8DCCB]/60 rounded-xl py-3 px-1.5 flex items-center justify-center h-14 cursor-pointer group shadow-sm hover:border-[#B88746] hover:-translate-y-[2px] transition-all duration-300"
+              data-partner-card
+              className="flex h-14 basis-[56%] shrink-0 snap-start items-center justify-center rounded-xl border border-[#E8DCCB]/60 bg-white px-2 py-3 shadow-sm transition-all duration-300 hover:-translate-y-[2px] hover:border-[#B88746] sm:basis-[31%] lg:basis-auto lg:shrink lg:snap-none"
             >
               {renderPartnerName(partner.name)}
             </div>
@@ -82,7 +114,7 @@ export default function Partners() {
         </div>
 
         {/* Right Arrow Button */}
-        <button className="absolute right-0 z-10 w-6 h-6 flex items-center justify-center text-muted/40 hover:text-gold transition-colors cursor-pointer select-none" aria-label="Đối tác tiếp theo">
+        <button type="button" disabled={!canScrollNext} onClick={() => scrollPartners(1)} className="absolute right-0 z-10 w-7 h-7 flex items-center justify-center rounded-full bg-white/90 text-muted hover:text-gold transition disabled:cursor-not-allowed disabled:opacity-30 shadow-sm" aria-label="Đối tác tiếp theo">
           <ChevronRight size={16} className="stroke-[2.5]" />
         </button>
       </div>

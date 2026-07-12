@@ -56,6 +56,19 @@ class Post extends Model
         return $this->morphToMany(Tag::class, 'taggable');
     }
 
+    public function manualRelatedPosts()
+    {
+        return $this->belongsToMany(
+            Post::class,
+            'post_related_posts',
+            'post_id',
+            'related_post_id'
+        )
+            ->withPivot('sort_order')
+            ->withTimestamps()
+            ->orderBy('post_related_posts.sort_order');
+    }
+
     public function seoMeta()
     {
         return $this->morphOne(SeoMeta::class, 'seoable');

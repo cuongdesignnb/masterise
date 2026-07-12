@@ -6,9 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Models\Project;
 use App\Models\ProjectCategory;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class ProjectController extends Controller
 {
+    private const REGIONS = ['Miền Bắc', 'Miền Trung', 'Miền Nam', 'Quốc tế'];
+
     private function noStore($response)
     {
         return $response
@@ -41,7 +45,7 @@ class ProjectController extends Controller
 
         // Filter by region
         if ($request->has('region') && !empty($request->region)) {
-            $query->where('region', $request->region);
+            $query->where('region', $this->normalizeRegion($request->region));
         }
 
         // Filter by status
@@ -105,6 +109,28 @@ class ProjectController extends Controller
         ], 200);
 
         return $canViewUnpublished ? $this->noStore($response) : $response;
+    }
+
+    public function regions()
+    {
+        $counts = Project::query()
+            ->where('is_published', true)
+            ->whereNotNull('region')
+            ->where('region', '!=', '')
+            ->select('region', DB::raw('COUNT(*) as projects_count'))
+            ->groupBy('region')
+            ->pluck('projects_count', 'region');
+
+        $data = collect(self::REGIONS)
+            ->filter(fn ($region) => $counts->has($region))
+            ->map(fn ($region) => [
+                'value' => $region,
+                'label' => $region,
+                'projects_count' => (int) $counts[$region],
+            ])
+            ->values();
+
+        return response()->json(['success' => true, 'data' => $data]);
     }
 
     public function adminIndex(Request $request)
@@ -282,6 +308,7 @@ class ProjectController extends Controller
      */
     public function store(Request $request)
     {
+        $request->merge(['region' => $this->normalizeRegion($request->input('region'))]);
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:projects',
@@ -294,7 +321,7 @@ class ProjectController extends Controller
             'badge_text' => 'nullable|string|max:100',
             'project_label' => 'nullable|string|max:255',
             'location' => 'nullable|string',
-            'region' => 'nullable|string',
+            'region' => ['nullable', Rule::in(self::REGIONS)],
             'address' => 'nullable|string',
             'province' => 'nullable|string',
             'district' => 'nullable|string',
@@ -427,6 +454,7 @@ class ProjectController extends Controller
      */
     public function update(Request $request, $id)
     {
+        $request->merge(['region' => $this->normalizeRegion($request->input('region'))]);
         $project = Project::find($id);
 
         if (!$project) {
@@ -448,7 +476,7 @@ class ProjectController extends Controller
             'badge_text' => 'nullable|string|max:100',
             'project_label' => 'nullable|string|max:255',
             'location' => 'nullable|string',
-            'region' => 'nullable|string',
+            'region' => ['nullable', Rule::in(self::REGIONS)],
             'address' => 'nullable|string',
             'province' => 'nullable|string',
             'district' => 'nullable|string',
@@ -730,5 +758,28 @@ class ProjectController extends Controller
                 'saved' => $saved
             ]
         ], 200);
+    }
+
+    private function normalizeRegion(?string $region): ?string
+    {
+        if ($region === null || trim($region) === '') {
+            return null;
+        }
+
+        $normalized = mb_strtolower(trim($region));
+        $normalized = str_replace(['-', '_'], ' ', $normalized);
+        $normalized = preg_replace('/\s+/', ' ', $normalized);
+        $aliases = [
+            'mien bac' => 'Miền Bắc',
+            'miền bắc' => 'Miền Bắc',
+            'mien trung' => 'Miền Trung',
+            'miền trung' => 'Miền Trung',
+            'mien nam' => 'Miền Nam',
+            'miền nam' => 'Miền Nam',
+            'quoc te' => 'Quốc tế',
+            'quốc tế' => 'Quốc tế',
+        ];
+
+        return $aliases[$normalized] ?? trim($region);
     }
 }

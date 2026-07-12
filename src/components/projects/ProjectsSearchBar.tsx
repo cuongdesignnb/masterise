@@ -5,14 +5,8 @@ import { Search, ChevronDown } from "lucide-react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import Container from "@/components/Container";
 import MotionWrapper from "@/components/MotionWrapper";
-
-const regionOptions = [
-  { value: "", label: "Tất cả khu vực" },
-  { value: "Thành phố Thủ Đức", label: "TP. Thủ Đức" },
-  { value: "Quận 1", label: "Quận 1" },
-  { value: "Hà Nội", label: "Hà Nội" },
-  { value: "TP. Ho Chi Minh", label: "TP. Hồ Chí Minh" },
-];
+import { projectService } from "@/services/projectService";
+import type { RegionOption } from "@/types/api";
 
 const categoryOptions = [
   { value: "", label: "Tất cả loại hình" },
@@ -51,6 +45,11 @@ export default function ProjectsSearchBar() {
   const [category, setCategory] = useState("");
   const [status, setStatus] = useState("");
   const [price, setPrice] = useState("");
+  const [regionOptions, setRegionOptions] = useState<RegionOption[]>([]);
+
+  useEffect(() => {
+    projectService.getRegions().then(setRegionOptions).catch(() => setRegionOptions([]));
+  }, []);
 
   // Keep a ref to track if component is mounting to avoid double triggering on first load
   const isMounted = useRef(false);
@@ -216,9 +215,10 @@ export default function ProjectsSearchBar() {
                   onChange={(e) => handleRegionChange(e.target.value)}
                   className="w-full appearance-none bg-ivory border border-line/50 rounded-xl px-4 py-2.5 text-sm text-muted cursor-pointer focus:outline-none focus:border-gold/50 focus:ring-1 focus:ring-gold/20 transition-colors pr-9 font-medium"
                 >
+                  <option value="">Tất cả vùng miền</option>
                   {regionOptions.map((opt) => (
                     <option key={opt.value} value={opt.value} className="text-ink font-medium">
-                      {opt.label}
+                      {opt.label} ({opt.projects_count})
                     </option>
                   ))}
                 </select>

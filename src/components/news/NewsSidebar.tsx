@@ -10,6 +10,7 @@ import { postService } from "@/services/postService";
 import { api } from "@/lib/api";
 import { unwrapData } from "@/adapters/apiResponseAdapter";
 import type { Post } from "@/types/api";
+import { getPostDetailHref } from "@/lib/postRoutes";
 
 interface CategoryItem {
   id: number;
@@ -26,14 +27,14 @@ export default function NewsSidebar() {
   useEffect(() => {
     // Fetch featured posts
     postService
-      .getFeaturedPosts({ limit: 5, post_type: "news" })
+      .getFeaturedPosts({ limit: 5, post_type: "news,investment" })
       .then((res) => setFeaturedPosts(unwrapData<Post[]>(res) || []))
       .catch((err) => console.error("Failed to load featured posts:", err))
       .finally(() => setIsLoadingFeatured(false));
 
     // Fetch categories
     api
-      .get<CategoryItem[]>("/post-categories")
+      .get<CategoryItem[]>("/post-categories?post_type=news,investment&exclude_post_type=event")
       .then((res) => {
         if (res.success && Array.isArray(res.data)) {
           setCategories(res.data);
@@ -92,7 +93,7 @@ export default function NewsSidebar() {
                   {/* Text */}
                   <div className="flex-1 min-w-0">
                     <Link
-                      href={`/tin-tuc/${post.slug}`}
+                      href={getPostDetailHref(post)}
                       className="text-xs font-semibold text-ink line-clamp-2 hover:text-gold transition-colors duration-200"
                     >
                       {post.title}

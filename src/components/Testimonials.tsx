@@ -41,7 +41,7 @@ export default function Testimonials() {
   if (testimonials.length === 0) return null;
 
   return (
-    <div className="flex flex-col h-full text-left">
+    <div className="flex min-w-0 max-w-full flex-col h-full overflow-x-clip text-left">
       <MotionWrapper>
         {/* Gold Serif Title with Leaf Icon */}
         <div className="mb-6 flex items-center gap-2">
@@ -53,12 +53,12 @@ export default function Testimonials() {
       </MotionWrapper>
 
       {/* 2-Card Horizontal Row on Desktop (Horizontal slide on Mobile) */}
-      <div className="flex overflow-x-auto snap-x snap-mandatory scroll-smooth hide-scrollbar gap-4 pb-4 -mx-4 px-4 md:grid md:grid-cols-2 md:mx-0 md:px-0 md:pb-0 md:overflow-visible flex-grow">
+      <div className="flex max-w-full flex-grow snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-1 pb-4 hide-scrollbar md:grid md:grid-cols-2 md:overflow-visible md:px-0 md:pb-0">
         {testimonials.map((testimonial, idx) => (
           <MotionWrapper
             key={testimonial.id}
             delay={idx * 0.08}
-            className="w-[85vw] sm:w-[380px] md:w-auto flex-shrink-0 snap-center md:flex-shrink md:snap-align-none h-full"
+            className="h-full w-[min(86vw,360px)] min-w-0 max-w-full flex-shrink-0 snap-center md:w-auto md:flex-shrink md:snap-align-none"
           >
             <motion.div
               whileHover={{ y: -4 }}

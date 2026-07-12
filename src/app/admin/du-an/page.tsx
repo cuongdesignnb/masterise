@@ -2730,6 +2730,7 @@ export default function AdminProjects() {
                           <option value="Miền Bắc">Miền Bắc</option>
                           <option value="Miền Trung">Miền Trung</option>
                           <option value="Miền Nam">Miền Nam</option>
+                          <option value="Quốc tế">Quốc tế</option>
                         </select>
                       </div>
                     </div>

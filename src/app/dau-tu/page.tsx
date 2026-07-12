@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import DauTuClient from "./DauTuClient";
+import { Suspense } from "react";
 
 export const metadata: Metadata = {
   title: "Cơ hội đầu tư Masterise Homes - Sự kiện, chính sách và phân tích",
@@ -9,5 +10,5 @@ export const metadata: Metadata = {
 };
 
 export default function DauTuPage() {
-  return <DauTuClient />;
+  return <Suspense fallback={<div className="min-h-screen bg-ivory" />}><DauTuClient /></Suspense>;
 }

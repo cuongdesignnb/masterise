@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\Admin\AiSettingsController;
 use App\Http\Controllers\Api\Admin\AiContentController;
 use App\Http\Controllers\Api\Admin\AiBatchController;
 use App\Http\Controllers\Api\PageController;
+use App\Http\Controllers\Api\TagController;
 use Illuminate\Support\Facades\Route;
 
 Route::group(['prefix' => 'v1'], function() {
@@ -35,6 +36,7 @@ Route::group(['prefix' => 'v1'], function() {
     // Projects
     Route::get('/projects', [ProjectController::class, 'index']);
     Route::get('/projects/featured', [ProjectController::class, 'featured']);
+    Route::get('/projects/regions', [ProjectController::class, 'regions']);
     Route::get('/projects/{slug}', [ProjectController::class, 'show']);
     Route::get('/project-categories', [ProjectController::class, 'categories']);
 
@@ -43,6 +45,7 @@ Route::group(['prefix' => 'v1'], function() {
     Route::get('/posts/featured', [PostController::class, 'featured']);
     Route::get('/posts/{slug}', [PostController::class, 'show']);
     Route::get('/post-categories', [PostController::class, 'categories']);
+    Route::get('/tags', [TagController::class, 'index']);
 
     // Static Pages Public Route
     Route::get('/pages', [PageController::class, 'index']);
@@ -132,6 +135,9 @@ Route::group(['prefix' => 'v1'], function() {
             Route::post('/posts', [PostController::class, 'store']);
             Route::put('/posts/{id}', [PostController::class, 'update']);
             Route::delete('/posts/{id}', [PostController::class, 'destroy']);
+            Route::post('/tags', [TagController::class, 'store']);
+            Route::put('/tags/{tag}', [TagController::class, 'update']);
+            Route::delete('/tags/{tag}', [TagController::class, 'destroy']);
 
             // Static Pages Admin CRUD
             Route::get('/pages', [PageController::class, 'index']);

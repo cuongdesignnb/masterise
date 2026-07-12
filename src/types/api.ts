@@ -156,6 +156,7 @@ export interface Post {
   category?: PostCategory;
   author?: User;
   tags?: Tag[];
+  manual_related_posts?: Post[];
   seo_meta?: SeoMeta | null;
   ai_generated?: boolean;
   ai_generation_job_id?: number | null;
@@ -189,6 +190,21 @@ export interface Tag {
   slug: string;
   created_at: string;
   updated_at: string;
+  posts_count?: number;
+}
+
+export interface PostDetailData {
+  post: Post;
+  inline_related: Post[];
+  related: Post[];
+  previous: Post | null;
+  next: Post | null;
+}
+
+export interface RegionOption {
+  value: 'Miền Bắc' | 'Miền Trung' | 'Miền Nam' | 'Quốc tế';
+  label: string;
+  projects_count: number;
 }
 
 export interface LeadNote {

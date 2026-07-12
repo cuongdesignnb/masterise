@@ -14,7 +14,7 @@ import NewsRelatedSection from "@/components/news-detail/NewsRelatedSection";
 import { extractTocFromHtml, formatArticleDate, readingMinutes } from "@/lib/articleContent";
 import ArticleToc from "@/components/news-detail/ArticleToc";
 import { getServerApiUrl } from "@/lib/serverApi";
-import type { Post } from "@/types/api";
+import type { Post, PostDetailData } from "@/types/api";
 import { absoluteUrl, SITE_NAME, SITE_URL } from "@/config/seo";
 
 const siteUrl = SITE_URL;
@@ -23,12 +23,7 @@ type Props = {
   params: Promise<{ slug: string }>;
 };
 
-type PostDetailResponse = {
-  post: Post;
-  related: Post[];
-  previous?: Post | null;
-  next?: Post | null;
-};
+type PostDetailResponse = PostDetailData;
 
 async function getPost(slug: string): Promise<PostDetailResponse | null> {
   const res = await fetch(`${getServerApiUrl()}/posts/${slug}`, {
@@ -99,7 +94,7 @@ export default async function NewsArticleDetailPage({ params }: Props) {
   const data = await getPost(slug);
   if (!data?.post) notFound();
 
-  const { post, related = [], previous = null, next = null } = data;
+  const { post, inline_related = [], related = [], previous = null, next = null } = data;
   const postUrl = `${siteUrl}/tin-tuc/${post.slug}`;
   const toc = extractTocFromHtml(post.content);
   const videos = (post.media_items || []).filter((item) => (item.type === "youtube" || item.type === "video_upload") && item.url);
@@ -164,7 +159,7 @@ export default async function NewsArticleDetailPage({ params }: Props) {
           <div className="grid gap-6 py-8 lg:grid-cols-[minmax(0,1fr)_330px] xl:grid-cols-[minmax(0,1fr)_360px]">
             <div className="min-w-0 space-y-6">
               <ArticleToc toc={toc} className="lg:hidden" />
-              <NewsArticleMainContent post={post} related={related} />
+              <NewsArticleMainContent post={post} related={inline_related} />
               <NewsMediaBlocks mediaItems={post.media_items} />
               <NewsArticleMetaFooter post={post} previous={previous} next={next} />
             </div>

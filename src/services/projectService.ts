@@ -1,5 +1,5 @@
 import { api } from '@/lib/api';
-import { ApiResponse, Project as ApiProject } from '@/types/api';
+import { Project as ApiProject, RegionOption } from '@/types/api';
 import { unwrapData } from '@/adapters/apiResponseAdapter';
 
 export const projectService = {
@@ -31,5 +31,10 @@ export const projectService = {
       console.error(`Error fetching project by slug ${slug}:`, e);
       return null;
     }
+  },
+
+  getRegions: async (): Promise<RegionOption[]> => {
+    const response = await api.get<RegionOption[]>('/projects/regions');
+    return unwrapData<RegionOption[]>(response) || [];
   },
 };

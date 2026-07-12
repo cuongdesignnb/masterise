@@ -40,13 +40,14 @@ export default function NewsFilterBar() {
   const [categories, setCategories] = useState<CategoryItem[]>([]);
   const categoryQuery = searchParams.get("category") || "all";
   const searchQuery = searchParams.get("q") || "";
+  const sortQuery = searchParams.get("sort") || "latest";
 
   const [searchTerm, setSearchTerm] = useState(searchQuery);
 
   // Fetch categories from API
   useEffect(() => {
     api
-      .get<CategoryItem[]>("/post-categories")
+      .get<CategoryItem[]>("/post-categories?post_type=news,investment&exclude_post_type=event")
       .then((res) => {
         if (res.success && Array.isArray(res.data)) {
           setCategories(res.data);
@@ -84,6 +85,14 @@ export default function NewsFilterBar() {
     } else {
       params.set("category", slug);
     }
+    params.delete("page");
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
+  const handleSortChange = (sort: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (sort === "latest") params.delete("sort");
+    else params.set("sort", sort);
     params.delete("page");
     router.push(`${pathname}?${params.toString()}`);
   };
@@ -147,10 +156,12 @@ export default function NewsFilterBar() {
 
             {/* ── Sort dropdown ── */}
             <div className="relative shrink-0">
-              <button className="inline-flex items-center gap-2 bg-white border border-line/60 rounded-xl px-4 py-2.5 text-xs font-semibold text-muted hover:border-gold hover:text-gold transition cursor-pointer">
-                Sắp xếp: Mới nhất
-                <ChevronDown size={14} />
-              </button>
+              <select value={sortQuery} onChange={(event) => handleSortChange(event.target.value)} aria-label="Sắp xếp bài viết" className="appearance-none rounded-xl border border-line/60 bg-white px-4 py-2.5 pr-9 text-xs font-semibold text-muted outline-none transition hover:border-gold hover:text-gold">
+                <option value="latest">Mới nhất</option>
+                <option value="oldest">Cũ nhất</option>
+                <option value="title">Tên A–Z</option>
+              </select>
+              <ChevronDown size={14} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted" />
             </div>
           </div>
         </MotionWrapper>

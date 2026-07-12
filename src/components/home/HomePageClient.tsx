@@ -31,6 +31,7 @@ import { projectService } from "@/services/projectService";
 import { postService } from "@/services/postService";
 import { unwrapData } from "@/adapters/apiResponseAdapter";
 import { getSalesStatusLabel, getSalesStatusColor } from "@/lib/salesStatus";
+import { getPostDetailHref } from "@/lib/postRoutes";
 import { useSiteSettings } from "@/providers/SiteSettingsProvider";
 import {
   fadeUp,
@@ -477,7 +478,7 @@ export default function HomePageClient() {
                 {homePageContent.partnersTitle}
               </h2>
             </motion.div>
-            <motion.div variants={fadeUp} className="grid gap-8 lg:grid-cols-2">
+            <motion.div variants={fadeUp} className="grid min-w-0 max-w-full gap-8 overflow-x-clip lg:grid-cols-2">
               <Partners />
               <Testimonials />
             </motion.div>
@@ -517,7 +518,7 @@ export default function HomePageClient() {
                     {posts.slice(0, 4).map((post) => (
                       <Link
                         key={post.id}
-                        href={`/tin-tuc/${post.slug}`}
+                        href={getPostDetailHref(post)}
                         className="news-card group block"
                       >
                         {/* Thumbnail */}

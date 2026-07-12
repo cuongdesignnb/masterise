@@ -4,6 +4,7 @@ import { ArrowRight, CalendarDays, MessageSquareText } from "lucide-react";
 import type { Post } from "@/types/api";
 import type { ArticleTocItem } from "@/lib/articleContent";
 import { formatArticleDate } from "@/lib/articleContent";
+import { getPostDetailHref } from "@/lib/postRoutes";
 
 type Props = {
   toc: ArticleTocItem[];
@@ -41,7 +42,7 @@ export default function NewsArticleSidebar({ toc, related, postType = "news" }: 
           <h2 className="text-sm font-black uppercase tracking-[0.12em] text-[#B88746]">{sectionTitle}</h2>
           <div className="mt-4 space-y-4">
             {related.slice(0, 4).map((item) => (
-              <Link key={item.id} href={`${basePath}/${item.slug}`} className="group grid grid-cols-[88px_1fr] gap-3">
+              <Link key={item.id} href={getPostDetailHref(item)} className="group grid grid-cols-[88px_1fr] gap-3">
                 <div className="relative aspect-[4/3] overflow-hidden rounded-xl border border-[#E8DCCB] bg-[#FBF8F2]">
                   {item.thumbnail ? (
                     <Image src={item.thumbnail} alt={item.title} fill className="object-cover transition duration-300 group-hover:scale-105" sizes="88px" />

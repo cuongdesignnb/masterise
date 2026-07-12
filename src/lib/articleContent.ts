@@ -70,25 +70,56 @@ export function enhanceArticleHtmlWithHeadingIds(content?: string | null) {
   });
 }
 
-export function splitArticleHtmlForInlineLinks(content?: string | null) {
+export function sanitizeArticleHtml(content?: string | null) {
+  return (content || "")
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script\s*>/gi, "")
+    .replace(/\son\w+\s*=\s*(["']).*?\1/gi, "")
+    .replace(/\s(href|src)\s*=\s*(["'])\s*javascript:[\s\S]*?\2/gi, "");
+}
+
+export function enhanceArticleTables(content?: string | null) {
+  const protectedBlocks: string[] = [];
+  const protect = (value: string) => {
+    const token = `___ARTICLE_PROTECTED_${protectedBlocks.length}___`;
+    protectedBlocks.push(value);
+    return token;
+  };
+
+  let html = content || "";
+  html = html.replace(/<pre\b[^>]*>[\s\S]*?<\/pre\s*>/gi, protect);
+  html = html.replace(/<code\b[^>]*>[\s\S]*?<\/code\s*>/gi, protect);
+  html = html.replace(/<div\b[^>]*class=["'][^"']*article-table-scroll[^"']*["'][^>]*>[\s\S]*?<\/table\s*>\s*<\/div\s*>/gi, protect);
+  html = html.replace(/<table\b[^>]*>[\s\S]*?<\/table\s*>/gi, (table) => (
+    `<div class="article-table-scroll" role="region" tabindex="0" aria-label="Bảng dữ liệu trong bài viết">${table}</div>`
+  ));
+
+  return html.replace(/___ARTICLE_PROTECTED_(\d+)___/g, (_, index) => protectedBlocks[Number(index)] || "");
+}
+
+export function enhanceArticleHtml(content?: string | null) {
+  return enhanceArticleTables(enhanceArticleHtmlWithHeadingIds(sanitizeArticleHtml(content)));
+}
+
+export function splitArticleIntroAndMain(content?: string | null) {
   const html = content || "";
-  if (!html) return { before: "", after: "" };
+  if (!html) return { introHtml: "", mainHtml: "" };
 
-  const paragraphEnd = /<\/p\s*>/i.exec(html);
-  const firstH2 = /<h2\b[^>]*>/i.exec(html);
-  const paragraphSplit = paragraphEnd ? paragraphEnd.index + paragraphEnd[0].length : -1;
-  const h2Split = firstH2?.index ?? -1;
-  const splitAt = paragraphSplit > 0 && paragraphSplit < html.length * 0.82
-    ? paragraphSplit
-    : h2Split > 80 && h2Split < html.length * 0.9
-      ? h2Split
-      : -1;
-
-  if (splitAt < 0 || stripHtml(html.slice(splitAt)).length < 80) {
-    return { before: html, after: "" };
+  const paragraphs = Array.from(html.matchAll(/<p\b[^>]*>[\s\S]*?<\/p\s*>/gi));
+  const firstMeaningful = paragraphs.find((match) => stripHtml(match[0]).length > 0);
+  if (!firstMeaningful || firstMeaningful.index === undefined) {
+    return { introHtml: html, mainHtml: "" };
   }
 
-  return { before: html.slice(0, splitAt), after: html.slice(splitAt) };
+  const splitAt = firstMeaningful.index + firstMeaningful[0].length;
+  const mainHtml = html.slice(splitAt);
+  if (stripHtml(mainHtml).length < 80) return { introHtml: html, mainHtml: "" };
+
+  return { introHtml: html.slice(0, splitAt), mainHtml };
+}
+
+export function splitArticleHtmlForInlineLinks(content?: string | null) {
+  const { introHtml, mainHtml } = splitArticleIntroAndMain(content);
+  return { before: introHtml, after: mainHtml };
 }
 
 export function formatArticleDate(value?: string | null) {
