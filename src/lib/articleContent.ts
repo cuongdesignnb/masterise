@@ -89,9 +89,23 @@ export function enhanceArticleTables(content?: string | null) {
   html = html.replace(/<pre\b[^>]*>[\s\S]*?<\/pre\s*>/gi, protect);
   html = html.replace(/<code\b[^>]*>[\s\S]*?<\/code\s*>/gi, protect);
   html = html.replace(/<div\b[^>]*class=["'][^"']*article-table-scroll[^"']*["'][^>]*>[\s\S]*?<\/table\s*>\s*<\/div\s*>/gi, protect);
-  html = html.replace(/<table\b[^>]*>[\s\S]*?<\/table\s*>/gi, (table) => (
-    `<div class="article-table-scroll" role="region" tabindex="0" aria-label="Bảng dữ liệu trong bài viết">${table}</div>`
-  ));
+  html = html.replace(/<table\b[^>]*>[\s\S]*?<\/table\s*>/gi, (table) => {
+    const rows = Array.from(table.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr\s*>/gi));
+    const columnCount = Math.max(1, ...rows.map((row) => {
+      const cells = Array.from(row[1].matchAll(/<(?:th|td)\b([^>]*)>/gi));
+      return cells.reduce((total, cell) => {
+        const colspan = cell[1].match(/\bcolspan\s*=\s*["']?(\d+)/i);
+        return total + Math.max(1, Number(colspan?.[1] || 1));
+      }, 0);
+    }));
+    // One- and two-column tables should fit the article on phones. Wider
+    // tables retain a readable column width and scroll inside their wrapper.
+    const minWidth = columnCount <= 2
+      ? 0
+      : Math.min(1400, columnCount * 140);
+
+    return `<div class="article-table-scroll" role="region" tabindex="0" aria-label="Bảng dữ liệu trong bài viết" data-column-count="${columnCount}" style="--article-table-min-width: ${minWidth}px">${table}</div>`;
+  });
 
   return html.replace(/___ARTICLE_PROTECTED_(\d+)___/g, (_, index) => protectedBlocks[Number(index)] || "");
 }
