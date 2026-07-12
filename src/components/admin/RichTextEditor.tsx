@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useId, useRef, useState } from 'react';
 import MediaSelectModal from '@/components/admin/MediaSelectModal';
 import { Copy, Eraser, Link2, MousePointer2, Search, Table2, Trash2, X } from 'lucide-react';
 import { projectService } from '@/services/projectService';
@@ -27,6 +27,9 @@ function serializeEditorHtml(quill: any) {
     element.classList.remove('ql-multi-selected');
     element.removeAttribute('data-multi-selected');
   });
+  clone.querySelectorAll('[class*="ql-multi-range-highlight"]').forEach((element) => {
+    element.replaceWith(...Array.from(element.childNodes));
+  });
   clone.querySelectorAll('.ql-article-table').forEach((wrapper) => {
     wrapper.replaceWith(...Array.from(wrapper.childNodes));
   });
@@ -44,10 +47,11 @@ export default function RichTextEditor({ value, onChange, placeholder, enablePro
   const [projectSearch, setProjectSearch] = useState('');
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoadingProjects, setIsLoadingProjects] = useState(false);
-  const selectedBlocksRef = useRef<Set<HTMLElement>>(new Set());
+  const selectedRangesRef = useRef<Array<{ index: number; length: number }>>([]);
   const [multiSelectMode, setMultiSelectMode] = useState(false);
-  const [selectedBlockCount, setSelectedBlockCount] = useState(0);
+  const [selectedRangeCount, setSelectedRangeCount] = useState(0);
   const tableInputHandlerRef = useRef<((event: Event) => void) | null>(null);
+  const highlightName = `ql-multi-${useId().replace(/:/g, '')}`;
 
   const applyHtmlToEditor = (quill: any, html: string) => {
     const normalizedHtml = html || '<p><br></p>';
@@ -176,65 +180,126 @@ export default function RichTextEditor({ value, onChange, placeholder, enablePro
     }
   }, [value]);
 
+  const quillRangeToDomRange = (range: { index: number; length: number }) => {
+    const quill = quillRef.current;
+    if (!quill || range.length <= 0) return null;
+    const resolveBoundary = (index: number) => {
+      const [leaf, offset] = quill.getLeaf(Math.max(0, Math.min(index, quill.getLength() - 1)));
+      const node = leaf?.domNode as Node | undefined;
+      if (!node) return null;
+      if (node.nodeType === Node.TEXT_NODE) {
+        return { node, offset: Math.min(offset, node.textContent?.length || 0) };
+      }
+      return { node, offset: Math.min(offset, node.childNodes.length) };
+    };
+    const start = resolveBoundary(range.index);
+    const end = resolveBoundary(range.index + range.length);
+    if (!start || !end) return null;
+    try {
+      const domRange = document.createRange();
+      domRange.setStart(start.node, start.offset);
+      domRange.setEnd(end.node, end.offset);
+      return domRange.collapsed ? null : domRange;
+    } catch {
+      return null;
+    }
+  };
+
+  const refreshMultiSelectionHighlight = () => {
+    const quill = quillRef.current;
+    const cssHighlights = (window.CSS as typeof CSS & { highlights?: Map<string, unknown> })?.highlights;
+    const HighlightCtor = (window as typeof window & { Highlight?: new (...ranges: Range[]) => unknown }).Highlight;
+    if (!cssHighlights || !HighlightCtor) {
+      if (!quill || !containerRef.current) return;
+      let overlay = containerRef.current.querySelector('.ql-multi-range-overlay') as HTMLElement | null;
+      if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.className = 'ql-multi-range-overlay';
+        overlay.setAttribute('aria-hidden', 'true');
+        containerRef.current.appendChild(overlay);
+      }
+      overlay.replaceChildren();
+      const containerBounds = containerRef.current.getBoundingClientRect();
+      const domRanges = selectedRangesRef.current
+        .map(quillRangeToDomRange)
+        .filter((range): range is Range => Boolean(range));
+      domRanges.forEach((domRange) => {
+        Array.from(domRange.getClientRects()).forEach((rect) => {
+          if (!rect.width || !rect.height) return;
+          const marker = document.createElement('span');
+          marker.className = 'ql-multi-range-overlay-marker';
+          marker.style.left = `${rect.left - containerBounds.left}px`;
+          marker.style.top = `${rect.top - containerBounds.top}px`;
+          marker.style.width = `${rect.width}px`;
+          marker.style.height = `${rect.height}px`;
+          overlay?.appendChild(marker);
+        });
+      });
+      return;
+    }
+    cssHighlights.delete(highlightName);
+    const domRanges = selectedRangesRef.current.map(quillRangeToDomRange).filter((range): range is Range => Boolean(range));
+    if (domRanges.length) cssHighlights.set(highlightName, new HighlightCtor(...domRanges));
+  };
+
+  const setSelectedRanges = (ranges: Array<{ index: number; length: number }>) => {
+    const unique = ranges
+      .filter((range) => range.length > 0)
+      .filter((range, index, items) => items.findIndex((item) => item.index === range.index && item.length === range.length) === index)
+      .sort((a, b) => a.index - b.index);
+    selectedRangesRef.current = unique;
+    setSelectedRangeCount(unique.length);
+    refreshMultiSelectionHighlight();
+  };
+
   const clearMultiSelection = () => {
-    selectedBlocksRef.current.forEach((block) => {
-      block.classList.remove('ql-multi-selected');
-      block.removeAttribute('data-multi-selected');
-    });
-    selectedBlocksRef.current.clear();
-    setSelectedBlockCount(0);
+    selectedRangesRef.current = [];
+    setSelectedRangeCount(0);
+    const cssHighlights = (window.CSS as typeof CSS & { highlights?: Map<string, unknown> })?.highlights;
+    cssHighlights?.delete(highlightName);
+    const quill = quillRef.current;
+    if (quill) {
+      containerRef.current?.querySelector('.ql-multi-range-overlay')?.replaceChildren();
+    }
   };
 
   useEffect(() => {
     const quill = quillRef.current;
     if (!quill || !multiSelectMode) return;
 
-    const handleBlockClick = (event: MouseEvent) => {
-      if (!event.ctrlKey && !event.metaKey) return;
-      const target = event.target as HTMLElement;
-      const block = target.closest('p,h1,h2,h3,h4,h5,h6,li,blockquote') as HTMLElement | null;
-      if (!block || !quill.root.contains(block)) return;
-      event.preventDefault();
-      event.stopPropagation();
-      if (selectedBlocksRef.current.has(block)) {
-        selectedBlocksRef.current.delete(block);
-        block.classList.remove('ql-multi-selected');
-        block.removeAttribute('data-multi-selected');
-      } else {
-        selectedBlocksRef.current.add(block);
-        block.classList.add('ql-multi-selected');
-        block.setAttribute('data-multi-selected', 'true');
-      }
-      setSelectedBlockCount(selectedBlocksRef.current.size);
+    const handleMouseUp = (event: MouseEvent) => {
+      const additive = event.ctrlKey || event.metaKey;
+      requestAnimationFrame(() => {
+        const range = quill.getSelection();
+        if (!range) return;
+        if (range.length > 0) {
+          setSelectedRanges(additive ? [...selectedRangesRef.current, range] : [range]);
+          window.getSelection()?.removeAllRanges();
+          return;
+        }
+        if (additive) {
+          const match = selectedRangesRef.current.findIndex((item) => range.index >= item.index && range.index <= item.index + item.length);
+          if (match >= 0) setSelectedRanges(selectedRangesRef.current.filter((_, index) => index !== match));
+        }
+      });
     };
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') clearMultiSelection();
     };
 
-    quill.root.addEventListener('click', handleBlockClick, true);
+    quill.root.addEventListener('mouseup', handleMouseUp);
     document.addEventListener('keydown', handleEscape);
     return () => {
-      quill.root.removeEventListener('click', handleBlockClick, true);
+      quill.root.removeEventListener('mouseup', handleMouseUp);
       document.removeEventListener('keydown', handleEscape);
     };
   }, [multiSelectMode]);
 
   useEffect(() => () => clearMultiSelection(), []);
 
-  const getSelectedRanges = () => {
-    const quill = quillRef.current;
-    if (!quill) return [];
-    return Array.from(selectedBlocksRef.current)
-      .map((block) => {
-        const blot = quill.constructor.find(block);
-        if (!blot) return null;
-        return { index: quill.getIndex(blot), length: Math.max(1, blot.length()) };
-      })
-      .filter((range): range is { index: number; length: number } => Boolean(range))
-      .sort((a, b) => a.index - b.index);
-  };
+  const getSelectedRanges = () => [...selectedRangesRef.current].sort((a, b) => a.index - b.index);
 
-  const formatSelectedBlocks = (format: string, value: string | boolean | false) => {
+  const formatSelectedRanges = (format: string, value: string | boolean | false) => {
     const quill = quillRef.current;
     if (!quill) return;
     const ranges = getSelectedRanges();
@@ -243,22 +308,26 @@ export default function RichTextEditor({ value, onChange, placeholder, enablePro
       else if (format === 'clean') quill.removeFormat(range.index, range.length, 'user');
       else quill.formatText(range.index, range.length, format, value, 'user');
     });
+    onChange(serializeEditorHtml(quill));
+    refreshMultiSelectionHighlight();
   };
 
-  const copySelectedBlocks = async () => {
-    const text = Array.from(selectedBlocksRef.current)
-      .sort((a, b) => a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1)
-      .map((block) => block.innerText)
+  const copySelectedRanges = async () => {
+    const quill = quillRef.current;
+    if (!quill) return;
+    const text = getSelectedRanges()
+      .map((range) => quill.getText(range.index, range.length))
       .join('\n');
     if (text) await navigator.clipboard.writeText(text);
   };
 
-  const deleteSelectedBlocks = () => {
+  const deleteSelectedRanges = () => {
     const quill = quillRef.current;
     if (!quill) return;
     getSelectedRanges().sort((a, b) => b.index - a.index).forEach((range) => {
       quill.deleteText(range.index, range.length, 'user');
     });
+    onChange(serializeEditorHtml(quill));
     clearMultiSelection();
   };
 
@@ -354,18 +423,23 @@ export default function RichTextEditor({ value, onChange, placeholder, enablePro
         </button>
       ) : null}
         <button type="button" onClick={insertTable} className="inline-flex items-center gap-2 rounded-lg border border-[#E8DCCB] bg-white px-3 py-2 text-xs font-bold text-[#6E5F51] hover:border-[#B88746] hover:text-[#8F632F]"><Table2 className="h-4 w-4" />Chèn bảng</button>
-        <button type="button" aria-pressed={multiSelectMode} onClick={() => { setMultiSelectMode((value) => !value); clearMultiSelection(); }} className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-bold ${multiSelectMode ? 'border-[#B88746] bg-[#B88746] text-white' : 'border-[#E8DCCB] bg-white text-[#6E5F51]'}`}><MousePointer2 className="h-4 w-4" />Chọn nhiều đoạn{multiSelectMode ? ` (${selectedBlockCount})` : ''}</button>
-        {multiSelectMode && selectedBlockCount > 0 ? <>
-          {['bold', 'italic', 'underline', 'strike'].map((format) => <button key={format} type="button" onClick={() => formatSelectedBlocks(format, true)} className="rounded border border-[#E8DCCB] bg-white px-2 py-1.5 text-xs font-bold">{format === 'bold' ? 'B' : format === 'italic' ? 'I' : format === 'underline' ? 'U' : 'S'}</button>)}
-          <input type="color" aria-label="Màu chữ" title="Màu chữ" onChange={(event) => formatSelectedBlocks('color', event.target.value)} className="h-8 w-8 rounded border border-[#E8DCCB]" />
-          <input type="color" aria-label="Màu nền" title="Màu nền" onChange={(event) => formatSelectedBlocks('background', event.target.value)} className="h-8 w-8 rounded border border-[#E8DCCB]" />
-          {['', 'center', 'right'].map((align) => <button key={align || 'left'} type="button" onClick={() => formatSelectedBlocks('align', align || false)} className="rounded border border-[#E8DCCB] bg-white px-2 py-1.5 text-[11px]">{align || 'left'}</button>)}
-          <button type="button" onClick={() => formatSelectedBlocks('clean', false)} aria-label="Xóa định dạng" className="rounded border border-[#E8DCCB] bg-white p-2"><Eraser className="h-4 w-4" /></button>
-          <button type="button" onClick={copySelectedBlocks} aria-label="Sao chép các đoạn đã chọn" className="rounded border border-[#E8DCCB] bg-white p-2"><Copy className="h-4 w-4" /></button>
-          <button type="button" onClick={deleteSelectedBlocks} aria-label="Xóa các đoạn đã chọn" className="rounded border border-red-200 bg-white p-2 text-red-600"><Trash2 className="h-4 w-4" /></button>
+        <button type="button" aria-pressed={multiSelectMode} onClick={() => { setMultiSelectMode((value) => !value); clearMultiSelection(); }} className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-bold ${multiSelectMode ? 'border-[#B88746] bg-[#B88746] text-white' : 'border-[#E8DCCB] bg-white text-[#6E5F51]'}`}><MousePointer2 className="h-4 w-4" />Chọn nhiều đoạn{multiSelectMode ? ` (${selectedRangeCount})` : ''}</button>
+        {multiSelectMode && selectedRangeCount > 0 ? <>
+          {['bold', 'italic', 'underline', 'strike'].map((format) => <button key={format} type="button" onClick={() => formatSelectedRanges(format, true)} className="rounded border border-[#E8DCCB] bg-white px-2 py-1.5 text-xs font-bold">{format === 'bold' ? 'B' : format === 'italic' ? 'I' : format === 'underline' ? 'U' : 'S'}</button>)}
+          <input type="color" aria-label="Màu chữ" title="Màu chữ" onChange={(event) => formatSelectedRanges('color', event.target.value)} className="h-8 w-8 rounded border border-[#E8DCCB]" />
+          <input type="color" aria-label="Màu nền" title="Màu nền" onChange={(event) => formatSelectedRanges('background', event.target.value)} className="h-8 w-8 rounded border border-[#E8DCCB]" />
+          {['', 'center', 'right'].map((align) => <button key={align || 'left'} type="button" onClick={() => formatSelectedRanges('align', align || false)} className="rounded border border-[#E8DCCB] bg-white px-2 py-1.5 text-[11px]">{align || 'left'}</button>)}
+          <button type="button" onClick={() => formatSelectedRanges('clean', false)} aria-label="Xóa định dạng" className="rounded border border-[#E8DCCB] bg-white p-2"><Eraser className="h-4 w-4" /></button>
+          <button type="button" onClick={copySelectedRanges} aria-label="Sao chép các đoạn đã chọn" className="rounded border border-[#E8DCCB] bg-white p-2"><Copy className="h-4 w-4" /></button>
+          <button type="button" onClick={deleteSelectedRanges} aria-label="Xóa các đoạn đã chọn" className="rounded border border-red-200 bg-white p-2 text-red-600"><Trash2 className="h-4 w-4" /></button>
           <button type="button" onClick={clearMultiSelection} className="rounded border border-[#E8DCCB] bg-white px-3 py-2 text-xs font-bold">Bỏ chọn tất cả</button>
         </> : null}
       </div>
+      {multiSelectMode ? (
+        <p className="mb-2 text-[11px] text-[#8C7A6B]">
+          Kéo chuột để chọn đoạn đầu tiên; giữ Ctrl (Windows) hoặc Cmd (macOS) rồi kéo để thêm đoạn khác. Ctrl/Cmd + nhấp vào đoạn đã chọn để bỏ riêng đoạn đó; nhấn Escape để bỏ tất cả.
+        </p>
+      ) : null}
       <div ref={containerRef} className="quill-editor-container" />
       
       <MediaSelectModal
@@ -448,7 +522,10 @@ export default function RichTextEditor({ value, onChange, placeholder, enablePro
         .rich-text-editor-wrapper .ql-container { overflow-x: auto; }
         .rich-text-editor-wrapper .ql-article-table { max-width: 100%; overflow-x: auto; border-radius: 12px; outline: none; }
         .rich-text-editor-wrapper .ql-article-table:focus-within { box-shadow: 0 0 0 2px rgba(184, 135, 70, .35); }
-        .rich-text-editor-wrapper .ql-editor .ql-multi-selected { outline: 2px solid #B88746; outline-offset: 2px; background: rgba(184, 135, 70, 0.12); }
+        ::highlight(${highlightName}) { color: inherit; background: rgba(184, 135, 70, 0.28); text-decoration: underline 2px rgba(143, 99, 47, .7); }
+        .rich-text-editor-wrapper .quill-editor-container { position: relative; }
+        .rich-text-editor-wrapper .ql-multi-range-overlay { position: absolute; inset: 0; z-index: 2; pointer-events: none; overflow: hidden; }
+        .rich-text-editor-wrapper .ql-multi-range-overlay-marker { position: absolute; border-bottom: 2px solid rgba(143, 99, 47, .75); background: rgba(184, 135, 70, .28); border-radius: 2px; }
         .rich-text-editor-wrapper .ql-editor.ql-blank::before {
           color: #8C7A6B !important;
           opacity: 0.6 !important;

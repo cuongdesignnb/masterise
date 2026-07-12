@@ -11,6 +11,7 @@ class Post extends Model
         'slug',
         'post_type',
         'summary',
+        'intro_content',
         'content',
         'thumbnail',
         'status',

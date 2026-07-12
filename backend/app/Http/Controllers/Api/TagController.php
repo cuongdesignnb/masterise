@@ -14,17 +14,28 @@ class TagController extends Controller
     public function index(Request $request)
     {
         $query = Tag::query();
+        $postTypes = array_values(array_filter(is_array($request->input('post_type'))
+            ? $request->input('post_type')
+            : explode(',', (string) $request->input('post_type'))));
 
         if ($request->filled('q')) {
-            $query->where('name', 'like', '%' . trim($request->q) . '%');
+            $search = trim($request->q);
+            $query->where(fn ($tags) => $tags
+                ->where('name', 'like', '%' . $search . '%')
+                ->orWhere('slug', 'like', '%' . $search . '%'));
+        }
+
+        if ($postTypes) {
+            $query->whereHas('posts', fn ($posts) => $posts
+                ->where('status', 'published')
+                ->whereIn('post_type', $postTypes));
         }
 
         if ($request->boolean('with_count')) {
-            $postType = $request->input('post_type');
-            $query->withCount(['posts' => function ($posts) use ($postType) {
+            $query->withCount(['posts' => function ($posts) use ($postTypes) {
                 $posts->where('status', 'published');
-                if ($postType) {
-                    $posts->whereIn('post_type', is_array($postType) ? $postType : explode(',', $postType));
+                if ($postTypes) {
+                    $posts->whereIn('post_type', $postTypes);
                 }
             }]);
         }

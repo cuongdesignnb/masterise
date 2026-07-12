@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import MobileTabBar from "@/components/MobileTabBar";
@@ -14,7 +14,7 @@ import NewsRelatedSection from "@/components/news-detail/NewsRelatedSection";
 import { extractTocFromHtml, formatArticleDate, readingMinutes } from "@/lib/articleContent";
 import ArticleToc from "@/components/news-detail/ArticleToc";
 import { getServerApiUrl } from "@/lib/serverApi";
-import type { Post, PostDetailData } from "@/types/api";
+import type { PostDetailData } from "@/types/api";
 import { absoluteUrl, SITE_NAME, SITE_URL } from "@/config/seo";
 
 const siteUrl = SITE_URL;
@@ -34,7 +34,7 @@ async function getPost(slug: string): Promise<PostDetailResponse | null> {
   if (!res.ok) return null;
   const payload = await res.json().catch(() => null);
   const data = payload?.data as PostDetailResponse | undefined;
-  if (!data?.post || data.post.post_type !== "news") return null;
+  if (!data?.post) return null;
   return data;
 }
 
@@ -61,6 +61,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!post) {
     return { title: "Không tìm thấy bài viết | Masterise Homes" };
+  }
+
+  if (post.post_type !== "news") {
+    return {
+      title: post.seo_meta?.title || `${post.title} | Masterise Homes`,
+      description: post.seo_meta?.description || post.summary || undefined,
+      alternates: { canonical: absoluteUrl(`/dau-tu/${post.slug}`) },
+    };
   }
 
   return {
@@ -93,13 +101,15 @@ export default async function NewsArticleDetailPage({ params }: Props) {
   const { slug } = await params;
   const data = await getPost(slug);
   if (!data?.post) notFound();
+  if (data.post.post_type !== "news") permanentRedirect(`/dau-tu/${data.post.slug}`);
 
   const { post, inline_related = [], related = [], previous = null, next = null } = data;
   const postUrl = `${siteUrl}/tin-tuc/${post.slug}`;
-  const toc = extractTocFromHtml(post.content);
+  const completeContent = [post.intro_content, post.content].filter(Boolean).join("");
+  const toc = extractTocFromHtml(completeContent);
   const videos = (post.media_items || []).filter((item) => (item.type === "youtube" || item.type === "video_upload") && item.url);
   const publishedLabel = formatArticleDate(post.published_at);
-  const minutes = readingMinutes(post.content || post.summary);
+  const minutes = readingMinutes(completeContent || post.summary);
 
   const jsonLdArticle = {
     "@context": "https://schema.org",

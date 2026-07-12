@@ -778,6 +778,19 @@ class ProjectController extends Controller
             'miền nam' => 'Miền Nam',
             'quoc te' => 'Quốc tế',
             'quốc tế' => 'Quốc tế',
+            'hà nội' => 'Miền Bắc',
+            'ha noi' => 'Miền Bắc',
+            'thành phố thủ đức' => 'Miền Nam',
+            'thanh pho thu duc' => 'Miền Nam',
+            'tp. thủ đức' => 'Miền Nam',
+            'tp thủ đức' => 'Miền Nam',
+            'tp.thủ đức' => 'Miền Nam',
+            'quận 1' => 'Miền Nam',
+            'quận1' => 'Miền Nam',
+            'tp.hcm' => 'Miền Nam',
+            'tp hcm' => 'Miền Nam',
+            'hồ chí minh' => 'Miền Nam',
+            'ho chi minh' => 'Miền Nam',
         ];
 
         return $aliases[$normalized] ?? trim($region);

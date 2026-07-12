@@ -142,6 +142,7 @@ export interface Post {
   slug: string;
   post_type: 'news' | 'investment' | 'event';
   summary: string | null;
+  intro_content: string | null;
   content: string | null;
   thumbnail: string | null;
   status: 'draft' | 'published' | 'scheduled';

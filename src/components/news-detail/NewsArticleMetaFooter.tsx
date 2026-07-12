@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, Tag as TagIcon } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import type { Post } from "@/types/api";
 import { getPostDetailHref } from "@/lib/postRoutes";
 
@@ -39,24 +39,23 @@ function NavCard({ post, direction }: { post: Post; direction: "previous" | "nex
 
 export default function NewsArticleMetaFooter({ post, previous, next }: Props) {
   const tags = post.tags || [];
+  const tagBasePath = post.post_type === "investment" ? "/dau-tu" : "/tin-tuc";
 
   if (!tags.length && !previous && !next) return null;
 
   return (
     <section className="space-y-5">
       {tags.length > 0 && (
-        <div className="rounded-[22px] border border-[#E8DCCB]/80 bg-white p-5 shadow-[0_18px_50px_rgba(31,27,22,0.06)]">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-[0.12em] text-[#B88746]">
-              <TagIcon className="h-4 w-4" /> Tags
-            </span>
-            {tags.map((tag) => (
-              <Link key={tag.id} href={post.post_type === "news" ? `/tin-tuc?tag=${tag.slug}` : `/dau-tu?tag=${tag.slug}`} className="rounded-full border border-[#E8DCCB] bg-[#FBF8F2] px-3 py-1.5 text-xs font-bold text-[#6E5F51] transition hover:border-[#B88746] hover:text-[#B88746]">
-                #{tag.name}
+        <nav aria-label="Chủ đề bài viết" className="border-t border-[#E8DCCB] pt-4 text-sm text-[#6E5F51]">
+          {tags.map((tag, index) => (
+            <span key={tag.id}>
+              {index > 0 ? <span aria-hidden="true" className="mx-2 text-[#C8B9A5]">|</span> : null}
+              <Link href={`${tagBasePath}?tag=${encodeURIComponent(tag.slug)}`} className="font-medium transition hover:text-[#B88746] hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B88746]/50">
+                {tag.name}
               </Link>
-            ))}
-          </div>
-        </div>
+            </span>
+          ))}
+        </nav>
       )}
 
       {(previous || next) && (

@@ -7,6 +7,7 @@ import Link from "next/link";
 import { ArrowLeft, ArrowRight, Calendar, X } from "lucide-react";
 import MotionWrapper from "@/components/MotionWrapper";
 import { postService } from "@/services/postService";
+import { tagService } from "@/services/tagService";
 import { getPostDetailHref, updateListSearchParams } from "@/lib/postRoutes";
 import type { ApiResponse, Post } from "@/types/api";
 
@@ -25,6 +26,21 @@ export default function ArticleGrid() {
   const [articles, setArticles] = useState<Post[]>([]);
   const [meta, setMeta] = useState(emptyMeta);
   const [isLoading, setIsLoading] = useState(true);
+  const [activeTagName, setActiveTagName] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    if (!tagQuery) {
+      Promise.resolve().then(() => active && setActiveTagName(""));
+      return () => { active = false; };
+    }
+    tagService.getTags({ q: tagQuery, post_type: "news" })
+      .then((response) => {
+        if (active) setActiveTagName(response.data.find((tag) => tag.slug === tagQuery)?.name || tagQuery);
+      })
+      .catch(() => active && setActiveTagName(tagQuery));
+    return () => { active = false; };
+  }, [tagQuery]);
 
   useEffect(() => {
     let active = true;
@@ -32,7 +48,7 @@ export default function ArticleGrid() {
     postService.getPosts({
       per_page: 9,
       page,
-      post_type: "news,investment",
+      post_type: "news",
       category: categoryQuery || undefined,
       q: searchQuery || undefined,
       tag: tagQuery || undefined,
@@ -68,11 +84,11 @@ export default function ArticleGrid() {
       <MotionWrapper className="mb-6 flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 className="heading-font text-lg font-bold text-ink sm:text-xl">
-            {searchQuery || categoryQuery || tagQuery ? "Kết quả tìm kiếm" : "Khám phá bài viết mới nhất"}
+            {tagQuery ? `Chủ đề: ${activeTagName || tagQuery}` : searchQuery || categoryQuery ? "Kết quả tìm kiếm" : "Khám phá bài viết mới nhất"}
           </h2>
           {!isLoading && <p className="mt-1 text-xs text-muted">{meta.total} bài viết · Trang {meta.current_page}/{meta.last_page}</p>}
         </div>
-        {tagQuery && <button type="button" onClick={clearTag} className="inline-flex items-center gap-1 rounded-full border border-line bg-white px-3 py-1.5 text-xs font-bold text-gold"><X size={13} />#{tagQuery}</button>}
+        {tagQuery && <button type="button" onClick={clearTag} className="inline-flex items-center gap-1 rounded-full border border-line bg-white px-3 py-1.5 text-xs font-bold text-gold"><X size={13} />Xóa lọc chủ đề</button>}
       </MotionWrapper>
 
       {isLoading ? (

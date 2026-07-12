@@ -32,6 +32,7 @@ import MediaSelectModal from '@/components/admin/MediaSelectModal';
 import RichTextEditor from '@/components/admin/RichTextEditor';
 import { tagService } from '@/services/tagService';
 import { getPostDetailHref } from '@/lib/postRoutes';
+import { splitArticleIntroAndMain } from '@/lib/articleContent';
 
 type NewsMediaDraft = Omit<PostMedia, 'id' | 'post_id' | 'created_at' | 'updated_at'> & {
   id?: number;
@@ -140,6 +141,7 @@ function AdminNews() {
   const [formTitle, setFormTitle] = useState('');
   const [formSlug, setFormSlug] = useState('');
   const [formSummary, setFormSummary] = useState('');
+  const [formIntroContent, setFormIntroContent] = useState('');
   const [formContent, setFormContent] = useState('');
   const [formThumbnail, setFormThumbnail] = useState('');
   const [formMediaItems, setFormMediaItems] = useState<NewsMediaDraft[]>([]);
@@ -232,6 +234,7 @@ function AdminNews() {
     setFormTitle('');
     setFormSlug('');
     setFormSummary('');
+    setFormIntroContent('');
     setFormContent('');
     setFormThumbnail('');
     setFormMediaItems([]);
@@ -264,7 +267,15 @@ function AdminNews() {
     setFormTitle(post.title);
     setFormSlug(post.slug);
     setFormSummary(post.summary || '');
-    setFormContent(post.content || '');
+    if (post.intro_content !== null && post.intro_content !== undefined) {
+      setFormIntroContent(post.intro_content);
+      setFormContent(post.content || '');
+    } else {
+      const legacyContent = post.content || '';
+      const split = splitArticleIntroAndMain(legacyContent);
+      setFormIntroContent(split.mainHtml ? split.introHtml : '');
+      setFormContent(split.mainHtml || legacyContent);
+    }
     setFormThumbnail(post.thumbnail || '');
     setFormMediaItems((post.media_items || []).map((item, index) => ({
       id: item.id,
@@ -305,6 +316,7 @@ function AdminNews() {
         title: formTitle,
         slug: formSlug,
         summary: formSummary,
+        intro_content: formIntroContent,
         content: formContent,
         thumbnail: formThumbnail,
         post_type: formPostType,
@@ -944,31 +956,42 @@ function AdminNews() {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Nội dung bài viết (Rich Text Editor)</label>
+                      <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Đoạn mở đầu</label>
+                      <p className="mb-2 text-[11px] text-[#8C7A6B]">Phần này hiển thị trước các bài viết liên quan.</p>
                       <RichTextEditor
-                        value={formContent}
-                        onChange={setFormContent}
-                        placeholder="Nhập nội dung bài viết đầy đủ..."
+                        value={formIntroContent}
+                        onChange={setFormIntroContent}
+                        placeholder="Nhập đoạn giới thiệu ngắn của bài viết..."
                         enableProjectLinks
                       />
                     </div>
 
-                    <div className="grid gap-5 lg:grid-cols-2">
-                      <section className="rounded-2xl border border-[#E8DCCB] bg-[#FBF8F2] p-4">
-                        <label className="block text-xs font-bold text-[#6E5F51]">Tags</label>
-                        <div className="mt-2 flex flex-wrap gap-2">
-                          {selectedTags.map((tag) => <button type="button" key={tag.id} onClick={() => setFormTagIds((ids) => ids.filter((id) => id !== tag.id))} className="inline-flex items-center gap-1 rounded-full bg-[#B88746] px-3 py-1.5 text-xs font-bold text-white">#{tag.name}<X className="h-3 w-3" /></button>)}
-                        </div>
-                        <div className="mt-3 flex gap-2"><input value={tagSearch} onChange={(event) => setTagSearch(event.target.value)} placeholder="Tìm hoặc tạo tag..." className="h-10 min-w-0 flex-1 rounded-xl border border-[#E8DCCB] bg-white px-3 text-sm outline-none focus:border-[#B88746]" /><button type="button" onClick={createAndSelectTag} className="rounded-xl bg-[#1F1B16] px-3 text-xs font-bold text-white">Thêm tag</button></div>
-                        {tagSearch && <div className="mt-2 max-h-36 space-y-1 overflow-y-auto">{filteredTags.slice(0, 8).map((tag) => <button type="button" key={tag.id} onClick={() => { setFormTagIds((ids) => [...ids, tag.id]); setTagSearch(''); }} className="block w-full rounded-lg bg-white px-3 py-2 text-left text-xs font-semibold hover:text-[#B88746]">{tag.name} {tag.posts_count !== undefined ? `(${tag.posts_count})` : ''}</button>)}</div>}
-                      </section>
-
-                      <section className="rounded-2xl border border-[#E8DCCB] bg-[#FBF8F2] p-4">
-                        <div className="flex items-center justify-between"><label className="text-xs font-bold text-[#6E5F51]">Bài viết liên quan</label><span className="text-[11px] text-[#8C7A6B]">{formRelatedPostIds.length}/3</span></div>
+                    <section className="rounded-2xl border border-[#E8DCCB] bg-[#FBF8F2] p-4">
+                        <div className="flex items-center justify-between"><label className="text-xs font-bold text-[#6E5F51]">Bài viết liên quan chèn sau đoạn mở đầu</label><span className="text-[11px] text-[#8C7A6B]">{formRelatedPostIds.length}/3</span></div>
+                        <p className="mt-1 text-[11px] text-[#8C7A6B]">Nếu chọn dưới 3 bài, hệ thống tự bổ sung bài cùng loại và không trùng lặp.</p>
                         <div className="mt-2 space-y-2">{selectedRelatedPosts.map((post, index) => <div key={post.id} className="flex items-center gap-2 rounded-xl border border-[#E8DCCB] bg-white p-2"><span className="min-w-0 flex-1 truncate text-xs font-bold">{post.title}</span><button type="button" disabled={index === 0} onClick={() => moveRelatedPost(index, -1)} aria-label="Đưa bài lên" className="p-1 disabled:opacity-30"><ArrowUp className="h-3.5 w-3.5" /></button><button type="button" disabled={index === selectedRelatedPosts.length - 1} onClick={() => moveRelatedPost(index, 1)} aria-label="Đưa bài xuống" className="p-1 disabled:opacity-30"><ArrowDown className="h-3.5 w-3.5" /></button><button type="button" onClick={() => setFormRelatedPostIds((ids) => ids.filter((id) => id !== post.id))} aria-label="Xóa bài liên quan" className="p-1 text-red-600"><X className="h-3.5 w-3.5" /></button></div>)}</div>
                         {formRelatedPostIds.length < 3 && <><input value={relatedSearch} onChange={(event) => setRelatedSearch(event.target.value)} placeholder="Tìm bài đã xuất bản..." className="mt-3 h-10 w-full rounded-xl border border-[#E8DCCB] bg-white px-3 text-sm outline-none focus:border-[#B88746]" />{relatedSearch && <div className="mt-2 max-h-40 space-y-1 overflow-y-auto">{filteredRelatedCandidates.slice(0, 10).map((post) => <button type="button" key={post.id} onClick={() => { setFormRelatedPostIds((ids) => [...ids, post.id]); setRelatedSearch(''); }} className="block w-full rounded-lg bg-white px-3 py-2 text-left text-xs font-semibold hover:text-[#B88746]">{post.title}</button>)}</div>}</>}
-                      </section>
+                    </section>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Nội dung chính</label>
+                      <p className="mb-2 text-[11px] text-[#8C7A6B]">Phần này hiển thị ngay sau khối bài viết liên quan.</p>
+                      <RichTextEditor
+                        value={formContent}
+                        onChange={setFormContent}
+                        placeholder="Nhập nội dung chính đầy đủ..."
+                        enableProjectLinks
+                      />
                     </div>
+
+                    <section className="rounded-2xl border border-[#E8DCCB] bg-[#FBF8F2] p-4">
+                      <label className="block text-xs font-bold text-[#6E5F51]">Tags</label>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {selectedTags.map((tag) => <button type="button" key={tag.id} onClick={() => setFormTagIds((ids) => ids.filter((id) => id !== tag.id))} className="inline-flex items-center gap-1 rounded-full bg-[#B88746] px-3 py-1.5 text-xs font-bold text-white">#{tag.name}<X className="h-3 w-3" /></button>)}
+                      </div>
+                      <div className="mt-3 flex gap-2"><input value={tagSearch} onChange={(event) => setTagSearch(event.target.value)} placeholder="Tìm hoặc tạo tag..." className="h-10 min-w-0 flex-1 rounded-xl border border-[#E8DCCB] bg-white px-3 text-sm outline-none focus:border-[#B88746]" /><button type="button" onClick={createAndSelectTag} className="rounded-xl bg-[#1F1B16] px-3 text-xs font-bold text-white">Thêm tag</button></div>
+                      {tagSearch && <div className="mt-2 max-h-36 space-y-1 overflow-y-auto">{filteredTags.slice(0, 8).map((tag) => <button type="button" key={tag.id} onClick={() => { setFormTagIds((ids) => [...ids, tag.id]); setTagSearch(''); }} className="block w-full rounded-lg bg-white px-3 py-2 text-left text-xs font-semibold hover:text-[#B88746]">{tag.name} {tag.posts_count !== undefined ? `(${tag.posts_count})` : ''}</button>)}</div>}
+                    </section>
                   </div>
                 )}
 

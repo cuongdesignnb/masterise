@@ -8,7 +8,15 @@ type Props = {
 };
 
 export default function NewsArticleMainContent({ post, related = [] }: Props) {
-  const html = enhanceArticleHtml(post.content || "");
+  const hasOfficialIntro = post.intro_content !== null && post.intro_content !== undefined;
+  const legacyHtml = hasOfficialIntro ? "" : enhanceArticleHtml(post.content || "");
+  const legacySplit = splitArticleIntroAndMain(legacyHtml);
+  const introHtml = hasOfficialIntro
+    ? enhanceArticleHtml(post.intro_content || "")
+    : legacySplit.introHtml;
+  const mainHtml = hasOfficialIntro
+    ? enhanceArticleHtml(post.content || "")
+    : legacySplit.mainHtml;
   const inlineRelated = related
     .filter((item, index, items) =>
       item.status === "published" &&
@@ -17,9 +25,8 @@ export default function NewsArticleMainContent({ post, related = [] }: Props) {
       items.findIndex((candidate) => candidate.id === item.id) === index,
     )
     .slice(0, 3);
-  const { introHtml, mainHtml } = splitArticleIntroAndMain(html);
 
-  if (!html) {
+  if (!introHtml && !mainHtml) {
     return (
       <section className="rounded-[24px] border border-[#E8DCCB]/80 bg-white px-5 py-7 text-sm leading-7 text-[#8C7A6B] shadow-[0_18px_50px_rgba(31,27,22,0.06)] sm:px-8">
         Nội dung bài viết đang được cập nhật.
@@ -32,8 +39,8 @@ export default function NewsArticleMainContent({ post, related = [] }: Props) {
       <article
         className="prose prose-stone min-w-0 max-w-none text-[15px] leading-8 prose-headings:scroll-mt-28 prose-headings:font-black prose-headings:tracking-normal prose-headings:text-[#1F1B16] prose-h2:mt-10 prose-h2:text-2xl prose-h3:text-xl prose-p:text-[#4B4238] prose-a:font-bold prose-a:text-[#B88746] prose-a:underline-offset-4 hover:prose-a:underline focus-visible:prose-a:rounded-sm focus-visible:prose-a:outline-none focus-visible:prose-a:ring-2 focus-visible:prose-a:ring-[#B88746]/50 prose-blockquote:rounded-2xl prose-blockquote:border-l-4 prose-blockquote:border-[#B88746] prose-blockquote:bg-[#FBF8F2] prose-blockquote:px-5 prose-blockquote:py-4 prose-blockquote:text-[#6E5F51] prose-img:rounded-2xl prose-img:border prose-img:border-[#E8DCCB] sm:text-base"
       >
-        <div dangerouslySetInnerHTML={{ __html: introHtml }} />
-        {mainHtml && inlineRelated.length ? <InlineRelatedArticleLinks posts={inlineRelated} /> : null}
+        {introHtml ? <div dangerouslySetInnerHTML={{ __html: introHtml }} /> : null}
+        {inlineRelated.length ? <InlineRelatedArticleLinks posts={inlineRelated} /> : null}
         {mainHtml ? <div dangerouslySetInnerHTML={{ __html: mainHtml }} /> : null}
       </article>
       <style>{`
