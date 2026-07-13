@@ -92,6 +92,7 @@ export default function RichTextEditor({
   const isUpdatingRef = useRef(false);
   const isApplyingMultiFormatRef = useRef(false);
   const savedRangeRef = useRef<SavedRange | null>(null);
+  const lastSelectionRef = useRef<SavedRange | null>(null);
   const savedRangesRef = useRef<SavedRange[]>([]);
   const selectedTableCellRef = useRef<HTMLTableCellElement | null>(null);
   const tableEditorRef = useRef<HTMLDivElement>(null);
@@ -105,6 +106,7 @@ export default function RichTextEditor({
   const [tableModal, setTableModal] = useState<TableModalState | null>(null);
   const [tableRows, setTableRows] = useState(3);
   const [tableColumns, setTableColumns] = useState(3);
+  const [activeHeading, setActiveHeading] = useState('');
 
   const applyHtmlToEditor = (quill: any, html: string) => {
     const normalizedHtml = html || '<p><br></p>';
@@ -187,9 +189,51 @@ export default function RichTextEditor({
     clearRangeHighlight();
   };
 
+  const updateActiveHeadingForRanges = (ranges: SavedRange[]) => {
+    const quill = quillRef.current;
+    if (!quill || !ranges.length) return;
+    const headings = ranges.map((range) => String(quill.getFormat(range.index, Math.max(1, range.length)).header || ''));
+    setActiveHeading(headings.every((heading) => heading === headings[0]) ? headings[0] : 'mixed');
+  };
+
   const setSavedRanges = (ranges: SavedRange[]) => {
-    savedRangesRef.current = mergeRanges(ranges);
+    const merged = mergeRanges(ranges);
+    savedRangesRef.current = merged;
+    updateActiveHeadingForRanges(merged);
     refreshRangeHighlight();
+  };
+
+  const saveCurrentSelection = () => {
+    const range = quillRef.current?.getSelection();
+    if (range) lastSelectionRef.current = { index: range.index, length: range.length };
+  };
+
+  const applyHeadingFormat = (value: string) => {
+    const quill = quillRef.current;
+    if (!quill) return;
+    const headerValue = ['1', '2', '3', '4', '5'].includes(value) ? Number(value) : false;
+    const ranges = savedRangesRef.current;
+    const currentRange = quill.getSelection() || lastSelectionRef.current || ranges[0] || null;
+
+    isApplyingMultiFormatRef.current = true;
+    try {
+      if (ranges.length > 1) {
+        ranges.forEach((range) => {
+          quill.formatLine(range.index, Math.max(1, range.length), 'header', headerValue, 'user');
+        });
+        updateActiveHeadingForRanges(ranges);
+        refreshRangeHighlight();
+      } else if (currentRange) {
+        quill.formatLine(currentRange.index, Math.max(1, currentRange.length), 'header', headerValue, 'user');
+        lastSelectionRef.current = currentRange;
+        quill.setSelection(currentRange.index, currentRange.length, 'silent');
+        setActiveHeading(headerValue === false ? '' : String(headerValue));
+      }
+      onChange(serializeEditorHtml(quill));
+    } finally {
+      isApplyingMultiFormatRef.current = false;
+    }
+    quill.focus();
   };
 
   const applyToolbarFormat = (format: string, formatValue: unknown) => {
@@ -197,28 +241,35 @@ export default function RichTextEditor({
     if (!quill) return;
     const ranges = savedRangesRef.current;
     if (ranges.length < 2) {
+      const current = quill.getSelection() || lastSelectionRef.current || ranges[0] || null;
       if (format === 'clean') {
-        const current = quill.getSelection();
         if (current) quill.removeFormat(current.index, current.length, 'user');
-      } else {
-        quill.format(format, formatValue, 'user');
+      } else if (current) {
+        if (format === 'align' || format === 'list') {
+          quill.formatLine(current.index, Math.max(1, current.length), format, formatValue, 'user');
+        } else {
+          quill.formatText(current.index, current.length, format, formatValue, 'user');
+        }
       }
       return;
     }
 
     isApplyingMultiFormatRef.current = true;
-    ranges.forEach((range) => {
-      if (format === 'header' || format === 'align' || format === 'list') {
-        quill.formatLine(range.index, Math.max(1, range.length), format, formatValue, 'user');
-      } else if (format === 'clean') {
-        quill.removeFormat(range.index, range.length, 'user');
-      } else {
-        quill.formatText(range.index, range.length, format, formatValue, 'user');
-      }
-    });
-    onChange(serializeEditorHtml(quill));
-    isApplyingMultiFormatRef.current = false;
-    refreshRangeHighlight();
+    try {
+      ranges.forEach((range) => {
+        if (format === 'align' || format === 'list') {
+          quill.formatLine(range.index, Math.max(1, range.length), format, formatValue, 'user');
+        } else if (format === 'clean') {
+          quill.removeFormat(range.index, range.length, 'user');
+        } else {
+          quill.formatText(range.index, range.length, format, formatValue, 'user');
+        }
+      });
+      onChange(serializeEditorHtml(quill));
+      refreshRangeHighlight();
+    } finally {
+      isApplyingMultiFormatRef.current = false;
+    }
   };
 
   const openTableForInsert = () => {
@@ -355,6 +406,24 @@ export default function RichTextEditor({
     setTableModal(null);
   };
 
+  const deleteCurrentTable = () => {
+    const quill = quillRef.current;
+    if (!quill || !tableModal || tableModal.mode !== 'edit' || tableModal.index === null) return;
+    if (!window.confirm('Bạn có chắc chắn muốn xóa toàn bộ bảng này khỏi bài viết?')) return;
+
+    const tableIndex = tableModal.index;
+    quill.deleteText(tableIndex, 1, 'user');
+    if (quill.getLength() <= 1) {
+      quill.insertText(0, '\n', 'user');
+      quill.setSelection(0, 0, 'silent');
+    } else {
+      quill.setSelection(Math.min(tableIndex, Math.max(0, quill.getLength() - 1)), 0, 'silent');
+    }
+    onChange(serializeEditorHtml(quill));
+    selectTableCell(null);
+    setTableModal(null);
+  };
+
   useEffect(() => {
     let active = true;
 
@@ -393,7 +462,6 @@ export default function RichTextEditor({
           placeholder: placeholder || 'Nhập nội dung bài viết/dự án...',
           modules: {
             toolbar: [
-              [{ header: [1, 2, 3, 4, 5, false] }],
               ['bold', 'italic', 'underline', 'strike'],
               [{ color: [] }, { background: [] }],
               [{ list: 'ordered' }, { list: 'bullet' }],
@@ -413,7 +481,7 @@ export default function RichTextEditor({
         if (toolbarElement && toolbarHostRef.current) toolbarHostRef.current.appendChild(toolbarElement);
         if (toolbar) {
           toolbar.addHandler('image', () => setIsMediaModalOpen(true));
-          ['bold', 'italic', 'underline', 'strike', 'color', 'background', 'header', 'align', 'list'].forEach((format) => {
+          ['bold', 'italic', 'underline', 'strike', 'color', 'background', 'align', 'list'].forEach((format) => {
             toolbar.addHandler(format, (formatValue: unknown) => applyToolbarFormat(format, formatValue));
           });
           toolbar.addHandler('clean', () => applyToolbarFormat('clean', false));
@@ -424,6 +492,12 @@ export default function RichTextEditor({
         quill.on('text-change', (_delta: unknown, _old: unknown, source: string) => {
           if (!isUpdatingRef.current) onChange(serializeEditorHtml(quill));
           if (source === 'user' && !isApplyingMultiFormatRef.current) clearSavedRanges();
+        });
+        quill.on('selection-change', (range: SavedRange | null) => {
+          if (!range) return;
+          lastSelectionRef.current = { index: range.index, length: range.length };
+          if (savedRangesRef.current.length > 1) updateActiveHeadingForRanges(savedRangesRef.current);
+          else setActiveHeading(String(quill.getFormat(range).header || ''));
         });
 
         let additiveStartIndex: number | null = null;
@@ -482,9 +556,10 @@ export default function RichTextEditor({
         };
         const handleKeyDown = (event: KeyboardEvent) => {
           if (event.key === 'Escape') clearSavedRanges();
-          if ((event.key === 'Enter' || event.key === ' ') && (event.target as HTMLElement).classList.contains('ql-article-table')) {
+          const target = event.target as HTMLElement;
+          if ((event.key === 'Enter' || event.key === ' ' || event.key === 'Delete' || event.key === 'Backspace') && target.classList.contains('ql-article-table')) {
             event.preventDefault();
-            (event.target as HTMLElement).dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+            target.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
           }
         };
         const handleDragStart = (event: DragEvent) => {
@@ -603,6 +678,24 @@ export default function RichTextEditor({
       <div className={`rich-text-editor-sticky-tools ${stickyToolbar ? 'is-sticky' : ''}`}>
         <div className="rich-text-editor-custom-tools">
           {editorLabel ? <span className="mr-auto text-[11px] font-black uppercase tracking-[0.08em] text-[#8F632F]">{editorLabel}</span> : null}
+          <label className="inline-flex items-center gap-2 text-[11px] font-bold text-[#6E5F51]">
+            <span className="sr-only">Định dạng tiêu đề</span>
+            <select
+              aria-label="Định dạng tiêu đề"
+              value={activeHeading}
+              onMouseDown={saveCurrentSelection}
+              onChange={(event) => applyHeadingFormat(event.target.value)}
+              className="h-9 min-w-[138px] rounded-lg border border-[#E8DCCB] bg-white px-3 text-xs font-bold text-[#4B4238] outline-none focus:border-[#B88746] focus:ring-2 focus:ring-[#B88746]/20"
+            >
+              {activeHeading === 'mixed' ? <option value="mixed" disabled>Nhiều định dạng</option> : null}
+              <option value="">Đoạn thường</option>
+              <option value="1">Heading 1</option>
+              <option value="2">Heading 2</option>
+              <option value="3">Heading 3</option>
+              <option value="4">Heading 4</option>
+              <option value="5">Heading 5</option>
+            </select>
+          </label>
           {enableProjectLinks ? (
             <button type="button" onClick={openProjectLinkModal} className="inline-flex items-center gap-2 rounded-lg border border-[#B88746]/50 bg-[#FFF9F0] px-3 py-2 text-xs font-bold text-[#8F632F] transition hover:border-[#B88746] hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B88746]/40">
               <Link2 className="h-4 w-4" /> Chèn liên kết dự án
@@ -651,9 +744,12 @@ export default function RichTextEditor({
               <div ref={tableEditorRef} onClick={(event) => selectTableCell((event.target as HTMLElement).closest('th,td') as HTMLTableCellElement | null)} className="table-modal-editor min-w-max" />
             </div>
 
-            <div className="flex justify-end gap-2 border-t border-[#E8DCCB] bg-white px-4 py-3 sm:px-5">
-              <button type="button" onClick={() => setTableModal(null)} className="rounded-xl border border-[#E8DCCB] px-4 py-2 text-xs font-bold text-[#6E5F51]">Hủy</button>
-              <button type="button" onClick={saveTableModal} className="rounded-xl bg-[#B88746] px-5 py-2 text-xs font-black text-white">Lưu bảng</button>
+            <div className="flex items-center justify-between gap-3 border-t border-[#E8DCCB] bg-white px-4 py-3 sm:px-5">
+              <div>{tableModal.mode === 'edit' ? <button type="button" onClick={deleteCurrentTable} className="rounded-xl border border-red-300 bg-red-50 px-4 py-2 text-xs font-black text-red-700 hover:bg-red-100">Xóa bảng</button> : null}</div>
+              <div className="flex justify-end gap-2">
+                <button type="button" onClick={() => setTableModal(null)} className="rounded-xl border border-[#E8DCCB] px-4 py-2 text-xs font-bold text-[#6E5F51]">Hủy</button>
+                <button type="button" onClick={saveTableModal} className="rounded-xl bg-[#B88746] px-5 py-2 text-xs font-black text-white">Lưu bảng</button>
+              </div>
             </div>
           </div>
         </div>
