@@ -765,7 +765,7 @@ export default function AdminProjects() {
     setFormHandoverTime(project.handover_time || '');
     setFormLocation(project.location || '');
     setFormLocationDescription(project.location_description || '');
-    setFormRegion(project.region || 'Miền Nam');
+    setFormRegion(project.region || '');
     setFormAddress(project.address || '');
     setFormProvince(project.province || '');
     setFormDistrict(project.district || '');
@@ -2727,6 +2727,7 @@ export default function AdminProjects() {
                           onChange={(e) => setFormRegion(e.target.value)}
                           className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
                         >
+                          <option value="">Chọn vùng miền</option>
                           <option value="Miền Bắc">Miền Bắc</option>
                           <option value="Miền Trung">Miền Trung</option>
                           <option value="Miền Nam">Miền Nam</option>

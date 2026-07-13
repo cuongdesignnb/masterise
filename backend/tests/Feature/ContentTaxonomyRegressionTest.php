@@ -177,7 +177,7 @@ class ContentTaxonomyRegressionTest extends TestCase
         $unresolved = Project::create(['name' => 'Không rõ', 'slug' => 'khong-ro', 'region' => 'Khu vực lạ', 'location' => 'Chưa cập nhật', 'is_published' => true]);
 
         $projectCount = Project::count();
-        $migration = require database_path('migrations/2026_07_12_000004_map_project_city_regions.php');
+        $migration = require database_path('migrations/2026_07_13_000006_enforce_project_regions_from_region_and_province.php');
         $migration->up();
         $migration->up();
         $this->assertSame($projectCount, Project::count());
@@ -199,6 +199,11 @@ class ContentTaxonomyRegressionTest extends TestCase
         $project = Project::where('slug', 'cu')->firstOrFail();
         $this->actingAs($admin, 'sanctum')->putJson("/api/v1/projects/{$project->id}", [
             'name' => $project->name, 'slug' => $project->slug, 'region' => 'mien bac',
+            'status' => 'selling', 'sales_status' => 'selling', 'is_published' => true,
+        ])->assertUnprocessable()->assertJsonValidationErrors('region');
+
+        $this->actingAs($admin, 'sanctum')->putJson("/api/v1/projects/{$project->id}", [
+            'name' => $project->name, 'slug' => $project->slug, 'region' => 'Miền Bắc',
             'status' => 'selling', 'sales_status' => 'selling', 'is_published' => true,
         ])->assertOk()->assertJsonPath('data.region', 'Miền Bắc');
     }

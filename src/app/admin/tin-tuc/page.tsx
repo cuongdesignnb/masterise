@@ -963,6 +963,8 @@ function AdminNews() {
                         onChange={setFormIntroContent}
                         placeholder="Nhập đoạn giới thiệu ngắn của bài viết..."
                         enableProjectLinks
+                        stickyToolbar
+                        editorLabel="Đoạn mở đầu"
                       />
                     </div>
 
@@ -981,6 +983,8 @@ function AdminNews() {
                         onChange={setFormContent}
                         placeholder="Nhập nội dung chính đầy đủ..."
                         enableProjectLinks
+                        stickyToolbar
+                        editorLabel="Nội dung chính"
                       />
                     </div>
 
