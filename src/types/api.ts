@@ -45,12 +45,20 @@ export interface ProjectCategoryOption {
   projects_count: number;
 }
 
-export type ProjectStatus =
-  | 'coming_soon'
-  | 'selling'
-  | 'sold_out'
-  | 'handing_over'
-  | 'handover';
+export type ProjectStatus = string;
+
+export interface ProjectStatusOption {
+  id: number;
+  name: string;
+  slug: string;
+  description?: string | null;
+  color_key: string;
+  sort_order: number;
+  is_active: boolean;
+  is_default: boolean;
+  projects_count: number;
+  published_projects_count?: number;
+}
 
 export interface Project {
   id: number;
@@ -83,6 +91,7 @@ export interface Project {
   area_max: string | null;
   area_text: string | null;
   project_status: ProjectStatus;
+  project_status_detail?: ProjectStatusOption | null;
   open_sale_at: string | null;
   handover_year: number | null;
   handover_time: string | null;

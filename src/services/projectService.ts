@@ -1,5 +1,5 @@
 import { api } from '@/lib/api';
-import { Project as ApiProject, ProjectCategoryOption, RegionOption } from '@/types/api';
+import { Project as ApiProject, ProjectCategoryOption, ProjectStatusOption, RegionOption } from '@/types/api';
 import { unwrapData } from '@/adapters/apiResponseAdapter';
 
 export const projectService = {
@@ -39,16 +39,13 @@ export const projectService = {
   },
 
   getRegions: async (): Promise<RegionOption[]> => {
-    const response = await api.get<Array<{ slug: string; name: string; projects_count: number }>>(
-      '/regions?all=true&active=true&with_count=true'
-    );
-    const regions = unwrapData<Array<{ slug: string; name: string; projects_count: number }>>(response) || [];
-    return regions
-      .filter((region) => region.projects_count > 0)
-      .map((region) => ({
-        value: region.slug,
-        label: region.name,
-        projects_count: region.projects_count,
-      }));
+    const response = await api.get<RegionOption[]>('/projects/regions');
+    return unwrapData<RegionOption[]>(response) || [];
+  },
+
+  getProjectStatuses: async (): Promise<ProjectStatusOption[]> => {
+    const response = await api.get<ProjectStatusOption[]>('/project-statuses?active=true&with_count=true');
+    return (unwrapData<ProjectStatusOption[]>(response) || [])
+      .filter((status) => status.is_active && status.projects_count > 0);
   },
 };

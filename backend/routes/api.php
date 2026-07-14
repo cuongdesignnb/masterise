@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\DeveloperController;
 use App\Http\Controllers\Api\LocationController;
 use App\Http\Controllers\Api\RegionController;
+use App\Http\Controllers\Api\ProjectStatusController;
 use App\Http\Controllers\Api\HeroBannerController;
 use App\Http\Controllers\Api\FaqController;
 use App\Http\Controllers\Api\TestimonialController;
@@ -40,6 +41,7 @@ Route::group(['prefix' => 'v1'], function() {
     Route::get('/projects/regions', [ProjectController::class, 'regions']);
     Route::get('/projects/{slug}', [ProjectController::class, 'show']);
     Route::get('/project-categories', [ProjectController::class, 'categories']);
+    Route::get('/project-statuses', [ProjectStatusController::class, 'index']);
 
     // Posts
     Route::get('/posts', [PostController::class, 'index']);
@@ -136,6 +138,10 @@ Route::group(['prefix' => 'v1'], function() {
             Route::post('/projects', [ProjectController::class, 'store']);
             Route::put('/projects/{id}', [ProjectController::class, 'update']);
             Route::delete('/projects/{id}', [ProjectController::class, 'destroy']);
+            Route::get('/admin/project-statuses', [ProjectStatusController::class, 'adminIndex']);
+            Route::post('/project-statuses', [ProjectStatusController::class, 'store']);
+            Route::put('/project-statuses/{id}', [ProjectStatusController::class, 'update']);
+            Route::delete('/project-statuses/{id}', [ProjectStatusController::class, 'destroy']);
 
             Route::get('/admin/project-categories', [ProjectController::class, 'adminCategories']);
             Route::post('/project-categories', [ProjectController::class, 'storeCategory']);

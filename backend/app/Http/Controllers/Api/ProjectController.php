@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Project;
 use App\Models\ProjectCategory;
+use App\Models\ProjectStatusDefinition;
 use App\Models\Location;
 use App\Models\Region;
 use App\Support\ProjectPriceRange;
@@ -169,13 +170,13 @@ class ProjectController extends Controller
     {
         $data = Region::query()
             ->where('is_active', true)
+            ->whereHas('projects', fn ($query) => $query->where('is_published', true))
             ->withCount([
                 'projects as projects_count' => fn ($query) => $query->where('is_published', true),
             ])
             ->orderBy('sort_order')
             ->orderBy('name')
             ->get()
-            ->filter(fn (Region $region) => $region->projects_count > 0)
             ->map(fn (Region $region) => [
                 'value' => $region->slug,
                 'label' => $region->name,
@@ -423,7 +424,10 @@ class ProjectController extends Controller
             'area_min' => 'nullable|numeric',
             'area_max' => 'nullable|numeric',
             'area_text' => 'nullable|string',
-            'project_status' => ['required', Rule::in(ProjectStatus::values())],
+            'project_status' => [
+                'required',
+                Rule::exists('project_statuses', 'slug')->where(fn ($query) => $query->where('is_active', true)),
+            ],
             'status' => 'prohibited',
             'sales_status' => 'prohibited',
             'open_sale_at' => 'nullable|date',
@@ -550,7 +554,7 @@ class ProjectController extends Controller
         ]);
 
         $project->refresh();
-        $project->load(['categories', 'seoMeta', 'developerRelation', 'locationRelation.region']);
+        $project->load(['categories', 'seoMeta', 'developerRelation', 'locationRelation.region', 'projectStatusDetail']);
 
         return $this->noStore(response()->json([
             'success' => true,
@@ -611,7 +615,10 @@ class ProjectController extends Controller
             'area_min' => 'nullable|numeric',
             'area_max' => 'nullable|numeric',
             'area_text' => 'nullable|string',
-            'project_status' => ['required', Rule::in(ProjectStatus::values())],
+            'project_status' => [
+                'required',
+                Rule::exists('project_statuses', 'slug')->where(fn ($query) => $query->where('is_active', true)),
+            ],
             'status' => 'prohibited',
             'sales_status' => 'prohibited',
             'open_sale_at' => 'nullable|date',
@@ -752,7 +759,7 @@ class ProjectController extends Controller
         );
 
         $project->refresh();
-        $project->load(['categories', 'seoMeta', 'developerRelation', 'locationRelation.region']);
+        $project->load(['categories', 'seoMeta', 'developerRelation', 'locationRelation.region', 'projectStatusDetail']);
 
         return $this->noStore(response()->json([
             'success' => true,
@@ -1021,8 +1028,7 @@ class ProjectController extends Controller
             return;
         }
 
-        // Compatibility for legacy bookmarked URLs until old projects receive a location.
-        $query->where('region', $value);
+        $query->whereRaw('1 = 0');
     }
 
     /**
@@ -1045,10 +1051,14 @@ class ProjectController extends Controller
         foreach ($values as $value) {
             $value = trim((string) $value);
             $mapped = match ($source) {
-                'project_status' => in_array($value, ProjectStatus::values(), true) ? $value : null,
+                'project_status' => ProjectStatusDefinition::query()->where('slug', $value)->exists() ? $value : null,
                 'sales_status' => ProjectStatus::fromLegacySalesStatus($value),
                 'status' => ProjectStatus::fromLegacyStatus($value),
             };
+
+            if ($mapped !== null && !ProjectStatusDefinition::query()->where('slug', $mapped)->exists()) {
+                $mapped = null;
+            }
 
             if ($mapped === null) {
                 return response()->json([

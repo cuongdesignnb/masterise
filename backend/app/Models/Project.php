@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Project extends Model
 {
+    protected $with = ['projectStatusDetail'];
+
     protected $appends = [
         'region_details',
         'region_name',
@@ -151,6 +153,11 @@ class Project extends Model
     public function locationRelation()
     {
         return $this->belongsTo(Location::class, 'location_id');
+    }
+
+    public function projectStatusDetail()
+    {
+        return $this->belongsTo(ProjectStatusDefinition::class, 'project_status', 'slug');
     }
 
     public function getRegionDetailsAttribute(): ?array

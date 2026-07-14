@@ -340,9 +340,9 @@ export default function HomePageClient() {
 
                         {/* Badges */}
                         <div className="absolute left-3.5 top-3.5 flex flex-wrap gap-2">
-                          {getProjectMarketingLabel(project.project_label, project.project_status) && (
+                          {getProjectMarketingLabel(project.project_label, project.project_status, project.project_status_detail) && (
                             <span className="max-w-[180px] truncate rounded-full bg-[#6F5436]/90 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-lg backdrop-blur-sm">
-                              {getProjectMarketingLabel(project.project_label, project.project_status)}
+                              {getProjectMarketingLabel(project.project_label, project.project_status, project.project_status_detail)}
                             </span>
                           )}
                           {project.is_hot && (
@@ -350,8 +350,8 @@ export default function HomePageClient() {
                               Hot
                             </span>
                           )}
-                          <span className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider backdrop-blur-sm ${getProjectStatusColor(project.project_status).bg} ${getProjectStatusColor(project.project_status).text}`}>
-                            {getProjectStatusLabel(project.project_status)}
+                          <span className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider backdrop-blur-sm ${getProjectStatusColor(project.project_status_detail).bg} ${getProjectStatusColor(project.project_status_detail).text}`}>
+                            {getProjectStatusLabel(project.project_status, project.project_status_detail)}
                           </span>
                         </div>
                       </div>

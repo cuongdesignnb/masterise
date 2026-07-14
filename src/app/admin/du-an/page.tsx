@@ -4,8 +4,8 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { useToast } from '@/components/admin/Toast';
-import { Project, ProjectCategory, ProjectStatus } from '@/types/api';
-import { PROJECT_STATUS_OPTIONS, getProjectStatusColor, getProjectStatusLabel } from '@/lib/projectStatus';
+import { Project, ProjectCategory, ProjectStatus, ProjectStatusOption } from '@/types/api';
+import { getProjectStatusColor, getProjectStatusLabel } from '@/lib/projectStatus';
 import { formatVnd } from '@/lib/projectPrice';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -29,6 +29,7 @@ import RichTextEditor from '@/components/admin/RichTextEditor';
 import VR360Tab from '@/components/admin/vr360/VR360Tab';
 import type { FloorPlanGroup, FloorPlanItem, FloorPlanTab } from '@/types/floor-plan';
 import { createFloorPlanKey, normalizeFloorPlanGroups, uniqueFloorPlanImages } from '@/lib/projectFloorPlan';
+import ProjectStatusManagerModal from '@/components/admin/ProjectStatusManagerModal';
 
 type SelectOption = {
   id: number;
@@ -203,6 +204,7 @@ export default function AdminProjects() {
   
   // Category manager modal state
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [isProjectStatusModalOpen, setIsProjectStatusModalOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategorySlug, setNewCategorySlug] = useState('');
   const [editingCategoryId, setEditingCategoryId] = useState<number | null>(null);
@@ -220,7 +222,7 @@ export default function AdminProjects() {
   const [formDeveloperId, setFormDeveloperId] = useState<number | ''>('');
   const [formLocationId, setFormLocationId] = useState<number | ''>('');
   const [formLocationSearch, setFormLocationSearch] = useState('');
-  const [formProjectStatus, setFormProjectStatus] = useState<ProjectStatus>('coming_soon');
+  const [formProjectStatus, setFormProjectStatus] = useState<ProjectStatus>('');
   const [formOpenSaleAt, setFormOpenSaleAt] = useState('');
   const [formIsFeatured, setFormIsFeatured] = useState(false);
   const [formIsHot, setFormIsHot] = useState(false);
@@ -637,6 +639,15 @@ export default function AdminProjects() {
       .some((value) => String(value).toLocaleLowerCase('vi').includes(normalizedLocationSearch));
   });
 
+  const { data: projectStatusesData = [] } = useQuery({
+    queryKey: ['admin-project-statuses'],
+    queryFn: async () => {
+      const response = await api.get<ProjectStatusOption[]>('/admin/project-statuses');
+      return response.data || [];
+    },
+    staleTime: 0,
+  });
+
   // Helper to slugify
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const nameVal = e.target.value;
@@ -662,7 +673,11 @@ export default function AdminProjects() {
     setFormDeveloperId('');
     setFormLocationId('');
     setFormLocationSearch('');
-    setFormProjectStatus('coming_soon');
+    setFormProjectStatus(
+      projectStatusesData.find((status) => status.is_default && status.is_active)?.slug
+      || projectStatusesData.find((status) => status.is_active)?.slug
+      || '',
+    );
     setFormOpenSaleAt('');
     setFormIsFeatured(false);
     setFormIsHot(false);
@@ -2097,6 +2112,14 @@ export default function AdminProjects() {
         </div>
         <div className="flex flex-wrap gap-2">
           <button
+            type="button"
+            onClick={() => setIsProjectStatusModalOpen(true)}
+            className="flex items-center gap-1.5 px-4 py-2.5 border border-[#E8DCCB] hover:bg-[#B88746]/5 text-[#1F1B16] rounded-xl text-sm font-semibold transition-all"
+          >
+            <Check className="w-4 h-4 text-[#B88746]" />
+            Quản lý trạng thái
+          </button>
+          <button
             onClick={() => setIsCategoryModalOpen(true)}
             className="flex items-center gap-1.5 px-4 py-2.5 border border-[#E8DCCB] hover:bg-[#B88746]/5 text-[#1F1B16] rounded-xl text-sm font-semibold transition-all"
           >
@@ -2157,8 +2180,8 @@ export default function AdminProjects() {
             className="px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-[#1F1B16] text-xs focus:outline-none focus:ring-1 focus:ring-[#B88746]"
           >
             <option value="">Tất cả trạng thái</option>
-            {PROJECT_STATUS_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>{option.label}</option>
+            {projectStatusesData.map((option) => (
+              <option key={option.id} value={option.slug}>{option.name} ({option.projects_count})</option>
             ))}
           </select>
         </div>
@@ -2237,8 +2260,8 @@ export default function AdminProjects() {
                       {project.price_text || 'Liên hệ'}
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${getProjectStatusColor(project.project_status).admin}`}>
-                        {getProjectStatusLabel(project.project_status)}
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${getProjectStatusColor(project.project_status_detail).admin}`}>
+                        {getProjectStatusLabel(project.project_status, project.project_status_detail)}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-center">
@@ -2737,8 +2760,12 @@ export default function AdminProjects() {
                         onChange={(e) => setFormProjectStatus(e.target.value as ProjectStatus)}
                         className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
                       >
-                        {PROJECT_STATUS_OPTIONS.map((option) => (
-                          <option key={option.value} value={option.value}>{option.label}</option>
+                        {projectStatusesData
+                          .filter((option) => option.is_active || option.slug === formProjectStatus)
+                          .map((option) => (
+                          <option key={option.id} value={option.slug}>
+                            {option.name} ({option.projects_count} dự án){option.is_active ? '' : ' — đã tắt'}
+                          </option>
                         ))}
                       </select>
                       <p className="mt-1 text-[10px] leading-4 text-[#8C7A6B]">
@@ -3526,6 +3553,20 @@ export default function AdminProjects() {
       </AnimatePresence>
 
       {/* Media Select Modal Wrapper */}
+      <ProjectStatusManagerModal
+        open={isProjectStatusModalOpen}
+        onClose={() => setIsProjectStatusModalOpen(false)}
+        onChanged={(statuses) => {
+          if (!formProjectStatus) {
+            setFormProjectStatus(
+              statuses.find((status) => status.is_default && status.is_active)?.slug
+              || statuses.find((status) => status.is_active)?.slug
+              || '',
+            );
+          }
+        }}
+      />
+
       <AnimatePresence>
         {mediaSelectorTarget !== null && (
           <MediaSelectModal

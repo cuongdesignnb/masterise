@@ -95,20 +95,20 @@ export default function FeaturedProjects() {
                     </Link>
 
                     <div className="absolute left-3 top-3 flex max-w-[70%] flex-col items-start gap-1.5">
-                      {getProjectMarketingLabel(project.project_label, project.project_status) && (
+                      {getProjectMarketingLabel(project.project_label, project.project_status, project.project_status_detail) && (
                         <span className="max-w-full truncate rounded-full bg-[#6F5436]/90 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wide text-white backdrop-blur-sm">
-                          {getProjectMarketingLabel(project.project_label, project.project_status)}
+                          {getProjectMarketingLabel(project.project_label, project.project_status, project.project_status_detail)}
                         </span>
                       )}
-                      {project.badge && project.badge !== getProjectMarketingLabel(project.project_label, project.project_status) && (
+                      {project.badge && project.badge !== getProjectMarketingLabel(project.project_label, project.project_status, project.project_status_detail) && (
                         <span className="rounded-full gold-gradient px-2.5 py-1 text-[9px] font-bold uppercase tracking-wide text-white">
                           {project.badge}
                         </span>
                       )}
                     </div>
                     {project.project_status && (
-                      <span className={`absolute bottom-3 left-3 rounded-full px-2.5 py-1 text-[9px] font-bold uppercase tracking-wide ${getProjectStatusColor(project.project_status).bg} ${getProjectStatusColor(project.project_status).text}`}>
-                        {getProjectStatusLabel(project.project_status)}
+                      <span className={`absolute bottom-3 left-3 rounded-full px-2.5 py-1 text-[9px] font-bold uppercase tracking-wide ${getProjectStatusColor(project.project_status_detail).bg} ${getProjectStatusColor(project.project_status_detail).text}`}>
+                        {getProjectStatusLabel(project.project_status, project.project_status_detail)}
                       </span>
                     )}
 

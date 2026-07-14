@@ -7,11 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import Container from "@/components/Container";
 import MotionWrapper from "@/components/MotionWrapper";
 import { projectService } from "@/services/projectService";
-import type { RegionOption } from "@/types/api";
-import { PROJECT_STATUS_OPTIONS } from "@/lib/projectStatus";
 import { isProjectPriceRange, PROJECT_PRICE_RANGE_OPTIONS } from "@/lib/projectPrice";
-
-const statusOptions = [{ value: "", label: "Tất cả trạng thái" }, ...PROJECT_STATUS_OPTIONS];
 
 const priceOptions = [
   { value: "", label: "Tất cả mức giá" },
@@ -29,16 +25,29 @@ export default function ProjectsSearchBar() {
   const [category, setCategory] = useState("");
   const [status, setStatus] = useState("");
   const [price, setPrice] = useState("");
-  const [regionOptions, setRegionOptions] = useState<RegionOption[]>([]);
+  const {
+    data: regionOptions = [],
+    isLoading: isRegionsLoading,
+    isError: isRegionsError,
+  } = useQuery({
+    queryKey: ["public-project-regions"],
+    queryFn: projectService.getRegions,
+    staleTime: 5 * 60 * 1000,
+  });
+  const {
+    data: projectStatusOptions = [],
+    isLoading: isStatusesLoading,
+    isError: isStatusesError,
+  } = useQuery({
+    queryKey: ["public-project-statuses"],
+    queryFn: projectService.getProjectStatuses,
+    staleTime: 5 * 60 * 1000,
+  });
   const { data: categoryOptions = [] } = useQuery({
     queryKey: ["public-project-categories"],
     queryFn: projectService.getProjectCategories,
     staleTime: 5 * 60 * 1000,
   });
-
-  useEffect(() => {
-    projectService.getRegions().then(setRegionOptions).catch(() => setRegionOptions([]));
-  }, []);
 
   // Keep a ref to track if component is mounting to avoid double triggering on first load
   const isMounted = useRef(false);
@@ -178,7 +187,9 @@ export default function ProjectsSearchBar() {
                   onChange={(e) => handleRegionChange(e.target.value)}
                   className="w-full appearance-none bg-ivory border border-line/50 rounded-xl px-4 py-2.5 text-sm text-muted cursor-pointer focus:outline-none focus:border-gold/50 focus:ring-1 focus:ring-gold/20 transition-colors pr-9 font-medium"
                 >
-                  <option value="">Tất cả vùng miền</option>
+                  <option value="">
+                    {isRegionsLoading ? "Đang tải vùng miền..." : isRegionsError ? "Không tải được vùng miền" : "Tất cả vùng miền"}
+                  </option>
                   {regionOptions.map((opt) => (
                     <option key={opt.value} value={opt.value} className="text-ink font-medium">
                       {opt.label} ({opt.projects_count})
@@ -218,9 +229,12 @@ export default function ProjectsSearchBar() {
                   onChange={(e) => handleStatusChange(e.target.value)}
                   className="w-full appearance-none bg-ivory border border-line/50 rounded-xl px-4 py-2.5 text-sm text-muted cursor-pointer focus:outline-none focus:border-gold/50 focus:ring-1 focus:ring-gold/20 transition-colors pr-9 font-medium"
                 >
-                  {statusOptions.map((opt) => (
-                    <option key={opt.value} value={opt.value} className="text-ink font-medium">
-                      {opt.label}
+                  <option value="">
+                    {isStatusesLoading ? "Đang tải trạng thái..." : isStatusesError ? "Không tải được trạng thái" : "Tất cả trạng thái"}
+                  </option>
+                  {projectStatusOptions.map((opt) => (
+                    <option key={opt.id} value={opt.slug} className="text-ink font-medium">
+                      {opt.name} ({opt.projects_count})
                     </option>
                   ))}
                 </select>

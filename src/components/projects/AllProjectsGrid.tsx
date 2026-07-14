@@ -117,7 +117,8 @@ export default function AllProjectsGrid() {
         {!isLoading && !error && projectCards.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {projectCards.map((project, idx) => {
-              const marketingLabel = getProjectMarketingLabel(project.project_label, project.project_status);
+              const marketingLabel = getProjectMarketingLabel(project.project_label, project.project_status, project.project_status_detail);
+              const statusColor = getProjectStatusColor(project.project_status_detail);
               return (
               <MotionWrapper key={project.id} delay={0.06 * idx}>
                 <div className="bg-white rounded-[16px] border border-line/50 overflow-hidden hover:-translate-y-1 hover:shadow-[0_12px_36px_rgba(87,61,28,0.08)] transition-all duration-300 group">
@@ -145,8 +146,8 @@ export default function AllProjectsGrid() {
                       )}
                     </div>
                     {project.project_status && (
-                      <span className={`absolute bottom-3 left-3 rounded-full px-2.5 py-1 text-[9px] font-bold uppercase ${getProjectStatusColor(project.project_status).bg} ${getProjectStatusColor(project.project_status).text}`}>
-                        {getProjectStatusLabel(project.project_status)}
+                      <span className={`absolute bottom-3 left-3 rounded-full px-2.5 py-1 text-[9px] font-bold uppercase ${statusColor.bg} ${statusColor.text}`}>
+                        {getProjectStatusLabel(project.project_status, project.project_status_detail)}
                       </span>
                     )}
                     {/* Heart */}

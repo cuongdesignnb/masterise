@@ -1,4 +1,4 @@
-import type { ProjectStatus } from './api';
+import type { ProjectStatus, ProjectStatusOption } from './api';
 
 export type NavItem = {
   label: string;
@@ -35,6 +35,7 @@ export type Project = {
   image: string;
   badge?: string;
   project_status: ProjectStatus;
+  project_status_detail?: ProjectStatusOption | null;
   type?: string;
   description?: string;
   slug?: string;

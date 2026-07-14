@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use App\Models\Project;
 use App\Models\ProjectCategory;
+use App\Support\ProjectRegionBackfill;
 
 class ProjectSeeder extends Seeder
 {
@@ -477,5 +478,7 @@ class ProjectSeeder extends Seeder
                 ]
             );
         }
+
+        ProjectRegionBackfill::run();
     }
 }

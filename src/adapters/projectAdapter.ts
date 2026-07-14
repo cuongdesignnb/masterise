@@ -107,7 +107,7 @@ function buildQuickCardsFromRealFields(api: ApiProject): IconDetail[] {
       ? { label: 'Bàn giao', value: api.handover_time, icon: 'CalendarDays' as const }
       : null,
     api.project_status
-      ? { label: 'Tình trạng', value: getProjectStatusLabel(api.project_status), icon: 'Building2' as const }
+      ? { label: 'Tình trạng', value: getProjectStatusLabel(api.project_status, api.project_status_detail), icon: 'Building2' as const }
       : null,
   ].filter(notNull);
 }
@@ -521,6 +521,7 @@ export function mapApiProjectToProjectCard(api: ApiProject): FrontendProject {
     image: api.thumbnail || api.banner_image || INTERNAL_IMAGE_PLACEHOLDER,
     badge: api.is_featured ? 'HOT' : undefined,
     project_status: api.project_status,
+    project_status_detail: api.project_status_detail,
     type,
     description: api.description || '',
     slug: api.slug,
@@ -540,7 +541,7 @@ export function mapApiProjectToProjectDetail(api: ApiProject): ProjectDetail {
     id: api.id,
     slug: api.slug,
     badge: api.badge_text || '',
-    projectStatus: api.project_status ? getProjectStatusLabel(api.project_status) : undefined,
+    projectStatus: api.project_status ? getProjectStatusLabel(api.project_status, api.project_status_detail) : undefined,
     name: api.name,
     subtitle: api.hero_subtitle || api.description || UPDATING,
     description: api.description || UPDATING,

@@ -6,7 +6,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import Button from "./Button";
-import { PROJECT_STATUS_OPTIONS } from "@/lib/projectStatus";
 import { projectService } from "@/services/projectService";
 import { PROJECT_PRICE_RANGE_OPTIONS } from "@/lib/projectPrice";
 
@@ -33,7 +32,7 @@ const filterOptions = {
     icon: Sliders,
     label: "Trạng thái",
     placeholder: "Tất cả dự án",
-    options: ["Tất cả trạng thái", ...PROJECT_STATUS_OPTIONS.map((option) => option.label)],
+    options: ["Tất cả trạng thái"],
   },
   area: {
     icon: ShieldCheck,
@@ -50,11 +49,20 @@ export default function SearchBar() {
     queryFn: projectService.getProjectCategories,
     staleTime: 5 * 60 * 1000,
   });
+  const { data: projectStatusOptions = [] } = useQuery({
+    queryKey: ["public-project-statuses"],
+    queryFn: projectService.getProjectStatuses,
+    staleTime: 5 * 60 * 1000,
+  });
   const resolvedFilterOptions = {
     ...filterOptions,
     type: {
       ...filterOptions.type,
       options: ["Tất cả loại hình", ...projectTypeOptions.map((option) => option.name)],
+    },
+    status: {
+      ...filterOptions.status,
+      options: ["Tất cả trạng thái", ...projectStatusOptions.map((option) => option.name)],
     },
   };
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
@@ -194,7 +202,7 @@ export default function SearchBar() {
                 
                 if (selectedValues.status) {
                   const st = selectedValues.status;
-                  const projectStatus = PROJECT_STATUS_OPTIONS.find((option) => option.label === st)?.value;
+                  const projectStatus = projectStatusOptions.find((option) => option.name === st)?.slug;
                   if (projectStatus) queryParams.push(`project_status=${projectStatus}`);
                 }
                 

@@ -88,7 +88,7 @@ export default function SavedProjects() {
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] uppercase font-bold tracking-wider text-[#B88746] bg-[#B88746]/10 px-2 py-0.5 rounded">
-                      {getProjectStatusLabel(project.project_status)}
+                      {getProjectStatusLabel(project.project_status, project.project_status_detail)}
                     </span>
                     <span className="text-[10px] uppercase font-bold tracking-wider text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
                       {project.region}
