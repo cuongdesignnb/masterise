@@ -1,3 +1,5 @@
+import type { FloorPlanGroup, LegacyFloorPlanItem } from './floor-plan';
+
 export type ProjectIconName =
   | "BadgeDollarSign"
   | "Building2"
@@ -107,18 +109,8 @@ export type ProjectDetail = {
     icon: ProjectIconName;
   }[];
   floorTabs: string[];
-  floorPlans: {
-    productType?: string;
-    name: string;
-    area?: string;
-    totalArea?: string;
-    image?: string;
-    images?: string[];
-    price?: string;
-    bedrooms?: string;
-    status?: string;
-    description?: string;
-  }[];
+  floorPlanGroups?: FloorPlanGroup[];
+  floorPlans: LegacyFloorPlanItem[];
   handoverStandards: {
     title: string;
     description: string;

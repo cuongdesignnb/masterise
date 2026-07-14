@@ -8,6 +8,7 @@ use App\Models\ProjectCategory;
 use App\Models\Location;
 use App\Models\Region;
 use App\Support\ProjectPriceRange;
+use App\Support\ProjectFloorPlanStructure;
 use App\Support\ProjectStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -15,6 +16,58 @@ use Illuminate\Validation\Rule;
 
 class ProjectController extends Controller
 {
+    private function floorPlanValidationRules(): array
+    {
+        return [
+            'floor_plan_groups' => 'nullable|array',
+            'floor_plan_groups.*.key' => ['required', 'string', 'max:100', 'regex:/^[A-Za-z0-9_-]+$/', 'distinct'],
+            'floor_plan_groups.*.label' => 'required|string|max:255',
+            'floor_plan_groups.*.tabs' => 'required|array',
+            'floor_plan_groups.*.tabs.*.key' => ['required', 'string', 'max:100', 'regex:/^[A-Za-z0-9_-]+$/', 'distinct'],
+            'floor_plan_groups.*.tabs.*.label' => 'required|string|max:255',
+            'floor_plan_groups.*.tabs.*.items' => 'required|array',
+            'floor_plan_groups.*.tabs.*.items.*.key' => ['required', 'string', 'max:100', 'regex:/^[A-Za-z0-9_-]+$/', 'distinct'],
+            'floor_plan_groups.*.tabs.*.items.*.productType' => 'nullable|string|max:255',
+            'floor_plan_groups.*.tabs.*.items.*.name' => 'required|string|max:255',
+            'floor_plan_groups.*.tabs.*.items.*.area' => 'nullable|string|max:255',
+            'floor_plan_groups.*.tabs.*.items.*.totalArea' => 'nullable|string|max:255',
+            'floor_plan_groups.*.tabs.*.items.*.description' => 'nullable|string',
+            'floor_plan_groups.*.tabs.*.items.*.price' => 'nullable|string|max:255',
+            'floor_plan_groups.*.tabs.*.items.*.bedrooms' => 'nullable|string|max:100',
+            'floor_plan_groups.*.tabs.*.items.*.status' => 'nullable|string|max:100',
+            'floor_plan_groups.*.tabs.*.items.*.images' => 'nullable|array',
+            'floor_plan_groups.*.tabs.*.items.*.images.*' => [
+                'string',
+                'max:2048',
+                function ($attribute, $value, $fail) {
+                    $scheme = is_string($value) ? strtolower((string) parse_url($value, PHP_URL_SCHEME)) : '';
+                    $isInternalPath = is_string($value) && Str::startsWith($value, '/');
+                    $isHttpUrl = filter_var($value, FILTER_VALIDATE_URL) && in_array($scheme, ['http', 'https'], true);
+                    if (!$isInternalPath && !$isHttpUrl) {
+                        $fail('Ảnh mặt bằng phải là URL HTTP(S) hoặc đường dẫn nội bộ hợp lệ.');
+                    }
+                },
+            ],
+        ];
+    }
+
+    private function applyFloorPlanData(Request $request, array $projectData): array
+    {
+        if ($request->exists('floor_plan_groups')) {
+            $groups = ProjectFloorPlanStructure::normalize($request->input('floor_plan_groups'));
+        } elseif ($request->exists('floor_tabs') || $request->exists('floor_plans')) {
+            $groups = ProjectFloorPlanStructure::fromLegacy(
+                $request->input('floor_tabs', []),
+                $request->input('floor_plans', [])
+            );
+        } else {
+            return $projectData;
+        }
+
+        $projectData['floor_plan_groups'] = $groups;
+        return array_merge($projectData, ProjectFloorPlanStructure::flatten($groups));
+    }
+
     private function noStore($response)
     {
         return $response
@@ -426,6 +479,7 @@ class ProjectController extends Controller
             'amenity_details' => 'nullable|array',
             'floor_tabs' => 'nullable|array',
             'floor_plans' => 'nullable|array',
+            ...$this->floorPlanValidationRules(),
             'handover_standards' => 'nullable|array',
             'price_rows' => 'nullable|array',
             'schema_price' => 'nullable|string|max:255',
@@ -476,8 +530,9 @@ class ProjectController extends Controller
             'detail_gallery_label', 'detail_gallery_title', 'detail_gallery_description', 'section_titles',
             'brochure_url', 'video_url', 'virtual_tour_url', 'map_image_url', 'location_description', 'lat', 'lng',
             'area_size', 'developer', 'scale', 'amenities', 'amenity_details', 'floor_tabs',
-            'floor_plans', 'handover_standards', 'price_rows', 'schema_price', 'schema_price_currency', 'schema_availability'
+            'floor_plans', 'floor_plan_groups', 'handover_standards', 'price_rows', 'schema_price', 'schema_price_currency', 'schema_availability'
         ]);
+        $projectData = $this->applyFloorPlanData($request, $projectData);
         $projectData = $this->normalizeProjectPriceData($projectData);
         $projectData['region'] = $location?->region?->name;
         $project = Project::create($projectData);
@@ -612,6 +667,7 @@ class ProjectController extends Controller
             'amenity_details' => 'nullable|array',
             'floor_tabs' => 'nullable|array',
             'floor_plans' => 'nullable|array',
+            ...$this->floorPlanValidationRules(),
             'handover_standards' => 'nullable|array',
             'price_rows' => 'nullable|array',
             'schema_price' => 'nullable|string|max:255',
@@ -661,8 +717,9 @@ class ProjectController extends Controller
             'detail_gallery_label', 'detail_gallery_title', 'detail_gallery_description', 'section_titles',
             'brochure_url', 'video_url', 'virtual_tour_url', 'map_image_url', 'location_description', 'lat', 'lng',
             'area_size', 'developer', 'scale', 'amenities', 'amenity_details', 'floor_tabs',
-            'floor_plans', 'handover_standards', 'price_rows', 'schema_price', 'schema_price_currency', 'schema_availability'
+            'floor_plans', 'floor_plan_groups', 'handover_standards', 'price_rows', 'schema_price', 'schema_price_currency', 'schema_availability'
         ]);
+        $projectData = $this->applyFloorPlanData($request, $projectData);
         $projectData = $this->normalizeProjectPriceData($projectData);
         if ($location) {
             $projectData['region'] = $location->region->name;

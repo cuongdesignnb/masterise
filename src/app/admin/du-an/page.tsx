@@ -27,6 +27,8 @@ import AdminMediaField from '@/components/admin/media/AdminMediaField';
 import AdminImagePreview from '@/components/admin/media/AdminImagePreview';
 import RichTextEditor from '@/components/admin/RichTextEditor';
 import VR360Tab from '@/components/admin/vr360/VR360Tab';
+import type { FloorPlanGroup, FloorPlanItem, FloorPlanTab } from '@/types/floor-plan';
+import { createFloorPlanKey, normalizeFloorPlanGroups, uniqueFloorPlanImages } from '@/lib/projectFloorPlan';
 
 type SelectOption = {
   id: number;
@@ -51,7 +53,6 @@ type HandoverStandardItem = { title: string; description: string; image: string;
 type ReasonItem = { title: string; description: string; icon: string };
 type TestimonialItem = { name: string; role: string; content: string; avatar: string };
 type FaqItem = { question: string; answer: string };
-type FloorPlanItem = { productType: string; name: string; area: string; totalArea: string; image: string; images: string[] };
 type PriceRowItem = {
   kind: 'row' | 'image' | 'file' | 'note';
   productType: string;
@@ -150,7 +151,7 @@ type RepeaterMediaTarget =
   | { group: 'amenityDetails'; index: number; field: 'image' }
   | { group: 'handoverStandards'; index: number; field: 'image' }
   | { group: 'projectTestimonials'; index: number; field: 'avatar' }
-  | { group: 'floorPlans'; index: number; field: 'images' | 'image' }
+  | { group: 'floorPlanGroups'; groupIndex: number; tabIndex: number; itemIndex: number; field: 'images' }
   | { group: 'priceRows'; index: number; field: 'image_url' | 'file_url' }
   | { group: 'policyCards'; index: number; field: 'image_url' | 'file_url' };
 type MediaSelectorTarget = BaseMediaTarget | RepeaterMediaTarget | null;
@@ -299,8 +300,7 @@ export default function AdminProjects() {
   const [formInvestmentReasons, setFormInvestmentReasons] = useState<ReasonItem[]>([]);
   const [formProjectTestimonials, setFormProjectTestimonials] = useState<TestimonialItem[]>([]);
   const [formProjectFaqs, setFormProjectFaqs] = useState<FaqItem[]>([]);
-  const [formFloorTabs, setFormFloorTabs] = useState<string[]>([]);
-  const [formFloorPlans, setFormFloorPlans] = useState<FloorPlanItem[]>([]);
+  const [formFloorPlanGroups, setFormFloorPlanGroups] = useState<FloorPlanGroup[]>([]);
   const [formHandoverStandards, setFormHandoverStandards] = useState<HandoverStandardItem[]>([]);
   const [formPriceRows, setFormPriceRows] = useState<PriceRowItem[]>([]);
   const [formPolicyCards, setFormPolicyCards] = useState<PolicyItem[]>([]);
@@ -420,7 +420,6 @@ export default function AdminProjects() {
   const asStrings = (value: unknown): string[] => normalizeArray(value)
     .map((item) => String(item || '').trim())
     .filter(Boolean);
-  const uniqueStrings = (items: unknown[]) => Array.from(new Set(items.map((item) => String(item || '').trim()).filter(Boolean)));
   const textValue = (value: unknown) => String(value || '');
   const inferFileType = (url: string): PriceRowItem['file_type'] => {
     const clean = url.split('?')[0].toLowerCase();
@@ -511,27 +510,6 @@ export default function AdminProjects() {
     question: textValue(item.question),
     answer: textValue(item.answer),
   }));
-  const loadFloorPlanItems = (value: unknown): FloorPlanItem[] => asRecords(value).map((item) => {
-    const images = uniqueStrings([
-      ...asStrings(item.images),
-      ...asStrings(item.image_urls),
-      ...asStrings(item.gallery),
-      ...asStrings(item.photos),
-      item.image_url,
-      item.image,
-      item.thumbnail,
-      item.url,
-      item.src,
-    ]);
-    return {
-      productType: textValue(item.productType || item.product_type || item.type),
-      name: textValue(item.name),
-      area: textValue(item.area),
-      totalArea: textValue(item.totalArea || item.total_area),
-      image: images[0] || '',
-      images,
-    };
-  });
   const loadPriceRowItems = (value: unknown): PriceRowItem[] => normalizeArray(value)
     .map((row) => {
       if (Array.isArray(row)) {
@@ -758,8 +736,7 @@ export default function AdminProjects() {
     setFormInvestmentReasons([]);
     setFormProjectTestimonials([]);
     setFormProjectFaqs([]);
-    setFormFloorTabs([]);
-    setFormFloorPlans([]);
+    setFormFloorPlanGroups([]);
     setFormHandoverStandards([]);
     setFormPriceRows([]);
     setFormPolicyCards([]);
@@ -850,8 +827,7 @@ export default function AdminProjects() {
     setFormInvestmentReasons(loadReasonItems(project.investment_reasons));
     setFormProjectTestimonials(loadTestimonialItems(project.project_testimonials));
     setFormProjectFaqs(loadFaqItems(project.project_faqs));
-    setFormFloorTabs(asStrings(project.floor_tabs));
-    setFormFloorPlans(loadFloorPlanItems(project.floor_plans));
+    setFormFloorPlanGroups(normalizeFloorPlanGroups(project.floor_plan_groups, project.floor_tabs, project.floor_plans));
     setFormHandoverStandards(loadHandoverStandardItems(project.handover_standards));
     setFormPriceRows(loadPriceRowItems(project.price_rows));
     setFormPolicyCards(loadPolicyItems(project.policy_cards));
@@ -906,16 +882,21 @@ export default function AdminProjects() {
       const investmentReasons = cleanArray(formInvestmentReasons, item => Boolean(item.title || item.description));
       const projectTestimonials = cleanArray(formProjectTestimonials, item => Boolean(item.name || item.content));
       const projectFaqs = cleanArray(formProjectFaqs, item => Boolean(item.question || item.answer));
-      const floorTabs = formFloorTabs.map(tab => tab.trim()).filter(Boolean);
-      const floorPlans = cleanArray(formFloorPlans, item => Boolean(item.name || item.area || item.image || item.images.length))
-        .map(item => {
-          const images = uniqueStrings([...(item.images || []), item.image]);
-          return {
-            ...item,
-            image: images[0] || '',
-            images,
-          };
-        });
+      const floorPlanGroups = formFloorPlanGroups
+        .filter(group => group.label.trim())
+        .map(group => ({
+          ...group,
+          label: group.label.trim(),
+          tabs: group.tabs
+            .filter(tab => tab.label.trim())
+            .map(tab => ({
+              ...tab,
+              label: tab.label.trim(),
+              items: tab.items
+                .filter(item => Boolean(item.name.trim() || item.area.trim() || item.images.length))
+                .map(item => ({ ...item, images: uniqueFloorPlanImages(item.images) })),
+            })),
+        }));
       const handoverStandards = cleanArray(formHandoverStandards, item => Boolean(item.title || item.description || item.image));
       const priceRows = cleanArray(formPriceRows, item => Boolean(
         item.productType || item.area || item.price || item.payment || item.status || item.note || item.title || item.description || item.image_url || item.file_url
@@ -1012,8 +993,7 @@ export default function AdminProjects() {
         investment_reasons: investmentReasons,
         project_testimonials: projectTestimonials,
         project_faqs: projectFaqs,
-        floor_tabs: floorTabs,
-        floor_plans: floorPlans,
+        floor_plan_groups: floorPlanGroups,
         handover_standards: handoverStandards,
         price_rows: priceRows,
         policy_cards: policyCards,
@@ -1166,16 +1146,22 @@ export default function AdminProjects() {
         setFormProjectTestimonials(items => items.map((item, index) =>
           index === mediaSelectorTarget.index ? { ...item, [mediaSelectorTarget.field]: selectedUrl } : item
         ));
-      } else if (mediaSelectorTarget.group === 'floorPlans') {
-        const selectedImages = uniqueStrings(Array.isArray(url) ? url : [url]);
-        setFormFloorPlans(items => items.map((item, index) =>
-          index === mediaSelectorTarget.index
-            ? {
-                ...item,
-                image: selectedImages[0] || item.image,
-                images: selectedImages.length ? selectedImages : item.images,
+      } else if (mediaSelectorTarget.group === 'floorPlanGroups') {
+        const selectedImages = uniqueFloorPlanImages(Array.isArray(url) ? url : [url]);
+        setFormFloorPlanGroups(groups => groups.map((group, groupIndex) =>
+          groupIndex !== mediaSelectorTarget.groupIndex ? group : {
+            ...group,
+            tabs: group.tabs.map((tab, tabIndex) =>
+              tabIndex !== mediaSelectorTarget.tabIndex ? tab : {
+                ...tab,
+                items: tab.items.map((item, itemIndex) =>
+                  itemIndex === mediaSelectorTarget.itemIndex && selectedImages.length
+                    ? { ...item, images: selectedImages }
+                    : item
+                ),
               }
-            : item
+            ),
+          }
         ));
       } else if (mediaSelectorTarget.group === 'priceRows') {
         setFormPriceRows(items => items.map((item, index) =>
@@ -1288,39 +1274,55 @@ export default function AdminProjects() {
     setter(nextItems);
   };
 
-  const createEmptyFloorPlan = (productType = ''): FloorPlanItem => ({
-    productType,
+  const createEmptyFloorPlan = (): FloorPlanItem => ({
+    key: createFloorPlanKey('item'),
+    productType: '',
     name: '',
     area: '',
     totalArea: '',
-    image: '',
+    description: '',
+    price: '',
+    bedrooms: '',
+    status: '',
     images: [],
   });
 
-  const addFloorPlanForTab = (productType = '') => {
-    setFormFloorPlans(items => [...items, createEmptyFloorPlan(productType)]);
+  const createEmptyFloorTab = (): FloorPlanTab => ({
+    key: createFloorPlanKey('tab'),
+    label: 'Sản phẩm',
+    items: [],
+  });
+
+  const createEmptyFloorGroup = (): FloorPlanGroup => ({
+    key: createFloorPlanKey('group'),
+    label: 'Mặt bằng',
+    tabs: [createEmptyFloorTab()],
+  });
+
+  const updateFloorGroup = (groupIndex: number, updater: (group: FloorPlanGroup) => FloorPlanGroup) => {
+    setFormFloorPlanGroups(groups => groups.map((group, index) => index === groupIndex ? updater(group) : group));
   };
 
-  const renameFloorTab = (index: number, nextValue: string) => {
-    const previousValue = formFloorTabs[index] || '';
-    setFormFloorTabs(items => items.map((item, itemIndex) => itemIndex === index ? nextValue : item));
-    if (previousValue) {
-      setFormFloorPlans(items => items.map(item =>
-        item.productType === previousValue ? { ...item, productType: nextValue } : item
-      ));
-    }
+  const updateFloorTab = (groupIndex: number, tabIndex: number, updater: (tab: FloorPlanTab) => FloorPlanTab) => {
+    updateFloorGroup(groupIndex, group => ({
+      ...group,
+      tabs: group.tabs.map((tab, index) => index === tabIndex ? updater(tab) : tab),
+    }));
   };
 
-  const removeFloorTab = (index: number) => {
-    const tabName = formFloorTabs[index] || '';
-    if (window.confirm('Bạn có chắc chắn muốn xóa nhóm loại sản phẩm này không? Các mặt bằng trong nhóm sẽ chuyển về chưa phân nhóm.')) {
-      setFormFloorTabs(items => items.filter((_, itemIndex) => itemIndex !== index));
-      if (tabName) {
-        setFormFloorPlans(items => items.map(item =>
-          item.productType === tabName ? { ...item, productType: '' } : item
-        ));
-      }
-    }
+  const updateFloorItem = (groupIndex: number, tabIndex: number, itemIndex: number, patch: Partial<FloorPlanItem>) => {
+    updateFloorTab(groupIndex, tabIndex, tab => ({
+      ...tab,
+      items: tab.items.map((item, index) => index === itemIndex ? { ...item, ...patch } : item),
+    }));
+  };
+
+  const moveNestedItem = <T,>(items: T[], index: number, direction: -1 | 1) => {
+    const nextIndex = index + direction;
+    if (nextIndex < 0 || nextIndex >= items.length) return items;
+    const next = [...items];
+    [next[index], next[nextIndex]] = [next[nextIndex], next[index]];
+    return next;
   };
 
   const sectionNote = (text: string) => (
@@ -1373,9 +1375,9 @@ export default function AdminProjects() {
       !formAmenityDetails.length ? 'Danh sách tiện ích nổi bật' : null,
     ], false, 'amenity_details'),
     buildChecklistItem('floor', 'Sản phẩm & Mặt bằng', [
-      !formFloorTabs.length ? 'Nhóm loại sản phẩm' : null,
-      !formFloorPlans.length ? 'Danh sách mặt bằng' : null,
-    ], false, !formFloorTabs.length ? 'floor_tabs' : 'floor_plans'),
+      !formFloorPlanGroups.length ? 'Nhóm mặt bằng' : null,
+      !formFloorPlanGroups.some(group => group.tabs.some(tab => tab.items.length)) ? 'Danh sách mặt bằng' : null,
+    ], false, 'floor_plans'),
     buildChecklistItem('handover', 'Tiêu chuẩn bàn giao', [
       !formHandoverStandards.length ? 'Danh sách tiêu chuẩn bàn giao' : null,
     ], true, 'handover_standards'),
@@ -1640,9 +1642,11 @@ export default function AdminProjects() {
       if (mediaSelectorTarget.group === 'projectTestimonials') {
         return formProjectTestimonials[mediaSelectorTarget.index]?.avatar ? [formProjectTestimonials[mediaSelectorTarget.index].avatar] : [];
       }
-      if (mediaSelectorTarget.group === 'floorPlans') {
-        const item = formFloorPlans[mediaSelectorTarget.index];
-        return uniqueStrings([...(item?.images || []), item?.image]);
+      if (mediaSelectorTarget.group === 'floorPlanGroups') {
+        return formFloorPlanGroups[mediaSelectorTarget.groupIndex]
+          ?.tabs[mediaSelectorTarget.tabIndex]
+          ?.items[mediaSelectorTarget.itemIndex]
+          ?.images || [];
       }
       if (mediaSelectorTarget.group === 'priceRows') {
         const item = formPriceRows[mediaSelectorTarget.index];
@@ -1687,83 +1691,133 @@ export default function AdminProjects() {
     </div>
   );
 
-  const renderFloorPlanRepeater = () => {
-    const floorTabOptions = uniqueStrings(formFloorTabs);
-    return (
-    <div data-project-field="floor_plans" className={`space-y-2 rounded-xl border bg-[#FBF8F2]/40 p-3 ${highlightClass('floor_plans') || 'border-[#E8DCCB]'}`}>
-      <div className="flex items-center justify-between gap-3">
+  const renderFloorPlanRepeater = () => (
+    <div data-project-field="floor_plans" className={`space-y-3 rounded-xl border bg-[#FBF8F2]/40 p-3 ${highlightClass('floor_plans') || 'border-[#E8DCCB]'}`}>
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <label className="text-xs font-semibold text-[#8C7A6B]">Danh sách mặt bằng</label>
-          <p className="mt-0.5 text-[11px] text-[#8C7A6B]">Chọn “Thuộc tab” để mặt bằng hiển thị đúng tab ngoài client. Ảnh đầu tiên sẽ là thumbnail.</p>
+          <label className="text-xs font-semibold text-[#8C7A6B]">Mặt bằng phân cấp</label>
+          <p className="mt-0.5 text-[11px] text-[#8C7A6B]">Nhóm cha → tab con → mặt bằng → nhiều ảnh. Đổi tên không làm thay đổi khóa liên kết.</p>
         </div>
-        <button
-          type="button"
-          onClick={() => addFloorPlanForTab(floorTabOptions[0] || '')}
-          className={addButtonClass}
-        >
-          Thêm mặt bằng
+        <button type="button" onClick={() => setFormFloorPlanGroups(groups => [...groups, createEmptyFloorGroup()])} className={addButtonClass}>
+          Thêm nhóm mặt bằng
         </button>
       </div>
-      {formFloorPlans.length === 0 ? <p className="text-xs text-[#8C7A6B]">Chưa có dữ liệu. Bấm "Thêm mặt bằng" để nhập.</p> : null}
-      {formFloorPlans.map((item, index) => {
-        const selectedImages = uniqueStrings([...(item.images || []), item.image]);
+
+      {!formFloorPlanGroups.length ? <p className="text-xs text-[#8C7A6B]">Chưa có nhóm mặt bằng.</p> : null}
+      {formFloorPlanGroups.map((group, groupIndex) => {
+        const groupItemCount = group.tabs.reduce((total, tab) => total + tab.items.length, 0);
         return (
-          <div key={index} className={repeaterCardClass}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-              {floorTabOptions.length ? (
-                <select
-                  value={item.productType}
-                  onChange={(e) => updateListItem(formFloorPlans, setFormFloorPlans, index, { productType: e.target.value })}
-                  className={inputClass}
-                >
-                  <option value="">Chưa phân nhóm</option>
-                  {floorTabOptions.map((tab) => (
-                    <option key={tab} value={tab}>{tab}</option>
-                  ))}
-                </select>
-              ) : (
-                <input value={item.productType} onChange={(e) => updateListItem(formFloorPlans, setFormFloorPlans, index, { productType: e.target.value })} className={inputClass} placeholder="Loại sản phẩm, ví dụ: Căn hộ cao cấp" />
-              )}
-              <input value={item.name} onChange={(e) => updateListItem(formFloorPlans, setFormFloorPlans, index, { name: e.target.value })} className={inputClass} placeholder="Tên mặt bằng, ví dụ: Căn hộ 2 phòng ngủ" />
-              <input value={item.area} onChange={(e) => updateListItem(formFloorPlans, setFormFloorPlans, index, { area: e.target.value })} className={inputClass} placeholder="Diện tích, ví dụ: 68 - 75 m²" />
-              <input value={item.totalArea} onChange={(e) => updateListItem(formFloorPlans, setFormFloorPlans, index, { totalArea: e.target.value })} className={inputClass} placeholder="Tổng diện tích sàn" />
-            </div>
-            <div className="space-y-2">
-              <div className="flex flex-wrap items-center justify-between gap-2">
+          <details key={group.key} open className="rounded-2xl border border-[#D9C7AF] bg-white p-3">
+            <summary className="cursor-pointer text-sm font-bold text-[#1F1B16]">
+              {group.label || 'Nhóm chưa đặt tên'} · {group.tabs.length} tab · {groupItemCount} mặt bằng
+            </summary>
+            <div className="mt-3 space-y-3">
+              <div className="grid grid-cols-1 gap-2 md:grid-cols-[1fr_auto]">
                 <div>
-                  <p className="text-xs font-semibold text-[#8C7A6B]">Ảnh mặt bằng</p>
-                  <p className="text-[11px] text-[#8C7A6B]">{selectedImages.length ? `Đang chọn ${selectedImages.length} ảnh. Ảnh số 1 là thumbnail.` : 'Chọn ảnh từ Media Library.'}</p>
+                  <input value={group.label} onChange={(event) => updateFloorGroup(groupIndex, current => ({ ...current, label: event.target.value }))} className={inputClass} placeholder="Tên nhóm, ví dụ: Căn hộ" />
+                  <p className="mt-1 text-[10px] text-[#8C7A6B]">Khóa ổn định: {group.key}</p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setMediaSelectorTarget({ group: 'floorPlans', index, field: 'images' })}
-                  className={addButtonClass}
-                >
-                  Chọn ảnh
-                </button>
+                <div className="flex flex-wrap gap-1">
+                  <button type="button" onClick={() => setFormFloorPlanGroups(groups => moveNestedItem(groups, groupIndex, -1))} disabled={groupIndex === 0} className={removeButtonClass}>Lên</button>
+                  <button type="button" onClick={() => setFormFloorPlanGroups(groups => moveNestedItem(groups, groupIndex, 1))} disabled={groupIndex === formFloorPlanGroups.length - 1} className={removeButtonClass}>Xuống</button>
+                  <button type="button" onClick={() => updateFloorGroup(groupIndex, current => ({ ...current, tabs: [...current.tabs, createEmptyFloorTab()] }))} className={addButtonClass}>Thêm tab</button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!groupItemCount || window.confirm(`Xóa nhóm này sẽ xóa ${groupItemCount} mặt bằng. Bạn có chắc chắn?`)) {
+                        setFormFloorPlanGroups(groups => groups.filter((_, index) => index !== groupIndex));
+                      }
+                    }}
+                    className={removeButtonClass}
+                  >Xóa nhóm</button>
+                </div>
               </div>
-              <AdminImagePreview
-                value={selectedImages}
-                label="Chưa chọn ảnh mặt bằng"
-                multiple
-                size="sm"
-                onRemove={(_, imageIndex) => {
-                  const images = selectedImages.filter((__, currentIndex) => currentIndex !== imageIndex);
-                  updateListItem(formFloorPlans, setFormFloorPlans, index, { images, image: images[0] || '' });
-                }}
-              />
+
+              {!group.tabs.length ? <p className="text-xs text-[#8C7A6B]">Nhóm này chưa có tab con.</p> : null}
+              {group.tabs.map((tab, tabIndex) => (
+                <details key={tab.key} open className="ml-0 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2]/60 p-3 md:ml-4">
+                  <summary className="cursor-pointer text-xs font-semibold text-[#6F5B49]">
+                    {tab.label || 'Tab chưa đặt tên'} · {tab.items.length} mặt bằng
+                  </summary>
+                  <div className="mt-3 space-y-3">
+                    <div className="grid grid-cols-1 gap-2 md:grid-cols-[1fr_auto]">
+                      <div>
+                        <input value={tab.label} onChange={(event) => updateFloorTab(groupIndex, tabIndex, current => ({ ...current, label: event.target.value }))} className={inputClass} placeholder="Tên tab, ví dụ: 2 phòng ngủ" />
+                        <p className="mt-1 text-[10px] text-[#8C7A6B]">Khóa ổn định: {tab.key}</p>
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        <button type="button" onClick={() => updateFloorGroup(groupIndex, current => ({ ...current, tabs: moveNestedItem(current.tabs, tabIndex, -1) }))} disabled={tabIndex === 0} className={removeButtonClass}>Lên</button>
+                        <button type="button" onClick={() => updateFloorGroup(groupIndex, current => ({ ...current, tabs: moveNestedItem(current.tabs, tabIndex, 1) }))} disabled={tabIndex === group.tabs.length - 1} className={removeButtonClass}>Xuống</button>
+                        <button type="button" onClick={() => updateFloorTab(groupIndex, tabIndex, current => ({ ...current, items: [...current.items, createEmptyFloorPlan()] }))} className={addButtonClass}>Thêm mặt bằng</button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (!tab.items.length || window.confirm(`Xóa tab này sẽ xóa ${tab.items.length} mặt bằng. Bạn có chắc chắn?`)) {
+                              updateFloorGroup(groupIndex, current => ({ ...current, tabs: current.tabs.filter((_, index) => index !== tabIndex) }));
+                            }
+                          }}
+                          className={removeButtonClass}
+                        >Xóa tab</button>
+                      </div>
+                    </div>
+
+                    {!tab.items.length ? <p className="text-xs text-[#8C7A6B]">Tab này chưa có mặt bằng.</p> : null}
+                    {tab.items.map((item, itemIndex) => (
+                      <div key={item.key} className={`${repeaterCardClass} ml-0 md:ml-4`}>
+                        <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+                          <input value={item.name} onChange={(event) => updateFloorItem(groupIndex, tabIndex, itemIndex, { name: event.target.value })} className={inputClass} placeholder="Tên mặt bằng *" />
+                          <input value={item.productType} onChange={(event) => updateFloorItem(groupIndex, tabIndex, itemIndex, { productType: event.target.value })} className={inputClass} placeholder="Loại sản phẩm" />
+                          <input value={item.area} onChange={(event) => updateFloorItem(groupIndex, tabIndex, itemIndex, { area: event.target.value })} className={inputClass} placeholder="Diện tích" />
+                          <input value={item.totalArea} onChange={(event) => updateFloorItem(groupIndex, tabIndex, itemIndex, { totalArea: event.target.value })} className={inputClass} placeholder="Tổng diện tích sàn" />
+                          <input value={item.price} onChange={(event) => updateFloorItem(groupIndex, tabIndex, itemIndex, { price: event.target.value })} className={inputClass} placeholder="Giá" />
+                          <input value={item.bedrooms} onChange={(event) => updateFloorItem(groupIndex, tabIndex, itemIndex, { bedrooms: event.target.value })} className={inputClass} placeholder="Phòng ngủ" />
+                          <input value={item.status} onChange={(event) => updateFloorItem(groupIndex, tabIndex, itemIndex, { status: event.target.value })} className={inputClass} placeholder="Trạng thái" />
+                          <p className="self-center text-[10px] text-[#8C7A6B]">Khóa: {item.key}</p>
+                          <textarea value={item.description} onChange={(event) => updateFloorItem(groupIndex, tabIndex, itemIndex, { description: event.target.value })} className={`${inputClass} md:col-span-2`} rows={3} placeholder="Mô tả" />
+                        </div>
+
+                        <div className="space-y-2">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <p className="text-xs text-[#8C7A6B]">{item.images.length ? `${item.images.length} ảnh · ảnh số 1 là thumbnail` : 'Chưa chọn ảnh'}</p>
+                            <button type="button" onClick={() => setMediaSelectorTarget({ group: 'floorPlanGroups', groupIndex, tabIndex, itemIndex, field: 'images' })} className={addButtonClass}>Chọn nhiều ảnh</button>
+                          </div>
+                          <AdminImagePreview
+                            value={item.images}
+                            label="Chưa chọn ảnh mặt bằng"
+                            multiple
+                            size="sm"
+                            onRemove={(_, imageIndex) => updateFloorItem(groupIndex, tabIndex, itemIndex, { images: item.images.filter((__, index) => index !== imageIndex) })}
+                          />
+                          {item.images.length > 1 ? (
+                            <div className="space-y-1">
+                              {item.images.map((image, imageIndex) => (
+                                <div key={`${image}-${imageIndex}`} className="flex min-w-0 items-center gap-2 text-[10px] text-[#8C7A6B]">
+                                  <span className="w-6 shrink-0">#{imageIndex + 1}</span>
+                                  <span className="min-w-0 flex-1 truncate">{image}</span>
+                                  <button type="button" onClick={() => updateFloorItem(groupIndex, tabIndex, itemIndex, { images: moveNestedItem(item.images, imageIndex, -1) })} disabled={imageIndex === 0} className={removeButtonClass}>Lên</button>
+                                  <button type="button" onClick={() => updateFloorItem(groupIndex, tabIndex, itemIndex, { images: moveNestedItem(item.images, imageIndex, 1) })} disabled={imageIndex === item.images.length - 1} className={removeButtonClass}>Xuống</button>
+                                </div>
+                              ))}
+                            </div>
+                          ) : null}
+                        </div>
+
+                        <div className="flex flex-wrap gap-1">
+                          <button type="button" onClick={() => updateFloorTab(groupIndex, tabIndex, current => ({ ...current, items: moveNestedItem(current.items, itemIndex, -1) }))} disabled={itemIndex === 0} className={removeButtonClass}>Đưa lên</button>
+                          <button type="button" onClick={() => updateFloorTab(groupIndex, tabIndex, current => ({ ...current, items: moveNestedItem(current.items, itemIndex, 1) }))} disabled={itemIndex === tab.items.length - 1} className={removeButtonClass}>Đưa xuống</button>
+                          <button type="button" onClick={() => updateFloorTab(groupIndex, tabIndex, current => ({ ...current, items: current.items.filter((_, index) => index !== itemIndex) }))} className={removeButtonClass}>Xóa mặt bằng</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </details>
+              ))}
             </div>
-            <div className="flex flex-wrap gap-1">
-              <button type="button" onClick={() => moveListItem(formFloorPlans, setFormFloorPlans, index, -1)} disabled={index === 0} className={removeButtonClass}>Đưa lên</button>
-              <button type="button" onClick={() => moveListItem(formFloorPlans, setFormFloorPlans, index, 1)} disabled={index === formFloorPlans.length - 1} className={removeButtonClass}>Đưa xuống</button>
-              <button type="button" onClick={() => removeListItem(formFloorPlans, setFormFloorPlans, index)} className={removeButtonClass}>Xóa dòng này</button>
-            </div>
-          </div>
+          </details>
         );
       })}
     </div>
   );
-  };
 
   const renderTextPairRepeater = <T extends Record<string, string>>(
     title: string,
@@ -3102,27 +3156,7 @@ export default function AdminProjects() {
 
                 {activeTab === 'floor' && (
                   <div className="space-y-4">
-                    {sectionNote('Phần này quản lý section “Mặt bằng & Loại hình sản phẩm”. Tab loại sản phẩm lấy từ Admin, không hardcode ngoài Client.')}
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <label className="text-xs font-semibold text-[#8C7A6B]">Nhóm loại sản phẩm</label>
-                        <button type="button" onClick={() => setFormFloorTabs([...formFloorTabs, ''])} className={addButtonClass}>Thêm loại sản phẩm</button>
-                      </div>
-                      {formFloorTabs.length === 0 ? <p className="text-xs text-[#8C7A6B]">Chưa có loại sản phẩm. Nếu có mặt bằng nhưng chưa có nhóm, Client sẽ gom vào “Sản phẩm”.</p> : null}
-                      {formFloorTabs.map((tab, index) => {
-                        const floorPlanCount = tab ? formFloorPlans.filter((plan) => plan.productType === tab).length : 0;
-                        return (
-                          <div key={index} className="grid grid-cols-1 gap-2 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2]/45 p-2 md:grid-cols-[1fr_auto_auto] md:items-center">
-                            <div>
-                              <input value={tab} onChange={(e) => renameFloorTab(index, e.target.value)} className={inputClass} placeholder="Ví dụ: Mặt bằng căn hộ" />
-                              <p className="mt-1 px-1 text-[10px] text-[#8C7A6B]">{floorPlanCount} mặt bằng đang thuộc tab này.</p>
-                            </div>
-                            <button type="button" onClick={() => addFloorPlanForTab(tab)} className={addButtonClass}>Thêm mặt bằng vào tab</button>
-                            <button type="button" onClick={() => removeFloorTab(index)} className={removeButtonClass}>Xóa</button>
-                          </div>
-                        );
-                      })}
-                    </div>
+                    {sectionNote('Phần này quản lý cấu trúc Nhóm cha → Tab con → Mặt bằng → Nhiều ảnh. Phiên bản này sắp xếp bằng nút Lên/Xuống và dùng Media Library hiện có.')}
                     {renderFloorPlanRepeater()}
                   </div>
                 )}
@@ -3495,14 +3529,14 @@ export default function AdminProjects() {
       <AnimatePresence>
         {mediaSelectorTarget !== null && (
           <MediaSelectModal
-            key={`${typeof mediaSelectorTarget === 'string' ? mediaSelectorTarget : `${mediaSelectorTarget.group}-${mediaSelectorTarget.index}`}-${getMediaSelectorSelectedUrls().join('|')}`}
+            key={`${typeof mediaSelectorTarget === 'string' ? mediaSelectorTarget : mediaSelectorTarget.group === 'floorPlanGroups' ? `${mediaSelectorTarget.group}-${mediaSelectorTarget.groupIndex}-${mediaSelectorTarget.tabIndex}-${mediaSelectorTarget.itemIndex}` : `${mediaSelectorTarget.group}-${mediaSelectorTarget.index}`}-${getMediaSelectorSelectedUrls().join('|')}`}
             isOpen={mediaSelectorTarget !== null}
             onClose={() => setMediaSelectorTarget(null)}
             onSelect={handleMediaSelected}
             multiple={
               mediaSelectorTarget === 'gallery'
               || mediaSelectorTarget === 'detailGallery'
-              || (typeof mediaSelectorTarget === 'object' && mediaSelectorTarget?.group === 'floorPlans' && mediaSelectorTarget.field === 'images')
+              || (typeof mediaSelectorTarget === 'object' && mediaSelectorTarget?.group === 'floorPlanGroups')
             }
             selectedUrls={getMediaSelectorSelectedUrls()}
           />

@@ -3,6 +3,7 @@ import { Project as FrontendProject } from '@/types';
 import { ProjectDetail, IconDetail, ProjectIconName } from '@/types/project-detail';
 import { getProjectStatusLabel } from '@/lib/projectStatus';
 import { getProjectPriceText } from '@/lib/projectPrice';
+import { flattenFloorPlanGroups, normalizeFloorPlanGroups } from '@/lib/projectFloorPlan';
 
 const INTERNAL_IMAGE_PLACEHOLDER = '/file.svg';
 const UPDATING = 'Đang cập nhật';
@@ -532,6 +533,8 @@ export function mapApiProjectToProjectDetail(api: ApiProject): ProjectDetail {
   const detailGalleryImages = normalizeGallery(api.detail_gallery);
   const quickCard = normalizeHeroQuickCards(api);
   const facts = normalizeIconDetails(api.project_facts, 'MapPin');
+  const floorPlanGroups = normalizeFloorPlanGroups(api.floor_plan_groups, api.floor_tabs, api.floor_plans);
+  const flattenedFloorPlans = flattenFloorPlanGroups(floorPlanGroups);
 
   return {
     id: api.id,
@@ -564,8 +567,9 @@ export function mapApiProjectToProjectDetail(api: ApiProject): ProjectDetail {
     sectionTitles: normalizeSectionTitles(api.section_titles),
     connectivity: normalizeConnectivity(api.connectivity, api.nearby_places),
     amenities: normalizeAmenities(api.amenity_details),
-    floorTabs: asArray(api.floor_tabs),
-    floorPlans: normalizeFloorPlans(api.floor_plans),
+    floorTabs: flattenedFloorPlans.floorTabs.length ? flattenedFloorPlans.floorTabs : asArray(api.floor_tabs),
+    floorPlanGroups,
+    floorPlans: flattenedFloorPlans.floorPlans.length ? flattenedFloorPlans.floorPlans : normalizeFloorPlans(api.floor_plans),
     handoverStandards: normalizeHandoverStandards(api.handover_standards),
     priceRows: normalizePriceRows(api.price_rows),
     productSummary: buildProductSummary(api),

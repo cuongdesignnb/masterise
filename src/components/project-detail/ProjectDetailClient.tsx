@@ -32,8 +32,10 @@ import {
   Maximize2,
   type LucideIcon,
 } from "lucide-react";
-import { type FormEvent, useState, useEffect, useMemo, useRef } from "react";
+import { type FormEvent, type KeyboardEvent as ReactKeyboardEvent, useState, useEffect, useMemo, useRef } from "react";
 import type { ProjectIconName, ProjectDetail } from "@/types/project-detail";
+import type { FloorPlanItem } from "@/types/floor-plan";
+import { normalizeFloorPlanGroups } from "@/lib/projectFloorPlan";
 import ProjectGalleryAlbumSection from "@/components/project-detail/ProjectGalleryAlbumSection";
 import ProjectPricingPolicySection from "@/components/project-detail/ProjectPricingPolicySection";
 import VR360Section from "@/components/vr360/VR360Section";
@@ -336,11 +338,17 @@ function LocationMap({ projectName, mapImageUrl }: { projectName: string; mapIma
 }
 
 export default function ProjectDetailClient({ project }: { project: ProjectDetail }) {
-  const floorTabs = project.floorTabs.length ? ["Tất cả", ...project.floorTabs] : (project.floorPlans.length ? ["Sản phẩm"] : []);
+  const floorPlanGroups = useMemo(() => normalizeFloorPlanGroups(project.floorPlanGroups, project.floorTabs, project.floorPlans)
+    .map((group) => ({
+      ...group,
+      tabs: group.tabs.filter((tab) => tab.items.length > 0),
+    }))
+    .filter((group) => group.tabs.length > 0), [project.floorPlanGroups, project.floorPlans, project.floorTabs]);
   const consultInterestOptions = useMemo(() => getConsultInterestOptions(project), [project]);
   const projectVideoEmbedUrl = useMemo(() => project.videoUrl ? getYouTubeEmbedUrl(project.videoUrl) : "", [project.videoUrl]);
   const projectVideoThumbnailUrl = useMemo(() => project.videoUrl ? getYouTubeThumbnailUrl(project.videoUrl) : "", [project.videoUrl]);
-  const [activeTab, setActiveTab] = useState(floorTabs[0] ?? "");
+  const [activeFloorGroupKey, setActiveFloorGroupKey] = useState(floorPlanGroups[0]?.key ?? "");
+  const [activeFloorTabKey, setActiveFloorTabKey] = useState(floorPlanGroups[0]?.tabs[0]?.key ?? "");
   const [activeImageIndex, setActiveImageIndex] = useState<number | null>(null);
   const [floorPlanImageModal, setFloorPlanImageModal] = useState<{ images: string[]; index: number; title: string } | null>(null);
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
@@ -526,18 +534,13 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
     };
   }, []);
 
-  useEffect(() => {
-    setFloorPlansExpanded(false);
-  }, [activeTab]);
-
   const hasFacts = project.facts.length > 0;
   const hasStats = project.stats.length > 0;
   const hasGallery = project.gallery.images.length > 0;
   const hasGalleryCopy = Boolean(project.gallery.label || project.gallery.title || project.gallery.description);
   const hasConnectivity = project.connectivity.length > 0 || Boolean(project.mapImageUrl);
   const hasAmenities = project.amenities.length > 0;
-  const hasFloorPlans = project.floorPlans.length > 0;
-  const hasFloorSection = hasFloorPlans || project.floorTabs.length > 0;
+  const hasFloorSection = floorPlanGroups.length > 0;
   const hasHandoverStandards = project.handoverStandards.length > 0;
   const hasPriceRows = project.priceRows.length > 0;
   const hasProductInfo = hasPriceRows || project.productSummary.length > 0;
@@ -646,17 +649,45 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
       return !productSummaryLabels.has(label) && !compactProductLabels.has(label);
     })
     .slice(0, 4);
-  const visibleFloorPlans = project.floorTabs.length && activeTab
-    ? project.floorPlans.filter((plan) => activeTab === "Tất cả" || !plan.productType || plan.productType === activeTab)
-    : project.floorPlans;
+  const activeFloorGroup = floorPlanGroups.find((group) => group.key === activeFloorGroupKey) || floorPlanGroups[0];
+  const resolvedActiveFloorTabKey = activeFloorTabKey === "__all__" || activeFloorGroup?.tabs.some((tab) => tab.key === activeFloorTabKey)
+    ? activeFloorTabKey
+    : activeFloorGroup?.tabs[0]?.key || "";
+  const activeFloorTab = activeFloorGroup?.tabs.find((tab) => tab.key === resolvedActiveFloorTabKey);
+  const visibleFloorPlans = activeFloorGroup
+    ? resolvedActiveFloorTabKey === "__all__"
+      ? activeFloorGroup.tabs.flatMap((tab) => tab.items)
+      : activeFloorTab?.items || activeFloorGroup.tabs[0]?.items || []
+    : [];
+  const activeFloorTabLabel = resolvedActiveFloorTabKey === "__all__" ? "Tất cả" : activeFloorTab?.label || "Sản phẩm";
   const floorPlansCanExpand = visibleFloorPlans.length > floorPlanLimit;
   const displayedFloorPlans = floorPlansExpanded ? visibleFloorPlans : visibleFloorPlans.slice(0, floorPlanLimit);
-  const getFloorPlanImages = (plan: ProjectDetail["floorPlans"][number]) =>
-    Array.from(new Set([...(plan.images || []), plan.image].map((image) => String(image || "").trim()).filter(Boolean)));
-  const openFloorPlanImages = (plan: ProjectDetail["floorPlans"][number], index = 0) => {
+  const getFloorPlanImages = (plan: FloorPlanItem) => plan.images;
+  const openFloorPlanImages = (plan: FloorPlanItem, index = 0) => {
     const images = getFloorPlanImages(plan);
     if (!images.length) return;
     setFloorPlanImageModal({ images, index: Math.min(Math.max(index, 0), images.length - 1), title: plan.name });
+  };
+  const selectFloorTab = (key: string) => {
+    setActiveFloorTabKey(key);
+    setFloorPlansExpanded(false);
+  };
+  const handleFloorTabKeyDown = (
+    event: ReactKeyboardEvent<HTMLButtonElement>,
+    keys: string[],
+    activeKey: string,
+    onSelect: (key: string) => void,
+  ) => {
+    if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+    event.preventDefault();
+    const currentIndex = Math.max(0, keys.indexOf(activeKey));
+    const nextIndex = event.key === "Home"
+      ? 0
+      : event.key === "End"
+        ? keys.length - 1
+        : (currentIndex + (event.key === "ArrowRight" ? 1 : -1) + keys.length) % keys.length;
+    onSelect(keys[nextIndex]);
+    event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>('[role="tab"]')[nextIndex]?.focus();
   };
   const overviewHtml = project.content
     ? project.content.replace(/<h1\b/gi, "<h2").replace(/<\/h1\s*>/gi, "</h2>")
@@ -1141,28 +1172,71 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
         {hasFloorSection ? <Reveal>
           <section id="mat-bang" className="scroll-mt-32">
             <ProjectSectionTitle sectionKey="floorPlans" fallbackEyebrow="Mặt bằng" fallbackTitle="Mặt bằng điển hình" />
-            {floorTabs.length ? <div className="mb-4 grid overflow-hidden rounded-[6px] border border-line bg-white sm:grid-cols-4">
-              {floorTabs.map((tab) => (
+            {floorPlanGroups.length > 1 ? <div className="scrollbar-none mb-3 flex max-w-full gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Nhóm mặt bằng">
+              {floorPlanGroups.map((group) => (
                 <button
-                  key={tab}
+                  key={group.key}
                   type="button"
-                  onClick={() => setActiveTab(tab)}
-                  className={`border-b border-line px-4 py-2.5 text-[10px] font-bold normal-case transition last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0 ${
-                    activeTab === tab ? "gold-gradient text-white" : "text-muted hover:bg-beige/70"
+                  role="tab"
+                  id={`floor-group-tab-${group.key}`}
+                  aria-controls="floor-plan-panel"
+                  aria-selected={activeFloorGroup?.key === group.key}
+                  tabIndex={activeFloorGroup?.key === group.key ? 0 : -1}
+                  onKeyDown={(event) => handleFloorTabKeyDown(event, floorPlanGroups.map((item) => item.key), activeFloorGroup?.key || "", (key) => {
+                    const nextGroup = floorPlanGroups.find((item) => item.key === key);
+                    if (!nextGroup) return;
+                    setActiveFloorGroupKey(key);
+                    setActiveFloorTabKey(nextGroup.tabs[0]?.key || "");
+                  })}
+                  onClick={() => {
+                    setActiveFloorGroupKey(group.key);
+                    setActiveFloorTabKey(group.tabs[0]?.key || "");
+                    setFloorPlansExpanded(false);
+                  }}
+                  className={`shrink-0 rounded-full border px-5 py-2.5 text-[11px] font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50 ${
+                    activeFloorGroup?.key === group.key ? "border-gold bg-gold text-white" : "border-line bg-white text-muted hover:border-gold/60 hover:text-gold-dark"
                   }`}
                 >
-                  {tab}
+                  {group.label}
                 </button>
               ))}
             </div> : null}
+            {activeFloorGroup ? <div className="scrollbar-none mb-5 flex max-w-full gap-2 overflow-x-auto border-b border-line pb-2" role="tablist" aria-label={`Loại mặt bằng ${activeFloorGroup.label}`}>
+              {(activeFloorGroup.tabs.length > 1
+                ? [{ key: "__all__", label: "Tất cả", items: [] }, ...activeFloorGroup.tabs]
+                : activeFloorGroup.tabs
+              ).map((tab) => {
+                const tabKeys = activeFloorGroup.tabs.length > 1
+                  ? ["__all__", ...activeFloorGroup.tabs.map((item) => item.key)]
+                  : activeFloorGroup.tabs.map((item) => item.key);
+                return (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    role="tab"
+                    id={`floor-child-tab-${tab.key}`}
+                    aria-controls="floor-plan-panel"
+                    aria-selected={resolvedActiveFloorTabKey === tab.key}
+                    tabIndex={resolvedActiveFloorTabKey === tab.key ? 0 : -1}
+                    onKeyDown={(event) => handleFloorTabKeyDown(event, tabKeys, resolvedActiveFloorTabKey, selectFloorTab)}
+                    onClick={() => selectFloorTab(tab.key)}
+                    className={`shrink-0 rounded-[6px] px-4 py-2 text-[10px] font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50 ${
+                      resolvedActiveFloorTabKey === tab.key ? "gold-gradient text-white" : "bg-beige/60 text-muted hover:bg-beige hover:text-gold-dark"
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div> : null}
             {visibleFloorPlans.length ? <>
-              <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3">
+              <div id="floor-plan-panel" role="tabpanel" aria-labelledby={`floor-child-tab-${resolvedActiveFloorTabKey}`} className="grid gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3">
               {displayedFloorPlans.map((plan, index) => {
                 const planImages = getFloorPlanImages(plan);
                 const thumbnailImage = planImages[0] || "";
                 return (
                 <motion.article
-                  key={`${plan.productType || 'floor'}-${plan.name}-${index}`}
+                  key={plan.key}
                   layout
                   whileHover={{ y: -5 }}
                   className="overflow-hidden rounded-[14px] border border-line/80 bg-white shadow-[0_12px_35px_rgba(87,61,28,.07)] sm:rounded-[16px]"
@@ -1176,7 +1250,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                       >
                         <Image
                           src={thumbnailImage}
-                          alt={`${plan.productType || activeTab || "Sản phẩm"} - ${plan.name}`}
+                          alt={`${plan.productType || activeFloorTabLabel} - ${plan.name}`}
                           fill
                           sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
                           className="object-cover transition duration-700 group-hover:scale-105"
@@ -1184,16 +1258,24 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                         <span className="absolute inset-0 flex items-center justify-center bg-black/25 opacity-0 transition group-hover:opacity-100">
                           <span className="rounded-full bg-white/90 px-3 py-1 text-[10px] font-bold text-ink">Xem ảnh</span>
                         </span>
+                        {planImages.length > 1 ? <span className="absolute bottom-2 right-2 rounded-full bg-black/70 px-2.5 py-1 text-[10px] font-bold text-white">+{planImages.length - 1} ảnh</span> : null}
                       </button>
                     ) : (
                       <div className="flex aspect-[4/3] w-full items-center justify-center rounded-[10px] border border-dashed border-line bg-white p-4 text-center text-[10px] font-semibold text-muted sm:aspect-[16/9]">
                         Chưa có ảnh mặt bằng
                       </div>
                     )}
+                    {planImages.length > 1 ? <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
+                      {planImages.slice(0, 5).map((image, imageIndex) => (
+                        <button key={`${image}-${imageIndex}`} type="button" onClick={() => openFloorPlanImages(plan, imageIndex)} className="relative h-12 w-16 shrink-0 overflow-hidden rounded-[6px] border border-line focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50" aria-label={`Xem ảnh ${imageIndex + 1} của ${plan.name}`}>
+                          <Image src={image} alt="" fill sizes="64px" className="object-cover" />
+                        </button>
+                      ))}
+                    </div> : null}
                   </div>
                   <div className="p-3 sm:p-4">
                     <p className="text-[10px] font-bold tracking-[0.08em] text-gold normal-case">
-                      {plan.productType || activeTab || "Sản phẩm"} · Mẫu {String(index + 1).padStart(2, "0")}
+                      {plan.productType || activeFloorTabLabel} · Mẫu {String(index + 1).padStart(2, "0")}
                     </p>
                     <h3 className="mt-1 text-sm font-bold text-ink">{plan.name}</h3>
                     <div className="mt-2 space-y-1.5 text-[12px] leading-5 text-muted">
@@ -1230,16 +1312,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                   </button>
                 </div>
               ) : null}
-            </> : (
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                {project.floorTabs.map((tab) => (
-                  <div key={tab} className="rounded-[14px] border border-line/75 bg-white p-4 shadow-[0_10px_26px_rgba(87,61,28,.05)]">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-gold">Loại sản phẩm</p>
-                    <p className="mt-1 text-sm font-bold text-ink">{tab}</p>
-                  </div>
-                ))}
-              </div>
-            )}
+            </> : null}
           </section>
         </Reveal> : null}
 

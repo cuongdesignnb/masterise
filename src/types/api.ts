@@ -1,3 +1,5 @@
+import type { FloorPlanGroup } from './floor-plan';
+
 export interface User {
   id: number;
   name: string;
@@ -108,6 +110,7 @@ export interface Project {
   amenity_details?: unknown[] | null;
   floor_tabs?: string[] | null;
   floor_plans?: unknown[] | null;
+  floor_plan_groups?: FloorPlanGroup[] | null;
   handover_standards?: unknown[] | null;
   price_rows?: unknown[] | null;
   policy_cards?: unknown[] | null;
