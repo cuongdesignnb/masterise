@@ -35,16 +35,14 @@ export default function AllProjectsGrid() {
   const region = searchParams.get("region") || "";
   const category = searchParams.get("category") || "";
   const projectStatus = searchParams.get("project_status") || "";
-  const priceMin = searchParams.get("price_min") || "";
-  const priceMax = searchParams.get("price_max") || "";
+  const priceRange = searchParams.get("price_range") || "";
 
   const queryParams: Record<string, string> = {};
   if (q) queryParams.q = q;
   if (region) queryParams.region = region;
   if (category) queryParams.category = category;
   if (projectStatus) queryParams.project_status = projectStatus;
-  if (priceMin) queryParams.price_min = priceMin;
-  if (priceMax) queryParams.price_max = priceMax;
+  if (priceRange) queryParams.price_range = priceRange;
   queryParams.sort_by = activeSort.sortBy;
   queryParams.sort_order = activeSort.sortOrder;
   queryParams.per_page = "100";

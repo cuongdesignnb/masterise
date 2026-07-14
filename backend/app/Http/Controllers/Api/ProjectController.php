@@ -7,6 +7,7 @@ use App\Models\Project;
 use App\Models\ProjectCategory;
 use App\Models\Location;
 use App\Models\Region;
+use App\Support\ProjectPriceRange;
 use App\Support\ProjectStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -68,12 +69,18 @@ class ProjectController extends Controller
             });
         }
 
-        // Filter by price range
-        if ($request->has('price_min')) {
-            $query->where('price_max', '>=', $request->price_min);
+        if ($priceRangeError = $this->applyPriceRangeFilter($query, $request)) {
+            return $priceRangeError;
         }
-        if ($request->has('price_max')) {
-            $query->where('price_min', '<=', $request->price_max);
+
+        // Temporary compatibility for callers that still send the legacy numeric range.
+        if (!$request->filled('price_range')) {
+            if ($request->has('price_min')) {
+                $query->where('price_max', '>=', $request->price_min);
+            }
+            if ($request->has('price_max')) {
+                $query->where('price_min', '<=', $request->price_max);
+            }
         }
 
         // Sorting
@@ -81,7 +88,7 @@ class ProjectController extends Controller
         $sortOrder = $request->get('sort_order', 'desc');
 
         if (in_array($sortBy, ['price_min', 'handover_year', 'open_sale_at', 'created_at', 'name', 'sort_order'])) {
-            $query->orderBy($sortBy, $sortOrder);
+            $this->applyProjectSort($query, $sortBy, $sortOrder);
         } else {
             $query->orderBy('created_at', 'desc');
         }
@@ -163,11 +170,15 @@ class ProjectController extends Controller
             });
         }
 
+        if ($priceRangeError = $this->applyPriceRangeFilter($query, $request)) {
+            return $priceRangeError;
+        }
+
         $sortBy = $request->get('sort_by', 'created_at');
         $sortOrder = $request->get('sort_order', 'desc');
 
         if (in_array($sortBy, ['price_min', 'handover_year', 'open_sale_at', 'created_at', 'name', 'sort_order'])) {
-            $query->orderBy($sortBy, $sortOrder);
+            $this->applyProjectSort($query, $sortBy, $sortOrder);
         } else {
             $query->orderBy('created_at', 'desc');
         }
@@ -337,8 +348,24 @@ class ProjectController extends Controller
             'province' => 'nullable|string',
             'district' => 'nullable|string',
             'ward' => 'nullable|string',
-            'price_min' => 'nullable|numeric',
-            'price_max' => 'nullable|numeric',
+            'price_min' => 'nullable|numeric|min:0',
+            'price_max' => [
+                'nullable', 'numeric', 'min:0',
+                function ($attribute, $value, $fail) use ($request) {
+                    if ($request->filled('price_min') && (float) $value < (float) $request->input('price_min')) {
+                        $fail('Giá cao nhất phải lớn hơn hoặc bằng giá khởi điểm.');
+                    }
+                },
+            ],
+            'price_per_sqm_min' => 'nullable|numeric|min:0',
+            'price_per_sqm_max' => [
+                'nullable', 'numeric', 'min:0',
+                function ($attribute, $value, $fail) use ($request) {
+                    if ($request->filled('price_per_sqm_min') && (float) $value < (float) $request->input('price_per_sqm_min')) {
+                        $fail('Giá/m² cao nhất phải lớn hơn hoặc bằng giá/m² thấp nhất.');
+                    }
+                },
+            ],
             'price_text' => 'nullable|string',
             'area_min' => 'nullable|numeric',
             'area_max' => 'nullable|numeric',
@@ -436,7 +463,8 @@ class ProjectController extends Controller
         $projectData = $request->only([
             'name', 'slug', 'code', 'developer_id', 'location_id', 'description', 'content', 
             'hero_subtitle', 'badge_text', 'project_label', 'location', 'address', 'province', 'district', 'ward',
-            'price_min', 'price_max', 'price_text', 'area_min', 'area_max', 'area_text',
+            'price_min', 'price_max', 'price_per_sqm_min', 'price_per_sqm_max', 'price_text',
+            'area_min', 'area_max', 'area_text',
             'project_status', 'open_sale_at', 'handover_year', 'handover_time', 'legal_status',
             'ownership_type', 'construction_density', 'total_area', 'total_units', 
             'total_blocks', 'total_floors', 'highlight_points', 'quick_cards', 'project_facts',
@@ -450,6 +478,7 @@ class ProjectController extends Controller
             'area_size', 'developer', 'scale', 'amenities', 'amenity_details', 'floor_tabs',
             'floor_plans', 'handover_standards', 'price_rows', 'schema_price', 'schema_price_currency', 'schema_availability'
         ]);
+        $projectData = $this->normalizeProjectPriceData($projectData);
         $projectData['region'] = $location?->region?->name;
         $project = Project::create($projectData);
 
@@ -505,8 +534,24 @@ class ProjectController extends Controller
             'province' => 'nullable|string',
             'district' => 'nullable|string',
             'ward' => 'nullable|string',
-            'price_min' => 'nullable|numeric',
-            'price_max' => 'nullable|numeric',
+            'price_min' => 'nullable|numeric|min:0',
+            'price_max' => [
+                'nullable', 'numeric', 'min:0',
+                function ($attribute, $value, $fail) use ($request) {
+                    if ($request->filled('price_min') && (float) $value < (float) $request->input('price_min')) {
+                        $fail('Giá cao nhất phải lớn hơn hoặc bằng giá khởi điểm.');
+                    }
+                },
+            ],
+            'price_per_sqm_min' => 'nullable|numeric|min:0',
+            'price_per_sqm_max' => [
+                'nullable', 'numeric', 'min:0',
+                function ($attribute, $value, $fail) use ($request) {
+                    if ($request->filled('price_per_sqm_min') && (float) $value < (float) $request->input('price_per_sqm_min')) {
+                        $fail('Giá/m² cao nhất phải lớn hơn hoặc bằng giá/m² thấp nhất.');
+                    }
+                },
+            ],
             'price_text' => 'nullable|string',
             'area_min' => 'nullable|numeric',
             'area_max' => 'nullable|numeric',
@@ -603,7 +648,8 @@ class ProjectController extends Controller
         $projectData = $request->only([
             'name', 'slug', 'code', 'developer_id', 'location_id', 'description', 'content', 
             'hero_subtitle', 'badge_text', 'project_label', 'location', 'address', 'province', 'district', 'ward',
-            'price_min', 'price_max', 'price_text', 'area_min', 'area_max', 'area_text',
+            'price_min', 'price_max', 'price_per_sqm_min', 'price_per_sqm_max', 'price_text',
+            'area_min', 'area_max', 'area_text',
             'project_status', 'open_sale_at', 'handover_year', 'handover_time', 'legal_status',
             'ownership_type', 'construction_density', 'total_area', 'total_units', 
             'total_blocks', 'total_floors', 'highlight_points', 'quick_cards', 'project_facts',
@@ -617,6 +663,7 @@ class ProjectController extends Controller
             'area_size', 'developer', 'scale', 'amenities', 'amenity_details', 'floor_tabs',
             'floor_plans', 'handover_standards', 'price_rows', 'schema_price', 'schema_price_currency', 'schema_availability'
         ]);
+        $projectData = $this->normalizeProjectPriceData($projectData);
         if ($location) {
             $projectData['region'] = $location->region->name;
         } elseif ($project->location_id !== null || !$project->is_published) {
@@ -847,6 +894,50 @@ class ProjectController extends Controller
                 'saved' => $saved
             ]
         ], 200);
+    }
+
+    private function applyPriceRangeFilter($query, Request $request): ?\Illuminate\Http\JsonResponse
+    {
+        if (!$request->filled('price_range')) {
+            return null;
+        }
+
+        $range = (string) $request->input('price_range');
+        if (!in_array($range, ProjectPriceRange::values(), true)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Khoảng giá không hợp lệ.',
+                'errors' => ['price_range' => ['Khoảng giá đã chọn không hợp lệ.']],
+            ], 422);
+        }
+
+        ProjectPriceRange::apply($query, $range);
+
+        return null;
+    }
+
+    private function applyProjectSort($query, string $sortBy, string $sortOrder): void
+    {
+        $direction = strtolower($sortOrder) === 'asc' ? 'asc' : 'desc';
+
+        if ($sortBy === 'price_min') {
+            $query->orderByRaw('price_min IS NULL')->orderBy('price_min', $direction);
+            return;
+        }
+
+        $query->orderBy($sortBy, $direction);
+    }
+
+    private function normalizeProjectPriceData(array $projectData): array
+    {
+        $priceMin = $projectData['price_min'] ?? null;
+        $priceText = trim((string) ($projectData['price_text'] ?? ''));
+
+        if ($priceText === '' && $priceMin !== null && $priceMin !== '') {
+            $projectData['price_text'] = ProjectPriceRange::displayText($priceMin);
+        }
+
+        return $projectData;
     }
 
     private function applyRegionFilter($query, string $value, bool $activeOnly): void

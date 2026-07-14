@@ -21,8 +21,7 @@ export default function ProjectsClient() {
     (searchParams.get("region") !== null && searchParams.get("region") !== "") || 
     (searchParams.get("category") !== null && searchParams.get("category") !== "") || 
     (searchParams.get("project_status") !== null && searchParams.get("project_status") !== "") ||
-    (searchParams.get("price_min") !== null && searchParams.get("price_min") !== "") || 
-    (searchParams.get("price_max") !== null && searchParams.get("price_max") !== "");
+    (searchParams.get("price_range") !== null && searchParams.get("price_range") !== "");
 
   return (
     <>

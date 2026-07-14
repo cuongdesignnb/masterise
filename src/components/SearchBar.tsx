@@ -8,6 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import Button from "./Button";
 import { PROJECT_STATUS_OPTIONS } from "@/lib/projectStatus";
 import { projectService } from "@/services/projectService";
+import { PROJECT_PRICE_RANGE_OPTIONS } from "@/lib/projectPrice";
 
 const filterOptions = {
   location: {
@@ -20,7 +21,7 @@ const filterOptions = {
     icon: Building2,
     label: "Khoảng giá",
     placeholder: "Chọn khoảng giá",
-    options: ["Tất cả khoảng giá", "Dưới 5 tỷ", "Từ 5 - 10 tỷ", "Từ 10 - 20 tỷ", "Từ 20 - 50 tỷ", "Trên 50 tỷ"],
+    options: ["Tất cả khoảng giá", ...PROJECT_PRICE_RANGE_OPTIONS.map((option) => option.label)],
   },
   type: {
     icon: Home,
@@ -180,21 +181,10 @@ export default function SearchBar() {
                 }
                 
                 if (selectedValues.price) {
-                  const pr = selectedValues.price;
-                  if (pr === "Dưới 5 tỷ") {
-                    queryParams.push("price_max=75000000");
-                  } else if (pr === "Từ 5 - 10 tỷ") {
-                    queryParams.push("price_min=60000000");
-                    queryParams.push("price_max=120000000");
-                  } else if (pr === "Từ 10 - 20 tỷ") {
-                    queryParams.push("price_min=100000000");
-                    queryParams.push("price_max=200000000");
-                  } else if (pr === "Từ 20 - 50 tỷ") {
-                    queryParams.push("price_min=200000000");
-                    queryParams.push("price_max=400000000");
-                  } else if (pr === "Trên 50 tỷ") {
-                    queryParams.push("price_min=300000000");
-                  }
+                  const selectedPriceRange = PROJECT_PRICE_RANGE_OPTIONS.find(
+                    (option) => option.label === selectedValues.price,
+                  );
+                  if (selectedPriceRange) queryParams.push(`price_range=${selectedPriceRange.value}`);
                 }
                 
                 if (selectedValues.type) {

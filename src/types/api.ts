@@ -74,6 +74,8 @@ export interface Project {
   ward: string | null;
   price_min: string | null;
   price_max: string | null;
+  price_per_sqm_min: string | null;
+  price_per_sqm_max: string | null;
   price_text: string | null;
   area_min: string | null;
   area_max: string | null;

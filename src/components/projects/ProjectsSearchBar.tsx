@@ -9,16 +9,13 @@ import MotionWrapper from "@/components/MotionWrapper";
 import { projectService } from "@/services/projectService";
 import type { RegionOption } from "@/types/api";
 import { PROJECT_STATUS_OPTIONS } from "@/lib/projectStatus";
+import { isProjectPriceRange, PROJECT_PRICE_RANGE_OPTIONS } from "@/lib/projectPrice";
 
 const statusOptions = [{ value: "", label: "Tất cả trạng thái" }, ...PROJECT_STATUS_OPTIONS];
 
 const priceOptions = [
   { value: "", label: "Tất cả mức giá" },
-  { value: "under-5", label: "Dưới 5 tỷ" },
-  { value: "5-10", label: "Từ 5 - 10 tỷ" },
-  { value: "10-20", label: "Từ 10 - 20 tỷ" },
-  { value: "20-50", label: "Từ 20 - 50 tỷ" },
-  { value: "above-50", label: "Trên 50 tỷ" },
+  ...PROJECT_PRICE_RANGE_OPTIONS,
 ];
 
 export default function ProjectsSearchBar() {
@@ -54,22 +51,8 @@ export default function ProjectsSearchBar() {
     
     setStatus(searchParams.get("project_status") || "");
 
-    const priceMin = searchParams.get("price_min") || "";
-    const priceMax = searchParams.get("price_max") || "";
-    let priceVal = "";
-    
-    if (priceMax === "75000000" || priceMax === "5000000000") {
-      priceVal = "under-5";
-    } else if ((priceMin === "60000000" && priceMax === "120000000") || (priceMin === "5000000000" && priceMax === "10000000000")) {
-      priceVal = "5-10";
-    } else if ((priceMin === "100000000" && priceMax === "200000000") || (priceMin === "10000000000" && priceMax === "20000000000")) {
-      priceVal = "10-20";
-    } else if ((priceMin === "200000000" && priceMax === "400000000") || (priceMin === "20000000000" && priceMax === "50000000000")) {
-      priceVal = "20-50";
-    } else if (priceMin === "300000000" || priceMin === "50000000000") {
-      priceVal = "above-50";
-    }
-    setPrice(priceVal);
+    const priceRange = searchParams.get("price_range") || "";
+    setPrice(isProjectPriceRange(priceRange) ? priceRange : "");
     
     isMounted.current = true;
   }, [searchParams]);
@@ -115,21 +98,8 @@ export default function ProjectsSearchBar() {
       const p = updates.price;
       params.delete("price_min");
       params.delete("price_max");
-
-      if (p === "under-5") {
-        params.set("price_max", "75000000");
-      } else if (p === "5-10") {
-        params.set("price_min", "60000000");
-        params.set("price_max", "120000000");
-      } else if (p === "10-20") {
-        params.set("price_min", "100000000");
-        params.set("price_max", "200000000");
-      } else if (p === "20-50") {
-        params.set("price_min", "200000000");
-        params.set("price_max", "400000000");
-      } else if (p === "above-50") {
-        params.set("price_min", "300000000");
-      }
+      if (p && isProjectPriceRange(p)) params.set("price_range", p);
+      else params.delete("price_range");
     }
 
     params.delete("page");
@@ -174,6 +144,10 @@ export default function ProjectsSearchBar() {
   const handlePriceChange = (val: string) => {
     setPrice(val);
     applyFilters({ price: val });
+  };
+
+  const resetFilters = () => {
+    router.push(pathname);
   };
 
   return (
@@ -275,14 +249,22 @@ export default function ProjectsSearchBar() {
                 />
               </div>
 
-              {/* Reset / Search button */}
-              <button
-                type="submit"
-                className="gold-gradient text-white rounded-xl px-5 py-2.5 text-sm font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity cursor-pointer"
-              >
-                <Search size={14} />
-                Tìm kiếm
-              </button>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={resetFilters}
+                  className="rounded-xl border border-line/60 px-3 py-2.5 text-sm font-semibold text-muted transition-colors hover:border-gold/50 hover:text-gold"
+                >
+                  Đặt lại
+                </button>
+                <button
+                  type="submit"
+                  className="gold-gradient flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                >
+                  <Search size={14} />
+                  Tìm
+                </button>
+              </div>
             </form>
           </div>
         </MotionWrapper>

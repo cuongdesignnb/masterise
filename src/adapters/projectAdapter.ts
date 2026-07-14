@@ -2,6 +2,7 @@ import { Project as ApiProject } from '@/types/api';
 import { Project as FrontendProject } from '@/types';
 import { ProjectDetail, IconDetail, ProjectIconName } from '@/types/project-detail';
 import { getProjectStatusLabel } from '@/lib/projectStatus';
+import { getProjectPriceText } from '@/lib/projectPrice';
 
 const INTERNAL_IMAGE_PLACEHOLDER = '/file.svg';
 const UPDATING = 'Đang cập nhật';
@@ -307,11 +308,12 @@ function normalizePriceRows(value: unknown) {
     .filter(notNull);
 }
 function buildProductSummary(api: ApiProject) {
+  const displayPrice = getProjectPriceText(api.price_text, api.price_min, '');
   return [
-    api.price_text || api.price_min || api.price_max
+    displayPrice
       ? {
           label: 'Giá tham khảo',
-          value: api.price_text || [api.price_min, api.price_max].filter(Boolean).join(' - '),
+          value: displayPrice,
         }
       : null,
     api.area_text || api.area_min || api.area_max
@@ -506,7 +508,7 @@ export function getProjectTypeText(categories: ApiProject['categories']): string
 }
 
 export function mapApiProjectToProjectCard(api: ApiProject): FrontendProject {
-  const price = api.price_text || (api.price_min ? `Từ ${api.price_min} tỷ` : UPDATING);
+  const price = getProjectPriceText(api.price_text, api.price_min, UPDATING);
   const location = api.location || api.address || UPDATING;
   const type = getProjectTypeText(api.categories);
 
@@ -543,7 +545,7 @@ export function mapApiProjectToProjectDetail(api: ApiProject): ProjectDetail {
     address: api.address || api.location || UPDATING,
     heroImage: api.banner_image || api.thumbnail || INTERNAL_IMAGE_PLACEHOLDER,
     thumbnail: api.thumbnail || api.banner_image || null,
-    priceFrom: api.price_text || UPDATING,
+    priceFrom: getProjectPriceText(api.price_text, api.price_min, UPDATING),
     quickCard,
     facts: facts.length ? facts : buildFactsFromRealFields(api),
     stats: asArray(api.project_stats),

@@ -6,6 +6,7 @@ import { api } from '@/lib/api';
 import { useToast } from '@/components/admin/Toast';
 import { Project, ProjectCategory, ProjectStatus } from '@/types/api';
 import { PROJECT_STATUS_OPTIONS, getProjectStatusColor, getProjectStatusLabel } from '@/lib/projectStatus';
+import { formatVnd } from '@/lib/projectPrice';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Building, 
@@ -240,6 +241,8 @@ export default function AdminProjects() {
   
   const [formPriceMin, setFormPriceMin] = useState<number | ''>('');
   const [formPriceMax, setFormPriceMax] = useState<number | ''>('');
+  const [formPricePerSqmMin, setFormPricePerSqmMin] = useState<number | ''>('');
+  const [formPricePerSqmMax, setFormPricePerSqmMax] = useState<number | ''>('');
   const [formPriceText, setFormPriceText] = useState('');
   const [formAreaMin, setFormAreaMin] = useState<number | ''>('');
   const [formAreaMax, setFormAreaMax] = useState<number | ''>('');
@@ -701,6 +704,8 @@ export default function AdminProjects() {
     setFormLng('');
     setFormPriceMin('');
     setFormPriceMax('');
+    setFormPricePerSqmMin('');
+    setFormPricePerSqmMax('');
     setFormPriceText('');
     setFormAreaMin('');
     setFormAreaMax('');
@@ -789,8 +794,10 @@ export default function AdminProjects() {
     setFormWard(project.ward || '');
     setFormLat(project.lat || '');
     setFormLng(project.lng || '');
-    setFormPriceMin(project.price_min ? Number(project.price_min) : '');
-    setFormPriceMax(project.price_max ? Number(project.price_max) : '');
+    setFormPriceMin(project.price_min ? Number(project.price_min) / 1_000_000_000 : '');
+    setFormPriceMax(project.price_max ? Number(project.price_max) / 1_000_000_000 : '');
+    setFormPricePerSqmMin(project.price_per_sqm_min ? Number(project.price_per_sqm_min) / 1_000_000 : '');
+    setFormPricePerSqmMax(project.price_per_sqm_max ? Number(project.price_per_sqm_max) / 1_000_000 : '');
     setFormPriceText(project.price_text || '');
     setFormAreaMin(project.area_min ? Number(project.area_min) : '');
     setFormAreaMax(project.area_max ? Number(project.area_max) : '');
@@ -974,8 +981,10 @@ export default function AdminProjects() {
         lat: formLat !== '' ? Number(formLat) : null,
         lng: formLng !== '' ? Number(formLng) : null,
         
-        price_min: formPriceMin !== '' ? Number(formPriceMin) : null,
-        price_max: formPriceMax !== '' ? Number(formPriceMax) : null,
+        price_min: formPriceMin !== '' ? Number(formPriceMin) * 1_000_000_000 : null,
+        price_max: formPriceMax !== '' ? Number(formPriceMax) * 1_000_000_000 : null,
+        price_per_sqm_min: formPricePerSqmMin !== '' ? Number(formPricePerSqmMin) * 1_000_000 : null,
+        price_per_sqm_max: formPricePerSqmMax !== '' ? Number(formPricePerSqmMax) * 1_000_000 : null,
         price_text: formPriceText,
         area_min: formAreaMin !== '' ? Number(formAreaMin) : null,
         area_max: formAreaMax !== '' ? Number(formAreaMax) : null,
@@ -1815,18 +1824,45 @@ export default function AdminProjects() {
     <div className="space-y-5">
       {sectionNote('Quản lý bảng giá, ảnh bảng giá, tài liệu giá và chính sách bán hàng. Có thể nhập từng dòng hoặc chọn ảnh/PDF từ Media Library để tiết kiệm thời gian.')}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-          <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Giá tối thiểu</label>
-          <input type="number" value={formPriceMin} onChange={(e) => setFormPriceMin(e.target.value !== '' ? Number(e.target.value) : '')} className={inputClass} placeholder="Ví dụ: 5000" />
+      <div className="rounded-2xl border border-[#E8DCCB] bg-[#FBF8F2] p-4">
+        <h3 className="text-sm font-bold text-[#1F1B16]">Giá dùng cho bộ lọc và thẻ dự án</h3>
+        <p className="mt-1 text-xs text-[#8C7A6B]">Giá khởi điểm được dùng để lọc và sắp xếp dự án ngoài website.</p>
+        <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
+          <div>
+            <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Giá khởi điểm (tỷ đồng)</label>
+            <input type="number" min="0" step="0.1" value={formPriceMin} onChange={(e) => setFormPriceMin(e.target.value !== '' ? Number(e.target.value) : '')} className={inputClass} placeholder="Ví dụ: 5.5" />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Giá cao nhất (tỷ đồng)</label>
+            <input type="number" min={formPriceMin === '' ? 0 : formPriceMin} step="0.1" value={formPriceMax} onChange={(e) => setFormPriceMax(e.target.value !== '' ? Number(e.target.value) : '')} className={inputClass} placeholder="Có thể để trống" />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Giá hiển thị</label>
+            <input value={formPriceText} onChange={(e) => setFormPriceText(e.target.value)} className={inputClass} placeholder="Ví dụ: Từ 5,5 tỷ/căn" />
+            <p className="mt-1 text-[11px] text-[#8C7A6B]">Để trống sẽ tự tạo từ giá khởi điểm.</p>
+          </div>
         </div>
-        <div>
-          <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Giá tối đa</label>
-          <input type="number" value={formPriceMax} onChange={(e) => setFormPriceMax(e.target.value !== '' ? Number(e.target.value) : '')} className={inputClass} placeholder="Ví dụ: 15000" />
-        </div>
-        <div>
-          <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Giá hiển thị</label>
-          <input value={formPriceText} onChange={(e) => setFormPriceText(e.target.value)} className={inputClass} placeholder="Ví dụ: Từ 8,9 tỷ/căn" />
+        {formPriceMin !== '' ? (
+          <div className="mt-3 rounded-xl border border-[#E8DCCB] bg-white px-3 py-2 text-xs text-[#6F5B49]">
+            <strong>{formPriceMin} tỷ</strong>
+            <span className="mx-2 text-[#C2AA8C]">•</span>
+            Tương đương {formatVnd(Number(formPriceMin) * 1_000_000_000)}
+          </div>
+        ) : null}
+      </div>
+
+      <div className="rounded-2xl border border-[#E8DCCB] bg-white p-4">
+        <h3 className="text-sm font-bold text-[#1F1B16]">Giá theo m²</h3>
+        <p className="mt-1 text-xs text-[#8C7A6B]">Đơn vị nhập: triệu đồng/m². Giá này không tham gia bộ lọc tổng giá.</p>
+        <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div>
+            <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Giá/m² thấp nhất (triệu đồng/m²)</label>
+            <input type="number" min="0" step="0.1" value={formPricePerSqmMin} onChange={(e) => setFormPricePerSqmMin(e.target.value !== '' ? Number(e.target.value) : '')} className={inputClass} placeholder="Ví dụ: 100" />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Giá/m² cao nhất (triệu đồng/m²)</label>
+            <input type="number" min={formPricePerSqmMin === '' ? 0 : formPricePerSqmMin} step="0.1" value={formPricePerSqmMax} onChange={(e) => setFormPricePerSqmMax(e.target.value !== '' ? Number(e.target.value) : '')} className={inputClass} placeholder="Có thể để trống" />
+          </div>
         </div>
       </div>
 
@@ -1835,6 +1871,7 @@ export default function AdminProjects() {
           <div>
             <h3 className="text-sm font-bold text-[#1F1B16]">Bảng giá & tài liệu giá</h3>
             <p className="mt-1 text-xs text-[#8C7A6B]">Thêm dòng giá thủ công hoặc chọn ảnh/PDF/Excel từ Media Library.</p>
+            <p className="mt-1 text-[11px] text-[#8C7A6B]">Bảng giá chi tiết chỉ dùng để trình bày theo từng loại sản phẩm, không điều khiển bộ lọc dự án.</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <button type="button" onClick={() => setFormPriceRows(items => [...items, createPriceItem('row')])} className={addButtonClass}>Thêm dòng giá</button>
@@ -2967,6 +3004,7 @@ export default function AdminProjects() {
                       <div>
                         <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Giá schema Google</label>
                         <input value={formSchemaPrice} onChange={(e) => setFormSchemaPrice(e.target.value)} className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none" placeholder="Ví dụ: 8900000000" />
+                        <p className="mt-1 text-[11px] text-[#8C7A6B]">Để trống sẽ tự dùng giá khởi điểm.</p>
                       </div>
                       <div>
                         <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Đơn vị tiền tệ schema</label>
@@ -3285,6 +3323,7 @@ export default function AdminProjects() {
                       <div>
                         <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Giá Schema</label>
                         <input value={formSchemaPrice} onChange={(e) => setFormSchemaPrice(e.target.value)} className={inputClass} placeholder="Ví dụ: 8900000000" />
+                        <p className="mt-1 text-[11px] text-[#8C7A6B]">Để trống sẽ tự dùng giá khởi điểm.</p>
                       </div>
                       <div>
                         <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Đơn vị tiền tệ Schema</label>

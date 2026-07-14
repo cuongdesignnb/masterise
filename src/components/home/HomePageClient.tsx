@@ -28,6 +28,7 @@ import Testimonials from "@/components/Testimonials";
 import FAQ from "@/components/FAQ";
 import { homepageService } from "@/services/homepageService";
 import { projectService } from "@/services/projectService";
+import { getProjectPriceText } from "@/lib/projectPrice";
 import { postService } from "@/services/postService";
 import { unwrapData } from "@/adapters/apiResponseAdapter";
 import { getProjectTypeText } from "@/adapters/projectAdapter";
@@ -369,7 +370,7 @@ export default function HomePageClient() {
                         </p>
                         <div className="mt-3 flex items-center justify-between">
                           <p className="text-sm font-bold text-champagne">
-                            {project.price_text || "Liên hệ"}
+                            {getProjectPriceText(project.price_text, project.price_min, "Liên hệ")}
                           </p>
                           {project.open_sale_at && (
                             <p className="flex items-center gap-1 text-[11px] text-muted">
