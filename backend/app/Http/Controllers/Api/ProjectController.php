@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Project;
 use App\Models\ProjectCategory;
+use App\Support\ProjectStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -48,16 +49,8 @@ class ProjectController extends Controller
             $query->where('region', $this->normalizeRegion($request->region));
         }
 
-        // Filter by status
-        if ($request->has('status') && !empty($request->status)) {
-            $statuses = is_array($request->status) ? $request->status : explode(',', $request->status);
-            $query->whereIn('status', $statuses);
-        }
-
-        // Filter by public sales status badge state
-        if ($request->has('sales_status') && !empty($request->sales_status)) {
-            $salesStatuses = is_array($request->sales_status) ? $request->sales_status : explode(',', $request->sales_status);
-            $query->whereIn('sales_status', $salesStatuses);
+        if ($statusError = $this->applyProjectStatusFilter($query, $request)) {
+            return $statusError;
         }
 
         if ($request->has('is_hot') && $request->is_hot !== '') {
@@ -108,6 +101,8 @@ class ProjectController extends Controller
             ]
         ], 200);
 
+        $response = $this->markDeprecatedProjectStatusQuery($response, $request);
+
         return $canViewUnpublished ? $this->noStore($response) : $response;
     }
 
@@ -151,14 +146,8 @@ class ProjectController extends Controller
             $query->where('region', $request->region);
         }
 
-        if ($request->has('status') && !empty($request->status)) {
-            $statuses = is_array($request->status) ? $request->status : explode(',', $request->status);
-            $query->whereIn('status', $statuses);
-        }
-
-        if ($request->has('sales_status') && !empty($request->sales_status)) {
-            $salesStatuses = is_array($request->sales_status) ? $request->sales_status : explode(',', $request->sales_status);
-            $query->whereIn('sales_status', $salesStatuses);
+        if ($statusError = $this->applyProjectStatusFilter($query, $request)) {
+            return $statusError;
         }
 
         if ($request->has('is_hot') && $request->is_hot !== '') {
@@ -188,7 +177,7 @@ class ProjectController extends Controller
         $perPage = $request->get('per_page', 10);
         $projects = $query->paginate($perPage);
 
-        return $this->noStore(response()->json([
+        $response = response()->json([
             'success' => true,
             'data' => $projects->items(),
             'meta' => [
@@ -197,7 +186,9 @@ class ProjectController extends Controller
                 'per_page' => $projects->perPage(),
                 'total' => $projects->total(),
             ]
-        ], 200));
+        ], 200);
+
+        return $this->noStore($this->markDeprecatedProjectStatusQuery($response, $request));
     }
 
     /**
@@ -333,8 +324,9 @@ class ProjectController extends Controller
             'area_min' => 'nullable|numeric',
             'area_max' => 'nullable|numeric',
             'area_text' => 'nullable|string',
-            'status' => 'required|string|in:upcoming,selling,completed',
-            'sales_status' => 'nullable|string|in:coming_soon,selling,sold_out,handover',
+            'project_status' => ['required', Rule::in(ProjectStatus::values())],
+            'status' => 'prohibited',
+            'sales_status' => 'prohibited',
             'open_sale_at' => 'nullable|date',
             'handover_year' => 'nullable|integer',
             'handover_time' => 'nullable|string',
@@ -414,7 +406,7 @@ class ProjectController extends Controller
             'name', 'slug', 'code', 'developer_id', 'location_id', 'description', 'content', 
             'hero_subtitle', 'badge_text', 'project_label', 'location', 'region', 'address', 'province', 'district', 'ward',
             'price_min', 'price_max', 'price_text', 'area_min', 'area_max', 'area_text',
-            'status', 'sales_status', 'open_sale_at', 'handover_year', 'handover_time', 'legal_status', 
+            'project_status', 'open_sale_at', 'handover_year', 'handover_time', 'legal_status',
             'ownership_type', 'construction_density', 'total_area', 'total_units', 
             'total_blocks', 'total_floors', 'highlight_points', 'quick_cards', 'project_facts',
             'project_stats', 'nearby_places', 'connectivity', 'payment_policy', 'sales_policy',
@@ -488,8 +480,9 @@ class ProjectController extends Controller
             'area_min' => 'nullable|numeric',
             'area_max' => 'nullable|numeric',
             'area_text' => 'nullable|string',
-            'status' => 'required|string|in:upcoming,selling,completed',
-            'sales_status' => 'nullable|string|in:coming_soon,selling,sold_out,handover',
+            'project_status' => ['required', Rule::in(ProjectStatus::values())],
+            'status' => 'prohibited',
+            'sales_status' => 'prohibited',
             'open_sale_at' => 'nullable|date',
             'handover_year' => 'nullable|integer',
             'handover_time' => 'nullable|string',
@@ -568,7 +561,7 @@ class ProjectController extends Controller
             'name', 'slug', 'code', 'developer_id', 'location_id', 'description', 'content', 
             'hero_subtitle', 'badge_text', 'project_label', 'location', 'region', 'address', 'province', 'district', 'ward',
             'price_min', 'price_max', 'price_text', 'area_min', 'area_max', 'area_text',
-            'status', 'sales_status', 'open_sale_at', 'handover_year', 'handover_time', 'legal_status', 
+            'project_status', 'open_sale_at', 'handover_year', 'handover_time', 'legal_status',
             'ownership_type', 'construction_density', 'total_area', 'total_units', 
             'total_blocks', 'total_floors', 'highlight_points', 'quick_cards', 'project_facts',
             'project_stats', 'nearby_places', 'connectivity', 'payment_policy', 'sales_policy',
@@ -759,6 +752,64 @@ class ProjectController extends Controller
                 'saved' => $saved
             ]
         ], 200);
+    }
+
+    /**
+     * Apply the canonical project_status filter. Legacy query aliases are supported
+     * temporarily for bookmarked URLs only; new clients must use project_status.
+     */
+    private function applyProjectStatusFilter($query, Request $request): ?\Illuminate\Http\JsonResponse
+    {
+        $source = collect(['project_status', 'sales_status', 'status'])
+            ->first(fn (string $key) => $request->filled($key));
+
+        if (!$source) {
+            return null;
+        }
+
+        $rawValues = $request->input($source);
+        $values = is_array($rawValues) ? $rawValues : explode(',', (string) $rawValues);
+        $statuses = [];
+
+        foreach ($values as $value) {
+            $value = trim((string) $value);
+            $mapped = match ($source) {
+                'project_status' => in_array($value, ProjectStatus::values(), true) ? $value : null,
+                'sales_status' => ProjectStatus::fromLegacySalesStatus($value),
+                'status' => ProjectStatus::fromLegacyStatus($value),
+            };
+
+            if ($mapped === null) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Trạng thái dự án không hợp lệ.',
+                    'errors' => [$source => ['Giá trị trạng thái dự án không hợp lệ: '.$value]],
+                ], 422);
+            }
+
+            $statuses[] = $mapped;
+        }
+
+        $query->whereIn('project_status', array_values(array_unique($statuses)));
+
+        if ($source !== 'project_status') {
+            $request->attributes->set('deprecated_project_status_query', $source);
+        }
+
+        return null;
+    }
+
+    private function markDeprecatedProjectStatusQuery($response, Request $request)
+    {
+        $legacyQuery = $request->attributes->get('deprecated_project_status_query');
+        if ($legacyQuery) {
+            $response
+                ->header('Deprecation', 'true')
+                ->header('X-Deprecated-Query', $legacyQuery)
+                ->header('Link', '</api/v1/projects?project_status=>; rel="successor-version"');
+        }
+
+        return $response;
     }
 
     private function normalizeRegion(?string $region): ?string

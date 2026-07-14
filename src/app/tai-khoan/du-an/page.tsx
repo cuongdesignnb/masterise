@@ -7,6 +7,7 @@ import { User, Project } from '@/types/api';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Heart, ArrowRight, MapPin, Building, Ruler, Trash2 } from 'lucide-react';
+import { getProjectStatusLabel } from '@/lib/projectStatus';
 
 export default function SavedProjects() {
   const queryClient = useQueryClient();
@@ -59,7 +60,7 @@ export default function SavedProjects() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {savedProjects.map((project: any) => (
+          {savedProjects.map((project: Project) => (
             <motion.div
               layout
               key={project.id}
@@ -87,8 +88,7 @@ export default function SavedProjects() {
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] uppercase font-bold tracking-wider text-[#B88746] bg-[#B88746]/10 px-2 py-0.5 rounded">
-                      {project.status === 'selling' ? 'Đang mở bán' :
-                       project.status === 'upcoming' ? 'Sắp mở bán' : 'Đã bàn giao'}
+                      {getProjectStatusLabel(project.project_status)}
                     </span>
                     <span className="text-[10px] uppercase font-bold tracking-wider text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
                       {project.region}

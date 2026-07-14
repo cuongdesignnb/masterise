@@ -1,3 +1,5 @@
+import type { ProjectStatus } from './api';
+
 export type NavItem = {
   label: string;
   href: string;
@@ -32,8 +34,7 @@ export type Project = {
   price: string;
   image: string;
   badge?: string;
-  status?: "hot" | "best-seller" | "upcoming" | "selling" | "done";
-  sales_status?: string;
+  project_status: ProjectStatus;
   type?: string;
   description?: string;
   slug?: string;

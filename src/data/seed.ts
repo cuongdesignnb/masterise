@@ -77,7 +77,7 @@ export const hotProjects: Project[] = [
     location: "TP. Thủ Đức, TP. HCM",
     price: "Từ 7.8 tỷ/căn",
     badge: "HOT",
-    status: "hot",
+    project_status: "selling",
     type: "Căn hộ",
     image:
       "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=1200&auto=format&fit=crop",
@@ -88,7 +88,7 @@ export const hotProjects: Project[] = [
     location: "Thảo Điền, TP. Thủ Đức",
     price: "Từ 7.9 tỷ/căn",
     badge: "Best Seller",
-    status: "best-seller",
+    project_status: "selling",
     type: "Căn hộ",
     image:
       "https://images.unsplash.com/photo-1613977257363-707ba9348227?q=80&w=1200&auto=format&fit=crop",
@@ -99,7 +99,7 @@ export const hotProjects: Project[] = [
     location: "Quận 1, TP. HCM",
     price: "Từ 25.0 tỷ/căn",
     badge: "Sắp mở bán",
-    status: "upcoming",
+    project_status: "coming_soon",
     type: "Branded Residences",
     image:
       "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?q=80&w=1200&auto=format&fit=crop",
@@ -110,7 +110,7 @@ export const hotProjects: Project[] = [
     location: "Vinhomes Grand Park",
     price: "Từ 5.5 tỷ/căn",
     badge: "HOT",
-    status: "hot",
+    project_status: "handover",
     type: "Căn hộ",
     image:
       "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1200&auto=format&fit=crop",
@@ -123,6 +123,7 @@ export const featuredProjects: Project[] = [
     name: "The Rivus",
     location: "Quận 2, TP. Thủ Đức",
     price: "Từ 50.0 tỷ/căn",
+    project_status: "selling",
     type: "Biệt thự",
     image:
       "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1200&auto=format&fit=crop",
@@ -132,6 +133,7 @@ export const featuredProjects: Project[] = [
     name: "The Metropole Thủ Thiêm",
     location: "TP. Thủ Đức",
     price: "Từ 20.0 tỷ/căn",
+    project_status: "sold_out",
     type: "Căn hộ",
     image:
       "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?q=80&w=1200&auto=format&fit=crop",
@@ -141,6 +143,7 @@ export const featuredProjects: Project[] = [
     name: "Lumière Boulevard",
     location: "Vinhomes Grand Park",
     price: "Từ 4.5 tỷ/căn",
+    project_status: "handing_over",
     type: "Căn hộ",
     image:
       "https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?q=80&w=1200&auto=format&fit=crop",
@@ -150,6 +153,7 @@ export const featuredProjects: Project[] = [
     name: "SOHO Heritage West Lake",
     location: "Tây Hồ, Hà Nội",
     price: "Từ 18.0 tỷ/căn",
+    project_status: "handover",
     type: "Căn hộ",
     image:
       "https://images.unsplash.com/photo-1582407947304-fd86f028f716?q=80&w=1200&auto=format&fit=crop",
@@ -159,6 +163,7 @@ export const featuredProjects: Project[] = [
     name: "Masteri Waterfront",
     location: "Ocean Park 1, Hà Nội",
     price: "Từ 3.9 tỷ/căn",
+    project_status: "coming_soon",
     type: "Căn hộ",
     image:
       "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?q=80&w=1200&auto=format&fit=crop",
@@ -168,6 +173,7 @@ export const featuredProjects: Project[] = [
     name: "Grand World Phú Quốc",
     location: "Phú Quốc",
     price: "Từ 6.5 tỷ/căn",
+    project_status: "selling",
     type: "Nghỉ dưỡng",
     image:
       "https://images.unsplash.com/photo-1600607688969-a5bfcd646154?q=80&w=1200&auto=format&fit=crop",

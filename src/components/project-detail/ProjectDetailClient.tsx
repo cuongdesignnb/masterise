@@ -710,9 +710,9 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                   {project.badge}
                 </span>
               ) : null}
-              {project.salesStatus ? (
+              {project.projectStatus ? (
                 <span className="inline-flex rounded-full bg-emerald-600 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.08em] text-white">
-                  {project.salesStatus}
+                  {project.projectStatus}
                 </span>
               ) : null}
             </div>
@@ -795,9 +795,9 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                     {project.badge}
                   </span>
                 ) : null}
-                {project.salesStatus && (
+                {project.projectStatus && (
                   <span className="inline-flex rounded-full bg-emerald-600/90 px-4 py-2 text-[10px] font-bold tracking-[0.14em] text-white shadow-sm">
-                    {project.salesStatus}
+                    {project.projectStatus}
                   </span>
                 )}
               </motion.div>

@@ -30,7 +30,7 @@ import { homepageService } from "@/services/homepageService";
 import { projectService } from "@/services/projectService";
 import { postService } from "@/services/postService";
 import { unwrapData } from "@/adapters/apiResponseAdapter";
-import { getSalesStatusLabel, getSalesStatusColor } from "@/lib/salesStatus";
+import { getProjectStatusLabel, getProjectStatusColor } from "@/lib/projectStatus";
 import { getPostDetailHref } from "@/lib/postRoutes";
 import { useSiteSettings } from "@/providers/SiteSettingsProvider";
 import {
@@ -69,7 +69,7 @@ const fallbackHero: Required<
   link: "/du-an",
 };
 
-// Sales status labels are now centralized in @/lib/salesStatus
+// Project status labels are centralized in @/lib/projectStatus.
 
 const heroStatIcons = [Building2, MapPin, Globe, TrendingUp];
 
@@ -343,8 +343,8 @@ export default function HomePageClient() {
                               Hot
                             </span>
                           )}
-                          <span className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider backdrop-blur-sm ${getSalesStatusColor(project.sales_status).bg} ${getSalesStatusColor(project.sales_status).text}`}>
-                            {getSalesStatusLabel(project.sales_status)}
+                          <span className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider backdrop-blur-sm ${getProjectStatusColor(project.project_status).bg} ${getProjectStatusColor(project.project_status).text}`}>
+                            {getProjectStatusLabel(project.project_status)}
                           </span>
                         </div>
                       </div>

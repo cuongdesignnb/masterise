@@ -1,7 +1,7 @@
 import { Project as ApiProject } from '@/types/api';
 import { Project as FrontendProject } from '@/types';
 import { ProjectDetail, IconDetail, ProjectIconName } from '@/types/project-detail';
-import { getSalesStatusLabel } from '@/lib/salesStatus';
+import { getProjectStatusLabel } from '@/lib/projectStatus';
 
 const INTERNAL_IMAGE_PLACEHOLDER = '/file.svg';
 const UPDATING = 'Đang cập nhật';
@@ -104,8 +104,8 @@ function buildQuickCardsFromRealFields(api: ApiProject): IconDetail[] {
     api.handover_time
       ? { label: 'Bàn giao', value: api.handover_time, icon: 'CalendarDays' as const }
       : null,
-    api.sales_status
-      ? { label: 'Tình trạng', value: getSalesStatusLabel(api.sales_status), icon: 'Building2' as const }
+    api.project_status
+      ? { label: 'Tình trạng', value: getProjectStatusLabel(api.project_status), icon: 'Building2' as const }
       : null,
   ].filter(notNull);
 }
@@ -504,11 +504,10 @@ export function mapApiProjectToProjectCard(api: ApiProject): FrontendProject {
     price,
     image: api.thumbnail || api.banner_image || INTERNAL_IMAGE_PLACEHOLDER,
     badge: api.is_featured ? 'HOT' : undefined,
-    status: api.status === 'selling' ? 'selling' : api.status === 'upcoming' ? 'upcoming' : 'done',
+    project_status: api.project_status,
     type,
     description: api.description || '',
     slug: api.slug,
-    sales_status: api.sales_status,
     project_label: api.project_label || null,
   };
 }
@@ -523,7 +522,7 @@ export function mapApiProjectToProjectDetail(api: ApiProject): ProjectDetail {
     id: api.id,
     slug: api.slug,
     badge: api.badge_text || '',
-    salesStatus: api.sales_status ? getSalesStatusLabel(api.sales_status) : undefined,
+    projectStatus: api.project_status ? getProjectStatusLabel(api.project_status) : undefined,
     name: api.name,
     subtitle: api.hero_subtitle || api.description || UPDATING,
     description: api.description || UPDATING,

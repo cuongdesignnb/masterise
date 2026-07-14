@@ -199,12 +199,12 @@ class ContentTaxonomyRegressionTest extends TestCase
         $project = Project::where('slug', 'cu')->firstOrFail();
         $this->actingAs($admin, 'sanctum')->putJson("/api/v1/projects/{$project->id}", [
             'name' => $project->name, 'slug' => $project->slug, 'region' => 'mien bac',
-            'status' => 'selling', 'sales_status' => 'selling', 'is_published' => true,
+            'project_status' => 'selling', 'is_published' => true,
         ])->assertUnprocessable()->assertJsonValidationErrors('region');
 
         $this->actingAs($admin, 'sanctum')->putJson("/api/v1/projects/{$project->id}", [
             'name' => $project->name, 'slug' => $project->slug, 'region' => 'Miền Bắc',
-            'status' => 'selling', 'sales_status' => 'selling', 'is_published' => true,
+            'project_status' => 'selling', 'is_published' => true,
         ])->assertOk()->assertJsonPath('data.region', 'Miền Bắc');
     }
 

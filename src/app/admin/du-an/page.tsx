@@ -4,7 +4,8 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { useToast } from '@/components/admin/Toast';
-import { Project, ProjectCategory } from '@/types/api';
+import { Project, ProjectCategory, ProjectStatus } from '@/types/api';
+import { PROJECT_STATUS_OPTIONS, getProjectStatusColor, getProjectStatusLabel } from '@/lib/projectStatus';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Building, 
@@ -205,8 +206,7 @@ export default function AdminProjects() {
   const [formProjectLabel, setFormProjectLabel] = useState('');
   const [formDeveloperId, setFormDeveloperId] = useState<number | ''>('');
   const [formLocationId, setFormLocationId] = useState<number | ''>('');
-  const [formStatus, setFormStatus] = useState<'upcoming' | 'selling' | 'completed'>('upcoming');
-  const [formSalesStatus, setFormSalesStatus] = useState<string>('coming_soon');
+  const [formProjectStatus, setFormProjectStatus] = useState<ProjectStatus>('coming_soon');
   const [formOpenSaleAt, setFormOpenSaleAt] = useState('');
   const [formIsFeatured, setFormIsFeatured] = useState(false);
   const [formIsHot, setFormIsHot] = useState(false);
@@ -309,10 +309,9 @@ export default function AdminProjects() {
     description: 'Mô tả ngắn',
     thumbnail: 'Ảnh đại diện',
     banner_image: 'Ảnh Hero',
-    sales_status: 'Trạng thái mở bán',
+    project_status: 'Trạng thái dự án',
     seo_title: 'Tiêu đề SEO',
     seo_description: 'Mô tả SEO',
-    status: 'Trạng thái dự án',
     floor_plans: 'Danh sách mặt bằng',
     handover_standards: 'Tiêu chuẩn bàn giao',
     price_rows: 'Dòng bảng giá',
@@ -604,7 +603,7 @@ export default function AdminProjects() {
     queryFn: async () => {
       let url = `/admin/projects?q=${encodeURIComponent(search)}&page=${page}&per_page=10`;
       if (categoryFilter) url += `&category=${encodeURIComponent(categoryFilter)}`;
-      if (statusFilter) url += `&status=${encodeURIComponent(statusFilter)}`;
+      if (statusFilter) url += `&project_status=${encodeURIComponent(statusFilter)}`;
       const response = await api.get<Project[]>(url);
       return response;
     },
@@ -661,8 +660,7 @@ export default function AdminProjects() {
     setFormProjectLabel('');
     setFormDeveloperId('');
     setFormLocationId('');
-    setFormStatus('upcoming');
-    setFormSalesStatus('coming_soon');
+    setFormProjectStatus('coming_soon');
     setFormOpenSaleAt('');
     setFormIsFeatured(false);
     setFormIsHot(false);
@@ -752,8 +750,7 @@ export default function AdminProjects() {
     setFormProjectLabel(project.project_label || '');
     setFormDeveloperId(project.developer_id || '');
     setFormLocationId(project.location_id || '');
-    setFormStatus(project.status);
-    setFormSalesStatus(project.sales_status || 'coming_soon');
+    setFormProjectStatus(project.project_status);
     setFormOpenSaleAt(project.open_sale_at ? project.open_sale_at.slice(0, 10) : '');
     setFormIsFeatured(project.is_featured);
     setFormIsHot(project.is_hot || false);
@@ -937,8 +934,7 @@ export default function AdminProjects() {
         project_label: formProjectLabel || null,
         developer_id: formDeveloperId !== '' ? Number(formDeveloperId) : null,
         location_id: formLocationId !== '' ? Number(formLocationId) : null,
-        status: formStatus,
-        sales_status: formSalesStatus,
+        project_status: formProjectStatus,
         open_sale_at: formOpenSaleAt || null,
         is_featured: formIsFeatured,
         is_hot: formIsHot,
@@ -2031,9 +2027,9 @@ export default function AdminProjects() {
             className="px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-[#1F1B16] text-xs focus:outline-none focus:ring-1 focus:ring-[#B88746]"
           >
             <option value="">Tất cả trạng thái</option>
-            <option value="upcoming">Sắp mở bán</option>
-            <option value="selling">Đang mở bán</option>
-            <option value="completed">Đã bàn giao</option>
+            {PROJECT_STATUS_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>{option.label}</option>
+            ))}
           </select>
         </div>
       </div>
@@ -2111,13 +2107,8 @@ export default function AdminProjects() {
                       {project.price_text || 'Liên hệ'}
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
-                        project.status === 'selling' ? 'bg-green-50 text-green-700 border border-green-200' :
-                        project.status === 'upcoming' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
-                        'bg-gray-50 text-gray-600 border border-gray-200'
-                      }`}>
-                        {project.status === 'selling' ? 'Đang mở bán' :
-                         project.status === 'upcoming' ? 'Sắp mở bán' : 'Đã bàn giao'}
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${getProjectStatusColor(project.project_status).admin}`}>
+                        {getProjectStatusLabel(project.project_status)}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-center">
@@ -2588,33 +2579,21 @@ export default function AdminProjects() {
                       </div>
                     </div>
 
-                    {/* Status selection, Sales status selection */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Trạng thái thi công/bàn giao *</label>
-                        <select
-                          value={formStatus}
-                          onChange={(e) => setFormStatus(e.target.value as typeof formStatus)}
-                          className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
-                        >
-                          <option value="upcoming">Chưa khởi công / Sắp mở bán</option>
-                          <option value="selling">Đang thi công / Đang mở bán</option>
-                          <option value="completed">Đã hoàn thành / Bàn giao</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Trạng thái giỏ hàng bán lẻ *</label>
-                        <select
-                          value={formSalesStatus}
-                          onChange={(e) => setFormSalesStatus(e.target.value)}
-                          className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
-                        >
-                          <option value="coming_soon">Sắp mở bán</option>
-                          <option value="selling">Đang mở bán</option>
-                          <option value="sold_out">Đã bán hết</option>
-                          <option value="handover">Đã bàn giao</option>
-                        </select>
-                      </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Trạng thái dự án *</label>
+                      <select
+                        value={formProjectStatus}
+                        onChange={(e) => setFormProjectStatus(e.target.value as ProjectStatus)}
+                        className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
+                      >
+                        {PROJECT_STATUS_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>{option.label}</option>
+                        ))}
+                      </select>
+                      <p className="mt-1 text-[10px] leading-4 text-[#8C7A6B]">
+                        Trạng thái này được dùng cho badge, bộ lọc và hiển thị công khai của dự án.
+                        Tiến độ xây dựng chi tiết được quản lý tại tab “Tiến độ thi công”.
+                      </p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

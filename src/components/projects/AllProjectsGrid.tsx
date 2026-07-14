@@ -14,7 +14,7 @@ import Button from "@/components/Button";
 import LoadingState from "@/components/common/LoadingState";
 import EmptyState from "@/components/common/EmptyState";
 import ErrorState from "@/components/common/ErrorState";
-import { getSalesStatusLabel, getSalesStatusColor } from "@/lib/salesStatus";
+import { getProjectStatusLabel, getProjectStatusColor } from "@/lib/projectStatus";
 
 const sortOptions = [
   { value: "latest", label: "Mới nhất", sortBy: "created_at", sortOrder: "desc" },
@@ -35,8 +35,7 @@ export default function AllProjectsGrid() {
   const q = searchParams.get("q") || "";
   const region = searchParams.get("region") || "";
   const category = searchParams.get("category") || "";
-  const status = searchParams.get("status") || "";
-  const salesStatus = searchParams.get("sales_status") || "";
+  const projectStatus = searchParams.get("project_status") || "";
   const priceMin = searchParams.get("price_min") || "";
   const priceMax = searchParams.get("price_max") || "";
 
@@ -44,8 +43,7 @@ export default function AllProjectsGrid() {
   if (q) queryParams.q = q;
   if (region) queryParams.region = region;
   if (category) queryParams.category = category;
-  if (status) queryParams.status = status;
-  if (salesStatus) queryParams.sales_status = salesStatus;
+  if (projectStatus) queryParams.project_status = projectStatus;
   if (priceMin) queryParams.price_min = priceMin;
   if (priceMax) queryParams.price_max = priceMax;
   queryParams.sort_by = activeSort.sortBy;
@@ -168,9 +166,9 @@ export default function AllProjectsGrid() {
                       </span>
                     )}
                     {/* Sales Status Badge */}
-                    {(project as any).sales_status && (
-                      <span className={`absolute top-3 ${project.badge ? 'left-16' : 'left-3'} text-[9px] font-bold uppercase px-2.5 py-1 rounded-full ${getSalesStatusColor((project as any).sales_status).bg} ${getSalesStatusColor((project as any).sales_status).text}`}>
-                        {getSalesStatusLabel((project as any).sales_status)}
+                    {project.project_status && (
+                      <span className={`absolute top-3 ${project.badge ? 'left-16' : 'left-3'} text-[9px] font-bold uppercase px-2.5 py-1 rounded-full ${getProjectStatusColor(project.project_status).bg} ${getProjectStatusColor(project.project_status).text}`}>
+                        {getProjectStatusLabel(project.project_status)}
                       </span>
                     )}
                     {/* Heart */}

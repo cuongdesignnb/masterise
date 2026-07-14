@@ -375,8 +375,8 @@ export default function AdminSettings() {
                 links: [
                   { label: 'Masterise Collection', href: '/du-an?category=masterise-colletion' },
                   { label: 'Lumiere Series', href: '/du-an?category=lumiere-series' },
-                  { label: 'Sắp mở bán', href: '/du-an?sales_status=coming_soon' },
-                  { label: 'Đang mở bán', href: '/du-an?sales_status=selling' }
+                  { label: 'Sắp mở bán', href: '/du-an?project_status=coming_soon' },
+                  { label: 'Đang mở bán', href: '/du-an?project_status=selling' }
                 ]
               },
               {
@@ -2968,10 +2968,11 @@ export default function AdminSettings() {
                                   ].filter((p: any) => p.label.toLowerCase().includes(searchLower) || p.href.toLowerCase().includes(searchLower));
 
                                   const filteredStatuses = [
-                                    { label: 'Sắp mở bán', href: '/du-an?sales_status=coming_soon' },
-                                    { label: 'Đang mở bán', href: '/du-an?sales_status=selling' },
-                                    { label: 'Đang bàn giao', href: '/du-an?sales_status=handing_over' },
-                                    { label: 'Đã bàn giao', href: '/du-an?sales_status=handover' }
+                                    { label: 'Sắp mở bán', href: '/du-an?project_status=coming_soon' },
+                                    { label: 'Đang mở bán', href: '/du-an?project_status=selling' },
+                                    { label: 'Đã hết giỏ hàng', href: '/du-an?project_status=sold_out' },
+                                    { label: 'Đang bàn giao', href: '/du-an?project_status=handing_over' },
+                                    { label: 'Đã bàn giao', href: '/du-an?project_status=handover' }
                                   ].filter((p: any) => p.label.toLowerCase().includes(searchLower));
 
                                   const filteredProjCats = projectCategoriesData.map((cat: any) => ({
@@ -3104,7 +3105,7 @@ export default function AdminSettings() {
                                                     className="w-full p-1.5 hover:bg-[#B88746]/10 text-left rounded text-[11px] hover:text-[#B88746] flex justify-between items-center transition-all bg-[#FBF8F2]/60"
                                                   >
                                                     <span className="font-medium text-gray-700">{item.label}</span>
-                                                    <span className="text-[9px] text-gray-400 font-mono">?sales_status=...</span>
+                                                    <span className="text-[9px] text-gray-400 font-mono">?project_status=...</span>
                                                   </button>
                                                 ))}
                                               </div>

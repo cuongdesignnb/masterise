@@ -5,6 +5,7 @@ import { MapPin, Building2, Home, Sliders, ShieldCheck, Search, ChevronDown } fr
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Button from "./Button";
+import { PROJECT_STATUS_OPTIONS } from "@/lib/projectStatus";
 
 const filterOptions = {
   location: {
@@ -29,7 +30,7 @@ const filterOptions = {
     icon: Sliders,
     label: "Trạng thái",
     placeholder: "Tất cả dự án",
-    options: ["Tất cả trạng thái", "Sắp mở bán", "Đang mở bán", "Đã bàn giao"],
+    options: ["Tất cả trạng thái", ...PROJECT_STATUS_OPTIONS.map((option) => option.label)],
   },
   area: {
     icon: ShieldCheck,
@@ -195,9 +196,8 @@ export default function SearchBar() {
                 
                 if (selectedValues.status) {
                   const st = selectedValues.status;
-                  if (st === "Sắp mở bán") queryParams.push("status=upcoming");
-                  else if (st === "Đang mở bán") queryParams.push("status=selling");
-                  else if (st === "Đã bàn giao") queryParams.push("status=completed");
+                  const projectStatus = PROJECT_STATUS_OPTIONS.find((option) => option.label === st)?.value;
+                  if (projectStatus) queryParams.push(`project_status=${projectStatus}`);
                 }
                 
                 const searchString = queryParams.join("&");

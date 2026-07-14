@@ -7,6 +7,7 @@ import Container from "@/components/Container";
 import MotionWrapper from "@/components/MotionWrapper";
 import { projectService } from "@/services/projectService";
 import type { RegionOption } from "@/types/api";
+import { PROJECT_STATUS_OPTIONS } from "@/lib/projectStatus";
 
 const categoryOptions = [
   { value: "", label: "Tất cả loại hình" },
@@ -17,13 +18,7 @@ const categoryOptions = [
   { value: "lumiere-series", label: "Lumiere Series" },
 ];
 
-const statusOptions = [
-  { value: "", label: "Tất cả trạng thái" },
-  { value: "coming_soon", label: "Sắp mở bán" },
-  { value: "selling", label: "Đang mở bán" },
-  { value: "handing_over", label: "Đang bàn giao" },
-  { value: "handover", label: "Đã bàn giao" },
-];
+const statusOptions = [{ value: "", label: "Tất cả trạng thái" }, ...PROJECT_STATUS_OPTIONS];
 
 const priceOptions = [
   { value: "", label: "Tất cả mức giá" },
@@ -60,10 +55,7 @@ export default function ProjectsSearchBar() {
     setRegion(searchParams.get("region") || "");
     setCategory(searchParams.get("category") || "");
     
-    let statusVal = searchParams.get("sales_status") || searchParams.get("status") || "";
-    if (statusVal === "upcoming") statusVal = "coming_soon";
-    if (statusVal === "completed") statusVal = "handover";
-    setStatus(statusVal);
+    setStatus(searchParams.get("project_status") || "");
 
     const priceMin = searchParams.get("price_min") || "";
     const priceMax = searchParams.get("price_max") || "";
@@ -112,14 +104,12 @@ export default function ProjectsSearchBar() {
       else params.delete("category");
     }
 
-    // Apply sales status
+    // Apply the canonical project status and reset pagination.
     if (updates.hasOwnProperty("status")) {
       if (updates.status) {
-        params.set("sales_status", updates.status);
-        params.delete("status");
+        params.set("project_status", updates.status);
       } else {
-        params.delete("sales_status");
-        params.delete("status");
+        params.delete("project_status");
       }
     }
 
@@ -145,7 +135,9 @@ export default function ProjectsSearchBar() {
       }
     }
 
-    router.push(`${pathname}?${params.toString()}`);
+    params.delete("page");
+    const query = params.toString();
+    router.push(query ? `${pathname}?${query}` : pathname);
   };
 
   // Debounce text search query

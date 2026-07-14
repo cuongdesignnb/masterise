@@ -20,8 +20,7 @@ export default function ProjectsClient() {
     (searchParams.get("q") !== null && searchParams.get("q") !== "") || 
     (searchParams.get("region") !== null && searchParams.get("region") !== "") || 
     (searchParams.get("category") !== null && searchParams.get("category") !== "") || 
-    (searchParams.get("status") !== null && searchParams.get("status") !== "") || 
-    (searchParams.get("sales_status") !== null && searchParams.get("sales_status") !== "") || 
+    (searchParams.get("project_status") !== null && searchParams.get("project_status") !== "") ||
     (searchParams.get("price_min") !== null && searchParams.get("price_min") !== "") || 
     (searchParams.get("price_max") !== null && searchParams.get("price_max") !== "");
 

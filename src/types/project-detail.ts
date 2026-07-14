@@ -74,7 +74,7 @@ export type ProjectDetail = {
   id?: number;
   slug: string;
   badge?: string;
-  salesStatus?: string;
+  projectStatus?: string;
   name: string;
   subtitle: string;
   description: string;
