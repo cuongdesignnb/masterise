@@ -5,15 +5,15 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Project;
 use App\Models\ProjectCategory;
+use App\Models\Location;
+use App\Models\Region;
 use App\Support\ProjectStatus;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class ProjectController extends Controller
 {
-    private const REGIONS = ['Miền Bắc', 'Miền Trung', 'Miền Nam', 'Quốc tế'];
-
     private function noStore($response)
     {
         return $response
@@ -26,7 +26,7 @@ class ProjectController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Project::query()->with(['categories', 'seoMeta', 'developerRelation', 'locationRelation']);
+        $query = Project::query()->with(['categories', 'seoMeta', 'developerRelation', 'locationRelation.region']);
         $user = $request->user('sanctum');
         $canViewUnpublished = $user && $user->hasAnyRole(['super_admin', 'admin', 'marketing']);
 
@@ -46,7 +46,7 @@ class ProjectController extends Controller
 
         // Filter by region
         if ($request->has('region') && !empty($request->region)) {
-            $query->where('region', $this->normalizeRegion($request->region));
+            $this->applyRegionFilter($query, (string) $request->region, true);
         }
 
         if ($statusError = $this->applyProjectStatusFilter($query, $request)) {
@@ -57,15 +57,14 @@ class ProjectController extends Controller
             $query->where('is_hot', filter_var($request->is_hot, FILTER_VALIDATE_BOOLEAN));
         }
 
-        if ($request->has('project_label') && !empty($request->project_label)) {
-            $query->where('project_label', $request->project_label);
-        }
-
         // Filter by category slug
         if ($request->has('category') && !empty($request->category)) {
-            $categorySlug = $request->category;
+            $categorySlug = $request->category === 'shophouse-commercial'
+                ? 'shophouse-thuong-mai'
+                : $request->category;
             $query->whereHas('categories', function($q) use ($categorySlug) {
-                $q->where('slug', $categorySlug);
+                $q->where('project_categories.slug', $categorySlug)
+                    ->where('project_categories.taxonomy_type', ProjectCategory::TYPE_PROJECT);
             });
         }
 
@@ -108,21 +107,19 @@ class ProjectController extends Controller
 
     public function regions()
     {
-        $counts = Project::query()
-            ->where('is_published', true)
-            ->whereNotNull('region')
-            ->where('region', '!=', '')
-            ->whereIn('region', self::REGIONS)
-            ->select('region', DB::raw('COUNT(*) as projects_count'))
-            ->groupBy('region')
-            ->pluck('projects_count', 'region');
-
-        $data = collect(self::REGIONS)
-            ->filter(fn ($region) => $counts->has($region))
-            ->map(fn ($region) => [
-                'value' => $region,
-                'label' => $region,
-                'projects_count' => (int) $counts[$region],
+        $data = Region::query()
+            ->where('is_active', true)
+            ->withCount([
+                'projects as projects_count' => fn ($query) => $query->where('is_published', true),
+            ])
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get()
+            ->filter(fn (Region $region) => $region->projects_count > 0)
+            ->map(fn (Region $region) => [
+                'value' => $region->slug,
+                'label' => $region->name,
+                'projects_count' => (int) $region->projects_count,
             ])
             ->values();
 
@@ -131,7 +128,7 @@ class ProjectController extends Controller
 
     public function adminIndex(Request $request)
     {
-        $query = Project::query()->with(['categories', 'seoMeta', 'developerRelation', 'locationRelation']);
+        $query = Project::query()->with(['categories', 'seoMeta', 'developerRelation', 'locationRelation.region']);
 
         if ($request->has('q') && !empty($request->q)) {
             $search = $request->q;
@@ -143,7 +140,7 @@ class ProjectController extends Controller
         }
 
         if ($request->has('region') && !empty($request->region)) {
-            $query->where('region', $request->region);
+            $this->applyRegionFilter($query, (string) $request->region, false);
         }
 
         if ($statusError = $this->applyProjectStatusFilter($query, $request)) {
@@ -161,7 +158,8 @@ class ProjectController extends Controller
         if ($request->has('category') && !empty($request->category)) {
             $categorySlug = $request->category;
             $query->whereHas('categories', function($q) use ($categorySlug) {
-                $q->where('slug', $categorySlug);
+                $q->where('project_categories.slug', $categorySlug)
+                    ->where('project_categories.taxonomy_type', ProjectCategory::TYPE_PROJECT);
             });
         }
 
@@ -206,7 +204,7 @@ class ProjectController extends Controller
         }
 
         $projects = $query
-            ->with(['categories', 'seoMeta'])
+            ->with(['categories', 'seoMeta', 'locationRelation.region'])
             ->orderBy('is_hot', 'desc')
             ->orderBy('sort_order', 'asc')
             ->orderByRaw('open_sale_at IS NULL')
@@ -227,7 +225,7 @@ class ProjectController extends Controller
     public function show($slug)
     {
         $query = Project::where('slug', $slug)
-            ->with(['categories', 'seoMeta', 'developerRelation', 'locationRelation']);
+            ->with(['categories', 'seoMeta', 'developerRelation', 'locationRelation.region']);
         $user = request()->user('sanctum');
         $canViewUnpublished = $user && $user->hasAnyRole(['super_admin', 'admin', 'marketing']);
 
@@ -251,6 +249,7 @@ class ProjectController extends Controller
             ->whereHas('categories', function($q) use ($categoryIds) {
                 $q->whereIn('project_categories.id', $categoryIds);
             })
+            ->with('locationRelation.region')
             ->limit(3)
             ->get();
 
@@ -267,7 +266,7 @@ class ProjectController extends Controller
 
     public function adminShow($id)
     {
-        $project = Project::with(['categories', 'seoMeta', 'developerRelation', 'locationRelation'])->find($id);
+        $project = Project::with(['categories', 'seoMeta', 'developerRelation', 'locationRelation.region'])->find($id);
 
         if (!$project) {
             return response()->json([
@@ -287,7 +286,15 @@ class ProjectController extends Controller
      */
     public function categories()
     {
-        $categories = ProjectCategory::withCount('projects')->get();
+        $categories = ProjectCategory::query()
+            ->where('taxonomy_type', ProjectCategory::TYPE_PROJECT)
+            ->withCount([
+                'projects as projects_count' => fn ($query) => $query->where('is_published', true),
+            ])
+            ->orderBy('name')
+            ->get()
+            ->filter(fn (ProjectCategory $category) => $category->projects_count > 0)
+            ->values();
 
         return response()->json([
             'success' => true,
@@ -295,12 +302,25 @@ class ProjectController extends Controller
         ], 200);
     }
 
+    public function adminCategories()
+    {
+        $categories = ProjectCategory::query()
+            ->where('taxonomy_type', ProjectCategory::TYPE_PROJECT)
+            ->withCount('projects')
+            ->orderBy('name')
+            ->get();
+
+        return $this->noStore(response()->json([
+            'success' => true,
+            'data' => $categories,
+        ], 200));
+    }
+
     /**
      * Create a new project (Admin/Marketing only).
      */
     public function store(Request $request)
     {
-        $request->merge(['region' => $this->normalizeRegion($request->input('region'))]);
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:projects',
@@ -311,9 +331,8 @@ class ProjectController extends Controller
             'content' => 'nullable|string',
             'hero_subtitle' => 'nullable|string|max:255',
             'badge_text' => 'nullable|string|max:100',
-            'project_label' => 'nullable|string|max:255',
+            'project_label' => 'nullable|string|max:80',
             'location' => 'nullable|string',
-            'region' => ['nullable', Rule::in(self::REGIONS)],
             'address' => 'nullable|string',
             'province' => 'nullable|string',
             'district' => 'nullable|string',
@@ -386,7 +405,10 @@ class ProjectController extends Controller
             'schema_price_currency' => 'nullable|string|max:10',
             'schema_availability' => 'nullable|string|max:255',
             'category_ids' => 'nullable|array',
-            'category_ids.*' => 'exists:project_categories,id',
+            'category_ids.*' => [
+                Rule::exists('project_categories', 'id')
+                    ->where(fn ($query) => $query->where('taxonomy_type', ProjectCategory::TYPE_PROJECT)),
+            ],
             // SEO Meta
             'seo_title' => 'nullable|string|max:255',
             'seo_description' => 'nullable|string',
@@ -401,10 +423,19 @@ class ProjectController extends Controller
             ], 422);
         }
 
+        $location = $this->resolveLocation($request);
+        if ($location instanceof \Illuminate\Http\JsonResponse) {
+            return $location;
+        }
+
+        if ($request->boolean('is_published') && !$location) {
+            return $this->invalidLocationResponse('Dự án phải có vị trí thuộc một vùng miền hợp lệ trước khi xuất bản.');
+        }
+
         // Create project
-        $project = Project::create($request->only([
+        $projectData = $request->only([
             'name', 'slug', 'code', 'developer_id', 'location_id', 'description', 'content', 
-            'hero_subtitle', 'badge_text', 'project_label', 'location', 'region', 'address', 'province', 'district', 'ward',
+            'hero_subtitle', 'badge_text', 'project_label', 'location', 'address', 'province', 'district', 'ward',
             'price_min', 'price_max', 'price_text', 'area_min', 'area_max', 'area_text',
             'project_status', 'open_sale_at', 'handover_year', 'handover_time', 'legal_status',
             'ownership_type', 'construction_density', 'total_area', 'total_units', 
@@ -418,7 +449,9 @@ class ProjectController extends Controller
             'brochure_url', 'video_url', 'virtual_tour_url', 'map_image_url', 'location_description', 'lat', 'lng',
             'area_size', 'developer', 'scale', 'amenities', 'amenity_details', 'floor_tabs',
             'floor_plans', 'handover_standards', 'price_rows', 'schema_price', 'schema_price_currency', 'schema_availability'
-        ]));
+        ]);
+        $projectData['region'] = $location?->region?->name;
+        $project = Project::create($projectData);
 
         // Sync categories
         if ($request->has('category_ids')) {
@@ -433,7 +466,7 @@ class ProjectController extends Controller
         ]);
 
         $project->refresh();
-        $project->load(['categories', 'seoMeta', 'developerRelation', 'locationRelation']);
+        $project->load(['categories', 'seoMeta', 'developerRelation', 'locationRelation.region']);
 
         return $this->noStore(response()->json([
             'success' => true,
@@ -447,7 +480,6 @@ class ProjectController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $request->merge(['region' => $this->normalizeRegion($request->input('region'))]);
         $project = Project::find($id);
 
         if (!$project) {
@@ -467,9 +499,8 @@ class ProjectController extends Controller
             'content' => 'nullable|string',
             'hero_subtitle' => 'nullable|string|max:255',
             'badge_text' => 'nullable|string|max:100',
-            'project_label' => 'nullable|string|max:255',
+            'project_label' => 'nullable|string|max:80',
             'location' => 'nullable|string',
-            'region' => ['nullable', Rule::in(self::REGIONS)],
             'address' => 'nullable|string',
             'province' => 'nullable|string',
             'district' => 'nullable|string',
@@ -542,7 +573,10 @@ class ProjectController extends Controller
             'schema_price_currency' => 'nullable|string|max:10',
             'schema_availability' => 'nullable|string|max:255',
             'category_ids' => 'nullable|array',
-            'category_ids.*' => 'exists:project_categories,id',
+            'category_ids.*' => [
+                Rule::exists('project_categories', 'id')
+                    ->where(fn ($query) => $query->where('taxonomy_type', ProjectCategory::TYPE_PROJECT)),
+            ],
             // SEO Meta
             'seo_title' => 'nullable|string|max:255',
             'seo_description' => 'nullable|string',
@@ -557,9 +591,18 @@ class ProjectController extends Controller
             ], 422);
         }
 
-        $project->update($request->only([
+        $location = $this->resolveLocation($request);
+        if ($location instanceof \Illuminate\Http\JsonResponse) {
+            return $location;
+        }
+
+        if ($request->boolean('is_published') && !$project->is_published && !$location) {
+            return $this->invalidLocationResponse('Dự án phải có vị trí thuộc một vùng miền hợp lệ trước khi xuất bản.');
+        }
+
+        $projectData = $request->only([
             'name', 'slug', 'code', 'developer_id', 'location_id', 'description', 'content', 
-            'hero_subtitle', 'badge_text', 'project_label', 'location', 'region', 'address', 'province', 'district', 'ward',
+            'hero_subtitle', 'badge_text', 'project_label', 'location', 'address', 'province', 'district', 'ward',
             'price_min', 'price_max', 'price_text', 'area_min', 'area_max', 'area_text',
             'project_status', 'open_sale_at', 'handover_year', 'handover_time', 'legal_status',
             'ownership_type', 'construction_density', 'total_area', 'total_units', 
@@ -573,11 +616,25 @@ class ProjectController extends Controller
             'brochure_url', 'video_url', 'virtual_tour_url', 'map_image_url', 'location_description', 'lat', 'lng',
             'area_size', 'developer', 'scale', 'amenities', 'amenity_details', 'floor_tabs',
             'floor_plans', 'handover_standards', 'price_rows', 'schema_price', 'schema_price_currency', 'schema_availability'
-        ]));
+        ]);
+        if ($location) {
+            $projectData['region'] = $location->region->name;
+        } elseif ($project->location_id !== null || !$project->is_published) {
+            $projectData['region'] = null;
+        }
+        $project->update($projectData);
 
         // Sync categories
         if ($request->has('category_ids')) {
-            $project->categories()->sync($request->category_ids);
+            $collectionCategoryIds = $project->categories()
+                ->where('taxonomy_type', ProjectCategory::TYPE_COLLECTION)
+                ->pluck('project_categories.id')
+                ->all();
+
+            $project->categories()->sync(array_values(array_unique([
+                ...$collectionCategoryIds,
+                ...$request->input('category_ids', []),
+            ])));
         }
 
         // Update or create SEO Meta
@@ -591,7 +648,7 @@ class ProjectController extends Controller
         );
 
         $project->refresh();
-        $project->load(['categories', 'seoMeta', 'developerRelation', 'locationRelation']);
+        $project->load(['categories', 'seoMeta', 'developerRelation', 'locationRelation.region']);
 
         return $this->noStore(response()->json([
             'success' => true,
@@ -636,11 +693,26 @@ class ProjectController extends Controller
      */
     public function storeCategory(Request $request)
     {
+        $name = trim((string) $request->input('name'));
+        $slug = Str::slug(trim((string) $request->input('slug')) ?: $name);
+        $request->merge(['name' => $name, 'slug' => $slug]);
+
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:project_categories',
             'description' => 'nullable|string',
         ]);
+
+        $validator->after(function ($validator) use ($name) {
+            $duplicate = ProjectCategory::query()
+                ->where('taxonomy_type', ProjectCategory::TYPE_PROJECT)
+                ->whereRaw('LOWER(name) = ?', [mb_strtolower($name)])
+                ->exists();
+
+            if ($duplicate) {
+                $validator->errors()->add('name', 'Loại hình dự án đã tồn tại.');
+            }
+        });
 
         if ($validator->fails()) {
             return response()->json([
@@ -650,7 +722,10 @@ class ProjectController extends Controller
             ], 422);
         }
 
-        $category = ProjectCategory::create($request->only(['name', 'slug', 'description']));
+        $category = ProjectCategory::create([
+            ...$request->only(['name', 'slug', 'description']),
+            'taxonomy_type' => ProjectCategory::TYPE_PROJECT,
+        ]);
 
         return response()->json([
             'success' => true,
@@ -664,7 +739,9 @@ class ProjectController extends Controller
      */
     public function updateCategory(Request $request, $id)
     {
-        $category = ProjectCategory::find($id);
+        $category = ProjectCategory::query()
+            ->where('taxonomy_type', ProjectCategory::TYPE_PROJECT)
+            ->find($id);
 
         if (!$category) {
             return response()->json([
@@ -673,11 +750,27 @@ class ProjectController extends Controller
             ], 404);
         }
 
+        $name = trim((string) $request->input('name'));
+        $slug = Str::slug(trim((string) $request->input('slug')) ?: $name);
+        $request->merge(['name' => $name, 'slug' => $slug]);
+
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:project_categories,slug,' . $id,
             'description' => 'nullable|string',
         ]);
+
+        $validator->after(function ($validator) use ($name, $id) {
+            $duplicate = ProjectCategory::query()
+                ->where('taxonomy_type', ProjectCategory::TYPE_PROJECT)
+                ->where('id', '!=', $id)
+                ->whereRaw('LOWER(name) = ?', [mb_strtolower($name)])
+                ->exists();
+
+            if ($duplicate) {
+                $validator->errors()->add('name', 'Loại hình dự án đã tồn tại.');
+            }
+        });
 
         if ($validator->fails()) {
             return response()->json([
@@ -701,7 +794,9 @@ class ProjectController extends Controller
      */
     public function destroyCategory($id)
     {
-        $category = ProjectCategory::find($id);
+        $category = ProjectCategory::query()
+            ->where('taxonomy_type', ProjectCategory::TYPE_PROJECT)
+            ->find($id);
 
         if (!$category) {
             return response()->json([
@@ -752,6 +847,34 @@ class ProjectController extends Controller
                 'saved' => $saved
             ]
         ], 200);
+    }
+
+    private function applyRegionFilter($query, string $value, bool $activeOnly): void
+    {
+        $value = trim($value);
+        $region = Region::query()
+            ->where(function ($builder) use ($value) {
+                $builder->where('slug', $value)->orWhere('name', $value);
+            })
+            ->first();
+
+        if ($region) {
+            if ($activeOnly && !$region->is_active) {
+                $query->whereRaw('1 = 0');
+                return;
+            }
+
+            $query->whereHas('locationRelation.region', function ($regionFilter) use ($region, $activeOnly) {
+                $regionFilter->whereKey($region->id);
+                if ($activeOnly) {
+                    $regionFilter->where('is_active', true);
+                }
+            });
+            return;
+        }
+
+        // Compatibility for legacy bookmarked URLs until old projects receive a location.
+        $query->where('region', $value);
     }
 
     /**
@@ -812,12 +935,30 @@ class ProjectController extends Controller
         return $response;
     }
 
-    private function normalizeRegion(?string $region): ?string
+    private function resolveLocation(Request $request): Location|\Illuminate\Http\JsonResponse|null
     {
-        if ($region === null || trim($region) === '') {
+        if (!$request->filled('location_id')) {
             return null;
         }
 
-        return trim($region);
+        $location = Location::with('region')->find($request->integer('location_id'));
+        if (!$location || !$location->region) {
+            return $this->invalidLocationResponse('Vị trí đã chọn chưa được gán vùng miền. Hãy cập nhật trong Quản lý vị trí.');
+        }
+
+        if (!$location->region->is_active) {
+            return $this->invalidLocationResponse('Vùng miền của vị trí đã bị vô hiệu hóa. Hãy chọn vị trí hợp lệ khác.');
+        }
+
+        return $location;
+    }
+
+    private function invalidLocationResponse(string $message): \Illuminate\Http\JsonResponse
+    {
+        return response()->json([
+            'success' => false,
+            'message' => $message,
+            'errors' => ['location_id' => [$message]],
+        ], 422);
     }
 }

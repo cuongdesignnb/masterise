@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -14,7 +14,7 @@ import Button from "@/components/Button";
 import LoadingState from "@/components/common/LoadingState";
 import EmptyState from "@/components/common/EmptyState";
 import ErrorState from "@/components/common/ErrorState";
-import { getProjectStatusLabel, getProjectStatusColor } from "@/lib/projectStatus";
+import { getProjectMarketingLabel, getProjectStatusLabel, getProjectStatusColor } from "@/lib/projectStatus";
 
 const sortOptions = [
   { value: "latest", label: "Mới nhất", sortBy: "created_at", sortOrder: "desc" },
@@ -27,7 +27,6 @@ const sortOptions = [
 
 export default function AllProjectsGrid() {
   const searchParams = useSearchParams();
-  const [activeTab, setActiveTab] = useState("Tất cả");
   const [sortValue, setSortValue] = useState<(typeof sortOptions)[number]["value"]>("latest");
   const activeSort = sortOptions.find((option) => option.value === sortValue) || sortOptions[0];
 
@@ -56,26 +55,13 @@ export default function AllProjectsGrid() {
       return await projectService.getProjects(queryParams);
     },
   });
-
-  const labelTabs = useMemo(() => {
-    const labels = Array.from(new Set(
-      projects
-        .map((project) => project.project_label?.trim())
-        .filter((label): label is string => Boolean(label))
-    ));
-
-    return ["Tất cả", ...labels];
-  }, [projects]);
-
-  useEffect(() => {
-    if (!labelTabs.includes(activeTab)) {
-      setActiveTab("Tất cả");
-    }
-  }, [activeTab, labelTabs]);
-
-  const filteredProjects = projects
-    .filter(project => activeTab === "Tất cả" || project.project_label?.trim() === activeTab)
-    .map(mapApiProjectToProjectCard);
+  const { data: categoryOptions = [] } = useQuery({
+    queryKey: ["public-project-categories"],
+    queryFn: projectService.getProjectCategories,
+    staleTime: 5 * 60 * 1000,
+  });
+  const selectedCategoryName = categoryOptions.find((option) => option.slug === category)?.name;
+  const projectCards = projects.map(mapApiProjectToProjectCard);
 
   return (
     <section id="tat-ca-du-an" className="scroll-mt-24 py-10">
@@ -89,24 +75,9 @@ export default function AllProjectsGrid() {
           </div>
         </MotionWrapper>
 
-        {/* Tabs + Sort */}
+        {/* Sort */}
         <MotionWrapper delay={0.05}>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-            <div className="flex gap-2 flex-wrap">
-              {labelTabs.map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`rounded-full px-4 py-1.5 text-xs font-semibold transition-all duration-300 cursor-pointer ${
-                    activeTab === tab
-                      ? "gold-gradient text-white shadow-sm"
-                      : "bg-white border border-line/60 text-muted hover:border-gold hover:text-gold"
-                  }`}
-                >
-                  {tab}
-                </button>
-              ))}
-            </div>
+          <div className="flex justify-end mb-6">
             <label className="relative inline-flex items-center text-xs text-muted bg-white border border-line/50 rounded-xl hover:border-gold transition">
               <span className="sr-only">Sắp xếp dự án</span>
               <select
@@ -135,18 +106,22 @@ export default function AllProjectsGrid() {
           />
         )}
 
-        {!isLoading && !error && filteredProjects.length === 0 && (
+        {!isLoading && !error && projectCards.length === 0 && (
           <EmptyState
             title="Không tìm thấy dự án nào"
-            description={`Chưa có dự án nào thuộc danh mục "${activeTab}" hiển thị.`}
+            description={selectedCategoryName
+              ? `Không tìm thấy dự án thuộc loại hình “${selectedCategoryName}”.`
+              : "Không tìm thấy dự án phù hợp với bộ lọc hiện tại."}
           />
         )}
 
         {/* Grid */}
-        {!isLoading && !error && filteredProjects.length > 0 && (
+        {!isLoading && !error && projectCards.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {filteredProjects.map((project, idx) => (
-              <MotionWrapper key={idx} delay={0.06 * idx}>
+            {projectCards.map((project, idx) => {
+              const marketingLabel = getProjectMarketingLabel(project.project_label, project.project_status);
+              return (
+              <MotionWrapper key={project.id} delay={0.06 * idx}>
                 <div className="bg-white rounded-[16px] border border-line/50 overflow-hidden hover:-translate-y-1 hover:shadow-[0_12px_36px_rgba(87,61,28,0.08)] transition-all duration-300 group">
                   {/* Image */}
                   <div className="relative aspect-[16/10] overflow-hidden">
@@ -159,15 +134,20 @@ export default function AllProjectsGrid() {
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                       />
                     </Link>
-                    {/* Badge */}
-                    {project.badge && (
-                      <span className="absolute top-3 left-3 text-white text-[9px] font-bold uppercase px-2.5 py-1 rounded-full gold-gradient">
-                        {project.badge}
-                      </span>
-                    )}
-                    {/* Sales Status Badge */}
+                    <div className="absolute left-3 top-3 flex max-w-[70%] flex-col items-start gap-1.5">
+                      {marketingLabel && (
+                        <span className="max-w-full truncate rounded-full bg-[#6F5436]/90 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wide text-white backdrop-blur-sm">
+                          {marketingLabel}
+                        </span>
+                      )}
+                      {project.badge && project.badge !== marketingLabel && (
+                        <span className="rounded-full gold-gradient px-2.5 py-1 text-[9px] font-bold uppercase text-white">
+                          {project.badge}
+                        </span>
+                      )}
+                    </div>
                     {project.project_status && (
-                      <span className={`absolute top-3 ${project.badge ? 'left-16' : 'left-3'} text-[9px] font-bold uppercase px-2.5 py-1 rounded-full ${getProjectStatusColor(project.project_status).bg} ${getProjectStatusColor(project.project_status).text}`}>
+                      <span className={`absolute bottom-3 left-3 rounded-full px-2.5 py-1 text-[9px] font-bold uppercase ${getProjectStatusColor(project.project_status).bg} ${getProjectStatusColor(project.project_status).text}`}>
                         {getProjectStatusLabel(project.project_status)}
                       </span>
                     )}
@@ -201,7 +181,8 @@ export default function AllProjectsGrid() {
                   </div>
                 </div>
               </MotionWrapper>
-            ))}
+              );
+            })}
           </div>
         )}
       </Container>

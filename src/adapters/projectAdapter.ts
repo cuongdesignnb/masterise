@@ -492,10 +492,23 @@ function normalizeSectionTitles(value: unknown): Record<string, { eyebrow?: stri
   );
 }
 
+export function getProjectTypeText(categories: ApiProject['categories']): string {
+  const projectTypeNames = Array.from(new Set(
+    (categories || [])
+      .filter((category) => category.taxonomy_type === 'project_type')
+      .map((category) => category.name.trim())
+      .filter(Boolean),
+  ));
+
+  return projectTypeNames.length > 0
+    ? `${projectTypeNames.slice(0, 2).join(' • ')}${projectTypeNames.length > 2 ? ` +${projectTypeNames.length - 2}` : ''}`
+    : UPDATING;
+}
+
 export function mapApiProjectToProjectCard(api: ApiProject): FrontendProject {
   const price = api.price_text || (api.price_min ? `Từ ${api.price_min} tỷ` : UPDATING);
   const location = api.location || api.address || UPDATING;
-  const type = api.categories && api.categories.length > 0 ? api.categories[0].name : UPDATING;
+  const type = getProjectTypeText(api.categories);
 
   return {
     id: api.id,

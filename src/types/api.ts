@@ -30,9 +30,17 @@ export interface ProjectCategory {
   name: string;
   slug: string;
   description: string | null;
+  taxonomy_type: 'project_type' | 'collection';
   projects_count?: number;
   created_at: string;
   updated_at: string;
+}
+
+export interface ProjectCategoryOption {
+  id: number;
+  name: string;
+  slug: string;
+  projects_count: number;
 }
 
 export type ProjectStatus =
@@ -57,6 +65,9 @@ export interface Project {
   location: string | null;
   location_description: string | null;
   region: string | null;
+  region_name?: string | null;
+  region_details?: Pick<Region, 'id' | 'name' | 'slug'> | null;
+  location_relation?: Location | null;
   address: string | null;
   province: string | null;
   district: string | null;
@@ -209,9 +220,38 @@ export interface PostDetailData {
 }
 
 export interface RegionOption {
-  value: 'Miền Bắc' | 'Miền Trung' | 'Miền Nam' | 'Quốc tế';
+  value: string;
   label: string;
   projects_count: number;
+}
+
+export interface Region {
+  id: number;
+  name: string;
+  slug: string;
+  description: string | null;
+  sort_order: number;
+  is_active: boolean;
+  locations_count?: number;
+  projects_count?: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface Location {
+  id: number;
+  region_id: number | null;
+  region?: Region | null;
+  name: string;
+  slug: string;
+  province: string | null;
+  district: string | null;
+  ward: string | null;
+  address: string | null;
+  latitude: string | number | null;
+  longitude: string | number | null;
+  description: string | null;
+  projects_count?: number;
 }
 
 export interface LeadNote {

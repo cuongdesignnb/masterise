@@ -13,7 +13,7 @@ import Button from "@/components/Button";
 import LoadingState from "@/components/common/LoadingState";
 import EmptyState from "@/components/common/EmptyState";
 import ErrorState from "@/components/common/ErrorState";
-import { getProjectStatusLabel, getProjectStatusColor } from "@/lib/projectStatus";
+import { getProjectMarketingLabel, getProjectStatusLabel, getProjectStatusColor } from "@/lib/projectStatus";
 
 export default function FeaturedProjects() {
   const { data: projects = [], isLoading, error, refetch } = useQuery({
@@ -94,13 +94,20 @@ export default function FeaturedProjects() {
                       />
                     </Link>
 
-                    {project.badge && (
-                      <span className="absolute top-3 left-3 gold-gradient text-white text-[9px] font-bold uppercase px-2.5 py-1 rounded-full tracking-wide">
-                        {project.badge}
-                      </span>
-                    )}
+                    <div className="absolute left-3 top-3 flex max-w-[70%] flex-col items-start gap-1.5">
+                      {getProjectMarketingLabel(project.project_label, project.project_status) && (
+                        <span className="max-w-full truncate rounded-full bg-[#6F5436]/90 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wide text-white backdrop-blur-sm">
+                          {getProjectMarketingLabel(project.project_label, project.project_status)}
+                        </span>
+                      )}
+                      {project.badge && project.badge !== getProjectMarketingLabel(project.project_label, project.project_status) && (
+                        <span className="rounded-full gold-gradient px-2.5 py-1 text-[9px] font-bold uppercase tracking-wide text-white">
+                          {project.badge}
+                        </span>
+                      )}
+                    </div>
                     {project.project_status && (
-                      <span className={`absolute top-3 ${project.badge ? 'left-[4.5rem]' : 'left-3'} text-[9px] font-bold uppercase px-2.5 py-1 rounded-full tracking-wide ${getProjectStatusColor(project.project_status).bg} ${getProjectStatusColor(project.project_status).text}`}>
+                      <span className={`absolute bottom-3 left-3 rounded-full px-2.5 py-1 text-[9px] font-bold uppercase tracking-wide ${getProjectStatusColor(project.project_status).bg} ${getProjectStatusColor(project.project_status).text}`}>
                         {getProjectStatusLabel(project.project_status)}
                       </span>
                     )}
@@ -130,6 +137,8 @@ export default function FeaturedProjects() {
                       <MapPin size={12} className="shrink-0 text-muted/70" />
                       <span>{project.location}</span>
                     </div>
+
+                    <p className="mt-1 text-[10px] font-medium text-muted">{project.type}</p>
 
                     <p className="text-[11px] text-muted mt-1.5 leading-relaxed line-clamp-2">
                       {project.description}

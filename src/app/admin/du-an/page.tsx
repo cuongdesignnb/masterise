@@ -34,6 +34,13 @@ type SelectOption = {
   province?: string | null;
   district?: string | null;
   ward?: string | null;
+  region_id?: number | null;
+  region?: {
+    id: number;
+    name: string;
+    slug: string;
+    is_active: boolean;
+  } | null;
 };
 type IconValueItem = { label: string; value: string; icon: string };
 type StatItem = { value: string; label: string };
@@ -195,6 +202,10 @@ export default function AdminProjects() {
   // Category manager modal state
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
+  const [newCategorySlug, setNewCategorySlug] = useState('');
+  const [editingCategoryId, setEditingCategoryId] = useState<number | null>(null);
+  const [editingCategoryName, setEditingCategoryName] = useState('');
+  const [editingCategorySlug, setEditingCategorySlug] = useState('');
   
   // Media Selector state
   const [mediaSelectorTarget, setMediaSelectorTarget] = useState<MediaSelectorTarget>(null);
@@ -206,6 +217,7 @@ export default function AdminProjects() {
   const [formProjectLabel, setFormProjectLabel] = useState('');
   const [formDeveloperId, setFormDeveloperId] = useState<number | ''>('');
   const [formLocationId, setFormLocationId] = useState<number | ''>('');
+  const [formLocationSearch, setFormLocationSearch] = useState('');
   const [formProjectStatus, setFormProjectStatus] = useState<ProjectStatus>('coming_soon');
   const [formOpenSaleAt, setFormOpenSaleAt] = useState('');
   const [formIsFeatured, setFormIsFeatured] = useState(false);
@@ -219,7 +231,6 @@ export default function AdminProjects() {
   
   const [formLocation, setFormLocation] = useState('');
   const [formLocationDescription, setFormLocationDescription] = useState('');
-  const [formRegion, setFormRegion] = useState('Miền Nam');
   const [formAddress, setFormAddress] = useState('');
   const [formProvince, setFormProvince] = useState('');
   const [formDistrict, setFormDistrict] = useState('');
@@ -305,7 +316,7 @@ export default function AdminProjects() {
   const fieldLabelMap: Record<string, string> = {
     name: 'Tên dự án',
     slug: 'Đường dẫn tĩnh',
-    project_label: 'Nhãn dự án',
+    project_label: 'Nhãn hiển thị trên thẻ dự án',
     description: 'Mô tả ngắn',
     thumbnail: 'Ảnh đại diện',
     banner_image: 'Ảnh Hero',
@@ -324,7 +335,7 @@ export default function AdminProjects() {
     detail_gallery_title: 'Tiêu đề album cuối trang',
     detail_gallery_description: 'Mô tả album cuối trang',
     map_image_url: 'Ảnh bản đồ',
-    category_ids: 'Danh mục dự án',
+    category_ids: 'Loại hình dự án',
   };
   const fieldTabMap: Record<string, ProjectAdminTab> = {
     name: 'overview',
@@ -612,7 +623,7 @@ export default function AdminProjects() {
   const { data: categoriesData, isLoading: isCategoriesLoading } = useQuery({
     queryKey: ['admin-project-categories'],
     queryFn: async () => {
-      const response = await api.get<ProjectCategory[]>('/project-categories');
+      const response = await api.get<ProjectCategory[]>('/admin/project-categories');
       return response.data;
     },
   });
@@ -635,6 +646,15 @@ export default function AdminProjects() {
 
   const developersSelect = Array.isArray(developersData) ? developersData : [];
   const locationsSelect = Array.isArray(locationsData) ? locationsData : [];
+  const selectedLocation = locationsSelect.find((location) => location.id === Number(formLocationId));
+  const normalizedLocationSearch = formLocationSearch.trim().toLocaleLowerCase('vi');
+  const filteredLocationOptions = locationsSelect.filter((location) => {
+    if (location.id === Number(formLocationId)) return true;
+    if (!normalizedLocationSearch) return true;
+    return [location.name, location.province, location.district, location.region?.name]
+      .filter(Boolean)
+      .some((value) => String(value).toLocaleLowerCase('vi').includes(normalizedLocationSearch));
+  });
 
   // Helper to slugify
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -660,6 +680,7 @@ export default function AdminProjects() {
     setFormProjectLabel('');
     setFormDeveloperId('');
     setFormLocationId('');
+    setFormLocationSearch('');
     setFormProjectStatus('coming_soon');
     setFormOpenSaleAt('');
     setFormIsFeatured(false);
@@ -672,7 +693,6 @@ export default function AdminProjects() {
     setFormHandoverTime('');
     setFormLocation('');
     setFormLocationDescription('');
-    setFormRegion('Miền Nam');
     setFormAddress('');
     setFormProvince('');
     setFormDistrict('');
@@ -750,6 +770,7 @@ export default function AdminProjects() {
     setFormProjectLabel(project.project_label || '');
     setFormDeveloperId(project.developer_id || '');
     setFormLocationId(project.location_id || '');
+    setFormLocationSearch('');
     setFormProjectStatus(project.project_status);
     setFormOpenSaleAt(project.open_sale_at ? project.open_sale_at.slice(0, 10) : '');
     setFormIsFeatured(project.is_featured);
@@ -762,7 +783,6 @@ export default function AdminProjects() {
     setFormHandoverTime(project.handover_time || '');
     setFormLocation(project.location || '');
     setFormLocationDescription(project.location_description || '');
-    setFormRegion(project.region || '');
     setFormAddress(project.address || '');
     setFormProvince(project.province || '');
     setFormDistrict(project.district || '');
@@ -947,7 +967,6 @@ export default function AdminProjects() {
         
         location: formLocation,
         location_description: formLocationDescription || null,
-        region: formRegion,
         address: formAddress || null,
         province: formProvince || null,
         district: formDistrict || null,
@@ -1188,21 +1207,31 @@ export default function AdminProjects() {
 
   // Project Category CRUD Mutations
   const createCategoryMutation = useMutation({
-    mutationFn: async (name: string) => {
-      const slug = name
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[đĐ]/g, 'd')
-        .replace(/[^a-z0-9\s-]/g, '')
-        .trim()
-        .replace(/\s+/g, '-')
-        .replace(/-+/g, '-');
-      return api.post('/project-categories', { name, slug });
+    mutationFn: async ({ name, slug }: { name: string; slug: string }) => {
+      return api.post('/project-categories', { name, slug: slug || null });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-project-categories'] });
+      queryClient.invalidateQueries({ queryKey: ['public-project-categories'] });
       setNewCategoryName('');
+      setNewCategorySlug('');
+    },
+    onError: (err: unknown) => {
+      toast.error(getErrorMessage(err));
+    }
+  });
+
+  const updateCategoryMutation = useMutation({
+    mutationFn: async ({ id, name, slug }: { id: number; name: string; slug: string }) => {
+      return api.put(`/project-categories/${id}`, { name, slug: slug || null });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-project-categories'] });
+      queryClient.invalidateQueries({ queryKey: ['public-project-categories'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-projects'] });
+      setEditingCategoryId(null);
+      setEditingCategoryName('');
+      setEditingCategorySlug('');
     },
     onError: (err: unknown) => {
       toast.error(getErrorMessage(err));
@@ -1215,6 +1244,7 @@ export default function AdminProjects() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-project-categories'] });
+      queryClient.invalidateQueries({ queryKey: ['public-project-categories'] });
       queryClient.invalidateQueries({ queryKey: ['admin-projects'] });
     },
     onError: (err: unknown) => {
@@ -1447,6 +1477,15 @@ export default function AdminProjects() {
 
     if (!formSlug.trim()) {
       setFormSlug(slugifyProjectName(formName));
+    }
+
+    const willBePublished = mode === 'publish' || (mode !== 'draft' && formIsPublished);
+    if (willBePublished && (!selectedLocation || !selectedLocation.region)) {
+      const message = 'Dự án phải chọn một vị trí đã được gán vùng miền trước khi xuất bản.';
+      setFormError(message);
+      setFieldErrors({ location_id: message });
+      setActiveTab('overview');
+      return;
     }
 
     if (mode === 'publish') {
@@ -1971,7 +2010,7 @@ export default function AdminProjects() {
             className="flex items-center gap-1.5 px-4 py-2.5 border border-[#E8DCCB] hover:bg-[#B88746]/5 text-[#1F1B16] rounded-xl text-sm font-semibold transition-all"
           >
             <Layers className="w-4 h-4 text-[#B88746]" />
-            Quản lý Danh mục
+            Quản lý loại hình dự án
           </button>
           <button
             onClick={handleCreateOpen}
@@ -2051,7 +2090,7 @@ export default function AdminProjects() {
               <thead>
                 <tr className="bg-[#FBF8F2] border-b border-[#E8DCCB] text-[#8C7A6B] text-xs font-semibold uppercase tracking-wider">
                   <th className="px-6 py-4">Hình ảnh & Tên</th>
-                  <th className="px-6 py-4">Danh mục</th>
+                  <th className="px-6 py-4">Loại hình</th>
                   <th className="px-6 py-4">Khu vực</th>
                   <th className="px-6 py-4">Giá bán</th>
                   <th className="px-6 py-4">Trạng thái</th>
@@ -2371,16 +2410,17 @@ export default function AdminProjects() {
                     </div>
 
                     <div data-project-field="project_label">
-                      <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Nhãn dự án</label>
+                      <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Nhãn hiển thị trên thẻ dự án</label>
                       <input
                         type="text"
+                        maxLength={80}
                         value={formProjectLabel}
                         onChange={(e) => setFormProjectLabel(e.target.value)}
                         className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
-                        placeholder="Ví dụ: Masteri Collection, Lumiere Series, Branded Residence"
+                        placeholder="Ví dụ: Mới ra mắt, Phiên bản giới hạn, Tâm điểm đầu tư"
                       />
                       <p className="mt-1 text-[10px] leading-4 text-[#8C7A6B]">
-                        Dùng để tạo bộ lọc nhãn dự án ngoài trang danh sách. Các dự án có cùng nhãn sẽ nằm chung một tab.
+                        Nhãn marketing ngắn hiển thị trên card hoặc Hero. Không dùng để lọc dự án và không thay thế trạng thái dự án.
                       </p>
                     </div>
 
@@ -2417,6 +2457,13 @@ export default function AdminProjects() {
                       </div>
                       <div>
                         <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Liên kết Vị trí/Khu vực</label>
+                        <input
+                          type="search"
+                          value={formLocationSearch}
+                          onChange={(event) => setFormLocationSearch(event.target.value)}
+                          className="mb-2 w-full rounded-xl border border-[#E8DCCB] bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
+                          placeholder="Tìm tên vị trí, tỉnh, quận hoặc vùng miền..."
+                        />
                         <select
                           value={formLocationId}
                           onChange={(e) => {
@@ -2433,10 +2480,23 @@ export default function AdminProjects() {
                           className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
                         >
                           <option value="">-- Chọn Vị trí khu vực --</option>
-                          {locationsSelect.map(l => (
-                            <option key={l.id} value={l.id}>{l.name} ({l.province || '—'})</option>
+                          {filteredLocationOptions.map(l => (
+                            <option key={l.id} value={l.id} disabled={!l.region}>
+                              {l.name} — {l.province || 'Chưa rõ tỉnh'} — {l.region?.name || 'Chưa gán vùng'}
+                            </option>
                           ))}
                         </select>
+                        {selectedLocation?.region ? (
+                          <p className="mt-2 text-xs font-semibold text-emerald-700">
+                            Vùng miền tự động: {selectedLocation.region.name}
+                          </p>
+                        ) : formLocationId !== '' ? (
+                          <p className="mt-2 text-xs font-semibold text-red-600">
+                            Vị trí này chưa có vùng miền. <a href="/admin/locations" className="underline">Mở Quản lý vị trí</a> để cập nhật.
+                          </p>
+                        ) : (
+                          <p className="mt-2 text-xs text-[#8C7A6B]">Vùng miền được lấy tự động theo vị trí đã chọn.</p>
+                        )}
                       </div>
                     </div>
 
@@ -2655,7 +2715,10 @@ export default function AdminProjects() {
 
                     {/* Category Selection */}
                     <div>
-                      <label className="block text-xs font-semibold text-[#8C7A6B] mb-2">Thuộc danh mục *</label>
+                      <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Loại hình dự án *</label>
+                      <p className="mb-2 text-[10px] leading-4 text-[#8C7A6B]">
+                        Dùng để phân loại và lọc dự án trên trang danh sách dự án. Có thể chọn nhiều loại hình.
+                      </p>
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                         {categories.map((cat) => {
                           const isChecked = formCategoryIds.includes(cat.id);
@@ -2700,18 +2763,11 @@ export default function AdminProjects() {
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Vùng miền (region)</label>
-                        <select
-                          value={formRegion}
-                          onChange={(e) => setFormRegion(e.target.value)}
-                          className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
-                        >
-                          <option value="">Chọn vùng miền</option>
-                          <option value="Miền Bắc">Miền Bắc</option>
-                          <option value="Miền Trung">Miền Trung</option>
-                          <option value="Miền Nam">Miền Nam</option>
-                          <option value="Quốc tế">Quốc tế</option>
-                        </select>
+                        <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Vùng miền (tự động theo vị trí)</label>
+                        <div className={`min-h-10 rounded-xl border px-3 py-2 text-sm ${selectedLocation?.region ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-amber-200 bg-amber-50 text-amber-800'}`}>
+                          {selectedLocation?.region?.name || 'Chưa xác định — hãy chọn vị trí đã có vùng miền'}
+                        </div>
+                        <p className="mt-1 text-xs text-[#8C7A6B]">Không thể nhập tay; thay đổi vùng tại module Quản lý vị trí.</p>
                       </div>
                     </div>
 
@@ -3322,25 +3378,20 @@ export default function AdminProjects() {
               className="relative bg-white border border-[#E8DCCB] rounded-2xl w-full max-w-md overflow-hidden shadow-2xl z-10 p-6 space-y-4 text-[#1F1B16] font-body"
             >
               <div className="flex justify-between items-center">
-                <h3 className="font-heading font-medium text-lg text-[#1F1B16]">Quản lý Danh mục Dự án</h3>
+                <h3 className="font-heading font-medium text-lg text-[#1F1B16]">Quản lý loại hình dự án</h3>
                 <button onClick={() => setIsCategoryModalOpen(false)} className="p-1 hover:bg-gray-100 rounded-lg text-gray-500">
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
               {/* Add Category Form */}
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Tên danh mục mới..."
-                  value={newCategoryName}
-                  onChange={(e) => setNewCategoryName(e.target.value)}
-                  className="flex-1 px-3 py-2 border border-[#E8DCCB] rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-[#B88746] bg-[#FBF8F2]"
-                />
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_1fr_auto]">
+                <input type="text" placeholder="Tên loại hình mới..." value={newCategoryName} onChange={(e) => setNewCategoryName(e.target.value)} className="px-3 py-2 border border-[#E8DCCB] rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-[#B88746] bg-[#FBF8F2]" />
+                <input type="text" placeholder="Slug (tự sinh nếu trống)" value={newCategorySlug} onChange={(e) => setNewCategorySlug(e.target.value)} className="px-3 py-2 border border-[#E8DCCB] rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-[#B88746] bg-[#FBF8F2]" />
                 <button
                   onClick={() => {
                     if (!newCategoryName.trim()) return;
-                    createCategoryMutation.mutate(newCategoryName);
+                    createCategoryMutation.mutate({ name: newCategoryName, slug: newCategorySlug });
                   }}
                   disabled={createCategoryMutation.isPending}
                   className="px-4 py-2 bg-[#B88746] hover:bg-[#1F1B16] text-white rounded-xl text-xs font-bold transition-all disabled:opacity-50"
@@ -3356,27 +3407,33 @@ export default function AdminProjects() {
                 </div>
               ) : categories.length === 0 ? (
                 <div className="p-4 text-center text-xs text-gray-400 italic">
-                  Chưa có danh mục nào.
+                  Chưa có loại hình dự án nào.
                 </div>
               ) : (
                 <div className="divide-y divide-[#E8DCCB]/60 max-h-[200px] overflow-y-auto pr-1">
                   {categories.map((cat) => (
-                    <div key={cat.id} className="py-2.5 flex items-center justify-between text-xs">
-                      <div>
-                        <span className="font-semibold">{cat.name}</span>
-                        <span className="block text-[9px] text-[#8C7A6B]">/{cat.slug} (Có {cat.projects_count || 0} dự án)</span>
-                      </div>
-                      <button
-                        onClick={() => {
-                          if (window.confirm(`Xóa danh mục "${cat.name}"?`)) {
-                            deleteCategoryMutation.mutate(cat.id);
-                          }
-                        }}
-                        disabled={deleteCategoryMutation.isPending}
-                        className="p-1 hover:bg-red-50 text-red-600 rounded-lg transition-colors"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                    <div key={cat.id} className="py-2.5 text-xs">
+                      {editingCategoryId === cat.id ? (
+                        <div className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
+                          <input value={editingCategoryName} onChange={(event) => setEditingCategoryName(event.target.value)} className="rounded-lg border border-[#E8DCCB] px-2 py-1.5" aria-label="Tên loại hình" />
+                          <input value={editingCategorySlug} onChange={(event) => setEditingCategorySlug(event.target.value)} className="rounded-lg border border-[#E8DCCB] px-2 py-1.5" aria-label="Slug loại hình" />
+                          <div className="flex gap-1">
+                            <button onClick={() => updateCategoryMutation.mutate({ id: cat.id, name: editingCategoryName, slug: editingCategorySlug })} disabled={!editingCategoryName.trim() || updateCategoryMutation.isPending} className="rounded-lg bg-[#B88746] px-2 py-1.5 font-bold text-white disabled:opacity-50">Lưu</button>
+                            <button onClick={() => setEditingCategoryId(null)} className="rounded-lg border border-[#E8DCCB] px-2 py-1.5">Hủy</button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
+                            <span className="font-semibold">{cat.name}</span>
+                            <span className="block text-[9px] text-[#8C7A6B]">/{cat.slug} (Có {cat.projects_count || 0} dự án)</span>
+                          </div>
+                          <div className="flex gap-1">
+                            <button onClick={() => { setEditingCategoryId(cat.id); setEditingCategoryName(cat.name); setEditingCategorySlug(cat.slug); }} className="p-1 hover:bg-[#B88746]/10 text-[#B88746] rounded-lg transition-colors" aria-label={`Sửa ${cat.name}`}><Edit className="w-3.5 h-3.5" /></button>
+                            <button onClick={() => { if (window.confirm(`Xóa loại hình "${cat.name}"?`)) deleteCategoryMutation.mutate(cat.id); }} disabled={deleteCategoryMutation.isPending || (cat.projects_count || 0) > 0} className="p-1 hover:bg-red-50 text-red-600 rounded-lg transition-colors disabled:cursor-not-allowed disabled:opacity-40" aria-label={`Xóa ${cat.name}`}><Trash2 className="w-3.5 h-3.5" /></button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

@@ -373,8 +373,8 @@ export default function AdminSettings() {
               {
                 title: 'DỰ ÁN',
                 links: [
-                  { label: 'Masterise Collection', href: '/du-an?category=masterise-colletion' },
-                  { label: 'Lumiere Series', href: '/du-an?category=lumiere-series' },
+                  { label: 'Căn hộ cao cấp', href: '/du-an?category=can-ho-cao-cap' },
+                  { label: 'Biệt thự & dinh thự', href: '/du-an?category=biet-thu-dinh-thu' },
                   { label: 'Sắp mở bán', href: '/du-an?project_status=coming_soon' },
                   { label: 'Đang mở bán', href: '/du-an?project_status=selling' }
                 ]

@@ -48,3 +48,24 @@ export function getProjectStatusLabel(status: ProjectStatus | undefined | null):
 export function getProjectStatusColor(status: ProjectStatus | undefined | null) {
   return PROJECT_STATUS_COLORS[status || 'coming_soon'];
 }
+
+function normalizeBadgeText(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D')
+    .trim()
+    .toLocaleLowerCase('vi');
+}
+
+export function getProjectMarketingLabel(
+  label: string | undefined | null,
+  status: ProjectStatus | undefined | null,
+): string | null {
+  const trimmed = label?.trim();
+  if (!trimmed) return null;
+
+  const statusLabel = getProjectStatusLabel(status);
+  return normalizeBadgeText(trimmed) === normalizeBadgeText(statusLabel) ? null : trimmed;
+}

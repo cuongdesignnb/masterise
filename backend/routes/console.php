@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
 use App\Models\Post;
 use App\Models\Project;
+use App\Models\Region;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
@@ -25,7 +26,7 @@ Artisan::command('content:audit-taxonomy', function () {
     ]);
     $this->table(['ID', 'Title', 'Slug', 'Type', 'Category', 'Category slug', 'Status', 'Published at'], $posts);
 
-    $allowedRegions = ['Miền Bắc', 'Miền Trung', 'Miền Nam', 'Quốc tế'];
+    $allowedRegions = Region::query()->pluck('name')->all();
     $unusualRegions = Project::query()
         ->whereNotNull('region')->where('region', '!=', '')
         ->whereNotIn('region', $allowedRegions)

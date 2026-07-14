@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\DeveloperController;
 use App\Http\Controllers\Api\LocationController;
+use App\Http\Controllers\Api\RegionController;
 use App\Http\Controllers\Api\HeroBannerController;
 use App\Http\Controllers\Api\FaqController;
 use App\Http\Controllers\Api\TestimonialController;
@@ -58,6 +59,10 @@ Route::group(['prefix' => 'v1'], function() {
     // Locations
     Route::get('/locations', [LocationController::class, 'index']);
     Route::get('/locations/{id}', [LocationController::class, 'show']);
+
+    // Regions
+    Route::get('/regions', [RegionController::class, 'index']);
+    Route::get('/regions/{id}', [RegionController::class, 'show']);
 
     // Leads submit
     Route::post('/leads', [LeadController::class, 'submit']);
@@ -120,6 +125,11 @@ Route::group(['prefix' => 'v1'], function() {
             Route::put('/locations/{id}', [LocationController::class, 'update']);
             Route::delete('/locations/{id}', [LocationController::class, 'destroy']);
 
+            // Regions CRUD
+            Route::post('/regions', [RegionController::class, 'store']);
+            Route::put('/regions/{id}', [RegionController::class, 'update']);
+            Route::delete('/regions/{id}', [RegionController::class, 'destroy']);
+
             // Projects CRUD
             Route::get('/admin/projects', [ProjectController::class, 'adminIndex']);
             Route::get('/admin/projects/{id}', [ProjectController::class, 'adminShow']);
@@ -127,6 +137,7 @@ Route::group(['prefix' => 'v1'], function() {
             Route::put('/projects/{id}', [ProjectController::class, 'update']);
             Route::delete('/projects/{id}', [ProjectController::class, 'destroy']);
 
+            Route::get('/admin/project-categories', [ProjectController::class, 'adminCategories']);
             Route::post('/project-categories', [ProjectController::class, 'storeCategory']);
             Route::put('/project-categories/{id}', [ProjectController::class, 'updateCategory']);
             Route::delete('/project-categories/{id}', [ProjectController::class, 'destroyCategory']);

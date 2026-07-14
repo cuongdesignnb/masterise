@@ -5,8 +5,8 @@ namespace Database\Seeders;
 use App\Models\ProjectVrTour;
 use App\Models\ProjectVrScene;
 use App\Models\ProjectVrHotspot;
+use App\Models\Project;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Str;
 
 class ProjectVrTourSeeder extends Seeder
 {
@@ -15,9 +15,14 @@ class ProjectVrTourSeeder extends Seeder
      */
     public function run(): void
     {
-        // 1. Create a VR Tour for The Global City (project ID 1)
+        $projectId = Project::where('slug', 'the-global-city')->value('id');
+        if (!$projectId) {
+            return;
+        }
+
+        // 1. Create a VR Tour for The Global City.
         $tour = ProjectVrTour::create([
-            'project_id' => 1,
+            'project_id' => $projectId,
             'title' => 'Trải nghiệm Thực tế ảo VR 360° The Global City',
             'description' => 'Khám phá đô thị biểu tượng mới tại trung tâm TP. Thủ Đức được Foster + Partners quy hoạch.',
             'cover_image' => 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=88&w=600&auto=format&fit=crop',
@@ -29,7 +34,7 @@ class ProjectVrTourSeeder extends Seeder
         // Scene 1: Overview
         $sceneOverview = ProjectVrScene::create([
           'tour_id' => $tour->id,
-          'project_id' => 1,
+          'project_id' => $projectId,
           'title' => 'Toàn cảnh đô thị',
           'slug' => 'toan-canh-do-thi',
           'description' => 'Góc nhìn từ trên cao của đại đô thị 117.4 ha',
@@ -47,7 +52,7 @@ class ProjectVrTourSeeder extends Seeder
         // Scene 2: Apartment
         $sceneApartment = ProjectVrScene::create([
           'tour_id' => $tour->id,
-          'project_id' => 1,
+          'project_id' => $projectId,
           'title' => 'Căn hộ mẫu 3PN',
           'slug' => 'can-ho-mau-3pn',
           'description' => 'Trải nghiệm phong cách sống Branded Residences sang trọng',
@@ -66,7 +71,7 @@ class ProjectVrTourSeeder extends Seeder
         // Hotspots for Overview Scene
         ProjectVrHotspot::create([
             'scene_id' => $sceneOverview->id,
-            'project_id' => 1,
+            'project_id' => $projectId,
             'type' => 'navigation',
             'title' => 'Di chuyển vào Căn hộ 3PN',
             'description' => 'Tham quan nhà mẫu 3 phòng ngủ sang trọng.',
@@ -78,7 +83,7 @@ class ProjectVrTourSeeder extends Seeder
 
         ProjectVrHotspot::create([
             'scene_id' => $sceneOverview->id,
-            'project_id' => 1,
+            'project_id' => $projectId,
             'type' => 'lead',
             'title' => 'Nhận bảng giá & giỏ hàng',
             'description' => 'Xem chi tiết giá bán shophouse và căn hộ mở bán.',
@@ -91,7 +96,7 @@ class ProjectVrTourSeeder extends Seeder
 
         ProjectVrHotspot::create([
             'scene_id' => $sceneOverview->id,
-            'project_id' => 1,
+            'project_id' => $projectId,
             'type' => 'info',
             'title' => 'Kênh đào nhạc nước 2km',
             'description' => 'Khu nhạc nước quy mô lớn nhất Đông Nam Á, tâm điểm lễ hội của TP. Thủ Đức.',
@@ -103,7 +108,7 @@ class ProjectVrTourSeeder extends Seeder
         // Hotspots for Apartment Scene
         ProjectVrHotspot::create([
             'scene_id' => $sceneApartment->id,
-            'project_id' => 1,
+            'project_id' => $projectId,
             'type' => 'navigation',
             'title' => 'Trở về Toàn cảnh dự án',
             'description' => 'Xem đô thị từ góc nhìn trên cao.',
@@ -115,7 +120,7 @@ class ProjectVrTourSeeder extends Seeder
 
         ProjectVrHotspot::create([
             'scene_id' => $sceneApartment->id,
-            'project_id' => 1,
+            'project_id' => $projectId,
             'type' => 'lead',
             'title' => 'Đặt lịch xem thực tế',
             'description' => 'Đăng ký xe đưa đón tham quan dự án và căn hộ mẫu.',

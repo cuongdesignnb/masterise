@@ -4,7 +4,9 @@ namespace Tests\Feature;
 
 use App\Models\Post;
 use App\Models\PostCategory;
+use App\Models\Location;
 use App\Models\Project;
+use App\Models\Region;
 use App\Models\Tag;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -168,10 +170,15 @@ class ContentTaxonomyRegressionTest extends TestCase
 
     public function test_regions_are_normalized_unique_public_only_and_static_route_precedes_slug(): void
     {
-        Project::create(['name' => 'Bắc 1', 'slug' => 'bac-1', 'region' => 'Miền Bắc', 'is_published' => true]);
-        Project::create(['name' => 'Bắc 2', 'slug' => 'bac-2', 'region' => 'Miền Bắc', 'is_published' => true]);
-        Project::create(['name' => 'Nam', 'slug' => 'nam', 'region' => 'Miền Nam', 'is_published' => true]);
-        Project::create(['name' => 'Ẩn', 'slug' => 'an', 'region' => 'Miền Trung', 'is_published' => false]);
+        $north = Region::where('slug', 'mien-bac')->firstOrFail();
+        $south = Region::where('slug', 'mien-nam')->firstOrFail();
+        $northLocation = Location::create(['name' => 'Hà Nội', 'slug' => 'ha-noi', 'province' => 'Hà Nội', 'region_id' => $north->id]);
+        $southLocation = Location::create(['name' => 'Thủ Đức', 'slug' => 'thu-duc', 'province' => 'Hồ Chí Minh', 'region_id' => $south->id]);
+
+        Project::create(['name' => 'Bắc 1', 'slug' => 'bac-1', 'region' => 'Miền Bắc', 'location_id' => $northLocation->id, 'is_published' => true]);
+        Project::create(['name' => 'Bắc 2', 'slug' => 'bac-2', 'region' => 'Miền Bắc', 'location_id' => $northLocation->id, 'is_published' => true]);
+        Project::create(['name' => 'Nam', 'slug' => 'nam', 'region' => 'Miền Nam', 'location_id' => $southLocation->id, 'is_published' => true]);
+        Project::create(['name' => 'Ẩn', 'slug' => 'an', 'region' => 'Miền Nam', 'location_id' => $southLocation->id, 'is_published' => false]);
         $legacyNorth = Project::create(['name' => 'Cũ', 'slug' => 'cu', 'region' => 'Hà Nội', 'province' => 'Hà Nội', 'location' => 'Gia Lâm, Hà Nội', 'is_published' => true]);
         $legacySouth = Project::create(['name' => 'Nam cũ', 'slug' => 'nam-cu', 'region' => 'Thành phố Thủ Đức', 'location' => 'TP. Thủ Đức, TP. Hồ Chí Minh', 'is_published' => true]);
         $unresolved = Project::create(['name' => 'Không rõ', 'slug' => 'khong-ro', 'region' => 'Khu vực lạ', 'location' => 'Chưa cập nhật', 'is_published' => true]);
@@ -189,23 +196,20 @@ class ContentTaxonomyRegressionTest extends TestCase
 
         $this->getJson('/api/v1/projects/regions')->assertOk()
             ->assertJsonCount(2, 'data')
-            ->assertJsonPath('data.0.value', 'Miền Bắc')
-            ->assertJsonPath('data.0.projects_count', 3)
-            ->assertJsonPath('data.1.value', 'Miền Nam')
-            ->assertJsonPath('data.1.projects_count', 2);
-        $this->getJson('/api/v1/projects?region=Mi%E1%BB%81n%20B%E1%BA%AFc')->assertOk()->assertJsonCount(3, 'data');
+            ->assertJsonPath('data.0.value', 'mien-bac')
+            ->assertJsonPath('data.0.projects_count', 2)
+            ->assertJsonPath('data.1.value', 'mien-nam')
+            ->assertJsonPath('data.1.projects_count', 1);
+        $this->getJson('/api/v1/projects?region=mien-bac')->assertOk()->assertJsonCount(2, 'data');
 
         $admin = $this->admin();
-        $project = Project::where('slug', 'cu')->firstOrFail();
+        $project = Project::where('slug', 'bac-1')->firstOrFail();
         $this->actingAs($admin, 'sanctum')->putJson("/api/v1/projects/{$project->id}", [
-            'name' => $project->name, 'slug' => $project->slug, 'region' => 'mien bac',
+            'name' => $project->name, 'slug' => $project->slug, 'location_id' => $northLocation->id, 'region' => 'Miền Nam',
             'project_status' => 'selling', 'is_published' => true,
-        ])->assertUnprocessable()->assertJsonValidationErrors('region');
-
-        $this->actingAs($admin, 'sanctum')->putJson("/api/v1/projects/{$project->id}", [
-            'name' => $project->name, 'slug' => $project->slug, 'region' => 'Miền Bắc',
-            'project_status' => 'selling', 'is_published' => true,
-        ])->assertOk()->assertJsonPath('data.region', 'Miền Bắc');
+        ])->assertOk()
+            ->assertJsonPath('data.region', 'Miền Bắc')
+            ->assertJsonPath('data.region_details.slug', 'mien-bac');
     }
 
     public function test_post_pagination_category_tag_and_investment_scope_keep_market_and_events_separate(): void

@@ -17,6 +17,7 @@ class ProjectCategorySeeder extends Seeder
             [
                 'name' => 'Căn Hộ Cao Cấp',
                 'description' => 'Các dự án căn hộ cao cấp, căn hộ hàng hiệu (Branded Residences) hợp tác với Marriott International.',
+                'taxonomy_type' => ProjectCategory::TYPE_PROJECT,
             ]
         );
 
@@ -25,21 +26,24 @@ class ProjectCategorySeeder extends Seeder
             [
                 'name' => 'Biệt Thự & Dinh Thự',
                 'description' => 'Biệt thự sinh thái, dinh thực hạng sang ven sông đẳng cấp thượng lưu.',
+                'taxonomy_type' => ProjectCategory::TYPE_PROJECT,
             ]
         );
 
         ProjectCategory::updateOrCreate(
-            ['slug' => 'shophouse-commercial'],
+            ['slug' => 'shophouse-thuong-mai'],
             [
-                'name' => 'Nhà Phố Thương Mại (Shophouse)',
+                'name' => 'Shophouse thương mại',
                 'description' => 'Nhà phố thương mại, shophouse mặt tiền kinh doanh sầm uất tại các đại đô thị.',
+                'taxonomy_type' => ProjectCategory::TYPE_PROJECT,
             ]
         );
         ProjectCategory::updateOrCreate(
             ['slug' => 'masterise-colletion'],
             [
-                'name' => 'Masterise Colletion',
+                'name' => 'Masterise Collection',
                 'description' => 'Bo suu tap bat dong san can ho cao cap, huong den chuan song hien dai, tien ich dong bo va gia tri so huu ben vung. Alias SEO: Masterise Collection.',
+                'taxonomy_type' => ProjectCategory::TYPE_COLLECTION,
             ]
         );
 
@@ -48,6 +52,7 @@ class ProjectCategorySeeder extends Seeder
             [
                 'name' => 'Lumiere Series',
                 'description' => 'Dong bat dong san can ho hang sang mang phong cach thiet ke tinh te, khong gian song xanh, rieng tu va chuan trai nghiem cao cap.',
+                'taxonomy_type' => ProjectCategory::TYPE_COLLECTION,
             ]
         );
     }

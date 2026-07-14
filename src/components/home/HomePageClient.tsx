@@ -30,7 +30,8 @@ import { homepageService } from "@/services/homepageService";
 import { projectService } from "@/services/projectService";
 import { postService } from "@/services/postService";
 import { unwrapData } from "@/adapters/apiResponseAdapter";
-import { getProjectStatusLabel, getProjectStatusColor } from "@/lib/projectStatus";
+import { getProjectTypeText } from "@/adapters/projectAdapter";
+import { getProjectMarketingLabel, getProjectStatusLabel, getProjectStatusColor } from "@/lib/projectStatus";
 import { getPostDetailHref } from "@/lib/postRoutes";
 import { useSiteSettings } from "@/providers/SiteSettingsProvider";
 import {
@@ -338,6 +339,11 @@ export default function HomePageClient() {
 
                         {/* Badges */}
                         <div className="absolute left-3.5 top-3.5 flex flex-wrap gap-2">
+                          {getProjectMarketingLabel(project.project_label, project.project_status) && (
+                            <span className="max-w-[180px] truncate rounded-full bg-[#6F5436]/90 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-lg backdrop-blur-sm">
+                              {getProjectMarketingLabel(project.project_label, project.project_status)}
+                            </span>
+                          )}
                           {project.is_hot && (
                             <span className="badge-soft-hot rounded-full bg-red-600 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-lg">
                               Hot
@@ -357,6 +363,9 @@ export default function HomePageClient() {
                         <p className="mt-2.5 flex items-center gap-1.5 text-xs text-muted">
                           <MapPin size={13} className="shrink-0" />
                           {project.location || project.address || "Đang cập nhật"}
+                        </p>
+                        <p className="mt-1 text-[11px] font-medium text-muted">
+                          {getProjectTypeText(project.categories)}
                         </p>
                         <div className="mt-3 flex items-center justify-between">
                           <p className="text-sm font-bold text-champagne">

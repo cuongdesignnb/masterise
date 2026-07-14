@@ -16,7 +16,7 @@ class ProjectSeeder extends Seeder
         // Get categories
         $catApartment = ProjectCategory::where('slug', 'can-ho-cao-cap')->first();
         $catVilla = ProjectCategory::where('slug', 'biet-thu-dinh-thu')->first();
-        $catShophouse = ProjectCategory::where('slug', 'shophouse-commercial')->first();
+        $catShophouse = ProjectCategory::where('slug', 'shophouse-thuong-mai')->first();
 
         // 1. The Global City
         $p1 = Project::updateOrCreate(
@@ -440,6 +440,10 @@ class ProjectSeeder extends Seeder
 
             if ($category) {
                 $project->categories()->syncWithoutDetaching([$category->id]);
+            }
+
+            if ($catApartment) {
+                $project->categories()->syncWithoutDetaching([$catApartment->id]);
             }
 
             $project->seoMeta()->updateOrCreate(

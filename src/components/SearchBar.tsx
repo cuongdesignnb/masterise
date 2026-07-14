@@ -4,8 +4,10 @@ import React, { useState, useRef, useEffect } from "react";
 import { MapPin, Building2, Home, Sliders, ShieldCheck, Search, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import Button from "./Button";
 import { PROJECT_STATUS_OPTIONS } from "@/lib/projectStatus";
+import { projectService } from "@/services/projectService";
 
 const filterOptions = {
   location: {
@@ -24,7 +26,7 @@ const filterOptions = {
     icon: Home,
     label: "Loại hình",
     placeholder: "Chọn loại hình",
-    options: ["Tất cả loại hình", "Căn hộ hạng sang", "Biệt thự cao cấp", "Shophouse", "Branded Residences", "Nghỉ dưỡng"],
+    options: ["Tất cả loại hình"],
   },
   status: {
     icon: Sliders,
@@ -42,6 +44,18 @@ const filterOptions = {
 
 export default function SearchBar() {
   const router = useRouter();
+  const { data: projectTypeOptions = [] } = useQuery({
+    queryKey: ["public-project-categories"],
+    queryFn: projectService.getProjectCategories,
+    staleTime: 5 * 60 * 1000,
+  });
+  const resolvedFilterOptions = {
+    ...filterOptions,
+    type: {
+      ...filterOptions.type,
+      options: ["Tất cả loại hình", ...projectTypeOptions.map((option) => option.name)],
+    },
+  };
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [selectedValues, setSelectedValues] = useState<Record<string, string>>({
     location: "",
@@ -91,7 +105,7 @@ export default function SearchBar() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 xl:grid-cols-6 gap-5 lg:gap-4 items-center">
           
           {/* Filters List */}
-          {Object.entries(filterOptions).map(([key, filter]) => {
+          {Object.entries(resolvedFilterOptions).map(([key, filter]) => {
             const Icon = filter.icon;
             const isSelected = !!selectedValues[key];
             const displayValue = selectedValues[key] || filter.placeholder;
@@ -184,14 +198,8 @@ export default function SearchBar() {
                 }
                 
                 if (selectedValues.type) {
-                  const ty = selectedValues.type;
-                  if (ty.includes("Căn hộ") || ty.includes("Residences")) {
-                    queryParams.push("category=can-ho-cao-cap");
-                  } else if (ty.includes("Biệt thự")) {
-                    queryParams.push("category=biet-thu-dinh-thu");
-                  } else if (ty.includes("Shophouse")) {
-                    queryParams.push("category=shophouse-commercial");
-                  }
+                  const selectedType = projectTypeOptions.find((option) => option.name === selectedValues.type);
+                  if (selectedType) queryParams.push(`category=${encodeURIComponent(selectedType.slug)}`);
                 }
                 
                 if (selectedValues.status) {

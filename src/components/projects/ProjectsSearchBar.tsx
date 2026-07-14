@@ -3,20 +3,12 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Search, ChevronDown } from "lucide-react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import Container from "@/components/Container";
 import MotionWrapper from "@/components/MotionWrapper";
 import { projectService } from "@/services/projectService";
 import type { RegionOption } from "@/types/api";
 import { PROJECT_STATUS_OPTIONS } from "@/lib/projectStatus";
-
-const categoryOptions = [
-  { value: "", label: "Tất cả loại hình" },
-  { value: "can-ho-cao-cap", label: "Căn Hộ Cao Cấp" },
-  { value: "biet-thu-dinh-thu", label: "Biệt Thự & Dinh Thự" },
-  { value: "shophouse-commercial", label: "Shophouse Thương Mại" },
-  { value: "masterise-colletion", label: "Masterise Collection" },
-  { value: "lumiere-series", label: "Lumiere Series" },
-];
 
 const statusOptions = [{ value: "", label: "Tất cả trạng thái" }, ...PROJECT_STATUS_OPTIONS];
 
@@ -41,6 +33,11 @@ export default function ProjectsSearchBar() {
   const [status, setStatus] = useState("");
   const [price, setPrice] = useState("");
   const [regionOptions, setRegionOptions] = useState<RegionOption[]>([]);
+  const { data: categoryOptions = [] } = useQuery({
+    queryKey: ["public-project-categories"],
+    queryFn: projectService.getProjectCategories,
+    staleTime: 5 * 60 * 1000,
+  });
 
   useEffect(() => {
     projectService.getRegions().then(setRegionOptions).catch(() => setRegionOptions([]));
@@ -227,9 +224,10 @@ export default function ProjectsSearchBar() {
                   onChange={(e) => handleCategoryChange(e.target.value)}
                   className="w-full appearance-none bg-ivory border border-line/50 rounded-xl px-4 py-2.5 text-sm text-muted cursor-pointer focus:outline-none focus:border-gold/50 focus:ring-1 focus:ring-gold/20 transition-colors pr-9 font-medium"
                 >
+                  <option value="">Tất cả loại hình</option>
                   {categoryOptions.map((opt) => (
-                    <option key={opt.value} value={opt.value} className="text-ink font-medium">
-                      {opt.label}
+                    <option key={opt.id} value={opt.slug} className="text-ink font-medium">
+                      {opt.name} ({opt.projects_count})
                     </option>
                   ))}
                 </select>

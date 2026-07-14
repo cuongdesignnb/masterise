@@ -7,6 +7,7 @@ use App\Models\Location;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class LocationController extends Controller
 {
@@ -15,7 +16,9 @@ class LocationController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Location::query();
+        $query = Location::query()
+            ->with('region:id,name,slug,is_active')
+            ->withCount('projects');
 
         // Filter by search query
         if ($request->has('q') && !empty($request->q)) {
@@ -24,7 +27,8 @@ class LocationController extends Controller
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('province', 'like', "%{$search}%")
                   ->orWhere('district', 'like', "%{$search}%")
-                  ->orWhere('address', 'like', "%{$search}%");
+                  ->orWhere('address', 'like', "%{$search}%")
+                  ->orWhereHas('region', fn ($regionQuery) => $regionQuery->where('name', 'like', "%{$search}%"));
             });
         }
 
@@ -34,6 +38,17 @@ class LocationController extends Controller
         }
         if ($request->has('district') && !empty($request->district)) {
             $query->where('district', $request->district);
+        }
+
+        if ($request->filled('region_id')) {
+            $query->where('region_id', $request->integer('region_id'));
+        }
+
+        if ($request->filled('region')) {
+            $region = trim((string) $request->region);
+            $query->whereHas('region', function ($regionQuery) use ($region) {
+                $regionQuery->where('slug', $region)->orWhere('name', $region);
+            });
         }
 
         // If 'all' is passed, bypass pagination
@@ -66,6 +81,11 @@ class LocationController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
+            'region_id' => [
+                'required',
+                'integer',
+                Rule::exists('regions', 'id')->where(fn ($query) => $query->where('is_active', true)),
+            ],
             'name' => 'required|string|max:255',
             'slug' => 'nullable|string|max:255|unique:locations,slug',
             'province' => 'nullable|string|max:255',
@@ -86,7 +106,7 @@ class LocationController extends Controller
         }
 
         $data = $request->only([
-            'name', 'province', 'district', 'ward', 'address', 'latitude', 'longitude', 'description'
+            'region_id', 'name', 'province', 'district', 'ward', 'address', 'latitude', 'longitude', 'description'
         ]);
 
         $data['slug'] = $request->get('slug') ?: Str::slug($request->name);
@@ -98,7 +118,7 @@ class LocationController extends Controller
             $data['slug'] = $originalSlug . '-' . $count++;
         }
 
-        $location = Location::create($data);
+        $location = Location::create($data)->load('region:id,name,slug,is_active');
 
         return response()->json([
             'success' => true,
@@ -112,7 +132,7 @@ class LocationController extends Controller
      */
     public function show($id)
     {
-        $location = Location::withCount('projects')
+        $location = Location::with('region:id,name,slug,is_active')->withCount('projects')
             ->where('id', $id)
             ->orWhere('slug', $id)
             ->first();
@@ -145,6 +165,11 @@ class LocationController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
+            'region_id' => [
+                'required',
+                'integer',
+                Rule::exists('regions', 'id')->where(fn ($query) => $query->where('is_active', true)),
+            ],
             'name' => 'required|string|max:255',
             'slug' => 'nullable|string|max:255|unique:locations,slug,' . $id,
             'province' => 'nullable|string|max:255',
@@ -165,7 +190,7 @@ class LocationController extends Controller
         }
 
         $data = $request->only([
-            'name', 'province', 'district', 'ward', 'address', 'latitude', 'longitude', 'description'
+            'region_id', 'name', 'province', 'district', 'ward', 'address', 'latitude', 'longitude', 'description'
         ]);
 
         if ($request->has('slug')) {
@@ -174,10 +199,15 @@ class LocationController extends Controller
 
         $location->update($data);
 
+        if ($location->wasChanged('region_id')) {
+            $regionName = $location->region()->value('name');
+            $location->projects()->update(['region' => $regionName]);
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Location updated successfully',
-            'data' => $location
+            'data' => $location->fresh()->load('region:id,name,slug,is_active')->loadCount('projects')
         ], 200);
     }
 

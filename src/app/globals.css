@@ -431,3 +431,19 @@ body {
     transform: translateX(0) scale(1);
   }
 }
+
+.form-input {
+  width: 100%;
+  border: 1px solid #e8dccb;
+  border-radius: 0.75rem;
+  background: #fbf8f2;
+  padding: 0.625rem 0.75rem;
+  color: #1f1b16;
+  font-size: 0.875rem;
+  outline: none;
+}
+
+.form-input:focus {
+  border-color: #b88746;
+  box-shadow: 0 0 0 1px #b88746;
+}

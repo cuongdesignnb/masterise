@@ -6,6 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class Project extends Model
 {
+    protected $appends = [
+        'region_details',
+        'region_name',
+    ];
+
     protected $fillable = [
         'name',
         'slug',
@@ -140,6 +145,29 @@ class Project extends Model
     public function locationRelation()
     {
         return $this->belongsTo(Location::class, 'location_id');
+    }
+
+    public function getRegionDetailsAttribute(): ?array
+    {
+        if (!$this->relationLoaded('locationRelation')) {
+            return null;
+        }
+
+        $location = $this->getRelation('locationRelation');
+        if (!$location || !$location->relationLoaded('region') || !$location->region) {
+            return null;
+        }
+
+        return [
+            'id' => $location->region->id,
+            'name' => $location->region->name,
+            'slug' => $location->region->slug,
+        ];
+    }
+
+    public function getRegionNameAttribute(): ?string
+    {
+        return $this->regionDetails['name'] ?? $this->region;
     }
 
     public function categories()

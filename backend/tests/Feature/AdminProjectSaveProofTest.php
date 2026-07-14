@@ -133,7 +133,7 @@ class AdminProjectSaveProofTest extends TestCase
         ]);
     }
 
-    public function test_public_projects_can_be_filtered_by_project_label(): void
+    public function test_public_project_label_query_is_ignored_but_labels_remain_in_response(): void
     {
         Project::create([
             'name' => 'Masteri Collection Project',
@@ -161,9 +161,9 @@ class AdminProjectSaveProofTest extends TestCase
 
         $this->getJson('/api/v1/projects?project_label=Masteri%20Collection')
             ->assertOk()
-            ->assertJsonCount(1, 'data')
-            ->assertJsonPath('data.0.slug', 'masteri-collection-project')
-            ->assertJsonPath('data.0.project_label', 'Masteri Collection');
+            ->assertJsonCount(2, 'data')
+            ->assertJsonFragment(['project_label' => 'Masteri Collection'])
+            ->assertJsonFragment(['project_label' => 'Lumiere Series']);
     }
 
     public function test_featured_projects_prioritize_hot_then_manual_sort_order(): void

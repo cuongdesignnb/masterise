@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Location extends Model
 {
     protected $fillable = [
+        'region_id',
         'name',
         'slug',
         'province',
@@ -29,5 +30,10 @@ class Location extends Model
     public function projects()
     {
         return $this->hasMany(Project::class);
+    }
+
+    public function region()
+    {
+        return $this->belongsTo(Region::class);
     }
 }
