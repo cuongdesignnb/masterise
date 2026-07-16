@@ -89,6 +89,8 @@ export default function RichTextEditor({
   const containerRef = useRef<HTMLDivElement>(null);
   const toolbarHostRef = useRef<HTMLDivElement>(null);
   const quillRef = useRef<any>(null);
+  const onChangeRef = useRef(onChange);
+  const initialValueRef = useRef(value);
   const isUpdatingRef = useRef(false);
   const isApplyingMultiFormatRef = useRef(false);
   const savedRangeRef = useRef<SavedRange | null>(null);
@@ -107,6 +109,10 @@ export default function RichTextEditor({
   const [tableRows, setTableRows] = useState(3);
   const [tableColumns, setTableColumns] = useState(3);
   const [activeHeading, setActiveHeading] = useState('');
+
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
 
   const applyHtmlToEditor = (quill: any, html: string) => {
     const normalizedHtml = html || '<p><br></p>';
@@ -229,7 +235,7 @@ export default function RichTextEditor({
         quill.setSelection(currentRange.index, currentRange.length, 'silent');
         setActiveHeading(headerValue === false ? '' : String(headerValue));
       }
-      onChange(serializeEditorHtml(quill));
+      onChangeRef.current(serializeEditorHtml(quill));
     } finally {
       isApplyingMultiFormatRef.current = false;
     }
@@ -265,7 +271,7 @@ export default function RichTextEditor({
           quill.formatText(range.index, range.length, format, formatValue, 'user');
         }
       });
-      onChange(serializeEditorHtml(quill));
+      onChangeRef.current(serializeEditorHtml(quill));
       refreshRangeHighlight();
     } finally {
       isApplyingMultiFormatRef.current = false;
@@ -401,7 +407,7 @@ export default function RichTextEditor({
       quill.insertText(range.index + 1, '\n', 'user');
       quill.setSelection(range.index + 2, 0, 'silent');
     }
-    onChange(serializeEditorHtml(quill));
+    onChangeRef.current(serializeEditorHtml(quill));
     selectTableCell(null);
     setTableModal(null);
   };
@@ -419,7 +425,7 @@ export default function RichTextEditor({
     } else {
       quill.setSelection(Math.min(tableIndex, Math.max(0, quill.getLength() - 1)), 0, 'silent');
     }
-    onChange(serializeEditorHtml(quill));
+    onChangeRef.current(serializeEditorHtml(quill));
     selectTableCell(null);
     setTableModal(null);
   };
@@ -487,10 +493,10 @@ export default function RichTextEditor({
           toolbar.addHandler('clean', () => applyToolbarFormat('clean', false));
         }
 
-        if (value) applyHtmlToEditor(quill, value);
+        if (initialValueRef.current) applyHtmlToEditor(quill, initialValueRef.current);
 
         quill.on('text-change', (_delta: unknown, _old: unknown, source: string) => {
-          if (!isUpdatingRef.current) onChange(serializeEditorHtml(quill));
+          if (!isUpdatingRef.current) onChangeRef.current(serializeEditorHtml(quill));
           if (source === 'user' && !isApplyingMultiFormatRef.current) clearSavedRanges();
         });
         quill.on('selection-change', (range: SavedRange | null) => {

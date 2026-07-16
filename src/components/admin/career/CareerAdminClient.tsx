@@ -28,7 +28,7 @@ export default function CareerAdminClient({ initialTab = 'jobs' }: { initialTab?
   </div>
   {jobEditor && <JobEditor job={jobEditor} setJob={setJobEditor} close={() => setJobEditor(null)} save={saveJob} choose={(field) => setMediaField(field)} />}
   {application && <ApplicationDetail data={application} setData={setApplication} close={() => setApplication(null)} save={saveApplication} resend={async () => { await careerService.resendEmail(application.id); toast.success('Đã đưa email vào hàng đợi.'); }} />}
-  <MediaSelectModal isOpen={!!mediaField} onClose={() => setMediaField(null)} onSelect={(url) => { const value = Array.isArray(url) ? url[0] : url; if (mediaField === 'hero_image' && settings) setSettings({ ...settings, page_content: { ...settings.page_content, hero_image: value } }); else if (mediaField && jobEditor) setJobEditor({ ...jobEditor, [mediaField]: value }); setMediaField(null); }} />
+  <MediaSelectModal isOpen={!!mediaField} onClose={() => setMediaField(null)} onSelect={(url) => { const value = Array.isArray(url) ? url[0] : url; if (mediaField === 'hero_image' && settings) setSettings({ ...settings, page_content: { ...settings.page_content, hero_image: value } }); else if (mediaField === 'thumbnail' || mediaField === 'banner_image') setJobEditor(current => current ? { ...current, [mediaField]: value } : current); setMediaField(null); }} />
   </div>;
 }
 

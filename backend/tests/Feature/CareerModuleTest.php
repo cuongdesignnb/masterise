@@ -116,6 +116,48 @@ class CareerModuleTest extends TestCase
         $this->actingAs($user, 'sanctum')->get('/api/v1/admin/career/applications/'.$application->id.'/cv')->assertOk();
     }
 
+    public function test_admin_update_keeps_overview_and_responsibilities_independent(): void
+    {
+        $job = $this->job([
+            'description' => '<p>Tổng quan ban đầu.</p>',
+            'responsibilities' => '<ul><li>Trách nhiệm ban đầu.</li></ul>',
+        ]);
+        $user = User::factory()->create();
+        Permission::findOrCreate('career_jobs.update', 'web');
+        $user->givePermissionTo('career_jobs.update');
+
+        $payload = [
+            'title' => $job->title,
+            'slug' => $job->slug,
+            'code' => $job->code,
+            'department' => $job->department,
+            'location' => $job->location,
+            'employment_type' => $job->employment_type,
+            'vacancies' => $job->vacancies,
+            'status' => $job->status,
+            'is_featured' => false,
+            'is_published' => true,
+            'sort_order' => 0,
+            'description' => '<p>Chỉ cập nhật tổng quan công việc.</p>',
+            'responsibilities' => '<ul><li>Chỉ cập nhật trách nhiệm công việc.</li></ul>',
+        ];
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->putJson('/api/v1/admin/career/jobs/'.$job->id, $payload)
+            ->assertOk();
+
+        $decode = fn (?string $value) => html_entity_decode((string) $value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $this->assertSame('<p>Chỉ cập nhật tổng quan công việc.</p>', $decode($response->json('data.description')));
+        $this->assertSame('<ul><li>Chỉ cập nhật trách nhiệm công việc.</li></ul>', $decode($response->json('data.responsibilities')));
+
+        $job->refresh();
+        $this->assertSame('<p>Chỉ cập nhật tổng quan công việc.</p>', $decode($job->description));
+        $this->assertSame('<ul><li>Chỉ cập nhật trách nhiệm công việc.</li></ul>', $decode($job->responsibilities));
+        $public = $this->getJson('/api/v1/career/jobs/'.$job->slug)->assertOk();
+        $this->assertSame('<p>Chỉ cập nhật tổng quan công việc.</p>', $decode($public->json('data.job.description')));
+        $this->assertSame('<ul><li>Chỉ cập nhật trách nhiệm công việc.</li></ul>', $decode($public->json('data.job.responsibilities')));
+    }
+
     public function test_status_change_records_activity_and_unicode_remains_intact(): void
     {
         $application = CareerApplication::create(['application_code' => 'UV-TEST-02', 'full_name' => 'Đỗ Thị Hương', 'email' => 'huong@example.com', 'phone' => '0987654321', 'status' => 'new', 'consent_at' => now()]);
