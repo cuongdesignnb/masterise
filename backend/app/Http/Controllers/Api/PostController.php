@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\PostListResource;
 use App\Models\Post;
 use App\Models\PostCategory;
 use Illuminate\Support\Arr;
 use Illuminate\Http\Request;
+use App\Support\PublicContentCache;
 
 class PostController extends Controller
 {
@@ -15,11 +17,17 @@ class PostController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Post::query()->with(['category', 'author', 'tags', 'seoMeta', 'mediaItems']);
-
         // Staff can see draft posts, guests and customers can only see published ones
         $user = $request->user('sanctum');
-        if (!$user || !$user->hasAnyRole(['super_admin', 'admin', 'marketing'])) {
+        $canViewUnpublished = $user && $user->hasAnyRole(['super_admin', 'admin', 'marketing']);
+        $query = $canViewUnpublished
+            ? Post::query()->with(['category', 'author', 'tags', 'seoMeta', 'mediaItems'])
+            : Post::query()->select([
+                'id', 'title', 'slug', 'post_type', 'summary', 'thumbnail', 'status', 'is_featured',
+                'post_category_id', 'author_id', 'published_at', 'event_start_at', 'event_end_at',
+                'event_location', 'event_register_url', 'created_at', 'updated_at',
+            ])->with(['category:id,name,slug', 'author:id,name,avatar', 'tags:id,name,slug']);
+        if (!$canViewUnpublished) {
             $query->where('status', 'published');
         } elseif ($request->has('status') && !empty($request->status) && $request->status !== 'all') {
             $query->where('status', $request->status);
@@ -27,7 +35,7 @@ class PostController extends Controller
 
         // Manual relations may contain drafts. They are only needed by the editor,
         // so do not expose them from public collection endpoints.
-        if ($user && $user->hasAnyRole(['super_admin', 'admin', 'marketing'])) {
+        if ($canViewUnpublished) {
             $query->with('manualRelatedPosts');
         }
 
@@ -72,19 +80,30 @@ class PostController extends Controller
         elseif ($sort === 'title') $query->orderBy('title')->orderBy('id');
         else $query->orderBy('published_at', 'desc')->orderBy('id', 'desc');
 
-        $perPage = min(100, max(1, (int) $request->get('per_page', 9)));
-        $posts = $query->paginate($perPage);
+        $perPage = min($canViewUnpublished ? 100 : 50, max(1, $request->integer('per_page', 12)));
+        $resolve = function () use ($query, $perPage, $request, $canViewUnpublished): array {
+            $posts = $query->paginate($perPage);
+            return [
+                'success' => true,
+                'data' => $canViewUnpublished
+                    ? $posts->items()
+                    : PostListResource::collection($posts->items())->resolve($request),
+                'meta' => [
+                    'current_page' => $posts->currentPage(),
+                    'last_page' => $posts->lastPage(),
+                    'per_page' => $posts->perPage(),
+                    'total' => $posts->total(),
+                ],
+            ];
+        };
+        $payload = $canViewUnpublished
+            ? $resolve()
+            : PublicContentCache::remember('posts.list', $request->query(), 300, $resolve);
 
-        return response()->json([
-            'success' => true,
-            'data' => $posts->items(),
-            'meta' => [
-                'current_page' => $posts->currentPage(),
-                'last_page' => $posts->lastPage(),
-                'per_page' => $posts->perPage(),
-                'total' => $posts->total(),
-            ]
-        ], 200);
+        $response = response()->json($payload, 200);
+        return $canViewUnpublished
+            ? $response->header('Cache-Control', 'no-store')
+            : $response->header('Cache-Control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=60');
     }
 
     /**
@@ -92,10 +111,18 @@ class PostController extends Controller
      */
     public function featured(Request $request)
     {
-        $limit = $request->get('limit', 4);
-        $posts = Post::where('status', 'published')
+        $limit = min(8, max(1, $request->integer('limit', 4)));
+        $posts = PublicContentCache::remember('posts.featured', [
+            'limit' => $limit,
+            'post_type' => $request->input('post_type'),
+        ], 600, function () use ($request, $limit): array {
+            $items = Post::query()->select([
+                'id', 'title', 'slug', 'post_type', 'summary', 'thumbnail', 'status', 'is_featured',
+                'post_category_id', 'author_id', 'published_at', 'event_start_at', 'event_end_at',
+                'event_location', 'event_register_url', 'created_at', 'updated_at',
+            ])->where('status', 'published')
             ->where('is_featured', true)
-            ->with(['category', 'author', 'tags', 'seoMeta', 'mediaItems'])
+            ->with(['category:id,name,slug', 'author:id,name,avatar', 'tags:id,name,slug'])
             ->when($request->filled('post_type'), function ($query) use ($request) {
                 $postTypes = is_array($request->post_type) ? $request->post_type : explode(',', $request->post_type);
                 $query->whereIn('post_type', $postTypes);
@@ -104,10 +131,13 @@ class PostController extends Controller
             ->limit($limit)
             ->get();
 
+            return PostListResource::collection($items)->resolve($request);
+        });
+
         return response()->json([
             'success' => true,
             'data' => $posts
-        ], 200);
+        ], 200)->header('Cache-Control', 'public, max-age=60, s-maxage=600, stale-while-revalidate=60');
     }
 
     /**
@@ -194,16 +224,21 @@ class PostController extends Controller
         $excludedTypes = $request->filled('exclude_post_type')
             ? (is_array($request->exclude_post_type) ? $request->exclude_post_type : explode(',', $request->exclude_post_type))
             : [];
-        $categories = PostCategory::withCount(['posts' => function($q) use ($postTypes, $excludedTypes) {
-            $q->where('status', 'published');
-            if ($postTypes) $q->whereIn('post_type', $postTypes);
-            if ($excludedTypes) $q->whereNotIn('post_type', $excludedTypes);
-        }])->get();
+        $categories = PublicContentCache::remember('posts.taxonomy', [
+            'post_type' => $postTypes,
+            'exclude_post_type' => $excludedTypes,
+        ], 900, function () use ($postTypes, $excludedTypes) {
+            return PostCategory::withCount(['posts' => function ($q) use ($postTypes, $excludedTypes) {
+                $q->where('status', 'published');
+                if ($postTypes) $q->whereIn('post_type', $postTypes);
+                if ($excludedTypes) $q->whereNotIn('post_type', $excludedTypes);
+            }])->get();
+        });
 
         return response()->json([
             'success' => true,
             'data' => $categories
-        ], 200);
+        ], 200)->header('Cache-Control', 'public, max-age=300, s-maxage=900');
     }
 
     /**

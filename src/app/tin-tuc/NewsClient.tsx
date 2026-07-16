@@ -10,9 +10,18 @@ import ArticleGrid from "@/components/news/ArticleGrid";
 import NewsCTA from "@/components/news/NewsCTA";
 import Container from "@/components/Container";
 import GlobalContactForm from "@/components/lead/GlobalContactForm";
-import type { Post } from "@/types/api";
+import type { ApiResponse, Post, PostCategory } from "@/types/api";
 
-export default function NewsClient({ heroPost, heroPostLabel }: { heroPost: Post | null; heroPostLabel: string }) {
+interface NewsClientProps {
+  heroPost: Post | null;
+  heroPostLabel: string;
+  initialPosts: ApiResponse<Post[]> | null;
+  initialPostQuery: string;
+  initialFeatured: Post[];
+  initialCategories: PostCategory[];
+}
+
+export default function NewsClient({ heroPost, heroPostLabel, initialPosts, initialPostQuery, initialFeatured, initialCategories }: NewsClientProps) {
   return (
     <>
       <Header />
@@ -24,11 +33,11 @@ export default function NewsClient({ heroPost, heroPostLabel }: { heroPost: Post
           <div className="grid gap-8 lg:grid-cols-[1fr_300px] py-10 lg:py-14">
             {/* Main Content */}
             <div className="space-y-10 lg:space-y-14">
-              <ArticleGrid />
+              <ArticleGrid initialResponse={initialPosts} initialQuery={initialPostQuery} />
             </div>
             {/* Sidebar */}
             <aside className="space-y-6">
-              <NewsSidebar />
+              <NewsSidebar initialFeatured={initialFeatured} initialCategories={initialCategories} />
             </aside>
           </div>
         </Container>

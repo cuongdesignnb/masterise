@@ -14,14 +14,19 @@ import LoadingState from "@/components/common/LoadingState";
 import EmptyState from "@/components/common/EmptyState";
 import ErrorState from "@/components/common/ErrorState";
 import { getProjectMarketingLabel, getProjectStatusLabel, getProjectStatusColor } from "@/lib/projectStatus";
+import type { Project } from "@/types/api";
 
-export default function FeaturedProjects() {
+export default function FeaturedProjects({ initialProjects = [] }: { initialProjects?: Project[] }) {
   const { data: projects = [], isLoading, error, refetch } = useQuery({
     queryKey: ["projects-page-featured"],
     queryFn: async () => {
       const data = await projectService.getFeaturedProjects();
       return data.map(mapApiProjectToProjectCard);
     },
+    initialData: initialProjects.map(mapApiProjectToProjectCard),
+    staleTime: 5 * 60 * 1000,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
 
   useEffect(() => {

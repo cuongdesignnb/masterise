@@ -88,10 +88,7 @@ async function request<T>(
     cache: token ? 'no-store' : options.cache,
   };
 
-  let url = endpoint.startsWith('http') ? endpoint : `${API_URL}/${endpoint.replace(/^\//, '')}`;
-  if (token && (config.method || 'GET').toUpperCase() === 'GET') {
-    url += `${url.includes('?') ? '&' : '?'}_ts=${Date.now()}`;
-  }
+  const url = endpoint.startsWith('http') ? endpoint : `${API_URL}/${endpoint.replace(/^\//, '')}`;
 
   try {
     const response = await fetch(url, config);

@@ -13,8 +13,25 @@ import WhyChooseProjects from "@/components/projects/WhyChooseProjects";
 import AllProjectsGrid from "@/components/projects/AllProjectsGrid";
 import ProjectsCTA from "@/components/projects/ProjectsCTA";
 import GlobalContactForm from "@/components/lead/GlobalContactForm";
+import type { ApiResponse, Project, ProjectCategoryOption, ProjectStatusOption, RegionOption } from "@/types/api";
 
-export default function ProjectsClient() {
+interface ProjectsClientProps {
+  initialProjects: ApiResponse<Project[]> | null;
+  initialProjectQuery: string;
+  initialFeatured: Project[];
+  initialRegions: RegionOption[];
+  initialCategories: ProjectCategoryOption[];
+  initialStatuses: ProjectStatusOption[];
+}
+
+export default function ProjectsClient({
+  initialProjects,
+  initialProjectQuery,
+  initialFeatured,
+  initialRegions,
+  initialCategories,
+  initialStatuses,
+}: ProjectsClientProps) {
   const searchParams = useSearchParams();
   const hasActiveFilters = 
     (searchParams.get("q") !== null && searchParams.get("q") !== "") || 
@@ -29,16 +46,16 @@ export default function ProjectsClient() {
       <MobileTabBar />
       <main className="relative z-10 pb-16 lg:pb-0">
         <ProjectsHero />
-        <ProjectsSearchBar />
+        <ProjectsSearchBar initialRegions={initialRegions} initialCategories={initialCategories} initialStatuses={initialStatuses} />
 
         {!hasActiveFilters ? (
           <>
-            <FeaturedProjects />
+            <FeaturedProjects initialProjects={initialFeatured} />
             <WhyChooseProjects />
-            <AllProjectsGrid />
+            <AllProjectsGrid initialResponse={initialProjects} initialQuery={initialProjectQuery} initialCategories={initialCategories} />
           </>
         ) : (
-          <AllProjectsGrid />
+          <AllProjectsGrid initialResponse={initialProjects} initialQuery={initialProjectQuery} initialCategories={initialCategories} />
         )}
         
         <ProjectsCTA />

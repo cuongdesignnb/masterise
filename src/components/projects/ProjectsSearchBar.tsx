@@ -8,13 +8,20 @@ import Container from "@/components/Container";
 import MotionWrapper from "@/components/MotionWrapper";
 import { projectService } from "@/services/projectService";
 import { isProjectPriceRange, PROJECT_PRICE_RANGE_OPTIONS } from "@/lib/projectPrice";
+import type { ProjectCategoryOption, ProjectStatusOption, RegionOption } from "@/types/api";
 
 const priceOptions = [
   { value: "", label: "Tất cả mức giá" },
   ...PROJECT_PRICE_RANGE_OPTIONS,
 ];
 
-export default function ProjectsSearchBar() {
+interface ProjectsSearchBarProps {
+  initialRegions?: RegionOption[];
+  initialCategories?: ProjectCategoryOption[];
+  initialStatuses?: ProjectStatusOption[];
+}
+
+export default function ProjectsSearchBar({ initialRegions = [], initialCategories = [], initialStatuses = [] }: ProjectsSearchBarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -33,6 +40,9 @@ export default function ProjectsSearchBar() {
     queryKey: ["public-project-regions"],
     queryFn: projectService.getRegions,
     staleTime: 5 * 60 * 1000,
+    initialData: initialRegions,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
   const {
     data: projectStatusOptions = [],
@@ -42,11 +52,17 @@ export default function ProjectsSearchBar() {
     queryKey: ["public-project-statuses"],
     queryFn: projectService.getProjectStatuses,
     staleTime: 5 * 60 * 1000,
+    initialData: initialStatuses,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
   const { data: categoryOptions = [] } = useQuery({
     queryKey: ["public-project-categories"],
     queryFn: projectService.getProjectCategories,
     staleTime: 5 * 60 * 1000,
+    initialData: initialCategories,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
 
   // Keep a ref to track if component is mounting to avoid double triggering on first load

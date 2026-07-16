@@ -26,11 +26,7 @@ import GlobalContactForm from "@/components/lead/GlobalContactForm";
 import Partners from "@/components/Partners";
 import Testimonials from "@/components/Testimonials";
 import FAQ from "@/components/FAQ";
-import { homepageService } from "@/services/homepageService";
-import { projectService } from "@/services/projectService";
 import { getProjectPriceText } from "@/lib/projectPrice";
-import { postService } from "@/services/postService";
-import { unwrapData } from "@/adapters/apiResponseAdapter";
 import { getProjectTypeText } from "@/adapters/projectAdapter";
 import { getProjectMarketingLabel, getProjectStatusLabel, getProjectStatusColor } from "@/lib/projectStatus";
 import { getPostDetailHref } from "@/lib/postRoutes";
@@ -45,7 +41,7 @@ import {
 } from "@/lib/motion";
 import type { Post, Project } from "@/types/api";
 
-type HomepageHero = {
+export type HomepageHero = {
   id?: string | number;
   title_lines?: string[];
   title?: string;
@@ -75,39 +71,24 @@ const fallbackHero: Required<
 
 const heroStatIcons = [Building2, MapPin, Globe, TrendingUp];
 
-export default function HomePageClient() {
+interface HomePageClientProps {
+  initialHeroSlides?: HomepageHero[];
+  initialProjects?: Project[];
+  initialPosts?: Post[];
+}
+
+export default function HomePageClient({ initialHeroSlides = [], initialProjects = [], initialPosts = [] }: HomePageClientProps) {
   const { homePageContent } = useSiteSettings();
-  const [heroSlides, setHeroSlides] = useState<HomepageHero[]>([fallbackHero]);
+  const [heroSlides] = useState<HomepageHero[]>(() => {
+    const activeBanners = initialHeroSlides
+      .filter((banner) => banner.is_active !== false && banner.image)
+      .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+    return activeBanners.length > 0 ? activeBanners : [fallbackHero];
+  });
   const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
   const [heroAutoplay, setHeroAutoplay] = useState(true);
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [posts, setPosts] = useState<Post[]>([]);
-
-  useEffect(() => {
-    homepageService
-      .getHeroBanners()
-      .then((response) => {
-        const banners = unwrapData<HomepageHero[]>(response) || [];
-        const activeBanners = banners
-          .filter((banner) => banner.is_active !== false)
-          .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
-          .filter((banner) => banner.image);
-
-        setHeroSlides(activeBanners.length > 0 ? activeBanners : [fallbackHero]);
-        setCurrentHeroIndex(0);
-      })
-      .catch(() => setHeroSlides([fallbackHero]));
-
-    projectService
-      .getFeaturedProjects({ limit: "6" })
-      .then(setProjects)
-      .catch(() => setProjects([]));
-
-    postService
-      .getPosts({ per_page: 6, post_type: "news" })
-      .then((response) => setPosts(unwrapData<Post[]>(response) || []))
-      .catch(() => setPosts([]));
-  }, []);
+  const [projects] = useState<Project[]>(initialProjects);
+  const [posts] = useState<Post[]>(initialPosts);
 
   useEffect(() => {
     if (!heroAutoplay || heroSlides.length <= 1) return;

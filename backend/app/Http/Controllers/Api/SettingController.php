@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use App\Support\ContactPageContent;
+use App\Support\PublicContentCache;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
@@ -16,21 +17,25 @@ class SettingController extends Controller
      */
     public function publicSettings()
     {
-        $keys = ['company_name', 'company_address', 'hotline', 'email', 'social_links', 'homepage_meta', 'logo_url', 'about_mission', 'about_vision', 'about_timeline', 'contact_departments', 'contact_page_content', 'projects_page_hero', 'projects_page_cta', 'news_page_hero', 'news_page_cta', 'about_page_hero', 'about_page_intro', 'about_page_metrics', 'about_page_values', 'about_page_awards', 'about_page_ecosystem', 'about_page_sustainability', 'about_page_why_choose', 'about_page_brand_story', 'about_page_faqs', 'about_page_contact_cta', 'about_page_collections', 'footer_navigation', 'career_page_content'];
-        $settings = [];
+        $settings = PublicContentCache::remember('settings.public', [], 600, function (): array {
+            $keys = ['company_name', 'company_address', 'hotline', 'email', 'social_links', 'homepage_meta', 'logo_url', 'about_mission', 'about_vision', 'about_timeline', 'contact_departments', 'contact_page_content', 'projects_page_hero', 'projects_page_cta', 'news_page_hero', 'news_page_cta', 'about_page_hero', 'about_page_intro', 'about_page_metrics', 'about_page_values', 'about_page_awards', 'about_page_ecosystem', 'about_page_sustainability', 'about_page_why_choose', 'about_page_brand_story', 'about_page_faqs', 'about_page_contact_cta', 'about_page_collections', 'footer_navigation', 'career_page_content'];
+            $values = [];
 
-        foreach ($keys as $key) {
-            $settings[$key] = Setting::get($key);
-        }
-        $settings['contact_page_content'] = ContactPageContent::normalize(
-            is_array($settings['contact_page_content']) ? $settings['contact_page_content'] : [],
-            is_array($settings['contact_departments']) ? $settings['contact_departments'] : [],
-        );
+            foreach ($keys as $key) {
+                $values[$key] = Setting::get($key);
+            }
+            $values['contact_page_content'] = ContactPageContent::normalize(
+                is_array($values['contact_page_content']) ? $values['contact_page_content'] : [],
+                is_array($values['contact_departments']) ? $values['contact_departments'] : [],
+            );
+
+            return $values;
+        });
 
         return response()->json([
             'success' => true,
             'data' => $settings
-        ], 200);
+        ], 200)->header('Cache-Control', 'public, max-age=60, s-maxage=600, stale-while-revalidate=60');
     }
 
     /**

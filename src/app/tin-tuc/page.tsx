@@ -1,75 +1,59 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { SITE_URL } from "@/config/seo";
-import { getServerApiUrl } from "@/lib/serverApi";
-import type { Post } from "@/types/api";
+import { fetchApiResponse } from "@/lib/serverApi";
+import type { ApiResponse, Post, PostCategory } from "@/types/api";
 import NewsClient from "./NewsClient";
-
-const siteUrl = SITE_URL;
 
 export const metadata: Metadata = {
   title: "Tin tức & Góc nhìn thị trường | Masterise Homes",
-  description:
-    "Cập nhật tin tức mới nhất về dự án, xu hướng thị trường bất động sản, pháp lý, kiến trúc và phong cách sống từ Masterise Homes.",
-  keywords: [
-    "tin tức Masterise Homes",
-    "tin tức bất động sản",
-    "thị trường bất động sản",
-    "dự án Masterise Homes",
-    "The Global City",
-    "Lumière Riverside",
-    "phong cách sống cao cấp",
-    "pháp lý bất động sản",
-    "kiến trúc bất động sản",
-  ],
+  description: "Cập nhật tin tức mới nhất về dự án, xu hướng thị trường bất động sản, pháp lý, kiến trúc và phong cách sống từ Masterise Homes.",
+  keywords: ["tin tức Masterise Homes", "tin tức bất động sản", "thị trường bất động sản", "dự án Masterise Homes"],
   openGraph: {
     title: "Tin tức & Góc nhìn thị trường | Masterise Homes",
-    description:
-      "Cập nhật thông tin mới nhất về dự án, thị trường, pháp lý, kiến trúc và phong cách sống từ Masterise Homes.",
+    description: "Cập nhật thông tin mới nhất về dự án, thị trường, pháp lý, kiến trúc và phong cách sống từ Masterise Homes.",
     type: "website",
     locale: "vi_VN",
   },
   alternates: { canonical: "/tin-tuc" },
 };
 
-async function getHeroPost(): Promise<{ post: Post | null; label: string }> {
-  const readFirstPost = async (path: string) => {
-    const response = await fetch(`${getServerApiUrl()}${path}`, {
-      cache: "no-store",
-      headers: { Accept: "application/json" },
-    });
-    if (!response.ok) return null;
-    const payload = await response.json().catch(() => null);
-    const post = payload?.data?.[0] as Post | undefined;
-    return post?.slug && post.status === "published" ? post : null;
+type SearchParams = Record<string, string | string[] | undefined>;
+const first = (value: string | string[] | undefined) => Array.isArray(value) ? value[0] : value;
+
+export default async function NewsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
+  const query = await searchParams;
+  const postParams: Record<string, string> = {
+    per_page: "9",
+    page: first(query.page) || "1",
+    post_type: "news",
+    sort: first(query.sort) || "latest",
+    status: "published",
   };
-
-  try {
-    const featured = await readFirstPost("/posts/featured?limit=1&post_type=news");
-    if (featured) return { post: featured, label: "Bài viết nổi bật" };
-    const latest = await readFirstPost("/posts?per_page=1&post_type=news&status=published");
-    return { post: latest, label: "Bài viết mới nhất" };
-  } catch {
-    return { post: null, label: "" };
+  for (const key of ["category", "q", "tag"] as const) {
+    const value = first(query[key]);
+    if (value) postParams[key] = value;
   }
-}
 
-export default async function NewsPage() {
-  const heroPost = await getHeroPost();
+  const postQuery = new URLSearchParams(postParams).toString();
+  const [initialPosts, featuredResponse, categoriesResponse] = await Promise.all([
+    fetchApiResponse<ApiResponse<Post[]>>(`/posts?${postQuery}`, { revalidate: 180, tags: ["posts"] }),
+    fetchApiResponse<ApiResponse<Post[]>>("/posts/featured?limit=5&post_type=news,investment", { revalidate: 300, tags: ["posts-featured"] }),
+    fetchApiResponse<ApiResponse<PostCategory[]>>("/post-categories?post_type=news,investment&exclude_post_type=event", { revalidate: 600, tags: ["post-taxonomy"] }),
+  ]);
+  const featuredPosts = featuredResponse?.data || [];
+  const featuredHero = featuredPosts.find((post) => post.post_type === "news") || null;
+  const heroPost = featuredHero || initialPosts?.data?.[0] || null;
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
-      {
-        "@type": "Organization",
-        name: "Masterise Homes",
-        url: siteUrl,
-        logo: `${siteUrl}/logo.png`,
-      },
+      { "@type": "Organization", name: "Masterise Homes", url: SITE_URL, logo: `${SITE_URL}/logo.png` },
       {
         "@type": "BreadcrumbList",
         itemListElement: [
-          { "@type": "ListItem", position: 1, name: "Trang chủ", item: siteUrl },
-          { "@type": "ListItem", position: 2, name: "Tin tức", item: `${siteUrl}/tin-tuc` },
+          { "@type": "ListItem", position: 1, name: "Trang chủ", item: SITE_URL },
+          { "@type": "ListItem", position: 2, name: "Tin tức", item: `${SITE_URL}/tin-tuc` },
         ],
       },
       {
@@ -82,12 +66,16 @@ export default async function NewsPage() {
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
-      <Suspense fallback={<div className="text-center py-20 text-sm text-muted bg-cream">Đang tải trang tin tức...</div>}>
-        <NewsClient heroPost={heroPost.post} heroPostLabel={heroPost.label} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <Suspense fallback={<div className="bg-cream py-20 text-center text-sm text-muted">Đang tải trang tin tức...</div>}>
+        <NewsClient
+          heroPost={heroPost}
+          heroPostLabel={featuredHero ? "Bài viết nổi bật" : "Bài viết mới nhất"}
+          initialPosts={initialPosts}
+          initialPostQuery={postQuery}
+          initialFeatured={featuredPosts}
+          initialCategories={categoriesResponse?.data || []}
+        />
       </Suspense>
     </>
   );

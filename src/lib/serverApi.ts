@@ -25,3 +25,23 @@ export async function fetchApi<T>(endpoint: string): Promise<T | null> {
     return null;
   }
 }
+
+export async function fetchApiResponse<T>(
+  endpoint: string,
+  options: { revalidate?: number; tags?: string[] } = {},
+): Promise<T | null> {
+  try {
+    const res = await fetch(`${getServerApiUrl()}${endpoint}`, {
+      next: {
+        revalidate: options.revalidate ?? 300,
+        tags: options.tags,
+      },
+      headers: { Accept: "application/json" },
+    });
+
+    if (!res.ok) return null;
+    return (await res.json()) as T;
+  } catch {
+    return null;
+  }
+}

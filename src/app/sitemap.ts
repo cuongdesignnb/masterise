@@ -1,8 +1,8 @@
 import type { MetadataRoute } from "next";
 import { absoluteUrl, SITE_URL } from "@/config/seo";
-import { fetchApi } from "@/lib/serverApi";
+import { fetchApiResponse } from "@/lib/serverApi";
 import { getPublicPages } from "@/services/pageServerService";
-import type { Post, Project } from "@/types/api";
+import type { ApiResponse, Post, Project } from "@/types/api";
 import type { CareerJob } from "@/types/career";
 
 type ChangeFrequency = NonNullable<MetadataRoute.Sitemap[number]["changeFrequency"]>;
@@ -20,6 +20,26 @@ function cleanImages(images: Array<string | null | undefined>) {
   return Array.from(new Set(images.filter(Boolean).map((image) => absoluteUrl(image as string))));
 }
 
+async function fetchAllPages<T>(endpoint: string, perPage: number): Promise<T[]> {
+  const separator = endpoint.includes("?") ? "&" : "?";
+  const firstPage = await fetchApiResponse<ApiResponse<T[]>>(`${endpoint}${separator}per_page=${perPage}&page=1`, {
+    revalidate: 300,
+    tags: ["sitemap-content"],
+  });
+  if (!firstPage) return [];
+
+  const lastPage = Math.max(1, firstPage.meta?.last_page || 1);
+  const remaining = lastPage > 1
+    ? await Promise.all(Array.from({ length: lastPage - 1 }, (_, index) =>
+        fetchApiResponse<ApiResponse<T[]>>(`${endpoint}${separator}per_page=${perPage}&page=${index + 2}`, {
+          revalidate: 300,
+          tags: ["sitemap-content"],
+        })))
+    : [];
+
+  return [firstPage, ...remaining.filter(Boolean)].flatMap((page) => page?.data || []);
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
     sitemapEntry("", 1, "daily"),
@@ -34,21 +54,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   const [projectsData, postsData, pagesData, careersData] = await Promise.all([
-    fetchApi<Project[]>("/projects?per_page=100&sort_by=open_sale_at&sort_order=asc"),
-    fetchApi<Post[]>("/posts?per_page=100"),
+    fetchAllPages<Project>("/projects?sort_by=open_sale_at&sort_order=asc", 50),
+    fetchAllPages<Post>("/posts", 50),
     getPublicPages(),
-    fetchApi<CareerJob[]>("/career/jobs?per_page=100"),
+    fetchAllPages<CareerJob>("/career/jobs", 24),
   ]);
 
-  const projectRoutes: MetadataRoute.Sitemap = (projectsData || [])
+  const projectRoutes: MetadataRoute.Sitemap = projectsData
     .filter((project) => project.is_published)
     .map((project) => {
       const images = cleanImages([
         project.banner_image,
         project.thumbnail,
-        ...(project.gallery || []),
-        ...(project.detail_gallery || []),
-        project.map_image_url,
       ]);
 
       return {
@@ -60,7 +77,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       };
     });
 
-  const postRoutes: MetadataRoute.Sitemap = (postsData || [])
+  const postRoutes: MetadataRoute.Sitemap = postsData
     .filter((post) => post.status === "published")
     .map((post) => {
       const isNews = post.post_type === "news";
@@ -82,7 +99,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.6,
     }));
 
-  const careerRoutes: MetadataRoute.Sitemap = (careersData || []).map((job) => ({
+  const careerRoutes: MetadataRoute.Sitemap = careersData.map((job) => ({
     url: `${SITE_URL}/tuyen-dung/${job.slug}`,
     lastModified: job.updated_at ? new Date(job.updated_at) : new Date(),
     changeFrequency: "weekly" as ChangeFrequency,

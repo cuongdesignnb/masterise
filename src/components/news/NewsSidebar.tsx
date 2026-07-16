@@ -9,7 +9,7 @@ import Button from "@/components/Button";
 import { postService } from "@/services/postService";
 import { api } from "@/lib/api";
 import { unwrapData } from "@/adapters/apiResponseAdapter";
-import type { Post } from "@/types/api";
+import type { Post, PostCategory } from "@/types/api";
 import { getPostDetailHref } from "@/lib/postRoutes";
 
 interface CategoryItem {
@@ -19,21 +19,22 @@ interface CategoryItem {
   posts_count?: number;
 }
 
-export default function NewsSidebar() {
-  const [featuredPosts, setFeaturedPosts] = useState<Post[]>([]);
-  const [categories, setCategories] = useState<CategoryItem[]>([]);
-  const [isLoadingFeatured, setIsLoadingFeatured] = useState(true);
+export default function NewsSidebar({ initialFeatured = [], initialCategories = [] }: { initialFeatured?: Post[]; initialCategories?: PostCategory[] }) {
+  const [featuredPosts, setFeaturedPosts] = useState<Post[]>(initialFeatured);
+  const [categories, setCategories] = useState<CategoryItem[]>(initialCategories);
+  const [isLoadingFeatured, setIsLoadingFeatured] = useState(initialFeatured.length === 0);
 
   useEffect(() => {
+    if (initialFeatured.length > 0 && initialCategories.length > 0) return;
     // Fetch featured posts
-    postService
+    if (initialFeatured.length === 0) postService
       .getFeaturedPosts({ limit: 5, post_type: "news,investment" })
       .then((res) => setFeaturedPosts(unwrapData<Post[]>(res) || []))
       .catch((err) => console.error("Failed to load featured posts:", err))
       .finally(() => setIsLoadingFeatured(false));
 
     // Fetch categories
-    api
+    if (initialCategories.length === 0) api
       .get<CategoryItem[]>("/post-categories?post_type=news,investment&exclude_post_type=event")
       .then((res) => {
         if (res.success && Array.isArray(res.data)) {
@@ -41,7 +42,7 @@ export default function NewsSidebar() {
         }
       })
       .catch((err) => console.error("Failed to load sidebar categories:", err));
-  }, []);
+  }, [initialCategories.length, initialFeatured.length]);
 
   return (
     <aside className="flex flex-col gap-5">

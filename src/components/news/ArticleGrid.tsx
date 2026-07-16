@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -13,7 +13,7 @@ import type { ApiResponse, Post } from "@/types/api";
 
 const emptyMeta = { current_page: 1, last_page: 1, per_page: 9, total: 0 };
 
-export default function ArticleGrid() {
+export default function ArticleGrid({ initialResponse = null, initialQuery = "" }: { initialResponse?: ApiResponse<Post[]> | null; initialQuery?: string }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -22,13 +22,30 @@ export default function ArticleGrid() {
   const tagQuery = searchParams.get("tag") || "";
   const sortQuery = searchParams.get("sort") || "latest";
   const page = Math.max(1, Number(searchParams.get("page") || 1) || 1);
+  const requestParams = new URLSearchParams({
+    per_page: "9",
+    page: String(page),
+    post_type: "news",
+    sort: sortQuery,
+    status: "published",
+  });
+  if (categoryQuery) requestParams.set("category", categoryQuery);
+  if (searchQuery) requestParams.set("q", searchQuery);
+  if (tagQuery) requestParams.set("tag", tagQuery);
+  const requestQuery = requestParams.toString();
 
-  const [articles, setArticles] = useState<Post[]>([]);
-  const [meta, setMeta] = useState(emptyMeta);
-  const [isLoading, setIsLoading] = useState(true);
+  const [articles, setArticles] = useState<Post[]>(initialResponse?.data || []);
+  const [meta, setMeta] = useState(initialResponse?.meta || emptyMeta);
+  const [isLoading, setIsLoading] = useState(!initialResponse);
   const [activeTagName, setActiveTagName] = useState("");
+  const shouldUseInitialResponse = useRef(Boolean(initialResponse && requestQuery === initialQuery));
 
   useEffect(() => {
+    if (shouldUseInitialResponse.current && requestQuery === initialQuery) {
+      shouldUseInitialResponse.current = false;
+      return;
+    }
+    shouldUseInitialResponse.current = false;
     let active = true;
     if (!tagQuery) {
       Promise.resolve().then(() => active && setActiveTagName(""));
@@ -66,7 +83,7 @@ export default function ArticleGrid() {
       }
     }).finally(() => active && setIsLoading(false));
     return () => { active = false; };
-  }, [categoryQuery, page, searchQuery, sortQuery, tagQuery]);
+  }, [categoryQuery, initialQuery, page, requestQuery, searchQuery, sortQuery, tagQuery]);
 
   const goToPage = (nextPage: number) => {
     const params = updateListSearchParams(searchParams, { page: nextPage });

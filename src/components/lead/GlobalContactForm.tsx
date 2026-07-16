@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { fadeUp } from "@/lib/motion";
 import { leadService } from "@/services/leadService";
 import { projectService } from "@/services/projectService";
-import type { Project } from "@/types/api";
+import type { ProjectOption } from "@/types/api";
 import Container from "@/components/Container";
 
 const demandOptions = [
@@ -32,7 +32,7 @@ export default function GlobalContactForm({
   compact = false,
   embedded = false,
 }: GlobalContactFormProps) {
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [projects, setProjects] = useState<ProjectOption[]>([]);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [error, setError] = useState("");
   const [form, setForm] = useState({
@@ -47,7 +47,7 @@ export default function GlobalContactForm({
 
   useEffect(() => {
     projectService
-      .getProjects({ per_page: "50", sort_by: "open_sale_at", sort_order: "asc" })
+      .getProjectOptions()
       .then(setProjects)
       .catch(() => setProjects([]));
   }, []);

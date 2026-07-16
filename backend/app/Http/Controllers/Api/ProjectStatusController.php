@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\ProjectStatusDefinition;
+use App\Support\PublicContentCache;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -18,16 +19,17 @@ class ProjectStatusController extends Controller
 
     public function index(Request $request)
     {
-        $statuses = ProjectStatusDefinition::query()
-            ->where('is_active', true)
-            ->withCount([
-                'publishedProjects as projects_count',
-            ])
-            ->orderBy('sort_order')
-            ->orderBy('name')
-            ->get();
+        $statuses = PublicContentCache::remember('projects.taxonomy', ['type' => 'statuses'], 900, fn () =>
+            ProjectStatusDefinition::query()
+                ->where('is_active', true)
+                ->withCount(['publishedProjects as projects_count'])
+                ->orderBy('sort_order')
+                ->orderBy('name')
+                ->get()
+        );
 
-        return response()->json(['success' => true, 'data' => $statuses]);
+        return response()->json(['success' => true, 'data' => $statuses])
+            ->header('Cache-Control', 'public, max-age=300, s-maxage=900');
     }
 
     public function adminIndex()

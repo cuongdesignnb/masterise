@@ -45,6 +45,12 @@ export interface ProjectCategoryOption {
   projects_count: number;
 }
 
+export interface ProjectOption {
+  id: number;
+  name: string;
+  slug: string;
+}
+
 export type ProjectStatus = string;
 
 export interface ProjectStatusOption {

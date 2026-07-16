@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\ProjectListResource;
 use App\Models\Project;
 use App\Models\ProjectCategory;
 use App\Models\ProjectStatusDefinition;
@@ -11,6 +12,7 @@ use App\Models\Region;
 use App\Support\ProjectPriceRange;
 use App\Support\ProjectFloorPlanStructure;
 use App\Support\ProjectStatus;
+use App\Support\PublicContentCache;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -81,9 +83,11 @@ class ProjectController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Project::query()->with(['categories', 'seoMeta', 'developerRelation', 'locationRelation.region']);
         $user = $request->user('sanctum');
         $canViewUnpublished = $user && $user->hasAnyRole(['super_admin', 'admin', 'marketing']);
+        $query = $canViewUnpublished
+            ? Project::query()->with(['categories', 'seoMeta', 'developerRelation', 'locationRelation.region'])
+            : $this->publicListQuery();
 
         if (!$canViewUnpublished) {
             $query->where('is_published', true);
@@ -147,28 +151,55 @@ class ProjectController extends Controller
             $query->orderBy('created_at', 'desc');
         }
 
-        $perPage = $request->get('per_page', 9);
-        $projects = $query->paginate($perPage);
-
-        $response = response()->json([
-            'success' => true,
-            'data' => $projects->items(),
-            'meta' => [
-                'current_page' => $projects->currentPage(),
-                'last_page' => $projects->lastPage(),
-                'per_page' => $projects->perPage(),
-                'total' => $projects->total(),
-            ]
-        ], 200);
+        $perPage = min($canViewUnpublished ? 100 : 50, max(1, $request->integer('per_page', 12)));
+        $resolve = function () use ($query, $perPage, $request, $canViewUnpublished): array {
+            $projects = $query->paginate($perPage);
+            return [
+                'success' => true,
+                'data' => $canViewUnpublished
+                    ? $projects->items()
+                    : ProjectListResource::collection($projects->items())->resolve($request),
+                'meta' => [
+                    'current_page' => $projects->currentPage(),
+                    'last_page' => $projects->lastPage(),
+                    'per_page' => $projects->perPage(),
+                    'total' => $projects->total(),
+                ],
+            ];
+        };
+        $payload = $canViewUnpublished
+            ? $resolve()
+            : PublicContentCache::remember('projects.list', $request->query(), 300, $resolve);
+        $response = response()->json($payload, 200);
 
         $response = $this->markDeprecatedProjectStatusQuery($response, $request);
 
-        return $canViewUnpublished ? $this->noStore($response) : $response;
+        return $canViewUnpublished
+            ? $this->noStore($response)
+            : $response->header('Cache-Control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=60');
+    }
+
+    private function publicListQuery()
+    {
+        return Project::query()
+            ->without('projectStatusDetail')
+            ->select([
+                'id', 'name', 'slug', 'description', 'project_label', 'location_id', 'location', 'address', 'region',
+                'price_min', 'price_max', 'price_text', 'area_min', 'area_max', 'area_text', 'project_status',
+                'open_sale_at', 'is_featured', 'is_hot', 'is_published', 'published_at', 'sort_order',
+                'thumbnail', 'banner_image', 'created_at', 'updated_at',
+            ])
+            ->with([
+                'categories:id,name,slug,taxonomy_type',
+                'projectStatusDetail:id,name,slug,description,color_key,sort_order,is_active,is_default',
+                'locationRelation:id,region_id,name,slug',
+                'locationRelation.region:id,name,slug',
+            ]);
     }
 
     public function regions()
     {
-        $data = Region::query()
+        $data = PublicContentCache::remember('projects.taxonomy', ['resource' => 'regions'], 900, fn () => Region::query()
             ->where('is_active', true)
             ->whereHas('projects', fn ($query) => $query->where('is_published', true))
             ->withCount([
@@ -182,9 +213,10 @@ class ProjectController extends Controller
                 'label' => $region->name,
                 'projects_count' => (int) $region->projects_count,
             ])
-            ->values();
+            ->values()->all());
 
-        return response()->json(['success' => true, 'data' => $data]);
+        return response()->json(['success' => true, 'data' => $data])
+            ->header('Cache-Control', 'public, max-age=300, s-maxage=900');
     }
 
     public function adminIndex(Request $request)
@@ -259,29 +291,26 @@ class ProjectController extends Controller
      */
     public function featured(Request $request)
     {
-        $limit = $request->get('limit', 6);
-        $query = Project::where('is_featured', true);
-        $user = $request->user('sanctum');
-        $canViewUnpublished = $user && $user->hasAnyRole(['super_admin', 'admin', 'marketing']);
+        $limit = min(8, max(1, $request->integer('limit', 6)));
+        $projects = PublicContentCache::remember('projects.featured', ['limit' => $limit], 600, function () use ($limit, $request): array {
+            $items = $this->publicListQuery()
+                ->where('is_featured', true)
+                ->where('is_published', true)
+                ->orderBy('is_hot', 'desc')
+                ->orderBy('sort_order', 'asc')
+                ->orderByRaw('open_sale_at IS NULL')
+                ->orderBy('open_sale_at', 'asc')
+                ->orderBy('created_at', 'desc')
+                ->limit($limit)
+                ->get();
 
-        if (!$canViewUnpublished) {
-            $query->where('is_published', true);
-        }
-
-        $projects = $query
-            ->with(['categories', 'seoMeta', 'locationRelation.region'])
-            ->orderBy('is_hot', 'desc')
-            ->orderBy('sort_order', 'asc')
-            ->orderByRaw('open_sale_at IS NULL')
-            ->orderBy('open_sale_at', 'asc')
-            ->orderBy('created_at', 'desc')
-            ->limit($limit)
-            ->get();
+            return ProjectListResource::collection($items)->resolve($request);
+        });
 
         return response()->json([
             'success' => true,
             'data' => $projects
-        ], 200);
+        ], 200)->header('Cache-Control', 'public, max-age=60, s-maxage=600, stale-while-revalidate=60');
     }
 
     /**
@@ -351,7 +380,7 @@ class ProjectController extends Controller
      */
     public function categories()
     {
-        $categories = ProjectCategory::query()
+        $categories = PublicContentCache::remember('projects.taxonomy', ['resource' => 'categories'], 900, fn () => ProjectCategory::query()
             ->where('taxonomy_type', ProjectCategory::TYPE_PROJECT)
             ->withCount([
                 'projects as projects_count' => fn ($query) => $query->where('is_published', true),
@@ -359,12 +388,31 @@ class ProjectController extends Controller
             ->orderBy('name')
             ->get()
             ->filter(fn (ProjectCategory $category) => $category->projects_count > 0)
-            ->values();
+            ->values()->all());
 
         return response()->json([
             'success' => true,
             'data' => $categories
-        ], 200);
+        ], 200)->header('Cache-Control', 'public, max-age=300, s-maxage=900');
+    }
+
+    public function options()
+    {
+        $data = PublicContentCache::remember('projects.options', [], 1800, fn () => Project::query()
+            ->without('projectStatusDetail')
+            ->where('is_published', true)
+            ->orderByRaw('open_sale_at IS NULL')
+            ->orderBy('open_sale_at')
+            ->orderBy('name')
+            ->get(['id', 'name', 'slug'])
+            ->map(fn (Project $project) => [
+                'id' => $project->id,
+                'name' => $project->name,
+                'slug' => $project->slug,
+            ])->all());
+
+        return response()->json(['success' => true, 'data' => $data])
+            ->header('Cache-Control', 'public, max-age=300, s-maxage=1800, stale-while-revalidate=120');
     }
 
     public function adminCategories()

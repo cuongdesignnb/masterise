@@ -8,6 +8,7 @@ use App\Models\CareerApplication;
 use App\Models\CareerApplicationActivity;
 use App\Models\CareerJob;
 use App\Models\Setting;
+use App\Support\PublicContentCache;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -40,11 +41,14 @@ class CareerController extends Controller
             ? $query->orderByRaw('application_deadline IS NULL')->orderBy('application_deadline')
             : $query->latest('published_at');
 
-        $paginator = $query->paginate($validated['per_page'] ?? 9);
-        return response()->json(['success' => true, 'data' => $paginator->items(), 'meta' => [
-            'current_page' => $paginator->currentPage(), 'last_page' => $paginator->lastPage(),
-            'per_page' => $paginator->perPage(), 'total' => $paginator->total(),
-        ]]);
+        $payload = PublicContentCache::remember('career.list', $validated, 300, function () use ($query, $validated): array {
+            $paginator = $query->paginate($validated['per_page'] ?? 9);
+            return ['success' => true, 'data' => $paginator->items(), 'meta' => [
+                'current_page' => $paginator->currentPage(), 'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(), 'total' => $paginator->total(),
+            ]];
+        });
+        return response()->json($payload)->header('Cache-Control', 'public, max-age=60, s-maxage=300');
     }
 
     public function show(string $slug)
@@ -58,26 +62,29 @@ class CareerController extends Controller
 
     public function options()
     {
-        $base = CareerJob::query()->visible();
-        $page = Setting::get('career_page_content', []);
-        $settings = Setting::get('career_settings', []);
-        return response()->json(['success' => true, 'data' => [
-            'departments' => (clone $base)->distinct()->orderBy('department')->pluck('department')->values(),
-            'locations' => (clone $base)->distinct()->orderBy('location')->pluck('location')->values(),
-            'employment_types' => collect(CareerJob::EMPLOYMENT_LABELS)->map(fn ($label, $value) => compact('value', 'label'))->values(),
-            'page_content' => $page,
-            'stats' => [
-                'open_jobs' => (clone $base)->count(),
-                'departments' => (clone $base)->distinct()->count('department'),
-                'locations' => (clone $base)->distinct()->count('location'),
-            ],
-            'application_rules' => [
-                'cv_required' => (bool) ($settings['cv_required'] ?? true),
-                'cv_max_mb' => (int) ($settings['cv_max_mb'] ?? 10),
-                'cv_extensions' => array_values(array_intersect($settings['cv_extensions'] ?? ['pdf', 'doc', 'docx'], ['pdf', 'doc', 'docx'])),
-                'privacy_policy_url' => $settings['privacy_policy_url'] ?? '/chuyen-trang/chinh-sach-bao-mat',
-            ],
-        ]]);
+        $payload = PublicContentCache::remember('career.options', [], 900, function (): array {
+            $base = CareerJob::query()->visible();
+            $page = Setting::get('career_page_content', []);
+            $settings = Setting::get('career_settings', []);
+            return ['success' => true, 'data' => [
+                'departments' => (clone $base)->distinct()->orderBy('department')->pluck('department')->values(),
+                'locations' => (clone $base)->distinct()->orderBy('location')->pluck('location')->values(),
+                'employment_types' => collect(CareerJob::EMPLOYMENT_LABELS)->map(fn ($label, $value) => compact('value', 'label'))->values(),
+                'page_content' => $page,
+                'stats' => [
+                    'open_jobs' => (clone $base)->count(),
+                    'departments' => (clone $base)->distinct()->count('department'),
+                    'locations' => (clone $base)->distinct()->count('location'),
+                ],
+                'application_rules' => [
+                    'cv_required' => (bool) ($settings['cv_required'] ?? true),
+                    'cv_max_mb' => (int) ($settings['cv_max_mb'] ?? 10),
+                    'cv_extensions' => array_values(array_intersect($settings['cv_extensions'] ?? ['pdf', 'doc', 'docx'], ['pdf', 'doc', 'docx'])),
+                    'privacy_policy_url' => $settings['privacy_policy_url'] ?? '/chuyen-trang/chinh-sach-bao-mat',
+                ],
+            ]];
+        });
+        return response()->json($payload)->header('Cache-Control', 'public, max-age=300, s-maxage=900');
     }
 
     public function apply(Request $request, CareerJob $job)
