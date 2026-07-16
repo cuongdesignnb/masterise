@@ -3,6 +3,7 @@ import { absoluteUrl, SITE_URL } from "@/config/seo";
 import { fetchApi } from "@/lib/serverApi";
 import { getPublicPages } from "@/services/pageServerService";
 import type { Post, Project } from "@/types/api";
+import type { CareerJob } from "@/types/career";
 
 type ChangeFrequency = NonNullable<MetadataRoute.Sitemap[number]["changeFrequency"]>;
 
@@ -29,12 +30,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     sitemapEntry("/ai-summary", 0.55, "monthly"),
     sitemapEntry("/gioi-thieu", 0.7, "monthly"),
     sitemapEntry("/lien-he", 0.7, "monthly"),
+    sitemapEntry("/tuyen-dung", 0.75, "daily"),
   ];
 
-  const [projectsData, postsData, pagesData] = await Promise.all([
+  const [projectsData, postsData, pagesData, careersData] = await Promise.all([
     fetchApi<Project[]>("/projects?per_page=100&sort_by=open_sale_at&sort_order=asc"),
     fetchApi<Post[]>("/posts?per_page=100"),
     getPublicPages(),
+    fetchApi<CareerJob[]>("/career/jobs?per_page=100"),
   ]);
 
   const projectRoutes: MetadataRoute.Sitemap = (projectsData || [])
@@ -79,5 +82,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.6,
     }));
 
-  return [...staticRoutes, ...projectRoutes, ...postRoutes, ...pageRoutes];
+  const careerRoutes: MetadataRoute.Sitemap = (careersData || []).map((job) => ({
+    url: `${SITE_URL}/tuyen-dung/${job.slug}`,
+    lastModified: job.updated_at ? new Date(job.updated_at) : new Date(),
+    changeFrequency: "weekly" as ChangeFrequency,
+    priority: job.is_featured ? 0.78 : 0.68,
+    images: job.banner_image || job.thumbnail ? [absoluteUrl(job.banner_image || job.thumbnail || "")] : undefined,
+  }));
+
+  return [...staticRoutes, ...projectRoutes, ...postRoutes, ...pageRoutes, ...careerRoutes];
 }

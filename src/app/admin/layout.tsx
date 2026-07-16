@@ -33,6 +33,7 @@ import {
   HelpCircle,
   MessageSquare,
   Handshake
+  ,BriefcaseBusiness
 } from 'lucide-react';
 
 export default function AdminLayout({
@@ -56,7 +57,7 @@ export default function AdminLayout({
         console.log("[AdminGuard] No user found. Redirecting to /dang-nhap");
         router.push('/dang-nhap');
       } else {
-        const isAdmin = hasRole(['super_admin', 'admin', 'marketing', 'sale_manager', 'sale']);
+        const isAdmin = hasRole(['super_admin', 'admin', 'marketing', 'sale_manager', 'sale', 'recruiter']);
         console.log("[AdminGuard] Is admin check:", isAdmin);
         if (!isAdmin) {
           console.log("[AdminGuard] Non-admin user detected. Redirecting to /tai-khoan");
@@ -78,12 +79,13 @@ export default function AdminLayout({
   }
 
   // Double check auth state to prevent flash
-  const isAdmin = hasRole(['super_admin', 'admin', 'marketing', 'sale_manager', 'sale']);
+  const isAdmin = hasRole(['super_admin', 'admin', 'marketing', 'sale_manager', 'sale', 'recruiter']);
   if (!user || !isAdmin) {
     return null;
   }
 
   const menuItems = [
+    { name: 'Tuyển dụng', href: '/admin/tuyen-dung', icon: BriefcaseBusiness, roles: ['super_admin', 'admin', 'recruiter'] },
     { name: 'Tổng quan', href: '/admin', icon: LayoutDashboard, roles: ['super_admin', 'admin', 'marketing', 'sale_manager', 'sale'] },
     { name: 'Quản lý Dự án', href: '/admin/du-an', icon: Building, roles: ['super_admin', 'admin', 'marketing'] },
     { name: 'Chủ đầu tư', href: '/admin/developers', icon: Award, roles: ['super_admin', 'admin', 'marketing'] },

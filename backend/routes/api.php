@@ -23,6 +23,10 @@ use App\Http\Controllers\Api\Admin\AiContentController;
 use App\Http\Controllers\Api\Admin\AiBatchController;
 use App\Http\Controllers\Api\PageController;
 use App\Http\Controllers\Api\TagController;
+use App\Http\Controllers\Api\CareerController;
+use App\Http\Controllers\Api\Admin\CareerJobAdminController;
+use App\Http\Controllers\Api\Admin\CareerApplicationAdminController;
+use App\Http\Controllers\Api\Admin\CareerSettingsController;
 use Illuminate\Support\Facades\Route;
 
 Route::group(['prefix' => 'v1'], function() {
@@ -83,6 +87,13 @@ Route::group(['prefix' => 'v1'], function() {
     Route::get('/faqs', [FaqController::class, 'index']);
     Route::get('/testimonials', [TestimonialController::class, 'index']);
     Route::get('/partners', [PartnerController::class, 'index']);
+
+    // Careers
+    Route::get('/career/options', [CareerController::class, 'options']);
+    Route::get('/career/jobs', [CareerController::class, 'index']);
+    Route::get('/career/jobs/{slug}', [CareerController::class, 'show']);
+    Route::post('/career/jobs/{job}/apply', [CareerController::class, 'apply'])->middleware('throttle:5,1');
+    Route::post('/career/apply-general', [CareerController::class, 'applyGeneral'])->middleware('throttle:3,1');
     
     // VR 360 Tour public route
     Route::get('/projects/{slug}/vr-tour', [App\Http\Controllers\Api\ProjectVrTourController::class, 'show']);
@@ -272,6 +283,25 @@ Route::group(['prefix' => 'v1'], function() {
                 Route::get('/jobs', [AiContentController::class, 'jobsHistory'])
                     ->middleware('permission:ai.jobs.view');
             });
+
+        Route::prefix('admin/career')->group(function () {
+            Route::get('/jobs', [CareerJobAdminController::class, 'index'])->middleware('permission:career_jobs.view');
+            Route::post('/jobs', [CareerJobAdminController::class, 'store'])->middleware('permission:career_jobs.create');
+            Route::get('/jobs/{job}', [CareerJobAdminController::class, 'show'])->middleware('permission:career_jobs.view');
+            Route::put('/jobs/{job}', [CareerJobAdminController::class, 'update'])->middleware('permission:career_jobs.update');
+            Route::delete('/jobs/{job}', [CareerJobAdminController::class, 'destroy'])->middleware('permission:career_jobs.delete');
+            Route::post('/jobs/{job}/duplicate', [CareerJobAdminController::class, 'duplicate'])->middleware('permission:career_jobs.create');
+
+            Route::get('/applications', [CareerApplicationAdminController::class, 'index'])->middleware('permission:career_applications.view');
+            Route::get('/applications/{application}', [CareerApplicationAdminController::class, 'show'])->middleware('permission:career_applications.view');
+            Route::patch('/applications/{application}', [CareerApplicationAdminController::class, 'update'])->middleware('permission:career_applications.update');
+            Route::delete('/applications/{application}', [CareerApplicationAdminController::class, 'destroy'])->middleware('permission:career_applications.delete');
+            Route::get('/applications/{application}/cv', [CareerApplicationAdminController::class, 'downloadCv'])->middleware('permission:career_applications.download_cv');
+            Route::post('/applications/{application}/resend-email', [CareerApplicationAdminController::class, 'resend'])->middleware('permission:career_applications.update');
+
+            Route::get('/settings', [CareerSettingsController::class, 'show'])->middleware('permission:career_settings.manage');
+            Route::put('/settings', [CareerSettingsController::class, 'update'])->middleware('permission:career_settings.manage');
+        });
 
     });
 });

@@ -103,7 +103,7 @@ export default function Header() {
                   </div>
                   <span className="max-w-[120px] truncate">{user.name}</span>
                 </Link>
-                {roles.some(role => ['super_admin', 'admin', 'marketing', 'sale_manager', 'sale'].includes(role)) && (
+                {roles.some(role => ['super_admin', 'admin', 'marketing', 'sale_manager', 'sale', 'recruiter'].includes(role)) && (
                   <Link
                     href="/admin"
                     className="flex items-center gap-1 text-xs font-semibold text-gold hover:text-gold-dark hover:underline"

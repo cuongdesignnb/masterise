@@ -59,7 +59,12 @@ class RolesAndPermissionsSeeder extends Seeder
             'audit_logs.view',
 
             // AI Content Automation
-            'ai.settings.view', 'ai.settings.update', 'ai.article.generate', 'ai.image.generate', 'ai.bulk.generate', 'ai.schedule.manage', 'ai.jobs.view'
+            'ai.settings.view', 'ai.settings.update', 'ai.article.generate', 'ai.image.generate', 'ai.bulk.generate', 'ai.schedule.manage', 'ai.jobs.view',
+
+            // Careers
+            'career_jobs.view', 'career_jobs.create', 'career_jobs.update', 'career_jobs.delete',
+            'career_applications.view', 'career_applications.update', 'career_applications.delete', 'career_applications.download_cv',
+            'career_settings.manage'
         ];
 
         foreach ($permissions as $permission) {
@@ -123,5 +128,12 @@ class RolesAndPermissionsSeeder extends Seeder
         // 7. Client (Standard Client Role)
         $client = Role::findOrCreate('client', 'web');
         $client->syncPermissions([]);
+
+        // 8. Recruiter
+        $recruiter = Role::findOrCreate('recruiter', 'web');
+        $recruiter->syncPermissions([
+            'dashboard.view', 'career_jobs.view', 'career_jobs.create', 'career_jobs.update', 'career_jobs.delete',
+            'career_applications.view', 'career_applications.update', 'career_applications.download_cv',
+        ]);
     }
 }

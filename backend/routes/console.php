@@ -13,6 +13,18 @@ Artisan::command('inspire', function () {
 
 Schedule::command('posts:publish-scheduled')->everyMinute();
 
+Artisan::command('careers:sync-schedule', function () {
+    $published = \App\Models\CareerJob::query()
+        ->where('status', 'scheduled')->whereNotNull('published_at')->where('published_at', '<=', now())
+        ->update(['status' => 'published', 'is_published' => true]);
+    $closed = \App\Models\CareerJob::query()
+        ->where('status', 'published')->whereNotNull('application_deadline')->where('application_deadline', '<', now())
+        ->update(['status' => 'closed', 'is_published' => false, 'closed_at' => now()]);
+    $this->info("Đã xuất bản {$published} tin và đóng {$closed} tin tuyển dụng.");
+})->purpose('Xuất bản và đóng tin tuyển dụng theo lịch');
+
+Schedule::command('careers:sync-schedule')->everyMinute()->withoutOverlapping();
+
 Artisan::command('content:audit-taxonomy', function () {
     $posts = Post::with('category')->orderBy('id')->get()->map(fn (Post $post) => [
         $post->id,

@@ -8,6 +8,9 @@ import Container from "./Container";
 
 export default function Footer() {
   const { hotline, email, companyAddress, companyName, socialLinks, footerNavigation } = useSiteSettings();
+  const resolvedFooterNavigation = footerNavigation.map((column, index) => index !== 0 || column.links.some((link) => link.href === '/tuyen-dung')
+    ? column
+    : { ...column, links: [...column.links.slice(0, 4), { label: 'Tuyển dụng', href: '/tuyen-dung' }, ...column.links.slice(4)] });
 
   const handleBackToTop = () => {
     window.scrollTo({
@@ -105,7 +108,7 @@ export default function Footer() {
           </div>
 
           {/* Columns 2-4: Navigation links */}
-          {footerNavigation.map((col) => (
+          {resolvedFooterNavigation.map((col) => (
             <div key={col.title} className="lg:col-span-2 flex flex-col text-left">
               <h3 className="text-xs font-bold text-gold tracking-widest uppercase mb-6">
                 {col.title}
