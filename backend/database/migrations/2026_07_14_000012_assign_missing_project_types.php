@@ -42,9 +42,13 @@ return new class extends Migration
         $missingProjects = array_values(array_diff($projectSlugs, $projects->keys()->all()));
 
         if ($missingProjects !== []) {
-            throw new RuntimeException(
-                'Missing expected projects for project type backfill: '.implode(', ', $missingProjects)
-            );
+            Log::warning('Missing project type backfill skipped unavailable project slugs.', [
+                'missing_project_slugs' => $missingProjects,
+            ]);
+        }
+        if ($projects->isEmpty()) {
+            Log::info('Missing project type backfill found no matching projects.');
+            return;
         }
 
         $categorySlugs = array_values(array_unique(array_merge(...array_values(self::ASSIGNMENTS))));
@@ -56,19 +60,23 @@ return new class extends Migration
         $missingCategories = array_values(array_diff($categorySlugs, $categories->keys()->all()));
 
         if ($missingCategories !== []) {
-            throw new RuntimeException(
-                'Missing expected project type categories: '.implode(', ', $missingCategories)
-            );
+            Log::warning('Missing project type backfill skipped unavailable categories.', [
+                'missing_category_slugs' => $missingCategories,
+            ]);
         }
 
         $addedRelations = DB::transaction(function () use ($projects, $categories): int {
             $added = 0;
 
             foreach (self::ASSIGNMENTS as $projectSlug => $assignedCategorySlugs) {
-                $projectId = $projects[$projectSlug]->id;
+                $project = $projects->get($projectSlug);
+                if (!$project) continue;
+                $projectId = $project->id;
 
                 foreach ($assignedCategorySlugs as $categorySlug) {
-                    $categoryId = $categories[$categorySlug]->id;
+                    $category = $categories->get($categorySlug);
+                    if (!$category) continue;
+                    $categoryId = $category->id;
                     $exists = DB::table('project_category_project')
                         ->where('project_id', $projectId)
                         ->where('project_category_id', $categoryId)
@@ -105,7 +113,9 @@ return new class extends Migration
 
         Log::info('Missing project type backfill completed', [
             'relations_added' => $addedRelations,
-            'projects_checked' => count(self::ASSIGNMENTS),
+            'projects_checked' => $projects->count(),
+            'projects_skipped' => count($missingProjects),
+            'categories_skipped' => count($missingCategories),
         ]);
     }
 

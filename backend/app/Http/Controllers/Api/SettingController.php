@@ -22,6 +22,10 @@ class SettingController extends Controller
         foreach ($keys as $key) {
             $settings[$key] = Setting::get($key);
         }
+        $settings['contact_page_content'] = ContactPageContent::normalize(
+            is_array($settings['contact_page_content']) ? $settings['contact_page_content'] : [],
+            is_array($settings['contact_departments']) ? $settings['contact_departments'] : [],
+        );
 
         return response()->json([
             'success' => true,
@@ -34,7 +38,17 @@ class SettingController extends Controller
      */
     public function index()
     {
-        $settings = Setting::all();
+        $settings = Setting::all()->map(function (Setting $setting): Setting {
+            if ($setting->key !== 'contact_page_content') return $setting;
+
+            $decoded = json_decode((string) $setting->value, true);
+            $setting->value = json_encode(
+                ContactPageContent::normalize(is_array($decoded) ? $decoded : []),
+                JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES,
+            );
+
+            return $setting;
+        });
 
         return response()->json([
             'success' => true,

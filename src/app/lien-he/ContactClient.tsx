@@ -12,22 +12,24 @@ import ContactConversionSection from "@/components/contact/ContactConversionSect
 import SupportDepartments from "@/components/contact/SupportDepartments";
 import ContactFAQ from "@/components/contact/ContactFAQ";
 import ContactCTA from "@/components/contact/ContactCTA";
+import { normalizeContactPageContent } from "@/lib/contactPage";
 import type { ContactPageContent, ContactPageSiteDetails, ContactSectionKey } from "@/types/contact-page";
 
 export default function ContactClient({ initialContent, siteDetails }: { initialContent: ContactPageContent; siteDetails: ContactPageSiteDetails }) {
+  const content = normalizeContactPageContent(initialContent);
   const renderSection = (key: ContactSectionKey) => {
     switch (key) {
-      case "hero": return initialContent.hero.enabled ? <ContactHero key={key} content={initialContent.hero} site={siteDetails} /> : null;
-      case "commitments": return initialContent.commitments.enabled ? <ContactTrustCommitments key={key} content={initialContent.commitments} /> : null;
-      case "introduction": return initialContent.introduction.enabled ? <ContactIntroduction key={key} content={initialContent.introduction} /> : null;
-      case "salesTeam": return initialContent.salesTeam.enabled ? <ContactSalesTeam key={key} content={initialContent.salesTeam} /> : null;
-      case "achievements": return initialContent.achievements.enabled ? <ContactAchievements key={key} content={initialContent.achievements} /> : null;
-      case "contactForm": return initialContent.contactForm.enabled ? <ContactConversionSection key={key} content={initialContent.contactForm} site={siteDetails} /> : null;
-      case "departments": return initialContent.departments.enabled ? <SupportDepartments key={key} content={initialContent.departments} /> : null;
-      case "faqs": return initialContent.faqs.enabled ? <ContactFAQ key={key} content={initialContent.faqs} /> : null;
-      case "cta": return initialContent.cta.enabled ? <ContactCTA key={key} content={initialContent.cta} /> : null;
+      case "hero": return content.hero.enabled ? <ContactHero key={key} content={content.hero} site={siteDetails} /> : null;
+      case "commitments": return content.commitments.enabled ? <ContactTrustCommitments key={key} content={content.commitments} /> : null;
+      case "introduction": return content.introduction.enabled ? <ContactIntroduction key={key} content={content.introduction} /> : null;
+      case "salesTeam": return content.salesTeam.enabled ? <ContactSalesTeam key={key} content={content.salesTeam} /> : null;
+      case "achievements": return content.achievements.enabled ? <ContactAchievements key={key} content={content.achievements} /> : null;
+      case "contactForm": return content.contactForm.enabled ? <ContactConversionSection key={key} content={content.contactForm} site={siteDetails} /> : null;
+      case "departments": return content.departments.enabled ? <SupportDepartments key={key} content={content.departments} /> : null;
+      case "faqs": return content.faqs.enabled ? <ContactFAQ key={key} content={content.faqs} /> : null;
+      case "cta": return content.cta.enabled ? <ContactCTA key={key} content={content.cta} /> : null;
     }
   };
 
-  return <><Header /><MobileTabBar /><main className="relative z-10 overflow-x-clip pb-16 lg:pb-0">{initialContent.sectionOrder.map(renderSection)}</main><Footer /></>;
+  return <><Header /><MobileTabBar /><main className="relative z-10 overflow-x-clip pb-16 lg:pb-0">{content.sectionOrder.map(renderSection)}</main><Footer /></>;
 }

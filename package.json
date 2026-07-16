@@ -6,7 +6,8 @@
     "dev": "next dev -p 8746",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:contact": "node scripts/run-contact-page-tests.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",

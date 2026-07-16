@@ -1,4 +1,4 @@
-import type { ContactPageContent, ContactSectionKey } from "@/types/contact-page";
+import type { ContactPageContent, ContactSectionKey } from "../types/contact-page";
 
 export const CONTACT_SECTION_KEYS: ContactSectionKey[] = [
   "hero", "commitments", "introduction", "salesTeam", "achievements",

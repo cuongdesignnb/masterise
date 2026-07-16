@@ -8,8 +8,8 @@ use App\Models\ProjectCategory;
 use App\Models\Region;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
-use RuntimeException;
 use Tests\TestCase;
 
 class MissingProjectTypesBackfillTest extends TestCase
@@ -195,7 +195,7 @@ class MissingProjectTypesBackfillTest extends TestCase
         $this->assertFalse(Schema::hasTable('project_type_backfill_20260714'));
     }
 
-    public function test_03_backfill_fails_before_writing_when_an_expected_project_is_missing(): void
+    public function test_03_backfill_processes_available_projects_when_other_expected_slugs_are_missing(): void
     {
         $apartment = ProjectCategory::create([
             'name' => 'Căn hộ cao cấp',
@@ -209,15 +209,65 @@ class MissingProjectTypesBackfillTest extends TestCase
             'is_published' => true,
         ]);
 
-        try {
-            $this->migration()->up();
-            $this->fail('The migration should reject a partial target dataset.');
-        } catch (RuntimeException $exception) {
-            $this->assertStringContainsString('Missing expected projects', $exception->getMessage());
-        }
+        Log::spy();
+        $this->migration()->up();
 
-        $this->assertSame(0, DB::table('project_category_project')
+        $this->assertSame(1, DB::table('project_category_project')
             ->where('project_category_id', $apartment->id)
             ->count());
+        $this->assertSame(1, DB::table('project_type_backfill_20260714')->count());
+        Log::shouldHaveReceived('warning')->once();
+    }
+
+    public function test_04_backfill_ignores_unrelated_production_projects(): void
+    {
+        $category = ProjectCategory::create([
+            'name' => 'Căn hộ cao cấp',
+            'slug' => 'can-ho-cao-cap',
+            'taxonomy_type' => ProjectCategory::TYPE_PROJECT,
+        ]);
+        $unrelated = Project::create([
+            'name' => 'Dự án production khác',
+            'slug' => 'du-an-production-khac',
+            'project_status' => 'selling',
+            'is_published' => true,
+        ]);
+
+        $this->migration()->up();
+        $this->migration()->up();
+
+        $this->assertDatabaseMissing('project_category_project', [
+            'project_id' => $unrelated->id,
+            'project_category_id' => $category->id,
+        ]);
+        $this->assertSame(0, DB::table('project_type_backfill_20260714')->count());
+    }
+
+    public function test_05_missing_category_is_logged_and_skipped_safely(): void
+    {
+        $project = Project::create([
+            'name' => 'Masterise Grand View',
+            'slug' => 'masterise-grand-view',
+            'project_status' => 'selling',
+            'is_published' => true,
+        ]);
+
+        Log::spy();
+        $this->migration()->up();
+
+        $this->assertSame(0, DB::table('project_category_project')->where('project_id', $project->id)->count());
+        $this->assertSame(0, DB::table('project_type_backfill_20260714')->count());
+        Log::shouldHaveReceived('warning')->twice();
+    }
+
+    public function test_06_empty_projects_table_is_a_safe_no_op(): void
+    {
+        $this->assertSame(0, Project::count());
+
+        $this->migration()->up();
+        $this->migration()->up();
+
+        $this->assertTrue(Schema::hasTable('project_type_backfill_20260714'));
+        $this->assertSame(0, DB::table('project_type_backfill_20260714')->count());
     }
 }

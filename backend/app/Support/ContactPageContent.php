@@ -302,29 +302,68 @@ final class ContactPageContent
     {
         $default = self::default();
         $result = $default;
-        $result['seo'] = array_replace($default['seo'], is_array($value['seo'] ?? null) ? $value['seo'] : []);
+        $result['seo'] = self::normalizeRecord($value['seo'] ?? null, $default['seo']);
 
         $order = array_values(array_unique(array_filter($value['sectionOrder'] ?? [], fn ($key) => in_array($key, self::SECTION_KEYS, true))));
         $result['sectionOrder'] = count($order) === count(self::SECTION_KEYS)
             ? $order
             : self::SECTION_KEYS;
 
-        $listFields = [
-            'hero' => ['quickInfo'], 'commitments' => ['items'], 'introduction' => ['paragraphs', 'images', 'bullets'],
-            'salesTeam' => ['items'], 'achievements' => ['metrics', 'milestones'], 'departments' => ['items'],
-            'faqs' => ['items'],
-        ];
         foreach (self::SECTION_KEYS as $section) {
-            $incoming = is_array($value[$section] ?? null) ? $value[$section] : [];
-            $result[$section] = array_replace($default[$section], $incoming);
-            foreach ($listFields[$section] ?? [] as $field) {
-                if (array_key_exists($field, $incoming) && is_array($incoming[$field])) {
-                    $result[$section][$field] = array_values($incoming[$field]);
-                }
-            }
-            $result[$section]['enabled'] = (bool) ($result[$section]['enabled'] ?? true);
-            $result[$section]['sortOrder'] = (int) ($result[$section]['sortOrder'] ?? 0);
+            $result[$section] = self::normalizeRecord($value[$section] ?? null, $default[$section]);
         }
+
+        $listSchemas = [
+            'hero.quickInfo' => ['quick-info', 'label', [
+                'id' => '', 'label' => '', 'value' => '', 'icon' => 'HeartHandshake',
+                'isActive' => true, 'sortOrder' => 0,
+            ]],
+            'commitments.items' => ['commitment', 'title', [
+                'id' => '', 'title' => '', 'description' => '', 'icon' => 'ShieldCheck',
+                'isActive' => true, 'sortOrder' => 0,
+            ]],
+            'introduction.images' => ['contact-image', 'url', [
+                'id' => '', 'url' => '', 'alt' => '', 'isActive' => true, 'sortOrder' => 0,
+            ]],
+            'introduction.bullets' => ['contact-bullet', 'text', [
+                'id' => '', 'text' => '', 'isActive' => true, 'sortOrder' => 0,
+            ]],
+            'salesTeam.items' => ['sales-member', 'name', [
+                'id' => '', 'name' => '', 'title' => '', 'avatar' => '', 'avatarAlt' => '',
+                'description' => '', 'responsibility' => '', 'phone' => '', 'email' => '',
+                'zaloUrl' => '', 'facebookUrl' => '', 'tags' => [],
+                'isActive' => true, 'sortOrder' => 0,
+            ]],
+            'achievements.metrics' => ['achievement', 'label', [
+                'id' => '', 'value' => '', 'suffix' => '', 'label' => '', 'description' => '',
+                'icon' => 'Award', 'isActive' => true, 'sortOrder' => 0,
+            ]],
+            'achievements.milestones' => ['milestone', 'title', [
+                'id' => '', 'year' => '', 'title' => '', 'description' => '', 'image' => '',
+                'imageAlt' => '', 'referenceUrl' => '', 'isActive' => true, 'sortOrder' => 0,
+            ]],
+            'departments.items' => ['department', 'name', [
+                'id' => '', 'name' => '', 'description' => '', 'phone' => '', 'email' => '',
+                'workingHours' => '', 'icon' => 'Headphones', 'isActive' => true, 'sortOrder' => 0,
+            ]],
+            'faqs.items' => ['faq', 'question', [
+                'id' => '', 'question' => '', 'answer' => '', 'isActive' => true, 'sortOrder' => 0,
+            ]],
+        ];
+        foreach ($listSchemas as $path => [$prefix, $primaryField, $schema]) {
+            $incoming = Arr::get($value, $path);
+            $items = $incoming === null && Arr::has($value, $path)
+                ? []
+                : ($incoming === null ? Arr::get($default, $path, []) : $incoming);
+            Arr::set($result, $path, self::normalizeItems($items, $schema, $prefix, $primaryField));
+        }
+
+        $paragraphs = Arr::has($value, 'introduction.paragraphs')
+            ? Arr::get($value, 'introduction.paragraphs')
+            : $default['introduction']['paragraphs'];
+        $result['introduction']['paragraphs'] = is_array($paragraphs)
+            ? collect($paragraphs)->filter(fn ($text) => is_string($text))->map(fn ($text) => trim($text))->filter()->values()->all()
+            : [];
 
         if (!$value && $legacyDepartments) {
             $result['departments']['items'] = collect($legacyDepartments)->values()->map(function ($item, $index) {
@@ -343,19 +382,73 @@ final class ContactPageContent
             })->filter(fn ($item) => $item['name'] !== '')->values()->all();
         }
 
-        $primaryFields = [
-            'hero.quickInfo' => 'label', 'commitments.items' => 'title', 'introduction.images' => 'url',
-            'introduction.bullets' => 'text', 'salesTeam.items' => 'name', 'achievements.metrics' => 'label',
-            'achievements.milestones' => 'title', 'departments.items' => 'name', 'faqs.items' => 'question',
-        ];
-        foreach ($primaryFields as $path => $field) {
-            $items = Arr::get($result, $path, []);
-            $items = collect($items)->filter(fn ($item) => is_array($item) && trim((string) ($item[$field] ?? '')) !== '')->values()->all();
-            Arr::set($result, $path, $items);
+        return $result;
+    }
+
+    private static function normalizeRecord(mixed $value, array $defaults): array
+    {
+        $source = is_array($value) && !array_is_list($value) ? $value : [];
+        $result = [];
+
+        foreach ($defaults as $key => $fallback) {
+            if (!array_key_exists($key, $source)) {
+                $result[$key] = $fallback;
+                continue;
+            }
+
+            $incoming = $source[$key];
+            if (is_string($fallback)) {
+                $result[$key] = is_string($incoming) ? $incoming : ($incoming === null ? '' : $fallback);
+            } elseif (is_bool($fallback)) {
+                $result[$key] = self::normalizeBoolean($incoming, $fallback);
+            } elseif (is_int($fallback) || is_float($fallback)) {
+                $result[$key] = self::normalizeNumber($incoming, $fallback);
+            } elseif (is_array($fallback) && !array_is_list($fallback)) {
+                $result[$key] = self::normalizeRecord($incoming, $fallback);
+            } elseif (is_array($fallback)) {
+                $result[$key] = is_array($incoming) ? array_values($incoming) : [];
+            } else {
+                $result[$key] = $fallback;
+            }
         }
-        $result['introduction']['paragraphs'] = collect($result['introduction']['paragraphs'])->map(fn ($text) => trim((string) $text))->filter()->values()->all();
 
         return $result;
+    }
+
+    private static function normalizeItems(mixed $value, array $schema, string $prefix, string $primaryField): array
+    {
+        if (!is_array($value)) return [];
+
+        return collect(array_values($value))
+            ->filter(fn ($item) => is_array($item) && !array_is_list($item))
+            ->map(function (array $item, int $index) use ($schema, $prefix): array {
+                $normalized = self::normalizeRecord($item, $schema);
+                if ($normalized['id'] === '') $normalized['id'] = $prefix.'-'.($index + 1);
+                if (($normalized['sortOrder'] ?? 0) === 0) $normalized['sortOrder'] = ($index + 1) * 10;
+                if (array_key_exists('tags', $normalized)) {
+                    $normalized['tags'] = is_array($item['tags'] ?? null)
+                        ? array_values(array_filter($item['tags'], fn ($tag) => is_string($tag)))
+                        : [];
+                }
+                return $normalized;
+            })
+            ->filter(fn ($item) => trim($item[$primaryField]) !== '')
+            ->values()
+            ->all();
+    }
+
+    private static function normalizeBoolean(mixed $value, bool $fallback): bool
+    {
+        if ($value === true || $value === 1 || $value === '1') return true;
+        if ($value === false || $value === 0 || $value === '0') return false;
+        return $fallback;
+    }
+
+    private static function normalizeNumber(mixed $value, int|float $fallback): int|float
+    {
+        if (!is_numeric($value)) return $fallback;
+        $number = $value + 0;
+        return is_finite((float) $number) ? $number : $fallback;
     }
 
     private static function isSafeUrl(string $url): bool

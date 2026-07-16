@@ -1,7 +1,7 @@
 import { cache } from "react";
 import type { Metadata } from "next";
 import { absoluteUrl, SITE_URL } from "@/config/seo";
-import { normalizeContactPageContent, activeSorted } from "@/lib/contactPage";
+import { activeSorted, asSafeRecord, asSafeString, normalizeContactPageContent } from "@/lib/contactPage";
 import { defaultContactPageContent } from "@/data/defaultContactPageContent";
 import { getServerApiUrl } from "@/lib/serverApi";
 import type { ContactPageSiteDetails } from "@/types/contact-page";
@@ -21,21 +21,23 @@ const getContactPageData = cache(async () => {
     });
     if (!response.ok) throw new Error(`Public settings returned ${response.status}`);
     const payload = (await response.json()) as PublicSettingsResponse;
-    const settings = payload.data || {};
+    const settings = asSafeRecord(payload.data);
+    const rawSocialLinks = asSafeRecord(settings.social_links);
+    const socialLinks = Object.fromEntries(
+      Object.entries(rawSocialLinks).filter((entry): entry is [string, string] => typeof entry[1] === "string"),
+    );
     const legacyDepartments = Array.isArray(settings.contact_departments)
       ? settings.contact_departments as Array<Record<string, unknown>>
       : [];
     return {
       content: normalizeContactPageContent(settings.contact_page_content, legacyDepartments),
       site: {
-        companyName: String(settings.company_name || "Masterise Homes"),
-        companyAddress: String(settings.company_address || ""),
-        hotline: String(settings.hotline || ""),
-        email: String(settings.email || ""),
-        logoUrl: String(settings.logo_url || ""),
-        socialLinks: settings.social_links && typeof settings.social_links === "object"
-          ? settings.social_links as Record<string, string>
-          : {},
+        companyName: asSafeString(settings.company_name, "Masterise Homes") || "Masterise Homes",
+        companyAddress: asSafeString(settings.company_address),
+        hotline: asSafeString(settings.hotline),
+        email: asSafeString(settings.email),
+        logoUrl: asSafeString(settings.logo_url),
+        socialLinks,
       } satisfies ContactPageSiteDetails,
     };
   } catch {
