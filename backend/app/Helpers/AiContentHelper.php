@@ -12,13 +12,13 @@ class AiContentHelper
      * Whitelist of allowed HTML tags.
      */
     protected static array $allowedTags = [
-        'h2', 'h3', 'h4', 'h5', 'h6',
+        'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
         'p', 'br', 'hr',
         'ul', 'ol', 'li',
-        'strong', 'em', 'span', 'b', 'i',
+        'strong', 'em', 'span', 'b', 'i', 'u', 's', 'sub', 'sup',
         'a', 'blockquote',
-        'table', 'thead', 'tbody', 'tr', 'th', 'td',
-        'img'
+        'table', 'caption', 'colgroup', 'col', 'thead', 'tbody', 'tfoot', 'tr', 'th', 'td',
+        'img', 'figure', 'figcaption'
     ];
 
     /**
@@ -64,19 +64,23 @@ class AiContentHelper
                     continue;
                 }
 
-                // Remove dangerous attributes (like onclick, onload, etc.)
+                // Keep only the small set of structural/editor attributes used by public content.
                 $attrsToRemove = [];
                 if ($node->hasAttributes()) {
                     foreach ($node->attributes as $attr) {
                         $name = strtolower($attr->name);
-                        // Strip anything starting with "on" (event listeners) or containing "javascript:"
-                        if (str_starts_with($name, 'on') || str_contains(strtolower($attr->value), 'javascript:')) {
+                        if (!self::isAllowedAttribute(strtolower($node->nodeName), $name, $attr->value)) {
                             $attrsToRemove[] = $attr->name;
                         }
                     }
                     foreach ($attrsToRemove as $attrName) {
                         $node->removeAttribute($attrName);
                     }
+                }
+
+                if ($node->hasAttribute('class')) {
+                    $safeClasses = self::sanitizeClassValue($node->getAttribute('class'));
+                    $safeClasses === '' ? $node->removeAttribute('class') : $node->setAttribute('class', $safeClasses);
                 }
 
                 // Add rel="noopener noreferrer" to external <a> tags
@@ -105,6 +109,57 @@ class AiContentHelper
         } finally {
             libxml_use_internal_errors($internalErrors);
         }
+    }
+
+    private static function isAllowedAttribute(string $tag, string $name, string $value): bool
+    {
+        if (str_starts_with($name, 'on') || $name === 'style' || str_contains(strtolower($value), 'javascript:')) {
+            return false;
+        }
+
+        if (in_array($name, ['class', 'id', 'title'], true)) {
+            return $name !== 'id' || preg_match('/^[A-Za-z][A-Za-z0-9_-]*$/', $value) === 1;
+        }
+        if ($tag === 'a' && in_array($name, ['href', 'target', 'rel'], true)) {
+            return $name !== 'href' || self::isSafeUrl($value, true);
+        }
+        if ($tag === 'img' && in_array($name, ['src', 'alt', 'width', 'height', 'loading'], true)) {
+            if ($name === 'src') return self::isSafeUrl($value, false);
+            if (in_array($name, ['width', 'height'], true)) return preg_match('/^\d{1,5}$/', $value) === 1;
+            if ($name === 'loading') return in_array(strtolower($value), ['lazy', 'eager'], true);
+            return true;
+        }
+        if (in_array($tag, ['td', 'th'], true) && in_array($name, ['colspan', 'rowspan', 'headers'], true)) {
+            return $name === 'headers'
+                ? preg_match('/^[A-Za-z0-9_ -]+$/', $value) === 1
+                : preg_match('/^\d{1,3}$/', $value) === 1;
+        }
+        if ($tag === 'th' && $name === 'scope') {
+            return in_array(strtolower($value), ['row', 'col', 'rowgroup', 'colgroup'], true);
+        }
+        if ($tag === 'col' && $name === 'span') return preg_match('/^\d{1,3}$/', $value) === 1;
+        if ($tag === 'blockquote' && $name === 'cite') return self::isSafeUrl($value, true);
+        if ($tag === 'ol' && $name === 'start') return preg_match('/^-?\d+$/', $value) === 1;
+        if ($tag === 'li' && $name === 'value') return preg_match('/^-?\d+$/', $value) === 1;
+
+        return false;
+    }
+
+    private static function sanitizeClassValue(string $value): string
+    {
+        return collect(preg_split('/\s+/', trim($value)) ?: [])
+            ->filter(fn ($class) => preg_match('/^ql-(?:align-(?:center|right|justify)|indent-[1-9]|direction-rtl)$/', $class) === 1)
+            ->unique()
+            ->implode(' ');
+    }
+
+    private static function isSafeUrl(string $value, bool $allowContactSchemes): bool
+    {
+        $value = trim($value);
+        if ($value === '' || str_starts_with($value, '/') || str_starts_with($value, '#')) return true;
+        if ($allowContactSchemes && preg_match('/^(?:mailto|tel):/i', $value)) return true;
+        return filter_var($value, FILTER_VALIDATE_URL) !== false
+            && in_array(strtolower((string) parse_url($value, PHP_URL_SCHEME)), ['http', 'https'], true);
     }
 
     /**

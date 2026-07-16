@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Helpers\AiContentHelper;
 use App\Http\Resources\ProjectListResource;
 use App\Models\Project;
 use App\Models\ProjectCategory;
@@ -585,6 +586,9 @@ class ProjectController extends Controller
             'floor_plans', 'floor_plan_groups', 'handover_standards', 'price_rows', 'schema_price', 'schema_price_currency', 'schema_availability'
         ]);
         $projectData = $this->applyFloorPlanData($request, $projectData);
+        if (array_key_exists('content', $projectData) && filled($projectData['content'])) {
+            $projectData['content'] = AiContentHelper::sanitizeHtml($projectData['content']);
+        }
         $projectData = $this->normalizeProjectPriceData($projectData);
         $projectData['region'] = $location?->region?->name;
         $project = Project::create($projectData);
@@ -775,6 +779,9 @@ class ProjectController extends Controller
             'floor_plans', 'floor_plan_groups', 'handover_standards', 'price_rows', 'schema_price', 'schema_price_currency', 'schema_availability'
         ]);
         $projectData = $this->applyFloorPlanData($request, $projectData);
+        if (array_key_exists('content', $projectData) && filled($projectData['content'])) {
+            $projectData['content'] = AiContentHelper::sanitizeHtml($projectData['content']);
+        }
         $projectData = $this->normalizeProjectPriceData($projectData);
         if ($location) {
             $projectData['region'] = $location->region->name;

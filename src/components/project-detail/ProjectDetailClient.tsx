@@ -40,6 +40,7 @@ import ProjectGalleryAlbumSection from "@/components/project-detail/ProjectGalle
 import ProjectPricingPolicySection from "@/components/project-detail/ProjectPricingPolicySection";
 import VR360Section from "@/components/vr360/VR360Section";
 import { leadService } from "@/services/leadService";
+import RichHtmlContent from "@/components/content/RichHtmlContent";
 
 const iconMap: Record<ProjectIconName, LucideIcon> = {
   BadgeDollarSign,
@@ -354,7 +355,6 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   const [heroTextExpanded, setHeroTextExpanded] = useState(false);
   const [canToggleHeroText, setCanToggleHeroText] = useState(false);
-  const [overviewExpanded, setOverviewExpanded] = useState(false);
   const [floorPlansExpanded, setFloorPlansExpanded] = useState(false);
   const [floorPlanLimit, setFloorPlanLimit] = useState(6);
   const [consultStatus, setConsultStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
@@ -689,10 +689,6 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
     onSelect(keys[nextIndex]);
     event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>('[role="tab"]')[nextIndex]?.focus();
   };
-  const overviewHtml = project.content
-    ? project.content.replace(/<h1\b/gi, "<h2").replace(/<\/h1\s*>/gi, "</h2>")
-    : "";
-  const canToggleOverview = Boolean(overviewHtml && overviewHtml.replace(/<[^>]*>/g, '').trim().length > 520);
   const ProjectSectionTitle = ({
     sectionKey,
     fallbackTitle,
@@ -967,28 +963,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
           <Reveal className="rounded-[22px] border border-line/80 bg-white p-5 shadow-soft sm:p-7">
             <section id="tong-quan" className="scroll-mt-32">
               <ProjectSectionTitle sectionKey="overview" fallbackEyebrow="Tổng quan dự án" fallbackTitle={`Tổng quan ${project.name}`} />
-              <div className="relative mt-5">
-                <div
-                  className={`prose prose-stone max-w-none text-left text-[15px] leading-7 text-ink prose-p:my-4 prose-headings:font-heading prose-headings:font-semibold prose-headings:text-[#1F1B16] prose-a:text-[#B88746] hover:prose-a:underline prose-img:rounded-2xl sm:text-base sm:leading-8 ${
-                    !overviewExpanded && canToggleOverview ? 'max-h-[360px] overflow-hidden sm:max-h-[430px]' : ''
-                  }`}
-                  dangerouslySetInnerHTML={{ __html: overviewHtml }}
-                />
-                {!overviewExpanded && canToggleOverview ? (
-                  <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-white via-white/90 to-white/0 backdrop-blur-[1px]" />
-                ) : null}
-              </div>
-              {canToggleOverview ? (
-                <div className="mt-4 flex justify-center">
-                  <button
-                    type="button"
-                    onClick={() => setOverviewExpanded((value) => !value)}
-                    className="rounded-full border border-gold/35 bg-[#fffaf2] px-5 py-2 text-[11px] font-bold uppercase tracking-[0.08em] text-gold-dark transition hover:border-gold hover:bg-white"
-                  >
-                    {overviewExpanded ? 'Thu gọn' : 'Xem thêm'}
-                  </button>
-                </div>
-              ) : null}
+              <RichHtmlContent html={project.content} className="mt-5" />
             </section>
           </Reveal>
         ) : null}
