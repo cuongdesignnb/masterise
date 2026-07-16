@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use App\Models\Setting;
 use App\Models\SeoMeta;
+use App\Support\ContactPageContent;
 
 class DatabaseSeeder extends Seeder
 {
@@ -57,6 +58,8 @@ class DatabaseSeeder extends Seeder
             'hero_description' => 'Kiến tạo phong cách sống đẳng cấp thế giới với các dự án bất động sản hàng hiệu hàng đầu Việt Nam.',
             'hero_video_url' => 'https://www.w3schools.com/html/mov_bbb.mp4',
         ], 'json');
+
+        ContactPageContent::ensureSetting();
 
         Setting::set('about_page_collections', [
             [

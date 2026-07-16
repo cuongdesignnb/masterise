@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
+use App\Support\ContactPageContent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 
 class SettingController extends Controller
 {
@@ -14,7 +16,7 @@ class SettingController extends Controller
      */
     public function publicSettings()
     {
-        $keys = ['company_name', 'company_address', 'hotline', 'email', 'social_links', 'homepage_meta', 'logo_url', 'about_mission', 'about_vision', 'about_timeline', 'contact_departments', 'projects_page_hero', 'projects_page_cta', 'news_page_hero', 'news_page_cta', 'about_page_hero', 'about_page_intro', 'about_page_metrics', 'about_page_values', 'about_page_awards', 'about_page_ecosystem', 'about_page_sustainability', 'about_page_why_choose', 'about_page_brand_story', 'about_page_faqs', 'about_page_contact_cta', 'about_page_collections', 'footer_navigation'];
+        $keys = ['company_name', 'company_address', 'hotline', 'email', 'social_links', 'homepage_meta', 'logo_url', 'about_mission', 'about_vision', 'about_timeline', 'contact_departments', 'contact_page_content', 'projects_page_hero', 'projects_page_cta', 'news_page_hero', 'news_page_cta', 'about_page_hero', 'about_page_intro', 'about_page_metrics', 'about_page_values', 'about_page_awards', 'about_page_ecosystem', 'about_page_sustainability', 'about_page_why_choose', 'about_page_brand_story', 'about_page_faqs', 'about_page_contact_cta', 'about_page_collections', 'footer_navigation'];
         $settings = [];
 
         foreach ($keys as $key) {
@@ -60,7 +62,31 @@ class SettingController extends Controller
             ], 422);
         }
 
-        foreach ($request->settings as $item) {
+        $settings = $request->settings;
+        foreach ($settings as $index => &$item) {
+            if ($item['key'] !== 'contact_page_content') continue;
+
+            if ($item['type'] !== 'json') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Dữ liệu trang liên hệ chưa hợp lệ.',
+                    'errors' => ["settings.{$index}.type" => ['contact_page_content phải sử dụng kiểu json.']],
+                ], 422);
+            }
+
+            try {
+                $item['value'] = ContactPageContent::validateAndNormalize($item['value']);
+            } catch (ValidationException $exception) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Dữ liệu trang liên hệ chưa hợp lệ.',
+                    'errors' => $exception->errors(),
+                ], 422);
+            }
+        }
+        unset($item);
+
+        foreach ($settings as $item) {
             Setting::set($item['key'], $item['value'], $item['type']);
         }
 
@@ -152,4 +178,3 @@ class SettingController extends Controller
         }
     }
 }
-

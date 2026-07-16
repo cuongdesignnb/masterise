@@ -22,6 +22,7 @@ interface GlobalContactFormProps {
   defaultDemandType?: string;
   leadSourcePosition?: string;
   compact?: boolean;
+  embedded?: boolean;
 }
 
 export default function GlobalContactForm({
@@ -29,6 +30,7 @@ export default function GlobalContactForm({
   defaultDemandType = "Đăng ký tư vấn",
   leadSourcePosition = "global_footer_form",
   compact = false,
+  embedded = false,
 }: GlobalContactFormProps) {
   const [projects, setProjects] = useState<Project[]>([]);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
@@ -118,16 +120,16 @@ export default function GlobalContactForm({
   return (
     <motion.section
       id="global-contact-form"
-      className={`scroll-mt-28 bg-ink-deep text-white ${compact ? "py-10" : "py-14 sm:py-20"}`}
+      className={embedded ? "scroll-mt-28" : `scroll-mt-28 bg-ink-deep text-white ${compact ? "py-10" : "py-14 sm:py-20"}`}
       variants={fadeUp}
       initial={false}
       whileInView="visible"
       viewport={{ once: true, amount: 0.2 }}
     >
-      <Container>
-        <div className="grid gap-10 lg:grid-cols-2 lg:items-start lg:gap-16">
+      <Container className={embedded ? "px-0 sm:px-0 lg:px-0" : undefined}>
+        <div className={embedded ? "block" : "grid gap-10 lg:grid-cols-2 lg:items-start lg:gap-16"}>
           {/* Left column – copy & benefits */}
-          <div className="flex flex-col justify-center text-left">
+          {!embedded && <div className="flex flex-col justify-center text-left">
             <p className="text-eyebrow">Tư vấn dự án</p>
             <h2 className="mt-4 text-3xl font-bold leading-tight text-white">
               Đăng ký nhận tư vấn dự án
@@ -144,7 +146,7 @@ export default function GlobalContactForm({
                 </li>
               ))}
             </ul>
-          </div>
+          </div>}
 
           {/* Right column – form card */}
           <form

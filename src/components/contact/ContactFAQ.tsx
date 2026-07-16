@@ -1,83 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { contactFaqs } from "@/data/contactSeed";
-import Container from "@/components/Container";
-import MotionWrapper from "@/components/MotionWrapper";
 import { ChevronDown } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import Container from "@/components/Container";
+import { activeSorted } from "@/lib/contactPage";
+import type { ContactPageContent } from "@/types/contact-page";
 
-export default function ContactFAQ() {
-  const [openIdx, setOpenIdx] = useState<number | null>(null);
-
-  const toggle = (idx: number) => {
-    setOpenIdx((prev) => (prev === idx ? null : idx));
-  };
-
-  return (
-    <section className="py-8">
-      <Container>
-        {/* ── Section header ────────────────────────── */}
-        <MotionWrapper>
-          <div className="flex items-center gap-2 mb-6">
-            <span className="text-gold text-sm">✦</span>
-            <h2 className="heading-font font-bold text-ink text-base">
-              Câu hỏi thường gặp
-            </h2>
-          </div>
-        </MotionWrapper>
-
-        {/* ── FAQ grid ──────────────────────────────── */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {contactFaqs.map((faq, idx) => {
-            const isOpen = openIdx === idx;
-
-            return (
-              <MotionWrapper key={idx} delay={0.06 * idx}>
-                <div className="bg-white rounded-[16px] border border-line/50 overflow-hidden transition-all">
-                  {/* Question header */}
-                  <button
-                    type="button"
-                    onClick={() => toggle(idx)}
-                    className="w-full flex justify-between items-start p-4 cursor-pointer text-left"
-                  >
-                    <span className="text-xs font-semibold text-ink pr-4 leading-relaxed">
-                      {faq.question}
-                    </span>
-                    <motion.span
-                      animate={{ rotate: isOpen ? 180 : 0 }}
-                      transition={{ duration: 0.3, ease: "easeInOut" }}
-                      className="flex-shrink-0 mt-0.5"
-                    >
-                      <ChevronDown className="w-4 h-4 text-gold" />
-                    </motion.span>
-                  </button>
-
-                  {/* Answer panel */}
-                  <AnimatePresence initial={false}>
-                    {isOpen && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{
-                          height: { duration: 0.3, ease: "easeInOut" },
-                          opacity: { duration: 0.2, ease: "easeInOut" },
-                        }}
-                        className="overflow-hidden"
-                      >
-                        <p className="px-4 pb-4 text-[11px] text-muted leading-relaxed">
-                          {faq.answer}
-                        </p>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              </MotionWrapper>
-            );
-          })}
-        </div>
-      </Container>
-    </section>
-  );
+export default function ContactFAQ({ content }: { content: ContactPageContent["faqs"] }) {
+  const items = activeSorted(content.items);
+  const [openId, setOpenId] = useState<string | null>(items[0]?.id || null);
+  if (!items.length) return null;
+  return <section className="bg-ivory py-16 sm:py-24" data-contact-section="faqs"><Container><div className="grid gap-10 lg:grid-cols-[.7fr_1.3fr] lg:gap-20"><div><p className="text-eyebrow">{content.label}</p><h2 className="mt-3 text-3xl font-semibold text-ink sm:text-4xl">{content.title}</h2>{content.description && <p className="mt-4 text-sm leading-7 text-muted">{content.description}</p>}</div><div className="divide-y divide-line/60 border-y border-line/60">{items.map((item) => { const open = openId === item.id; return <div key={item.id}><button type="button" aria-expanded={open} aria-controls={`contact-faq-${item.id}`} onClick={() => setOpenId(open ? null : item.id)} className="flex w-full items-center justify-between gap-4 py-5 text-left text-base font-semibold text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"><span>{item.question}</span><ChevronDown size={18} className={`shrink-0 text-gold transition-transform ${open ? "rotate-180" : ""}`} /></button><div id={`contact-faq-${item.id}`} hidden={!open} className="pb-5 pr-8 text-sm leading-7 text-muted">{item.answer}</div></div>; })}</div></div></Container></section>;
 }

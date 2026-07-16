@@ -35,6 +35,7 @@ import { pageService } from '@/services/pageService';
 import { postService } from '@/services/postService';
 import { projectService } from '@/services/projectService';
 import { defaultHomePageContent, type HomePageContent } from '@/providers/SiteSettingsProvider';
+import ContactPageSettings from '@/components/admin/settings/ContactPageSettings';
 
 // Interfaces for structured settings
 interface FaqItem {
@@ -855,14 +856,16 @@ export default function AdminSettings() {
           <h1 className="text-3xl font-heading font-medium text-[#1F1B16]">Cài đặt hệ thống</h1>
           <p className="text-sm text-[#8C7A6B]">Quản lý thông tin doanh nghiệp, banner trang chủ, lịch sử phát triển và các phòng ban liên hệ</p>
         </div>
-        <button
-          onClick={() => updateSettingsMutation.mutate()}
-          disabled={updateSettingsMutation.isPending}
-          className="shrink-0 flex items-center justify-center gap-2 px-5 py-2.5 bg-[#B88746] hover:bg-[#1F1B16] text-white rounded-xl text-sm font-semibold transition-all duration-300 shadow-sm disabled:opacity-50"
-        >
-          <Save className="w-4 h-4" />
-          {updateSettingsMutation.isPending ? 'Đang lưu...' : 'Lưu tất cả thay đổi'}
-        </button>
+        {activeTab !== 'contact' && (
+          <button
+            onClick={() => updateSettingsMutation.mutate()}
+            disabled={updateSettingsMutation.isPending}
+            className="shrink-0 flex items-center justify-center gap-2 px-5 py-2.5 bg-[#B88746] hover:bg-[#1F1B16] text-white rounded-xl text-sm font-semibold transition-all duration-300 shadow-sm disabled:opacity-50"
+          >
+            <Save className="w-4 h-4" />
+            {updateSettingsMutation.isPending ? 'Đang lưu...' : 'Lưu tất cả thay đổi'}
+          </button>
+        )}
       </div>
 
       {/* Tabs */}
@@ -2261,76 +2264,9 @@ export default function AdminSettings() {
             </div>
           )}
 
-          {/* TAB 4: Contact Departments */}
+          {/* TAB 4: Dynamic Contact Page */}
           {activeTab === 'contact' && (
-            <div className="space-y-4">
-              <div className="flex justify-between items-center border-b border-[#E8DCCB]/60 pb-2">
-                <h3 className="text-lg font-heading font-medium text-[#1F1B16] flex items-center gap-2">
-                  <Briefcase className="w-5 h-5 text-[#B88746]" />
-                  Các phòng ban hỗ trợ (Contact Departments)
-                </h3>
-                <button
-                  type="button"
-                  onClick={addDepartment}
-                  className="flex items-center gap-1 px-3 py-1.5 bg-[#B88746] hover:bg-[#1F1B16] text-white text-xs font-bold rounded-xl transition-all"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  Thêm Phòng ban
-                </button>
-              </div>
-
-              {departments.length === 0 ? (
-                <div className="p-8 text-center border border-dashed border-[#E8DCCB] rounded-xl text-xs text-[#8C7A6B]">
-                  Chưa có phòng ban liên hệ nào được định nghĩa.
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {departments.map((dept, idx) => (
-                    <div key={idx} className="p-4 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2]/30 flex gap-4 relative">
-                      <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-3">
-                        <div>
-                          <label className="block text-[9px] font-bold text-gray-500 uppercase mb-0.5">Tên phòng ban</label>
-                          <input
-                            type="text"
-                            value={dept.name}
-                            onChange={(e) => handleDepartmentChange(idx, 'name', e.target.value)}
-                            className="w-full px-3 py-1.5 border border-[#E8DCCB] rounded-lg text-xs bg-white focus:outline-none font-semibold"
-                            placeholder="Ví dụ: Phòng Kinh doanh"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[9px] font-bold text-gray-500 uppercase mb-0.5">Hotline phòng ban</label>
-                          <input
-                            type="text"
-                            value={dept.phone}
-                            onChange={(e) => handleDepartmentChange(idx, 'phone', e.target.value)}
-                            className="w-full px-3 py-1.5 border border-[#E8DCCB] rounded-lg text-xs bg-white focus:outline-none"
-                            placeholder="Ví dụ: 090 1234567"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[9px] font-bold text-gray-500 uppercase mb-0.5">Email phòng ban</label>
-                          <input
-                            type="email"
-                            value={dept.email}
-                            onChange={(e) => handleDepartmentChange(idx, 'email', e.target.value)}
-                            className="w-full px-3 py-1.5 border border-[#E8DCCB] rounded-lg text-xs bg-white focus:outline-none"
-                            placeholder="sales@masterise-homes.net.vn"
-                          />
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => removeDepartment(idx)}
-                        className="self-center p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+            <ContactPageSettings settings={settingsList} isLoading={isLoading} />
           )}
 
           {/* TAB 5: Projects Page Config */}
