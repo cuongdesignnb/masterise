@@ -28,14 +28,19 @@ export async function fetchApi<T>(endpoint: string): Promise<T | null> {
 
 export async function fetchApiResponse<T>(
   endpoint: string,
-  options: { revalidate?: number; tags?: string[] } = {},
+  options: { revalidate?: number; tags?: string[]; cache?: RequestCache } = {},
 ): Promise<T | null> {
   try {
+    const cacheOptions = options.cache === "no-store"
+      ? { cache: "no-store" as const }
+      : {
+          next: {
+            revalidate: options.revalidate ?? 300,
+            tags: options.tags,
+          },
+        };
     const res = await fetch(`${getServerApiUrl()}${endpoint}`, {
-      next: {
-        revalidate: options.revalidate ?? 300,
-        tags: options.tags,
-      },
+      ...cacheOptions,
       headers: { Accept: "application/json" },
     });
 

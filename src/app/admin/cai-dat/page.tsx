@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { useToast } from '@/components/admin/Toast';
@@ -59,7 +61,7 @@ export default function AdminSettings() {
   const queryClient = useQueryClient();
   const toast = useToast();
   const [activeTab, setActiveTab] = useState<'general' | 'homepage' | 'about' | 'contact' | 'projects_page' | 'news_page' | 'smtp' | 'footer'>('general');
-  const [mediaTarget, setMediaTarget] = useState<{ type: 'logo' | 'projects_hero_image' | 'projects_cta_image' | 'news_hero_image' | 'about_hero_image' | 'about_intro_image_0' | 'about_intro_image_1' | 'about_intro_image_2' | 'about_sustainability_image' | 'about_brand_story_image' | 'about_contact_cta_image' | 'about_collection_image'; index?: number } | null>(null);
+  const [mediaTarget, setMediaTarget] = useState<{ type: 'logo' | 'home_about_image' | 'projects_hero_image' | 'projects_cta_image' | 'news_hero_image' | 'about_hero_image' | 'about_intro_image_0' | 'about_intro_image_1' | 'about_intro_image_2' | 'about_sustainability_image' | 'about_brand_story_image' | 'about_contact_cta_image' | 'about_collection_image'; index?: number } | null>(null);
 
   const [footerNavigation, setFooterNavigation] = useState<{ title: string; links: { label: string; href: string }[] }[]>([]);
   const [suggestTarget, setSuggestTarget] = useState<{ colIdx: number; linkIdx: number } | null>(null);
@@ -785,6 +787,8 @@ export default function AdminSettings() {
     if (!mediaTarget) return;
     if (mediaTarget.type === 'logo') {
       setLogoUrl(url as string);
+    } else if (mediaTarget.type === 'home_about_image') {
+      setHomePageContent(prev => ({ ...prev, aboutImage: url as string }));
     } else if (mediaTarget.type === 'projects_hero_image') {
       setProjectsHeroImage(url as string);
     } else if (mediaTarget.type === 'projects_cta_image') {
@@ -1063,8 +1067,13 @@ export default function AdminSettings() {
           {activeTab === 'homepage' && (
             <div className="space-y-8">
               
-              <div className="rounded-2xl border border-[#E8DCCB] bg-[#FBF8F2] p-4 text-sm text-[#8C7A6B]">
-                Banner hero trang chủ được quản lý tập trung tại menu <strong className="text-[#1F1B16]">Banner trang chủ</strong>. Trang chủ lấy dữ liệu trực tiếp từ API <code>/hero-banners</code>, không dùng cấu hình banner trong mục Cài đặt nữa.
+              <div className="rounded-2xl border border-[#E8DCCB] bg-[#FBF8F2] p-4 text-sm leading-6 text-[#8C7A6B]">
+                <strong className="block text-[#1F1B16]">Ảnh lớn đầu trang được quản lý tại Banner hero đầu trang.</strong>
+                Menu này chỉ điều khiển khối hero ngay dưới header, không điều khiển ảnh trong các section bên dưới.
+                Ảnh của Section Giới thiệu được chọn độc lập ngay trong khối tương ứng phía dưới.
+                <Link href="/admin/banners" className="ml-1 font-bold text-[#B88746] hover:text-[#1F1B16]">
+                  Mở quản lý Banner hero
+                </Link>
               </div>
 
               <div className="space-y-5">
@@ -1154,6 +1163,54 @@ export default function AdminSettings() {
 
                 <div className="rounded-2xl border border-[#E8DCCB] p-4 space-y-4">
                   <h4 className="text-sm font-bold text-[#1F1B16]">Section Giới thiệu</h4>
+                  <div className="rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] p-3">
+                    <div className="flex flex-col gap-3 md:flex-row md:items-center">
+                      <div className="flex aspect-[4/3] w-full max-w-52 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[#E8DCCB] bg-white">
+                        {homePageContent.aboutImage ? (
+                          <Image
+                            src={homePageContent.aboutImage}
+                            alt={homePageContent.aboutImageAlt || 'Ảnh Section Giới thiệu'}
+                            width={416}
+                            height={312}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <ImageIcon className="h-8 w-8 text-[#B88746]/50" />
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-bold text-[#1F1B16]">Ảnh bên phải Section Giới thiệu</p>
+                        <p className="mt-1 text-xs leading-5 text-[#8C7A6B]">
+                          Vị trí ngoài client: khối “Về Masterise Homes”, nằm dưới danh sách Dự án nổi bật. Khuyến nghị ảnh ngang 4:3, tối thiểu 1200 × 900 px.
+                        </p>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setMediaTarget({ type: 'home_about_image' })}
+                            className="rounded-lg bg-[#1F1B16] px-4 py-2 text-xs font-bold text-white transition hover:bg-[#B88746]"
+                          >
+                            {homePageContent.aboutImage ? 'Đổi ảnh' : 'Chọn ảnh từ Media Library'}
+                          </button>
+                          {homePageContent.aboutImage && (
+                            <button
+                              type="button"
+                              onClick={() => setHomePageContent(prev => ({ ...prev, aboutImage: '' }))}
+                              className="rounded-lg border border-red-200 px-4 py-2 text-xs font-bold text-red-600 transition hover:bg-red-50"
+                            >
+                              Bỏ ảnh
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <label className="mt-3 block text-xs font-semibold text-[#8C7A6B]">Mô tả ảnh (Alt text)</label>
+                    <input
+                      value={homePageContent.aboutImageAlt}
+                      onChange={(e) => setHomePageContent(prev => ({ ...prev, aboutImageAlt: e.target.value }))}
+                      className="mt-1 w-full rounded-xl border border-[#E8DCCB] bg-white px-3 py-2 text-sm focus:outline-none"
+                      placeholder="Ví dụ: Không gian sống do Masterise Homes phát triển"
+                    />
+                  </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <input
                       value={homePageContent.aboutEyebrow}

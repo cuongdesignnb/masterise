@@ -59,14 +59,15 @@ body {
 .text-hero {
   font-size: clamp(2.5rem, 4.5vw + 1rem, 4.75rem);
   line-height: 1.06;
-  letter-spacing: -0.025em;
+  letter-spacing: 0;
   font-weight: 900;
+  overflow-wrap: anywhere;
 }
 
 .text-section-title {
   font-size: clamp(1.75rem, 2.5vw + 0.5rem, 3rem);
   line-height: 1.15;
-  letter-spacing: -0.015em;
+  letter-spacing: 0;
   font-weight: 900;
 }
 
@@ -283,6 +284,17 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(8px);
   transition: background 0.3s ease;
+  min-width: 0;
+}
+
+@media (max-width: 639px) {
+  .text-hero {
+    font-size: clamp(2rem, 9.5vw, 2.4rem);
+  }
+
+  .stat-item {
+    padding: 0.625rem 0.75rem;
+  }
 }
 
 .stat-item:hover {

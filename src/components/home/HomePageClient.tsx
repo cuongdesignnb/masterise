@@ -14,6 +14,7 @@ import {
   Sparkles,
   Building2,
   Globe,
+  Newspaper,
   Shield,
   TrendingUp,
 } from "lucide-react";
@@ -62,8 +63,7 @@ const fallbackHero: Required<
   highlight: "Kiến tạo chuẩn sống hàng hiệu",
   description:
     "Bộ sưu tập bất động sản cao cấp dành cho cộng đồng tinh hoa, nơi thiết kế, vị trí và trải nghiệm sống được nâng tầm theo chuẩn quốc tế.",
-  image:
-    "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1800&auto=format&fit=crop",
+  image: "",
   link: "/du-an",
 };
 
@@ -109,6 +109,7 @@ export default function HomePageClient({ initialHeroSlides = [], initialProjects
   const currentHeroDescription = currentHero.description || fallbackHero.description;
   const currentHeroImage = currentHero.image || fallbackHero.image;
   const currentHeroLink = currentHero.link || "/du-an";
+  const aboutImage = homePageContent.aboutImage || heroSlides.find((slide) => slide.image)?.image || "";
 
   const goToHeroSlide = (index: number) => {
     if (heroSlides.length <= 1) return;
@@ -135,14 +136,18 @@ export default function HomePageClient({ initialHeroSlides = [], initialProjects
               exit={{ opacity: 0 }}
               transition={{ duration: 1.25, ease: [0.22, 1, 0.36, 1] }}
             >
-              <Image
-                src={currentHeroImage}
-                alt={currentHeroTitle}
-                fill
-                priority={currentHeroIndex === 0}
-                className="object-cover scale-[1.02]"
-                sizes="100vw"
-              />
+              {currentHeroImage ? (
+                <Image
+                  src={currentHeroImage}
+                  alt={currentHeroTitle}
+                  fill
+                  priority={currentHeroIndex === 0}
+                  className="object-cover scale-[1.02]"
+                  sizes="100vw"
+                />
+              ) : (
+                <div className="absolute inset-0 bg-[linear-gradient(135deg,#17130f_0%,#33281d_52%,#8d6837_100%)]" />
+              )}
             </motion.div>
           </AnimatePresence>
           <div className="hero-overlay" />
@@ -150,7 +155,7 @@ export default function HomePageClient({ initialHeroSlides = [], initialProjects
 
           <Container className="relative z-10 flex min-h-[680px] sm:min-h-[760px] lg:min-h-[860px] items-center">
             <motion.div
-              className="max-w-3xl pt-24 pb-32 text-left"
+              className="w-full min-w-0 max-w-3xl pt-24 pb-32 text-left"
               variants={staggerContainer}
               initial={false}
               whileInView="visible"
@@ -198,14 +203,14 @@ export default function HomePageClient({ initialHeroSlides = [], initialProjects
               {/* Mini stats strip */}
               <motion.div
                 variants={fadeUp}
-                className="mt-14 flex flex-wrap gap-3"
+                className="mt-14 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap"
               >
                 {homePageContent.heroStats.map((stat, index) => {
                   const Icon = heroStatIcons[index] || Sparkles;
                   return (
                     <div key={stat.label} className="stat-item">
                       <Icon size={15} className="text-champagne shrink-0" />
-                      <span className="text-[13px] font-medium text-white/80">{stat.label}</span>
+                      <span className="min-w-0 text-xs font-medium leading-5 text-white/80 sm:text-[13px]">{stat.label}</span>
                     </div>
                   );
                 })}
@@ -433,14 +438,20 @@ export default function HomePageClient({ initialHeroSlides = [], initialProjects
               <motion.div variants={slideInRight} className="relative">
                 {/* Decorative accent behind image */}
                 <div className="absolute -right-4 -top-4 h-full w-full rounded-3xl border border-champagne/20 hidden lg:block" />
-                <div className="image-frame relative z-10 aspect-[4/3]">
-                  <Image
-                    src="https://images.unsplash.com/photo-1518005020951-eccb494ad742?q=80&w=1200&auto=format&fit=crop"
-                    alt="Masterise Homes"
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 1024px) 100vw, 50vw"
-                  />
+                <div className="image-frame relative z-10 aspect-[4/3] bg-ink-deep">
+                  {aboutImage ? (
+                    <Image
+                      src={aboutImage}
+                      alt={homePageContent.aboutImageAlt || homePageContent.aboutTitle}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 1024px) 100vw, 50vw"
+                    />
+                  ) : (
+                    <div className="flex h-full items-center justify-center bg-[linear-gradient(135deg,#17130f_0%,#6f522f_100%)] text-champagne">
+                      <Building2 size={64} strokeWidth={1.2} aria-hidden="true" />
+                    </div>
+                  )}
                 </div>
               </motion.div>
             </div>
@@ -514,15 +525,18 @@ export default function HomePageClient({ initialHeroSlides = [], initialProjects
                       >
                         {/* Thumbnail */}
                         <div className="relative aspect-[16/10] overflow-hidden">
-                          <Image
-                            src={
-                              post.thumbnail ||
-                              "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=800&auto=format&fit=crop"
-                            }
-                            alt={post.title}
-                            fill
-                            className="object-cover transition duration-700 ease-out group-hover:scale-[1.06]"
-                          />
+                          {post.thumbnail ? (
+                            <Image
+                              src={post.thumbnail}
+                              alt={post.title}
+                              fill
+                              className="object-cover transition duration-700 ease-out group-hover:scale-[1.06]"
+                            />
+                          ) : (
+                            <div className="flex h-full items-center justify-center bg-[linear-gradient(135deg,#1f1b16_0%,#9c7542_100%)] text-champagne">
+                              <Newspaper size={42} strokeWidth={1.2} aria-hidden="true" />
+                            </div>
+                          )}
                           <div className="absolute inset-x-0 bottom-0 h-1/4 bg-gradient-to-t from-black/20 to-transparent" />
                         </div>
                         <div className="p-4">

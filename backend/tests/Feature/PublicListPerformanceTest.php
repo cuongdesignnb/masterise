@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Post;
 use App\Models\PostCategory;
 use App\Models\Project;
+use App\Models\HeroBanner;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -101,6 +102,62 @@ class PublicListPerformanceTest extends TestCase
         Setting::set('company_name', 'Masterise mới');
 
         $this->getJson('/api/v1/settings/public')->assertJsonPath('data.company_name', 'Masterise mới');
+    }
+
+    public function test_public_settings_expose_homepage_content_and_invalidate_it_after_update(): void
+    {
+        Setting::set('home_page_content', [
+            'aboutTitle' => 'Giới thiệu ban đầu',
+            'aboutImage' => 'https://api.masterise-homes.net.vn/storage/media/gioi-thieu-1.webp',
+        ], 'json');
+
+        $response = $this->getJson('/api/v1/settings/public')->assertOk()
+            ->assertJsonPath('data.home_page_content.aboutTitle', 'Giới thiệu ban đầu')
+            ->assertJsonPath('data.home_page_content.aboutImage', 'https://api.masterise-homes.net.vn/storage/media/gioi-thieu-1.webp');
+        $this->assertStringContainsString('no-store', (string) $response->headers->get('Cache-Control'));
+
+        Setting::set('home_page_content', [
+            'aboutTitle' => 'Giới thiệu đã cập nhật',
+            'aboutImage' => 'https://api.masterise-homes.net.vn/storage/media/gioi-thieu-2.webp',
+        ], 'json');
+
+        $this->getJson('/api/v1/settings/public')
+            ->assertJsonPath('data.home_page_content.aboutTitle', 'Giới thiệu đã cập nhật')
+            ->assertJsonPath('data.home_page_content.aboutImage', 'https://api.masterise-homes.net.vn/storage/media/gioi-thieu-2.webp');
+    }
+
+    public function test_homepage_hero_only_returns_active_banners_in_slide_order(): void
+    {
+        HeroBanner::create([
+            'title_lines' => ['Slide thứ hai'],
+            'highlight' => 'Nội dung hai',
+            'description' => 'Mô tả hai',
+            'image' => 'https://api.masterise-homes.net.vn/storage/media/hero-2.webp',
+            'sort_order' => 20,
+            'is_active' => true,
+        ]);
+        HeroBanner::create([
+            'title_lines' => ['Slide đã tắt'],
+            'highlight' => 'Không hiển thị',
+            'description' => 'Không hiển thị',
+            'image' => 'https://api.masterise-homes.net.vn/storage/media/hero-off.webp',
+            'sort_order' => 5,
+            'is_active' => false,
+        ]);
+        HeroBanner::create([
+            'title_lines' => ['Slide đầu tiên'],
+            'highlight' => 'Nội dung một',
+            'description' => 'Mô tả một',
+            'image' => 'https://api.masterise-homes.net.vn/storage/media/hero-1.webp',
+            'sort_order' => 10,
+            'is_active' => true,
+        ]);
+
+        $response = $this->getJson('/api/v1/hero-banners')->assertOk()
+            ->assertJsonCount(2, 'data')
+            ->assertJsonPath('data.0.title_lines.0', 'Slide đầu tiên')
+            ->assertJsonPath('data.1.title_lines.0', 'Slide thứ hai');
+        $this->assertStringContainsString('no-store', (string) $response->headers->get('Cache-Control'));
     }
 
     private function project(array $attributes = []): Project

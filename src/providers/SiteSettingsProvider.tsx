@@ -168,6 +168,8 @@ export interface HomePageContent {
   aboutTitle: string;
   aboutDescription: string;
   aboutButton: string;
+  aboutImage: string;
+  aboutImageAlt: string;
   aboutBullets: string[];
   partnersEyebrow: string;
   partnersTitle: string;
@@ -228,6 +230,8 @@ export const defaultHomePageContent: HomePageContent = {
   aboutDescription:
     "Masterise Homes theo đuổi triết lý phát triển bất động sản cao cấp với trọng tâm là thiết kế, chất lượng sống, tiện ích đồng bộ và giá trị sở hữu bền vững cho cộng đồng cư dân tinh hoa.",
   aboutButton: "Tìm hiểu thêm",
+  aboutImage: "",
+  aboutImageAlt: "Không gian sống do Masterise Homes phát triển",
   aboutBullets: [
     "Định vị bất động sản cao cấp và hạng sang",
     "Hợp tác cùng các đối tác quốc tế hàng đầu",
@@ -302,7 +306,8 @@ export default function SiteSettingsProvider({
     async function fetchSettings() {
       try {
         const response = await api.get<Record<string, string | null>>(
-          "/settings/public"
+          "/settings/public",
+          { cache: "no-store" },
         );
         const data = response.data;
         if (cancelled) return;

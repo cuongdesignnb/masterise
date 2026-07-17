@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { useToast } from '@/components/admin/Toast';
@@ -12,6 +13,8 @@ import {
   Trash2,
   X,
   Image as ImageIcon,
+  ExternalLink,
+  Monitor,
 } from 'lucide-react';
 import MediaSelectModal from '@/components/admin/MediaSelectModal';
 
@@ -124,14 +127,18 @@ export default function AdminBanners() {
   };
 
   const banners = bannersData?.data || [];
+  const activeBannerCount = banners.filter((banner) => banner.is_active).length;
+  const activeSampleBannerCount = banners.filter(
+    (banner) => banner.is_active && banner.image.includes('images.unsplash.com'),
+  ).length;
 
   return (
     <div className="space-y-6">
       {/* Title Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-heading font-medium text-[#1F1B16]">Quản lý Banner</h1>
-          <p className="text-sm text-[#8C7A6B]">Quản lý banner trang chủ Masterise Homes</p>
+          <h1 className="text-3xl font-heading font-medium text-[#1F1B16]">Banner hero đầu trang</h1>
+          <p className="text-sm text-[#8C7A6B]">Quản lý slide ảnh lớn xuất hiện ngay dưới header của trang chủ</p>
         </div>
         <button
           onClick={handleCreateOpen}
@@ -141,6 +148,42 @@ export default function AdminBanners() {
           Thêm banner mới
         </button>
       </div>
+
+      <div className="grid gap-3 md:grid-cols-3">
+        <div className="rounded-xl border border-[#E8DCCB] bg-white p-4">
+          <div className="flex items-center gap-2 text-sm font-bold text-[#1F1B16]">
+            <Monitor className="h-4 w-4 text-[#B88746]" />
+            Vị trí hiển thị
+          </div>
+          <p className="mt-2 text-xs leading-5 text-[#8C7A6B]">Trang chủ → khối hero toàn màn hình ngay dưới header.</p>
+        </div>
+        <div className="rounded-xl border border-[#E8DCCB] bg-white p-4">
+          <p className="text-sm font-bold text-[#1F1B16]">Quy tắc slide</p>
+          <p className="mt-2 text-xs leading-5 text-[#8C7A6B]">
+            Hiện có {activeBannerCount} banner đang bật. Tất cả sẽ lần lượt xuất hiện; số thứ tự nhỏ hơn hiển thị trước.
+          </p>
+        </div>
+        <div className="rounded-xl border border-[#E8DCCB] bg-white p-4">
+          <p className="text-sm font-bold text-[#1F1B16]">Kích thước khuyến nghị</p>
+          <p className="mt-2 text-xs leading-5 text-[#8C7A6B]">Ảnh ngang 16:9, tối thiểu 1920 × 1080 px; chủ thể nên nằm gần trung tâm để không bị cắt trên mobile.</p>
+        </div>
+      </div>
+
+      <div className="flex justify-end">
+        <Link
+          href="/"
+          target="_blank"
+          className="inline-flex items-center gap-2 text-sm font-bold text-[#B88746] transition hover:text-[#1F1B16]"
+        >
+          Xem vị trí ngoài trang chủ <ExternalLink className="h-4 w-4" />
+        </Link>
+      </div>
+
+      {activeSampleBannerCount > 0 && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
+          Đang có <strong>{activeSampleBannerCount} banner mẫu dùng ảnh Unsplash</strong> còn bật. Các ảnh này vẫn luân phiên ngoài trang chủ cho đến khi bạn mở từng dòng để đổi sang ảnh trong Media Library, hoặc tắt/xóa banner mẫu.
+        </div>
+      )}
 
       {/* Table */}
       {isLoading ? (
@@ -161,6 +204,7 @@ export default function AdminBanners() {
                   <th className="px-6 py-4">Hình ảnh</th>
                   <th className="px-6 py-4">Tiêu đề</th>
                   <th className="px-6 py-4">Highlight</th>
+                  <th className="px-6 py-4">Vị trí</th>
                   <th className="px-6 py-4">Thứ tự</th>
                   <th className="px-6 py-4">Trạng thái</th>
                   <th className="px-6 py-4 text-right">Hành động</th>
@@ -172,7 +216,14 @@ export default function AdminBanners() {
                     <td className="px-6 py-4">
                       <div className="w-20 h-12 rounded-lg bg-[#FBF8F2] border border-[#E8DCCB]/60 overflow-hidden shrink-0 flex items-center justify-center">
                         {item.image ? (
-                          <img src={item.image} alt={(item.title_lines || []).join(' ')} className="w-full h-full object-cover" />
+                          <div className="relative h-full w-full">
+                            <img src={item.image} alt={(item.title_lines || []).join(' ')} className="w-full h-full object-cover" />
+                            {item.image.includes('images.unsplash.com') && (
+                              <span className="absolute inset-x-0 bottom-0 bg-amber-600/90 px-1 py-0.5 text-center text-[8px] font-bold text-white">
+                                Ảnh mẫu
+                              </span>
+                            )}
+                          </div>
                         ) : (
                           <ImageIcon className="w-5 h-5 text-[#B88746]/40" />
                         )}
@@ -187,6 +238,9 @@ export default function AdminBanners() {
                       <span className="text-xs text-[#8C7A6B] block max-w-xs truncate">
                         {item.highlight || '-'}
                       </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="whitespace-nowrap text-xs font-semibold text-[#1F1B16]">Hero đầu trang</span>
                     </td>
                     <td className="px-6 py-4">
                       <span className="text-xs font-medium text-[#1F1B16]">{item.sort_order}</span>
@@ -253,7 +307,7 @@ export default function AdminBanners() {
                   <h3 className="font-heading font-medium text-lg text-[#1F1B16]">
                     {editingItem ? 'Sửa banner' : 'Thêm banner mới'}
                   </h3>
-                  <p className="text-xs text-[#8C7A6B]">Điền thông tin chi tiết cho banner trang chủ</p>
+                  <p className="text-xs text-[#8C7A6B]">Vị trí: Trang chủ → Hero ngay dưới header</p>
                 </div>
                 <button
                   onClick={() => setIsFormOpen(false)}
@@ -265,6 +319,9 @@ export default function AdminBanners() {
 
               {/* Form Fields */}
               <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                <div className="rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] p-3 text-xs leading-5 text-[#8C7A6B]">
+                  Banner này chỉ dùng cho hero đầu trang chủ. Để đổi ảnh trong Section Giới thiệu, vào Cài đặt hệ thống → Cấu hình Trang chủ → Section Giới thiệu.
+                </div>
                 <div>
                   <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Tiêu đề (mỗi dòng một hàng) *</label>
                   <textarea
@@ -301,7 +358,7 @@ export default function AdminBanners() {
                 <div>
                   <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Ảnh banner từ Media Library *</label>
                   {formImageUrl && (
-                    <div className="mt-2 w-full h-32 rounded-xl border border-[#E8DCCB] overflow-hidden bg-[#FBF8F2]">
+                    <div className="mt-2 aspect-video w-full overflow-hidden rounded-xl border border-[#E8DCCB] bg-[#FBF8F2]">
                       <img src={formImageUrl} alt="Preview" className="w-full h-full object-cover" />
                     </div>
                   )}
@@ -317,11 +374,12 @@ export default function AdminBanners() {
                       Chọn ảnh
                     </button>
                   </div>
+                  <p className="mt-2 text-[11px] leading-4 text-[#8C7A6B]">Khuyến nghị 1920 × 1080 px (16:9). Ảnh bắt buộc chọn từ Media Library.</p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Thứ tự sắp xếp</label>
+                    <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Thứ tự slide</label>
                     <input
                       type="number"
                       value={formSortOrder}

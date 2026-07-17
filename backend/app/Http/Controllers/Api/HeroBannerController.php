@@ -20,7 +20,7 @@ class HeroBannerController extends Controller
         return response()->json([
             'success' => true,
             'data' => $banners
-        ], 200);
+        ], 200)->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
     }
 
     /**

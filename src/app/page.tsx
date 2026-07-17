@@ -28,7 +28,7 @@ export const metadata: Metadata = {
 
 export default async function Home() {
   const [heroes, projects, posts] = await Promise.all([
-    fetchApiResponse<ApiResponse<HomepageHero[]>>("/hero-banners", { revalidate: 300, tags: ["hero-banners"] }),
+    fetchApiResponse<ApiResponse<HomepageHero[]>>("/hero-banners", { cache: "no-store" }),
     fetchApiResponse<ApiResponse<Project[]>>("/projects/featured?limit=6", { revalidate: 300, tags: ["projects-featured"] }),
     fetchApiResponse<ApiResponse<Post[]>>("/posts?per_page=6&post_type=news", { revalidate: 180, tags: ["posts"] }),
   ]);
