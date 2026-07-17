@@ -1,8 +1,8 @@
 import Link from "next/link";
-import type { Post } from "@/types/api";
+import type { PostCard } from "@/types/api";
 import { getPostDetailHref } from "@/lib/postRoutes";
 
-export default function InlineRelatedArticleLinks({ posts }: { posts: Post[] }) {
+export default function InlineRelatedArticleLinks({ posts }: { posts: PostCard[] }) {
   if (!posts.length) return null;
 
   return (

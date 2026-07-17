@@ -1,9 +1,17 @@
-import { Suspense } from "react";
 import type { Metadata } from "next";
 import { SITE_URL } from "@/config/seo";
 import { fetchApiResponse } from "@/lib/serverApi";
 import type { ApiResponse, Post, PostCategory } from "@/types/api";
-import NewsClient from "./NewsClient";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import MobileTabBar from "@/components/MobileTabBar";
+import Container from "@/components/Container";
+import GlobalContactForm from "@/components/lead/GlobalContactForm";
+import NewsHero from "@/components/news/NewsHero";
+import NewsFilterBar from "@/components/news/NewsFilterBar";
+import NewsSidebar from "@/components/news/NewsSidebar";
+import ArticleGrid from "@/components/news/ArticleGrid";
+import NewsCTA from "@/components/news/NewsCTA";
 
 export const metadata: Metadata = {
   title: "Tin tức & Góc nhìn thị trường | Masterise Homes",
@@ -67,16 +75,30 @@ export default async function NewsPage({ searchParams }: { searchParams: Promise
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <Suspense fallback={<div className="bg-cream py-20 text-center text-sm text-muted">Đang tải trang tin tức...</div>}>
-        <NewsClient
-          heroPost={heroPost}
-          heroPostLabel={featuredHero ? "Bài viết nổi bật" : "Bài viết mới nhất"}
-          initialPosts={initialPosts}
-          initialPostQuery={postQuery}
-          initialFeatured={featuredPosts}
-          initialCategories={categoriesResponse?.data || []}
-        />
-      </Suspense>
+      <Header />
+      <MobileTabBar />
+      <main className="relative z-10 pb-16 lg:pb-0">
+        <NewsHero post={heroPost} postLabel={featuredHero ? "Bài viết nổi bật" : "Bài viết mới nhất"} />
+        <NewsFilterBar categories={categoriesResponse?.data || []} />
+        <Container>
+          <div className="grid gap-8 py-10 lg:grid-cols-[1fr_300px] lg:py-14">
+            <ArticleGrid
+              response={initialPosts}
+              query={{
+                page: postParams.page,
+                sort: postParams.sort,
+                category: postParams.category,
+                q: postParams.q,
+                tag: postParams.tag,
+              }}
+            />
+            <NewsSidebar initialFeatured={featuredPosts} initialCategories={categoriesResponse?.data || []} />
+          </div>
+        </Container>
+        <NewsCTA />
+        <GlobalContactForm leadSourcePosition="news_listing_footer_form" />
+      </main>
+      <Footer />
     </>
   );
 }

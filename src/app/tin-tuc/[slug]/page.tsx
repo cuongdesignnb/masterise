@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cache } from "react";
 import { notFound, permanentRedirect } from "next/navigation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -13,8 +14,8 @@ import NewsMediaBlocks from "@/components/news-detail/NewsMediaBlocks";
 import NewsRelatedSection from "@/components/news-detail/NewsRelatedSection";
 import { extractTocFromHtml, formatArticleDate, readingMinutes } from "@/lib/articleContent";
 import ArticleToc from "@/components/news-detail/ArticleToc";
-import { getServerApiUrl } from "@/lib/serverApi";
-import type { PostDetailData } from "@/types/api";
+import { fetchApiResponse } from "@/lib/serverApi";
+import type { ApiResponse, PostDetailData } from "@/types/api";
 import { absoluteUrl, SITE_NAME, SITE_URL } from "@/config/seo";
 
 const siteUrl = SITE_URL;
@@ -25,18 +26,13 @@ type Props = {
 
 type PostDetailResponse = PostDetailData;
 
-async function getPost(slug: string): Promise<PostDetailResponse | null> {
-  const res = await fetch(`${getServerApiUrl()}/posts/${slug}`, {
-    cache: "no-store",
-    headers: { Accept: "application/json" },
+const getPost = cache(async (slug: string): Promise<PostDetailResponse | null> => {
+  const payload = await fetchApiResponse<ApiResponse<PostDetailResponse>>(`/posts/${slug}`, {
+    revalidate: 60,
+    tags: ["posts", `post-${slug}`],
   });
-
-  if (!res.ok) return null;
-  const payload = await res.json().catch(() => null);
-  const data = payload?.data as PostDetailResponse | undefined;
-  if (!data?.post) return null;
-  return data;
-}
+  return payload?.data?.post ? payload.data : null;
+});
 
 function getYouTubeEmbedUrl(url?: string | null) {
   if (!url) return undefined;

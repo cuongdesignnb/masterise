@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import {
   Search,
@@ -12,9 +12,8 @@ import {
   ChevronDown,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { api } from "@/lib/api";
 import Container from "@/components/Container";
-import MotionWrapper from "@/components/MotionWrapper";
+import type { PostCategory } from "@/types/api";
 
 /* Map category labels to lucide icon components */
 const categoryIconMap: Record<string, LucideIcon> = {
@@ -25,36 +24,16 @@ const categoryIconMap: Record<string, LucideIcon> = {
   "Kiến trúc": Compass,
 };
 
-interface CategoryItem {
-  id: number;
-  name: string;
-  slug: string;
-  posts_count?: number;
-}
-
-export default function NewsFilterBar() {
+export default function NewsFilterBar({ categories }: { categories: PostCategory[] }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
 
-  const [categories, setCategories] = useState<CategoryItem[]>([]);
   const categoryQuery = searchParams.get("category") || "all";
   const searchQuery = searchParams.get("q") || "";
   const sortQuery = searchParams.get("sort") || "latest";
 
   const [searchTerm, setSearchTerm] = useState(searchQuery);
-
-  // Fetch categories from API
-  useEffect(() => {
-    api
-      .get<CategoryItem[]>("/post-categories?post_type=news,investment&exclude_post_type=event")
-      .then((res) => {
-        if (res.success && Array.isArray(res.data)) {
-          setCategories(res.data);
-        }
-      })
-      .catch((err) => console.error("Failed to load categories:", err));
-  }, []);
 
   // Sync state with URL parameter if it changes externally
   useEffect(() => {
@@ -100,8 +79,7 @@ export default function NewsFilterBar() {
   return (
     <section className="py-6 bg-cream">
       <Container>
-        <MotionWrapper>
-          <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+        <div className="flex flex-col lg:flex-row lg:items-center gap-4">
             {/* ── Search input ── */}
             <div className="relative w-full lg:w-80 shrink-0">
               <Search
@@ -163,8 +141,7 @@ export default function NewsFilterBar() {
               </select>
               <ChevronDown size={14} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted" />
             </div>
-          </div>
-        </MotionWrapper>
+        </div>
       </Container>
     </section>
   );

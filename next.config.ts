@@ -33,6 +33,12 @@ const nextConfig: NextConfig = {
         pathname: "/**",
       },
       {
+        protocol: "https",
+        hostname: "i.ytimg.com",
+        port: "",
+        pathname: "/**",
+      },
+      {
         protocol: "http",
         hostname: "localhost",
         port: "8747",
@@ -49,4 +55,3 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
-

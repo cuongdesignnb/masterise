@@ -3,8 +3,9 @@
 import React, { useEffect, useId, useRef, useState } from 'react';
 import MediaSelectModal from '@/components/admin/MediaSelectModal';
 import { Link2, Search, Table2, X } from 'lucide-react';
+import { api } from '@/lib/api';
 import { projectService } from '@/services/projectService';
-import type { Project } from '@/types/api';
+import type { Media, Project } from '@/types/api';
 import 'quill/dist/quill.snow.css';
 
 type SavedRange = { index: number; length: number };
@@ -109,6 +110,7 @@ export default function RichTextEditor({
   const [tableRows, setTableRows] = useState(3);
   const [tableColumns, setTableColumns] = useState(3);
   const [activeHeading, setActiveHeading] = useState('');
+  const [pastedImageStatus, setPastedImageStatus] = useState<'idle' | 'uploading' | 'error'>('idle');
 
   useEffect(() => {
     onChangeRef.current = onChange;
@@ -571,17 +573,51 @@ export default function RichTextEditor({
         const handleDragStart = (event: DragEvent) => {
           if (event.ctrlKey || event.metaKey || additiveStartIndex !== null) event.preventDefault();
         };
+        const handlePaste = async (event: ClipboardEvent) => {
+          const imageItems = Array.from(event.clipboardData?.items || [])
+            .filter((item) => item.kind === 'file' && item.type.startsWith('image/'));
+          if (!imageItems.length) return;
+
+          event.preventDefault();
+          const selection = quill.getSelection() || lastSelectionRef.current || { index: Math.max(0, quill.getLength() - 1), length: 0 };
+          let insertAt = selection.index;
+          setPastedImageStatus('uploading');
+
+          try {
+            if (selection.length > 0) quill.deleteText(selection.index, selection.length, 'user');
+            for (const [imageIndex, item] of imageItems.entries()) {
+              const source = item.getAsFile();
+              if (!source) continue;
+              const extension = source.type.split('/')[1] || 'png';
+              const file = new File([source], `anh-dan-${Date.now()}-${imageIndex + 1}.${extension}`, { type: source.type });
+              const response = await api.upload<Media>('/media/upload', file);
+              if (!response.data?.url) throw new Error('Media Library không trả về URL ảnh.');
+              quill.insertEmbed(insertAt, 'image', response.data.url, 'user');
+              insertAt += 1;
+              quill.insertText(insertAt, '\n', 'user');
+              insertAt += 1;
+            }
+            quill.setSelection(insertAt, 0, 'silent');
+            onChangeRef.current(serializeEditorHtml(quill));
+            setPastedImageStatus('idle');
+          } catch (error) {
+            console.error('Failed to upload pasted image:', error);
+            setPastedImageStatus('error');
+          }
+        };
         const handleResize = () => refreshRangeHighlight();
         quill.root.addEventListener('mousedown', handleMouseDown);
         quill.root.addEventListener('mouseup', handleMouseUp);
         quill.root.addEventListener('keydown', handleKeyDown);
         quill.root.addEventListener('dragstart', handleDragStart);
+        quill.root.addEventListener('paste', handlePaste);
         window.addEventListener('resize', handleResize);
         (quill as any).__articleCleanup = () => {
           quill.root.removeEventListener('mousedown', handleMouseDown);
           quill.root.removeEventListener('mouseup', handleMouseUp);
           quill.root.removeEventListener('keydown', handleKeyDown);
           quill.root.removeEventListener('dragstart', handleDragStart);
+          quill.root.removeEventListener('paste', handlePaste);
           window.removeEventListener('resize', handleResize);
         };
       } catch (error) {
@@ -712,6 +748,8 @@ export default function RichTextEditor({
           </button>
         </div>
         <div ref={toolbarHostRef} className="rich-text-editor-toolbar-host" />
+        {pastedImageStatus === 'uploading' ? <p className="px-3 pb-2 text-xs font-semibold text-[#8F632F]">Đang tải ảnh dán vào Media Library...</p> : null}
+        {pastedImageStatus === 'error' ? <p className="px-3 pb-2 text-xs font-semibold text-red-600">Không thể tải ảnh dán. Vui lòng chọn ảnh từ Media Library.</p> : null}
       </div>
 
       <div ref={containerRef} className="quill-editor-container" />

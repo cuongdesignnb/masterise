@@ -1,172 +1,52 @@
 "use client";
 
-import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { motion, type Variants } from "framer-motion";
-import { ChevronRight, Mail, ArrowRight } from "lucide-react";
+import { ArrowRight, ChevronRight, Mail } from "lucide-react";
 import { useSiteSettings } from "@/providers/SiteSettingsProvider";
 import Container from "@/components/Container";
 import Button from "@/components/Button";
 import type { Post } from "@/types/api";
 
-const stagger: Variants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.12, delayChildren: 0.15 },
-  },
-};
-
-const fadeUp: Variants = {
-  hidden: { opacity: 0, y: 24 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.75, ease: "easeOut" },
-  },
-};
-
 export default function NewsHero({ post, postLabel }: { post: Post | null; postLabel: string }) {
   const { newsPageHero: hero } = useSiteSettings();
-  const postHref = post?.slug ? `/tin-tuc/${post.slug}` : "";
+  const postHref = post?.slug ? `/tin-tuc/${post.slug}` : "#bai-viet-moi-nhat";
 
   return (
-    <section className="relative w-full overflow-hidden bg-cream pt-[72px] min-h-[420px] lg:min-h-[460px]">
-      {/* Decorative blurs */}
-      <div className="absolute top-1/4 right-1/4 w-72 h-72 bg-gold/8 rounded-full blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-60 h-60 bg-gold/5 rounded-full blur-[80px] pointer-events-none" />
-
+    <section className="relative min-h-[420px] w-full overflow-hidden bg-cream pt-[72px] lg:min-h-[460px]">
       <Container className="relative z-10 py-10 sm:py-14 lg:py-16">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
-          {/* ── Left column ── */}
-          <div className="lg:col-span-6 flex flex-col justify-center">
-            <motion.div
-              initial="hidden"
-              animate="visible"
-              variants={stagger}
-            >
-              {/* Breadcrumb */}
-              <motion.nav
-                variants={fadeUp}
-                className="flex items-center gap-1.5 text-xs text-muted mb-4"
-              >
-                {hero.breadcrumb.map((label, idx) => (
-                  <React.Fragment key={label}>
-                    {idx > 0 && (
-                      <ChevronRight size={12} className="text-gold" />
-                    )}
-                    <Link
-                      href={idx === 0 ? "/" : "/tin-tuc"}
-                      className={`hover:text-gold transition-colors ${
-                        idx === hero.breadcrumb.length - 1
-                          ? "text-gold font-semibold"
-                          : ""
-                      }`}
-                    >
-                      {label}
-                    </Link>
-                  </React.Fragment>
-                ))}
-              </motion.nav>
-
-              {/* Badge */}
-              <motion.span
-                variants={fadeUp}
-                className="inline-block gold-gradient text-white text-[10px] sm:text-xs font-bold tracking-[0.14em] uppercase px-4 py-1.5 rounded-full mb-4"
-              >
-                {hero.badge}
-              </motion.span>
-
-              {/* H1 */}
-              <motion.h1
-                variants={fadeUp}
-                className="text-3xl md:text-4xl lg:text-[46px] heading-font font-bold text-ink tracking-tight leading-tight"
-              >
-                {hero.title}
-              </motion.h1>
-
-              {/* Description */}
-              <motion.p
-                variants={fadeUp}
-                className="mt-4 text-sm text-muted max-w-xl leading-relaxed font-light"
-              >
-                {hero.description}
-              </motion.p>
-
-              {/* CTA Buttons */}
-              <motion.div
-                variants={fadeUp}
-                className="mt-7 flex flex-wrap gap-3 sm:gap-4 items-center"
-              >
-                <Button
-                  href="#bai-viet-moi-nhat"
-                  variant="solid"
-                  size="md"
-                  icon={<ArrowRight size={14} />}
-                  iconPosition="right"
-                >
-                  {hero.primaryCta}
-                </Button>
-                <Button
-                  href="/lien-he#global-contact-form"
-                  variant="outline"
-                  size="md"
-                  icon={<Mail size={14} />}
-                  iconPosition="left"
-                >
-                  {hero.secondaryCta}
-                </Button>
-              </motion.div>
-            </motion.div>
+        <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-12 lg:gap-10">
+          <div className="flex flex-col justify-center lg:col-span-6">
+            <nav className="mb-4 flex items-center gap-1.5 text-xs text-muted">
+              {hero.breadcrumb.map((label, index) => (
+                <span key={`${label}-${index}`} className="inline-flex items-center gap-1.5">
+                  {index > 0 ? <ChevronRight size={12} className="text-gold" /> : null}
+                  <Link href={index === 0 ? "/" : "/tin-tuc"} className={`transition-colors hover:text-gold ${index === hero.breadcrumb.length - 1 ? "font-semibold text-gold" : ""}`}>{label}</Link>
+                </span>
+              ))}
+            </nav>
+            <span className="gold-gradient mb-4 inline-block w-fit rounded-full px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-white sm:text-xs">{hero.badge}</span>
+            <h1 className="heading-font text-3xl font-bold leading-tight text-ink md:text-4xl lg:text-[46px]">{hero.title}</h1>
+            <p className="mt-4 max-w-xl text-sm font-light leading-relaxed text-muted">{hero.description}</p>
+            <div className="mt-7 flex flex-wrap items-center gap-3 sm:gap-4">
+              <Button href="#bai-viet-moi-nhat" variant="solid" size="md" icon={<ArrowRight size={14} />} iconPosition="right">{hero.primaryCta}</Button>
+              <Button href="/lien-he#global-contact-form" variant="outline" size="md" icon={<Mail size={14} />} iconPosition="left">{hero.secondaryCta}</Button>
+            </div>
           </div>
 
-          {/* ── Right column ── */}
-          <div className="lg:col-span-6 flex items-center justify-center lg:justify-end">
-            <motion.div
-              initial={{ opacity: 0, y: 30, scale: 0.97 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ delay: 0.4, duration: 0.8, ease: "easeOut" }}
-              className="relative w-full max-w-lg lg:max-w-none"
-            >
-              {/* Main hero image */}
-              <Link
-                href={postHref || "#bai-viet-moi-nhat"}
-                aria-label={post ? `Đọc bài viết ${post.title}` : "Khám phá bài viết mới nhất"}
-                className="relative block rounded-[22px] overflow-hidden shadow-soft aspect-[4/3] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/70"
-              >
-                <Image
-                  src={post?.thumbnail || hero.image}
-                  alt={post?.title || hero.title}
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 1024px) 100vw, 50vw"
-                  priority
-                />
+          <div className="flex items-center justify-center lg:col-span-6 lg:justify-end">
+            <div className="relative w-full max-w-lg lg:max-w-none">
+              <Link href={postHref} aria-label={post ? `Đọc bài viết ${post.title}` : "Khám phá bài viết mới nhất"} className="relative block aspect-[4/3] overflow-hidden rounded-[22px] shadow-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/70">
+                <Image src={post?.thumbnail || hero.image} alt={post?.title || hero.title} fill className="object-cover" sizes="(max-width: 1024px) 100vw, 50vw" priority />
               </Link>
-
-              {/* Highlight overlay card */}
-              {post && postHref && (
-                <Link
-                  href={postHref}
-                  className="group absolute bottom-4 right-4 left-4 rounded-[16px] border border-line/30 bg-white/90 p-4 shadow-soft backdrop-blur-sm transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/70 sm:left-auto sm:w-72"
-                >
-                  <span className="text-[10px] font-bold text-gold uppercase tracking-wider">
-                    {postLabel}
-                  </span>
-                  <h3 className="text-sm font-semibold text-ink mt-1 leading-snug line-clamp-2">
-                    {post.title}
-                  </h3>
-                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-gold mt-2 group-hover:text-gold-dark transition-colors">
-                    Đọc ngay
-                    <ArrowRight
-                      size={12}
-                      className="transition-transform group-hover:translate-x-1"
-                    />
-                  </span>
+              {post ? (
+                <Link href={postHref} className="group absolute bottom-4 left-4 right-4 rounded-[16px] border border-line/30 bg-white/90 p-4 shadow-soft backdrop-blur-sm transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/70 sm:left-auto sm:w-72">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-gold">{postLabel}</span>
+                  <h2 className="mt-1 line-clamp-2 text-sm font-semibold leading-snug text-ink">{post.title}</h2>
+                  <span className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-gold transition-colors group-hover:text-gold-dark">Đọc ngay<ArrowRight size={12} className="transition-transform group-hover:translate-x-1" /></span>
                 </Link>
-              )}
-            </motion.div>
+              ) : null}
+            </div>
           </div>
         </div>
       </Container>

@@ -6,10 +6,12 @@ use App\Models\CareerJob;
 use App\Models\Location;
 use App\Models\Post;
 use App\Models\PostCategory;
+use App\Models\PostMedia;
 use App\Models\Project;
 use App\Models\ProjectCategory;
 use App\Models\ProjectStatusDefinition;
 use App\Models\Region;
+use App\Models\SeoMeta;
 use App\Models\Setting;
 use App\Models\Tag;
 use App\Support\PublicContentCache;
@@ -46,11 +48,13 @@ class AppServiceProvider extends ServiceProvider
         $this->invalidateOnChange(Region::class, [
             'projects.list', 'projects.featured', 'projects.taxonomy',
         ]);
-        $this->invalidateOnChange(Post::class, ['posts.list', 'posts.featured']);
+        $this->invalidateOnChange(Post::class, ['posts.list', 'posts.featured', 'posts.detail']);
         $this->invalidateOnChange(PostCategory::class, [
-            'posts.list', 'posts.featured', 'posts.taxonomy',
+            'posts.list', 'posts.featured', 'posts.taxonomy', 'posts.detail',
         ]);
-        $this->invalidateOnChange(Tag::class, ['posts.list', 'posts.featured']);
+        $this->invalidateOnChange(Tag::class, ['posts.list', 'posts.featured', 'posts.detail']);
+        $this->invalidateOnChange(PostMedia::class, ['posts.detail']);
+        $this->invalidateOnChange(SeoMeta::class, ['posts.detail']);
         $this->invalidateOnChange(Setting::class, [
             'settings.public', 'career.list', 'career.options',
         ]);

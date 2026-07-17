@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight, Download, ExternalLink, FileArchive, FileSpreadsheet, FileText, FileVideo, Presentation, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, ExternalLink, FileArchive, FileSpreadsheet, FileText, FileVideo, Play, Presentation, X } from "lucide-react";
 import type { PostMedia } from "@/types/api";
 
 function getYouTubeEmbedUrl(url?: string | null) {
@@ -21,6 +21,12 @@ function getYouTubeEmbedUrl(url?: string | null) {
   } catch {
     return url;
   }
+}
+
+function getYouTubeThumbnailUrl(url?: string | null) {
+  const embedUrl = getYouTubeEmbedUrl(url);
+  const id = embedUrl.match(/\/embed\/([^?&/]+)/)?.[1];
+  return id ? `https://i.ytimg.com/vi/${id}/hqdefault.jpg` : "";
 }
 
 function formatBytes(value?: number | null) {
@@ -56,6 +62,7 @@ export default function NewsMediaBlocks({ mediaItems }: { mediaItems?: PostMedia
   const documents = useMemo(() => (mediaItems || []).filter((item) => item.type === "document" && item.url), [mediaItems]);
   const [activeImage, setActiveImage] = useState(0);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [activeVideos, setActiveVideos] = useState<string[]>([]);
 
   if (!images.length && !videos.length && !documents.length) return null;
 
@@ -110,11 +117,18 @@ export default function NewsMediaBlocks({ mediaItems }: { mediaItems?: PostMedia
           <div className="grid gap-4 lg:grid-cols-2">
             {videos.map((video, index) => (
               <div key={`${video.url}-${index}`} className="overflow-hidden rounded-[22px] border border-[#E8DCCB]/80 bg-white shadow-[0_18px_50px_rgba(31,27,22,0.06)]">
-                <div className="aspect-video bg-black">
+                <div className="relative aspect-video bg-black">
                   {video.type === "youtube" ? (
-                    <iframe src={getYouTubeEmbedUrl(video.url)} title={video.title || "Video tin tức"} className="h-full w-full" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen />
+                    activeVideos.includes(video.url || "") ? (
+                      <iframe src={`${getYouTubeEmbedUrl(video.url)}?autoplay=1`} title={video.title || "Video tin tức"} className="h-full w-full" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen />
+                    ) : (
+                      <button type="button" onClick={() => video.url && setActiveVideos((current) => [...current, video.url!])} className="group absolute inset-0 flex items-center justify-center overflow-hidden" aria-label={`Phát ${video.title || `video ${index + 1}`}`}>
+                        <Image src={video.thumbnail_url || getYouTubeThumbnailUrl(video.url) || "/file.svg"} alt={video.title || "Ảnh đại diện video"} fill className="object-cover opacity-85 transition duration-500 group-hover:scale-105 group-hover:opacity-70" sizes="(max-width: 1024px) 100vw, 430px" />
+                        <span className="relative z-10 inline-flex h-16 w-16 items-center justify-center rounded-full bg-white/95 text-[#B88746] shadow-xl transition group-hover:scale-105"><Play className="ml-1 h-7 w-7 fill-current" /></span>
+                      </button>
+                    )
                   ) : (
-                    <video src={video.url || ""} controls poster={video.thumbnail_url || undefined} className="h-full w-full object-contain" />
+                    <video src={video.url || ""} controls preload="metadata" poster={video.thumbnail_url || undefined} className="h-full w-full object-contain" />
                   )}
                 </div>
                 <div className="flex items-center gap-3 px-4 py-3">

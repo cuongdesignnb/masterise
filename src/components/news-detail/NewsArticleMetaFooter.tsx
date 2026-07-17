@@ -1,16 +1,16 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight } from "lucide-react";
-import type { Post } from "@/types/api";
+import type { Post, PostCard } from "@/types/api";
 import { getPostDetailHref } from "@/lib/postRoutes";
 
 type Props = {
   post: Post;
-  previous?: Post | null;
-  next?: Post | null;
+  previous?: PostCard | null;
+  next?: PostCard | null;
 };
 
-function NavCard({ post, direction }: { post: Post; direction: "previous" | "next" }) {
+function NavCard({ post, direction }: { post: PostCard; direction: "previous" | "next" }) {
   const isNews = post.post_type === "news";
   const path = getPostDetailHref(post);
   const label = direction === "previous"

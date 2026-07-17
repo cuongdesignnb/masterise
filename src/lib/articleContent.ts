@@ -110,8 +110,17 @@ export function enhanceArticleTables(content?: string | null) {
   return html.replace(/___ARTICLE_PROTECTED_(\d+)___/g, (_, index) => protectedBlocks[Number(index)] || "");
 }
 
+export function enhanceArticleImages(content?: string | null) {
+  return (content || "").replace(/<img\b([^>]*)>/gi, (_full, attributes: string) => {
+    let nextAttributes = attributes;
+    if (!/\sloading\s*=/i.test(nextAttributes)) nextAttributes += ' loading="lazy"';
+    if (!/\sdecoding\s*=/i.test(nextAttributes)) nextAttributes += ' decoding="async"';
+    return `<img${nextAttributes}>`;
+  });
+}
+
 export function enhanceArticleHtml(content?: string | null) {
-  return enhanceArticleTables(enhanceArticleHtmlWithHeadingIds(sanitizeArticleHtml(content)));
+  return enhanceArticleTables(enhanceArticleImages(enhanceArticleHtmlWithHeadingIds(sanitizeArticleHtml(content))));
 }
 
 export function splitArticleIntroAndMain(content?: string | null) {

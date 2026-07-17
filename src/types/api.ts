@@ -206,6 +206,25 @@ export interface Post {
   updated_at: string;
 }
 
+export interface PostCard {
+  id: number;
+  title: string;
+  slug: string;
+  post_type: 'news' | 'investment' | 'event';
+  summary: string | null;
+  thumbnail: string | null;
+  status: 'draft' | 'published' | 'scheduled';
+  is_featured: boolean;
+  post_category_id: number;
+  author_id: number;
+  published_at: string | null;
+  category?: PostCategory;
+  author?: User;
+  tags?: Tag[];
+  created_at: string;
+  updated_at: string;
+}
+
 export interface PostMedia {
   id?: number;
   post_id?: number;
@@ -233,10 +252,10 @@ export interface Tag {
 
 export interface PostDetailData {
   post: Post;
-  inline_related: Post[];
-  related: Post[];
-  previous: Post | null;
-  next: Post | null;
+  inline_related: PostCard[];
+  related: PostCard[];
+  previous: PostCard | null;
+  next: PostCard | null;
 }
 
 export interface RegionOption {

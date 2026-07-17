@@ -1,14 +1,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, CalendarDays, MessageSquareText } from "lucide-react";
-import type { Post } from "@/types/api";
+import type { PostCard } from "@/types/api";
 import type { ArticleTocItem } from "@/lib/articleContent";
 import { formatArticleDate } from "@/lib/articleContent";
 import { getPostDetailHref } from "@/lib/postRoutes";
 
 type Props = {
   toc: ArticleTocItem[];
-  related: Post[];
+  related: PostCard[];
   postType?: "news" | "investment" | "event";
 };
 

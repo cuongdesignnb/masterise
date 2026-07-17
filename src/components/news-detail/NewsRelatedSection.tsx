@@ -1,12 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import Container from "@/components/Container";
-import type { Post } from "@/types/api";
+import type { PostCard } from "@/types/api";
 import { formatArticleDate, readingMinutes } from "@/lib/articleContent";
 import { CalendarDays, Clock3 } from "lucide-react";
 import { getPostDetailHref } from "@/lib/postRoutes";
 
-export default function NewsRelatedSection({ related, postType = "news" }: { related: Post[]; postType?: "news" | "investment" | "event" }) {
+export default function NewsRelatedSection({ related, postType = "news" }: { related: PostCard[]; postType?: "news" | "investment" | "event" }) {
   if (!related.length) return null;
 
   const isNews = postType === "news";
@@ -49,7 +49,7 @@ export default function NewsRelatedSection({ related, postType = "news" }: { rel
                   )}
                   <span className="inline-flex items-center gap-1">
                     <Clock3 className="h-3.5 w-3.5 text-[#B88746]" />
-                    {readingMinutes(item.content || item.summary)} phút đọc
+                    {readingMinutes(item.summary)} phút đọc
                   </span>
                 </div>
               </div>
