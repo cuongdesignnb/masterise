@@ -3045,6 +3045,8 @@ export default function AdminProjects() {
                         value={formContent}
                         onChange={setFormContent}
                         placeholder="Nội dung đầy đủ của dự án (Giới thiệu, quy mô chi tiết, hạ tầng...)"
+                        enableProjectLinks
+                        stickyToolbar
                       />
                     </div>
 
