@@ -34,7 +34,7 @@ export default async function NewsPage({ searchParams }: { searchParams: Promise
   const postParams: Record<string, string> = {
     per_page: "9",
     page: first(query.page) || "1",
-    post_type: "news",
+    post_type: "news,investment",
     sort: first(query.sort) || "latest",
     status: "published",
   };
