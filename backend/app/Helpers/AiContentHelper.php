@@ -23,7 +23,7 @@ class AiContentHelper
 
     /**
      * Sanitize HTML content using DOMDocument.
-     * Removes scripts, styles, iframes, and javascript events.
+     * Removes scripts, unsafe styles, iframes, and javascript events.
      */
     public static function sanitizeHtml(string $html): string
     {
@@ -83,6 +83,11 @@ class AiContentHelper
                     $safeClasses === '' ? $node->removeAttribute('class') : $node->setAttribute('class', $safeClasses);
                 }
 
+                if ($node->hasAttribute('style')) {
+                    $safeStyle = self::sanitizeStyleValue($node->getAttribute('style'));
+                    $safeStyle === '' ? $node->removeAttribute('style') : $node->setAttribute('style', $safeStyle);
+                }
+
                 // Add rel="noopener noreferrer" to external <a> tags
                 if (strtolower($node->nodeName) === 'a') {
                     $href = $node->getAttribute('href');
@@ -113,9 +118,11 @@ class AiContentHelper
 
     private static function isAllowedAttribute(string $tag, string $name, string $value): bool
     {
-        if (str_starts_with($name, 'on') || $name === 'style' || str_contains(strtolower($value), 'javascript:')) {
+        if (str_starts_with($name, 'on') || str_contains(strtolower($value), 'javascript:')) {
             return false;
         }
+
+        if ($name === 'style') return self::sanitizeStyleValue($value) !== '';
 
         if (in_array($name, ['class', 'id', 'title'], true)) {
             return $name !== 'id' || preg_match('/^[A-Za-z][A-Za-z0-9_-]*$/', $value) === 1;
@@ -123,10 +130,11 @@ class AiContentHelper
         if ($tag === 'a' && in_array($name, ['href', 'target', 'rel'], true)) {
             return $name !== 'href' || self::isSafeUrl($value, true);
         }
-        if ($tag === 'img' && in_array($name, ['src', 'alt', 'width', 'height', 'loading'], true)) {
+        if ($tag === 'img' && in_array($name, ['src', 'alt', 'width', 'height', 'loading', 'decoding'], true)) {
             if ($name === 'src') return self::isSafeUrl($value, false);
             if (in_array($name, ['width', 'height'], true)) return preg_match('/^\d{1,5}$/', $value) === 1;
             if ($name === 'loading') return in_array(strtolower($value), ['lazy', 'eager'], true);
+            if ($name === 'decoding') return in_array(strtolower($value), ['async', 'sync', 'auto'], true);
             return true;
         }
         if (in_array($tag, ['td', 'th'], true) && in_array($name, ['colspan', 'rowspan', 'headers'], true)) {
@@ -141,6 +149,9 @@ class AiContentHelper
         if ($tag === 'blockquote' && $name === 'cite') return self::isSafeUrl($value, true);
         if ($tag === 'ol' && $name === 'start') return preg_match('/^-?\d+$/', $value) === 1;
         if ($tag === 'li' && $name === 'value') return preg_match('/^-?\d+$/', $value) === 1;
+        if ($tag === 'li' && $name === 'data-list') {
+            return in_array(strtolower($value), ['ordered', 'bullet', 'checked', 'unchecked'], true);
+        }
 
         return false;
     }
@@ -148,9 +159,45 @@ class AiContentHelper
     private static function sanitizeClassValue(string $value): string
     {
         return collect(preg_split('/\s+/', trim($value)) ?: [])
-            ->filter(fn ($class) => preg_match('/^ql-(?:align-(?:center|right|justify)|indent-[1-9]|direction-rtl)$/', $class) === 1)
+            ->filter(fn ($class) => preg_match('/^ql-(?:align-(?:left|center|right|justify)|indent-[1-9]|direction-rtl|size-(?:small|large|huge)|font-(?:serif|monospace)|color-(?:white|red|orange|yellow|green|blue|purple)|bg-(?:black|red|orange|yellow|green|blue|purple))$/', $class) === 1)
             ->unique()
             ->implode(' ');
+    }
+
+    private static function sanitizeStyleValue(string $value): string
+    {
+        $safeDeclarations = [];
+
+        foreach (explode(';', $value) as $declaration) {
+            $declaration = trim($declaration);
+            if ($declaration === '' || !str_contains($declaration, ':')) continue;
+
+            [$property, $styleValue] = array_map('trim', explode(':', $declaration, 2));
+            $property = strtolower($property);
+            if ($styleValue === '' || preg_match('/(?:url\s*\(|expression\s*\(|javascript:)/i', $styleValue)) continue;
+
+            if ($property === 'text-align' && preg_match('/^(?:left|right|center|justify|start|end)$/i', $styleValue)) {
+                $safeDeclarations[] = $property.': '.strtolower($styleValue);
+                continue;
+            }
+            if ($property === 'direction' && preg_match('/^(?:ltr|rtl)$/i', $styleValue)) {
+                $safeDeclarations[] = $property.': '.strtolower($styleValue);
+                continue;
+            }
+            if (in_array($property, ['color', 'background-color'], true) && self::isSafeCssColor($styleValue)) {
+                $safeDeclarations[] = $property.': '.$styleValue;
+            }
+        }
+
+        return implode('; ', array_unique($safeDeclarations));
+    }
+
+    private static function isSafeCssColor(string $value): bool
+    {
+        $value = trim($value);
+        return preg_match('/^#[0-9a-f]{3,8}$/i', $value) === 1
+            || preg_match('/^(?:rgb|rgba|hsl|hsla)\([\d\s.,%+\-\/]+\)$/i', $value) === 1
+            || preg_match('/^[a-z]+$/i', $value) === 1;
     }
 
     private static function isSafeUrl(string $value, bool $allowContactSchemes): bool

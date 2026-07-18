@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import RichHtmlContent from '@/components/content/RichHtmlContent';
 import { getPageForSEO } from '@/services/pageServerService';
 
 interface PageProps {
@@ -58,9 +59,9 @@ export default async function ChuyenTrangDetailPage({ params }: PageProps) {
               {page.title}
             </h1>
 
-            <div
+            <RichHtmlContent
+              html={page.content}
               className="prose prose-stone mt-8 max-w-none text-[15px] leading-8 prose-headings:font-heading prose-headings:text-[#1F1B16] prose-a:text-[#B88746] hover:prose-a:underline prose-img:rounded-2xl"
-              dangerouslySetInnerHTML={{ __html: page.content || '' }}
             />
           </div>
         </section>

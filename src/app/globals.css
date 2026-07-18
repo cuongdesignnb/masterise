@@ -465,6 +465,18 @@ body {
 .rich-html-content > :first-child { margin-top: 0; }
 .rich-html-content > :last-child { margin-bottom: 0; }
 .rich-html-content p { margin: 1rem 0; }
+.rich-html-content p,
+.rich-html-content li,
+.rich-html-content blockquote,
+.rich-html-content h1,
+.rich-html-content h2,
+.rich-html-content h3,
+.rich-html-content h4,
+.rich-html-content h5,
+.rich-html-content h6 { white-space: pre-wrap; overflow-wrap: anywhere; }
+.rich-html-content p:empty,
+.rich-html-content p:has(> br:only-child) { min-height: 1.75rem; }
+.rich-html-content p:empty::before { content: "\00a0"; }
 .rich-html-content h1,
 .rich-html-content h2,
 .rich-html-content h3,
@@ -485,11 +497,48 @@ body {
 .rich-html-content img { max-width: 100%; height: auto; margin: 1.25rem auto; border-radius: 0.75rem; }
 .rich-html-content figure { max-width: 100%; margin: 1.25rem 0; }
 .rich-html-content figcaption { margin-top: 0.5rem; color: #6f665c; font-size: 0.8125rem; text-align: center; }
+.rich-html-content .ql-align-left { text-align: left; }
 .rich-html-content .ql-align-center { text-align: center; }
 .rich-html-content .ql-align-right { text-align: right; }
 .rich-html-content .ql-align-justify { text-align: justify; }
-.rich-html-content .ql-indent-1 { margin-left: 1.5rem; }
-.rich-html-content .ql-indent-2 { margin-left: 3rem; }
+.rich-html-content .ql-direction-rtl { direction: rtl; }
+.rich-html-content .ql-indent-1 { padding-inline-start: 3em; }
+.rich-html-content .ql-indent-2 { padding-inline-start: 6em; }
+.rich-html-content .ql-indent-3 { padding-inline-start: 9em; }
+.rich-html-content .ql-indent-4 { padding-inline-start: 12em; }
+.rich-html-content .ql-indent-5 { padding-inline-start: 15em; }
+.rich-html-content .ql-indent-6 { padding-inline-start: 18em; }
+.rich-html-content .ql-indent-7 { padding-inline-start: 21em; }
+.rich-html-content .ql-indent-8 { padding-inline-start: 24em; }
+.rich-html-content .ql-indent-9 { padding-inline-start: 27em; }
+.rich-html-content .ql-size-small { font-size: 0.75em; }
+.rich-html-content .ql-size-large { font-size: 1.5em; }
+.rich-html-content .ql-size-huge { font-size: 2.5em; }
+.rich-html-content .ql-font-serif { font-family: Georgia, "Times New Roman", serif; }
+.rich-html-content .ql-font-monospace { font-family: Monaco, "Courier New", monospace; }
+.rich-html-content .ql-color-white { color: #fff; }
+.rich-html-content .ql-color-red { color: #e60000; }
+.rich-html-content .ql-color-orange { color: #f90; }
+.rich-html-content .ql-color-yellow { color: #ff0; }
+.rich-html-content .ql-color-green { color: #008a00; }
+.rich-html-content .ql-color-blue { color: #06c; }
+.rich-html-content .ql-color-purple { color: #93f; }
+.rich-html-content .ql-bg-black { background-color: #000; }
+.rich-html-content .ql-bg-red { background-color: #e60000; }
+.rich-html-content .ql-bg-orange { background-color: #f90; }
+.rich-html-content .ql-bg-yellow { background-color: #ff0; }
+.rich-html-content .ql-bg-green { background-color: #008a00; }
+.rich-html-content .ql-bg-blue { background-color: #06c; }
+.rich-html-content .ql-bg-purple { background-color: #93f; }
+.rich-html-content .ql-ui { display: none; }
+.rich-html-content li[data-list="ordered"] { list-style-type: decimal; }
+.rich-html-content li[data-list="bullet"] { list-style-type: disc; }
+.rich-html-content li[data-list="checked"],
+.rich-html-content li[data-list="unchecked"] { position: relative; list-style: none; }
+.rich-html-content li[data-list="checked"]::before,
+.rich-html-content li[data-list="unchecked"]::before { position: absolute; inset-inline-start: -1.35em; }
+.rich-html-content li[data-list="checked"]::before { content: "✓"; }
+.rich-html-content li[data-list="unchecked"]::before { content: "□"; }
 
 .rich-html-table-wrap { width: 100%; max-width: 100%; margin: 1.5rem 0; overflow-x: auto; border: 1px solid #e7d5bb; border-radius: 0.5rem; background: #fff; box-shadow: 0 6px 18px rgba(87, 61, 28, 0.05); overscroll-behavior-inline: contain; -webkit-overflow-scrolling: touch; }
 .rich-html-table-wrap:focus-visible { outline: 2px solid #b88746; outline-offset: 2px; }
@@ -511,6 +560,12 @@ body {
 }
 
 @media (max-width: 639px) {
+  .rich-html-content .ql-indent-4,
+  .rich-html-content .ql-indent-5,
+  .rich-html-content .ql-indent-6,
+  .rich-html-content .ql-indent-7,
+  .rich-html-content .ql-indent-8,
+  .rich-html-content .ql-indent-9 { padding-inline-start: 9em; }
   .rich-html-table-wrap th,
   .rich-html-table-wrap td { padding: 0.625rem 0.7rem; font-size: 0.8125rem; line-height: 1.35rem; }
 }

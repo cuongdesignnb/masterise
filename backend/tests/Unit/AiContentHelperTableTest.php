@@ -21,6 +21,9 @@ class AiContentHelperTableTest extends TestCase
   </tbody>
   <tfoot><tr><td colspan="2">Tiếng Việt đầy đủ</td></tr></tfoot>
 </table>
+<p class="ql-align-center" style="text-align: center; color: rgb(184, 135, 70); position: fixed">Nội dung căn giữa</p>
+<p><br></p>
+<ol><li class="ql-indent-1" data-list="bullet">Danh sách thụt lề</li></ol>
 <a href="javascript:alert(1)">Liên kết xấu</a><script>alert(1)</script>
 HTML;
 
@@ -33,7 +36,14 @@ HTML;
             $this->assertStringContainsString($attribute, $clean);
         }
         $this->assertStringContainsString('Tiếng Việt đầy đủ', html_entity_decode($clean, ENT_QUOTES | ENT_HTML5, 'UTF-8'));
-        $this->assertStringNotContainsString('style=', $clean);
+        $this->assertStringContainsString('class="ql-align-center"', $clean);
+        $this->assertStringContainsString('text-align: center', $clean);
+        $this->assertStringContainsString('color: rgb(184, 135, 70)', $clean);
+        $this->assertStringContainsString('<p><br></p>', $clean);
+        $this->assertStringContainsString('class="ql-indent-1"', $clean);
+        $this->assertStringContainsString('data-list="bullet"', $clean);
+        $this->assertDoesNotMatchRegularExpression('/<table[^>]*style=/i', $clean);
+        $this->assertStringNotContainsString('position:', $clean);
         $this->assertStringNotContainsString('onclick=', $clean);
         $this->assertStringNotContainsString('javascript:', $clean);
         $this->assertStringNotContainsString('<script', $clean);
