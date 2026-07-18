@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import { ArrowDown, ArrowUp, CalendarDays, Search, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { api } from "@/lib/api";
 import type { Post } from "@/types/api";
 
 type RelatedPostOption = Pick<Post, "id" | "title" | "thumbnail" | "published_at"> & {
@@ -18,6 +19,7 @@ type Props = {
   description?: string;
   excludeId?: number;
   maxItems?: number;
+  postTypes?: string;
 };
 
 function formatDate(value?: string | null) {
@@ -32,17 +34,72 @@ export default function RelatedPostsSelector({
   description = "Chọn tối đa 3 bài viết đã xuất bản và sắp xếp theo thứ tự hiển thị.",
   excludeId,
   maxItems = 3,
+  postTypes = "news,investment",
 }: Props) {
   const [search, setSearch] = useState("");
-  const candidateMap = useMemo(() => new Map(candidates.map((post) => [post.id, post])), [candidates]);
+  const [remoteResults, setRemoteResults] = useState<RelatedPostOption[]>([]);
+  const [discoveredCandidates, setDiscoveredCandidates] = useState<RelatedPostOption[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchFailed, setSearchFailed] = useState(false);
+  const allCandidates = useMemo(() => Array.from(new Map([
+    ...candidates,
+    ...discoveredCandidates,
+  ].map((post) => [post.id, post])).values()), [candidates, discoveredCandidates]);
+  const candidateMap = useMemo(() => new Map(allCandidates.map((post) => [post.id, post])), [allCandidates]);
   const selectedPosts = selectedIds.map((id) => candidateMap.get(id)).filter((post): post is RelatedPostOption => Boolean(post));
   const normalizedSearch = search.trim().toLocaleLowerCase("vi-VN");
-  const results = candidates.filter((post) => (
+  const resultSource = remoteResults.length > 0 ? remoteResults : allCandidates;
+  const results = resultSource.filter((post) => (
     (!post.status || post.status === "published") &&
     post.id !== excludeId &&
     !selectedIds.includes(post.id) &&
-    (!normalizedSearch || post.title.toLocaleLowerCase("vi-VN").includes(normalizedSearch))
+    (!normalizedSearch || [post.title, post.category?.name]
+      .filter(Boolean)
+      .some((value) => String(value).toLocaleLowerCase("vi-VN").includes(normalizedSearch)))
   ));
+
+  useEffect(() => {
+    const query = search.trim();
+    if (!query) {
+      setRemoteResults([]);
+      setIsSearching(false);
+      setSearchFailed(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    const timer = window.setTimeout(async () => {
+      setIsSearching(true);
+      setSearchFailed(false);
+      try {
+        const params = new URLSearchParams({
+          q: query,
+          per_page: "20",
+          status: "published",
+          post_type: postTypes,
+        });
+        const response = await api.get<Post[]>(`/posts?${params.toString()}`, { signal: controller.signal });
+        const found = response.data || [];
+        setRemoteResults(found);
+        setDiscoveredCandidates((current) => Array.from(new Map([
+          ...current,
+          ...found,
+        ].map((post) => [post.id, post])).values()));
+      } catch {
+        if (!controller.signal.aborted) {
+          setRemoteResults([]);
+          setSearchFailed(true);
+        }
+      } finally {
+        if (!controller.signal.aborted) setIsSearching(false);
+      }
+    }, 300);
+
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [search, postTypes]);
 
   const move = (index: number, direction: -1 | 1) => {
     const target = index + direction;
@@ -100,32 +157,38 @@ export default function RelatedPostsSelector({
         <p className="mt-3 rounded-xl border border-dashed border-[#DCCDB8] bg-white/70 px-3 py-4 text-center text-[11px] text-[#8C7A6B]">Chưa chọn bài viết liên quan.</p>
       )}
 
-      {selectedIds.length >= maxItems ? (
-        <p className="mt-3 text-xs font-semibold text-[#A15C32]">Chỉ được chọn tối đa 3 bài viết liên quan</p>
-      ) : (
-        <div className="mt-3">
-          <label className="relative block">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8C7A6B]" />
-            <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Tìm bài đã xuất bản..." className="h-10 w-full rounded-xl border border-[#E8DCCB] bg-white pl-9 pr-3 text-sm outline-none focus:border-[#B88746]" />
-          </label>
-          {search.trim() ? (
-            <div className="mt-2 max-h-64 space-y-1 overflow-y-auto rounded-xl border border-[#E8DCCB] bg-white p-1.5">
-              {results.slice(0, 10).map((post) => (
-                <button type="button" key={post.id} onClick={() => add(post.id)} className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left hover:bg-[#FBF8F2]">
-                  <div className="relative h-10 w-14 shrink-0 overflow-hidden rounded-md bg-[#F3EEE6]">
-                    {post.thumbnail ? <Image src={post.thumbnail} alt="" fill sizes="56px" className="object-cover" /> : null}
-                  </div>
-                  <span className="min-w-0">
-                    <span className="line-clamp-1 block text-xs font-bold text-[#1F1B16]">{post.title}</span>
-                    <span className="mt-0.5 block text-[10px] text-[#8C7A6B]">{post.category?.name || "Chưa phân loại"} · {formatDate(post.published_at)}</span>
-                  </span>
-                </button>
-              ))}
-              {results.length === 0 ? <p className="px-3 py-4 text-center text-xs text-[#8C7A6B]">Không tìm thấy bài viết phù hợp.</p> : null}
-            </div>
-          ) : null}
-        </div>
-      )}
+      <div className="mt-3">
+        {selectedIds.length >= maxItems ? (
+          <p className="mb-2 text-xs font-semibold text-[#A15C32]">Đã chọn đủ {maxItems} bài. Hãy xóa một bài để chọn bài khác.</p>
+        ) : null}
+        <label className="relative block">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8C7A6B]" />
+          <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Tìm theo tiêu đề hoặc danh mục bài viết..." className="h-10 w-full rounded-xl border border-[#E8DCCB] bg-white pl-9 pr-24 text-sm outline-none focus:border-[#B88746]" />
+          {isSearching ? <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-[#8C7A6B]">Đang tìm...</span> : null}
+        </label>
+        {search.trim() ? (
+          <div className="mt-2 max-h-64 space-y-1 overflow-y-auto rounded-xl border border-[#E8DCCB] bg-white p-1.5">
+            {results.slice(0, 20).map((post) => (
+              <button
+                type="button"
+                key={post.id}
+                disabled={selectedIds.length >= maxItems}
+                onClick={() => add(post.id)}
+                className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left hover:bg-[#FBF8F2] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <div className="relative h-10 w-14 shrink-0 overflow-hidden rounded-md bg-[#F3EEE6]">
+                  {post.thumbnail ? <Image src={post.thumbnail} alt="" fill sizes="56px" className="object-cover" /> : null}
+                </div>
+                <span className="min-w-0">
+                  <span className="line-clamp-1 block text-xs font-bold text-[#1F1B16]">{post.title}</span>
+                  <span className="mt-0.5 block text-[10px] text-[#8C7A6B]">{post.category?.name || "Chưa phân loại"} · {formatDate(post.published_at)}</span>
+                </span>
+              </button>
+            ))}
+            {!isSearching && results.length === 0 ? <p className="px-3 py-4 text-center text-xs text-[#8C7A6B]">{searchFailed ? "Không thể tìm bài viết. Vui lòng thử lại." : "Không tìm thấy bài viết phù hợp."}</p> : null}
+          </div>
+        ) : null}
+      </div>
     </section>
   );
 }

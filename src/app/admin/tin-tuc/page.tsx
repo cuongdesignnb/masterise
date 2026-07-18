@@ -959,6 +959,7 @@ function AdminNews() {
                       candidates={relatedCandidates}
                       selectedIds={formRelatedPostIds}
                       onChange={setFormRelatedPostIds}
+                      postTypes={formPostType}
                       excludeId={editingPost?.id}
                       title="Bài viết liên quan chèn sau đoạn mở đầu"
                       description="Nếu chọn dưới 3 bài, hệ thống tự bổ sung bài cùng loại và không trùng lặp."

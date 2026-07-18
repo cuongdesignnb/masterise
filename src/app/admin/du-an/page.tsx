@@ -3069,6 +3069,7 @@ export default function AdminProjects() {
                       candidates={relatedCandidates}
                       selectedIds={formRelatedPostIds}
                       onChange={setFormRelatedPostIds}
+                      postTypes="news,investment"
                       title="Bài viết liên quan"
                       description="Chọn tối đa 3 bài viết đã xuất bản. Các bài sẽ hiển thị đúng thứ tự này ngoài trang chi tiết dự án."
                     />
