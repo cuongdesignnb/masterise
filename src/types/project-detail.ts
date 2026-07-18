@@ -1,4 +1,5 @@
 import type { FloorPlanGroup, LegacyFloorPlanItem } from './floor-plan';
+import type { ProjectRelatedPost } from './api';
 
 export type ProjectIconName =
   | "BadgeDollarSign"
@@ -81,6 +82,7 @@ export type ProjectDetail = {
   subtitle: string;
   description: string;
   content?: string;
+  relatedPosts: ProjectRelatedPost[];
   address: string;
   heroImage: string;
   thumbnail?: string | null;
@@ -105,7 +107,7 @@ export type ProjectDetail = {
   amenities: {
     title: string;
     description: string;
-    image: string;
+    image?: string;
     icon: ProjectIconName;
   }[];
   floorTabs: string[];

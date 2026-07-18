@@ -158,9 +158,22 @@ export interface Project {
   scale: string | null;
   amenities: string[] | null;
   categories?: ProjectCategory[];
+  related_posts?: ProjectRelatedPost[];
   seo_meta?: SeoMeta | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface ProjectRelatedPost {
+  id: number;
+  title: string;
+  slug: string;
+  post_type: 'news' | 'investment';
+  excerpt: string | null;
+  summary: string | null;
+  thumbnail: string | null;
+  category?: PostCategory | null;
+  published_at: string | null;
 }
 
 export interface PostCategory {

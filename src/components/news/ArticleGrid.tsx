@@ -61,7 +61,6 @@ export default function ArticleGrid({ response, query }: { response: ApiResponse
                   <span className="text-[10px] font-bold uppercase tracking-wider text-gold">{article.category?.name || "Tin tức"}</span>
                   <h3 className="heading-font mt-1.5 line-clamp-2 text-sm font-bold text-ink transition-colors group-hover:text-gold">{article.title}</h3>
                   {article.summary ? <p className="mt-2 line-clamp-2 text-xs leading-5 text-muted">{article.summary}</p> : null}
-                  {article.tags?.length ? <div className="mt-3 flex flex-wrap gap-1">{article.tags.slice(0, 3).map((tag) => <span key={tag.id} className="rounded-full bg-beige px-2 py-1 text-[10px] font-semibold text-gold-dark">#{tag.name}</span>)}</div> : null}
                   <div className="mt-3 flex items-center gap-3 text-[11px] text-muted"><span className="inline-flex items-center gap-1"><Calendar size={12} />{article.published_at ? new Date(article.published_at).toLocaleDateString("vi-VN") : "Đang cập nhật"}</span></div>
                   <div className="mt-auto border-t border-line/20 pt-4"><span className="inline-flex items-center gap-1 text-xs font-semibold text-gold">Đọc thêm <ArrowRight size={13} /></span></div>
                 </div>

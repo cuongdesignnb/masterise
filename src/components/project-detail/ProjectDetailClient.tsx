@@ -38,6 +38,7 @@ import type { FloorPlanItem } from "@/types/floor-plan";
 import { normalizeFloorPlanGroups } from "@/lib/projectFloorPlan";
 import ProjectGalleryAlbumSection from "@/components/project-detail/ProjectGalleryAlbumSection";
 import ProjectPricingPolicySection from "@/components/project-detail/ProjectPricingPolicySection";
+import ProjectRelatedPostsSection from "@/components/project-detail/ProjectRelatedPostsSection";
 import VR360Section from "@/components/vr360/VR360Section";
 import { leadService } from "@/services/leadService";
 import RichHtmlContent from "@/components/content/RichHtmlContent";
@@ -968,6 +969,8 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
           </Reveal>
         ) : null}
 
+        <ProjectRelatedPostsSection posts={project.relatedPosts} />
+
         {hasGallery ? <Reveal
           className="rounded-[22px] border border-line/80 bg-white p-4 shadow-soft sm:p-5"
           delay={0.04}
@@ -1119,23 +1122,23 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
         {hasAmenities ? <Reveal className="rounded-[22px] border border-line/80 bg-white p-5 shadow-soft sm:p-7">
           <section id="tien-ich" className="scroll-mt-32">
             <ProjectSectionTitle sectionKey="amenities" fallbackTitle="Tiện ích nổi bật" />
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-3 lg:grid-cols-6">
               {project.amenities.map((amenity) => (
-                <article key={amenity.title} className="group min-w-0">
-                  <div className="relative aspect-[1.25] overflow-hidden rounded-[13px] bg-beige">
+                <article key={amenity.title} className="group flex min-w-0 overflow-hidden rounded-[13px] border border-line/70 bg-[#fcfaf6] md:block md:overflow-visible md:border-0 md:bg-transparent">
+                  {amenity.image ? <div className="relative min-h-28 w-[38%] shrink-0 overflow-hidden bg-beige md:aspect-[1.25] md:min-h-0 md:w-full md:rounded-[13px]">
                     <Image
                       src={amenity.image}
                       alt={amenity.title}
                       fill
-                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
+                      sizes="(max-width: 767px) 38vw, (max-width: 1024px) 33vw, 16vw"
                       className="object-cover transition duration-700 group-hover:scale-105"
                     />
-                  </div>
-                  <div className="mt-3 flex items-start gap-2.5">
+                  </div> : null}
+                  <div className="flex min-w-0 flex-1 items-start gap-2.5 p-3 md:mt-3 md:p-0">
                     <ProjectIcon name={amenity.icon} size={18} className="mt-0.5 shrink-0 text-gold" />
-                    <div>
-                      <h3 className="text-[12px] font-bold leading-5 text-ink">{amenity.title}</h3>
-                      <p className="text-[11px] leading-5 text-muted">{amenity.description}</p>
+                    <div className="min-w-0">
+                      <h3 className="line-clamp-2 text-[13px] font-bold leading-5 text-ink md:line-clamp-none md:text-[12px]">{amenity.title}</h3>
+                      {amenity.description ? <p className="mt-1 line-clamp-3 text-[12px] leading-5 text-muted md:mt-0 md:line-clamp-none md:text-[11px]">{amenity.description}</p> : null}
                     </div>
                   </div>
                 </article>

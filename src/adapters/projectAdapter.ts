@@ -170,11 +170,11 @@ function normalizeAmenities(value: unknown) {
       const title = String(record.title || '').trim();
       const description = String(record.description || '').trim();
       const image = String(record.image || '').trim();
-      if (!title || !description || !image) return null;
+      if (!title) return null;
       return {
         title,
         description,
-        image,
+        image: image || undefined,
         icon: normalizeIcon(record.icon, 'Sparkles'),
       };
     })
@@ -546,6 +546,7 @@ export function mapApiProjectToProjectDetail(api: ApiProject): ProjectDetail {
     subtitle: api.hero_subtitle || api.description || UPDATING,
     description: api.description || UPDATING,
     content: api.content || '',
+    relatedPosts: asArray(api.related_posts),
     address: api.address || api.location || UPDATING,
     heroImage: api.banner_image || api.thumbnail || INTERNAL_IMAGE_PLACEHOLDER,
     thumbnail: api.thumbnail || api.banner_image || null,

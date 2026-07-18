@@ -2,6 +2,7 @@ import type { ProjectDetail } from "@/types/project-detail";
 
 export const projectDetail: ProjectDetail = {
   slug: "the-global-city",
+  relatedPosts: [],
   badge: "DỰ ÁN BIỂU TƯỢNG",
   name: "THE GLOBAL CITY",
   subtitle: "Trung tâm mới của TP. Thủ Đức",

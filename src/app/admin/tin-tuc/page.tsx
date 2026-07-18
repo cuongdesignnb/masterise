@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import MediaSelectModal from '@/components/admin/MediaSelectModal';
 import RichTextEditor from '@/components/admin/RichTextEditor';
+import RelatedPostsSelector from '@/components/admin/RelatedPostsSelector';
 import { tagService } from '@/services/tagService';
 import { getPostDetailHref } from '@/lib/postRoutes';
 import { splitArticleIntroAndMain } from '@/lib/articleContent';
@@ -156,7 +157,6 @@ function AdminNews() {
   const [formTagIds, setFormTagIds] = useState<number[]>([]);
   const [formRelatedPostIds, setFormRelatedPostIds] = useState<number[]>([]);
   const [tagSearch, setTagSearch] = useState('');
-  const [relatedSearch, setRelatedSearch] = useState('');
   
   const [formSeoTitle, setFormSeoTitle] = useState('');
   const [formSeoDescription, setFormSeoDescription] = useState('');
@@ -249,7 +249,6 @@ function AdminNews() {
     setFormTagIds([]);
     setFormRelatedPostIds([]);
     setTagSearch('');
-    setRelatedSearch('');
     setFormSeoTitle('');
     setFormSeoDescription('');
     setFormSeoKeywords('');
@@ -300,7 +299,6 @@ function AdminNews() {
     setFormTagIds((post.tags || []).map((tag) => tag.id));
     setFormRelatedPostIds((post.manual_related_posts || []).map((item) => item.id));
     setTagSearch('');
-    setRelatedSearch('');
     
     setFormSeoTitle(post.seo_meta?.title || '');
     setFormSeoDescription(post.seo_meta?.description || '');
@@ -442,19 +440,8 @@ function AdminNews() {
     }
   };
 
-  const moveRelatedPost = (index: number, direction: -1 | 1) => {
-    const target = index + direction;
-    if (target < 0 || target >= formRelatedPostIds.length) return;
-    setFormRelatedPostIds((ids) => {
-      const next = [...ids];
-      [next[index], next[target]] = [next[target], next[index]];
-      return next;
-    });
-  };
   const selectedTags = tagsData.filter((tag) => formTagIds.includes(tag.id));
   const filteredTags = tagsData.filter((tag) => !formTagIds.includes(tag.id) && (!tagSearch.trim() || tag.name.toLocaleLowerCase('vi-VN').includes(tagSearch.trim().toLocaleLowerCase('vi-VN'))));
-  const selectedRelatedPosts = formRelatedPostIds.map((id) => relatedCandidates.find((post) => post.id === id)).filter((post): post is Post => Boolean(post));
-  const filteredRelatedCandidates = relatedCandidates.filter((post) => post.id !== editingPost?.id && !formRelatedPostIds.includes(post.id) && (!relatedSearch.trim() || post.title.toLocaleLowerCase('vi-VN').includes(relatedSearch.trim().toLocaleLowerCase('vi-VN'))));
 
   const updateMediaItem = (index: number, patch: Partial<NewsMediaDraft>) => {
     setFormMediaItems((items) => items.map((item, idx) => idx === index ? { ...item, ...patch } : item));
@@ -968,12 +955,14 @@ function AdminNews() {
                       />
                     </div>
 
-                    <section className="rounded-2xl border border-[#E8DCCB] bg-[#FBF8F2] p-4">
-                        <div className="flex items-center justify-between"><label className="text-xs font-bold text-[#6E5F51]">Bài viết liên quan chèn sau đoạn mở đầu</label><span className="text-[11px] text-[#8C7A6B]">{formRelatedPostIds.length}/3</span></div>
-                        <p className="mt-1 text-[11px] text-[#8C7A6B]">Nếu chọn dưới 3 bài, hệ thống tự bổ sung bài cùng loại và không trùng lặp.</p>
-                        <div className="mt-2 space-y-2">{selectedRelatedPosts.map((post, index) => <div key={post.id} className="flex items-center gap-2 rounded-xl border border-[#E8DCCB] bg-white p-2"><span className="min-w-0 flex-1 truncate text-xs font-bold">{post.title}</span><button type="button" disabled={index === 0} onClick={() => moveRelatedPost(index, -1)} aria-label="Đưa bài lên" className="p-1 disabled:opacity-30"><ArrowUp className="h-3.5 w-3.5" /></button><button type="button" disabled={index === selectedRelatedPosts.length - 1} onClick={() => moveRelatedPost(index, 1)} aria-label="Đưa bài xuống" className="p-1 disabled:opacity-30"><ArrowDown className="h-3.5 w-3.5" /></button><button type="button" onClick={() => setFormRelatedPostIds((ids) => ids.filter((id) => id !== post.id))} aria-label="Xóa bài liên quan" className="p-1 text-red-600"><X className="h-3.5 w-3.5" /></button></div>)}</div>
-                        {formRelatedPostIds.length < 3 && <><input value={relatedSearch} onChange={(event) => setRelatedSearch(event.target.value)} placeholder="Tìm bài đã xuất bản..." className="mt-3 h-10 w-full rounded-xl border border-[#E8DCCB] bg-white px-3 text-sm outline-none focus:border-[#B88746]" />{relatedSearch && <div className="mt-2 max-h-40 space-y-1 overflow-y-auto">{filteredRelatedCandidates.slice(0, 10).map((post) => <button type="button" key={post.id} onClick={() => { setFormRelatedPostIds((ids) => [...ids, post.id]); setRelatedSearch(''); }} className="block w-full rounded-lg bg-white px-3 py-2 text-left text-xs font-semibold hover:text-[#B88746]">{post.title}</button>)}</div>}</>}
-                    </section>
+                    <RelatedPostsSelector
+                      candidates={relatedCandidates}
+                      selectedIds={formRelatedPostIds}
+                      onChange={setFormRelatedPostIds}
+                      excludeId={editingPost?.id}
+                      title="Bài viết liên quan chèn sau đoạn mở đầu"
+                      description="Nếu chọn dưới 3 bài, hệ thống tự bổ sung bài cùng loại và không trùng lặp."
+                    />
 
                     <div>
                       <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Nội dung chính</label>

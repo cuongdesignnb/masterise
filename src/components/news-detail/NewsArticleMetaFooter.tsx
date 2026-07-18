@@ -37,33 +37,15 @@ function NavCard({ post, direction }: { post: PostCard; direction: "previous" | 
   );
 }
 
-export default function NewsArticleMetaFooter({ post, previous, next }: Props) {
-  const tags = post.tags || [];
-  const tagBasePath = post.post_type === "investment" ? "/dau-tu" : "/tin-tuc";
-
-  if (!tags.length && !previous && !next) return null;
+export default function NewsArticleMetaFooter({ previous, next }: Props) {
+  if (!previous && !next) return null;
 
   return (
-    <section className="space-y-5">
-      {tags.length > 0 && (
-        <nav aria-label="Chủ đề bài viết" className="border-t border-[#E8DCCB] pt-4 text-sm text-[#6E5F51]">
-          {tags.map((tag, index) => (
-            <span key={tag.id}>
-              {index > 0 ? <span aria-hidden="true" className="mx-2 text-[#C8B9A5]">|</span> : null}
-              <Link href={`${tagBasePath}?tag=${encodeURIComponent(tag.slug)}`} className="font-medium transition hover:text-[#B88746] hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B88746]/50">
-                {tag.name}
-              </Link>
-            </span>
-          ))}
-        </nav>
-      )}
-
-      {(previous || next) && (
-        <div className="grid gap-4 sm:grid-cols-2">
-          {previous ? <NavCard post={previous} direction="previous" /> : <div />}
-          {next ? <NavCard post={next} direction="next" /> : <div />}
-        </div>
-      )}
+    <section>
+      <div className="grid gap-4 sm:grid-cols-2">
+        {previous ? <NavCard post={previous} direction="previous" /> : <div />}
+        {next ? <NavCard post={next} direction="next" /> : <div />}
+      </div>
     </section>
   );
 }

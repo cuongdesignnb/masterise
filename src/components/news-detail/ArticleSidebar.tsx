@@ -7,7 +7,6 @@ import MotionWrapper from "@/components/MotionWrapper";
 import {
   articleDetail,
   relatedSidebarPosts,
-  topicTags,
 } from "@/data/newsDetailSeed";
 
 export default function ArticleSidebar() {
@@ -109,25 +108,6 @@ export default function ArticleSidebar() {
               </li>
             ))}
           </ul>
-        </div>
-      </MotionWrapper>
-
-      {/* Card 4: Topics */}
-      <MotionWrapper delay={0.25}>
-        <div className="bg-white rounded-[18px] border border-line/50 p-5">
-          <h3 className="heading-font font-bold text-ink text-base mb-4">
-            Chủ đề quan tâm
-          </h3>
-          <div className="flex flex-wrap gap-2">
-            {topicTags.map((tag, idx) => (
-              <span
-                key={idx}
-                className="bg-beige/60 text-muted text-[11px] rounded-full px-3 py-1.5 hover:bg-gold hover:text-white transition-colors cursor-pointer"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
         </div>
       </MotionWrapper>
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Helpers\AiContentHelper;
+use App\Http\Resources\ProjectRelatedPostResource;
 use App\Http\Resources\ProjectListResource;
 use App\Models\Project;
 use App\Models\ProjectCategory;
@@ -15,11 +16,26 @@ use App\Support\ProjectFloorPlanStructure;
 use App\Support\ProjectStatus;
 use App\Support\PublicContentCache;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class ProjectController extends Controller
 {
+    private function relatedPostValidationRules(): array
+    {
+        return [
+            'related_post_ids' => ['nullable', 'array', 'max:3'],
+            'related_post_ids.*' => [
+                'integer',
+                'distinct',
+                Rule::exists('posts', 'id')->where(fn ($query) => $query
+                    ->where('status', 'published')
+                    ->whereIn('post_type', ['news', 'investment'])),
+            ],
+        ];
+    }
+
     private function floorPlanValidationRules(): array
     {
         return [
@@ -348,10 +364,15 @@ class ProjectController extends Controller
             ->limit(3)
             ->get();
 
+        $projectData = $project->toArray();
+        $projectData['related_posts'] = ProjectRelatedPostResource::collection(
+            $this->projectRelatedPosts($project, true)
+        )->resolve(request());
+
         $response = response()->json([
             'success' => true,
             'data' => [
-                'project' => $project,
+                'project' => $projectData,
                 'related' => $relatedProjects
             ]
         ], 200);
@@ -370,9 +391,14 @@ class ProjectController extends Controller
             ], 404);
         }
 
+        $projectData = $project->toArray();
+        $projectData['related_posts'] = ProjectRelatedPostResource::collection(
+            $this->projectRelatedPosts($project, false)
+        )->resolve(request());
+
         return $this->noStore(response()->json([
             'success' => true,
-            'data' => $project
+            'data' => $projectData
         ], 200));
     }
 
@@ -543,6 +569,7 @@ class ProjectController extends Controller
                 Rule::exists('project_categories', 'id')
                     ->where(fn ($query) => $query->where('taxonomy_type', ProjectCategory::TYPE_PROJECT)),
             ],
+            ...$this->relatedPostValidationRules(),
             // SEO Meta
             'seo_title' => 'nullable|string|max:255',
             'seo_description' => 'nullable|string',
@@ -591,22 +618,31 @@ class ProjectController extends Controller
         }
         $projectData = $this->normalizeProjectPriceData($projectData);
         $projectData['region'] = $location?->region?->name;
-        $project = Project::create($projectData);
+        $project = DB::transaction(function () use ($projectData, $request) {
+            $project = Project::create($projectData);
 
-        // Sync categories
-        if ($request->has('category_ids')) {
-            $project->categories()->sync($request->category_ids);
-        }
+            if ($request->has('category_ids')) {
+                $project->categories()->sync($request->input('category_ids', []));
+            }
 
-        // Create SEO Meta
-        $project->seoMeta()->create([
-            'title' => $request->get('seo_title', $project->name),
-            'description' => $request->get('seo_description', $project->description),
-            'keywords' => $request->get('seo_keywords'),
-        ]);
+            $this->syncProjectRelatedPosts($project, $request->input('related_post_ids', []));
+
+            $project->seoMeta()->create([
+                'title' => $request->get('seo_title', $project->name),
+                'description' => $request->get('seo_description', $project->description),
+                'keywords' => $request->get('seo_keywords'),
+            ]);
+
+            return $project;
+        });
+
+        PublicContentCache::invalidate('projects.list', 'projects.featured', 'projects.options', 'projects.taxonomy');
 
         $project->refresh();
         $project->load(['categories', 'seoMeta', 'developerRelation', 'locationRelation.region', 'projectStatusDetail']);
+        $project->setAttribute('related_posts', ProjectRelatedPostResource::collection(
+            $this->projectRelatedPosts($project, false)
+        )->resolve($request));
 
         return $this->noStore(response()->json([
             'success' => true,
@@ -737,6 +773,7 @@ class ProjectController extends Controller
                 Rule::exists('project_categories', 'id')
                     ->where(fn ($query) => $query->where('taxonomy_type', ProjectCategory::TYPE_PROJECT)),
             ],
+            ...$this->relatedPostValidationRules(),
             // SEO Meta
             'seo_title' => 'nullable|string|max:255',
             'seo_description' => 'nullable|string',
@@ -788,33 +825,42 @@ class ProjectController extends Controller
         } elseif ($project->location_id !== null || !$project->is_published) {
             $projectData['region'] = null;
         }
-        $project->update($projectData);
+        DB::transaction(function () use ($project, $projectData, $request) {
+            $project->update($projectData);
 
-        // Sync categories
-        if ($request->has('category_ids')) {
-            $collectionCategoryIds = $project->categories()
-                ->where('taxonomy_type', ProjectCategory::TYPE_COLLECTION)
-                ->pluck('project_categories.id')
-                ->all();
+            if ($request->has('category_ids')) {
+                $collectionCategoryIds = $project->categories()
+                    ->where('taxonomy_type', ProjectCategory::TYPE_COLLECTION)
+                    ->pluck('project_categories.id')
+                    ->all();
 
-            $project->categories()->sync(array_values(array_unique([
-                ...$collectionCategoryIds,
-                ...$request->input('category_ids', []),
-            ])));
-        }
+                $project->categories()->sync(array_values(array_unique([
+                    ...$collectionCategoryIds,
+                    ...$request->input('category_ids', []),
+                ])));
+            }
 
-        // Update or create SEO Meta
-        $project->seoMeta()->updateOrCreate(
-            ['seoable_id' => $project->id, 'seoable_type' => Project::class],
-            [
-                'title' => $request->get('seo_title', $project->name),
-                'description' => $request->get('seo_description', $project->description),
-                'keywords' => $request->get('seo_keywords'),
-            ]
-        );
+            if ($request->has('related_post_ids')) {
+                $this->syncProjectRelatedPosts($project, $request->input('related_post_ids', []));
+            }
+
+            $project->seoMeta()->updateOrCreate(
+                ['seoable_id' => $project->id, 'seoable_type' => Project::class],
+                [
+                    'title' => $request->get('seo_title', $project->name),
+                    'description' => $request->get('seo_description', $project->description),
+                    'keywords' => $request->get('seo_keywords'),
+                ]
+            );
+        });
+
+        PublicContentCache::invalidate('projects.list', 'projects.featured', 'projects.options', 'projects.taxonomy');
 
         $project->refresh();
         $project->load(['categories', 'seoMeta', 'developerRelation', 'locationRelation.region', 'projectStatusDetail']);
+        $project->setAttribute('related_posts', ProjectRelatedPostResource::collection(
+            $this->projectRelatedPosts($project, false)
+        )->resolve($request));
 
         return $this->noStore(response()->json([
             'success' => true,
@@ -1045,6 +1091,37 @@ class ProjectController extends Controller
         }
 
         $query->orderBy($sortBy, $direction);
+    }
+
+    private function projectRelatedPosts(Project $project, bool $publicOnly)
+    {
+        return $project->relatedPosts()
+            ->select([
+                'posts.id',
+                'posts.title',
+                'posts.slug',
+                'posts.post_type',
+                'posts.summary',
+                'posts.thumbnail',
+                'posts.post_category_id',
+                'posts.published_at',
+            ])
+            ->with('category:id,name,slug')
+            ->when($publicOnly, fn ($query) => $query
+                ->where('posts.status', 'published')
+                ->whereIn('posts.post_type', ['news', 'investment']))
+            ->limit(3)
+            ->get();
+    }
+
+    private function syncProjectRelatedPosts(Project $project, array $postIds): void
+    {
+        $sync = [];
+        foreach (array_values(array_unique($postIds)) as $index => $postId) {
+            $sync[(int) $postId] = ['sort_order' => $index];
+        }
+
+        $project->relatedPosts()->sync($sync);
     }
 
     private function normalizeProjectPriceData(array $projectData): array

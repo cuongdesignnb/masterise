@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { useToast } from '@/components/admin/Toast';
-import { Project, ProjectCategory, ProjectStatus, ProjectStatusOption } from '@/types/api';
+import { Post, Project, ProjectCategory, ProjectStatus, ProjectStatusOption } from '@/types/api';
 import { getProjectStatusColor, getProjectStatusLabel } from '@/lib/projectStatus';
 import { formatVnd } from '@/lib/projectPrice';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -26,6 +26,7 @@ import MediaSelectModal from '@/components/admin/MediaSelectModal';
 import AdminMediaField from '@/components/admin/media/AdminMediaField';
 import AdminImagePreview from '@/components/admin/media/AdminImagePreview';
 import RichTextEditor from '@/components/admin/RichTextEditor';
+import RelatedPostsSelector from '@/components/admin/RelatedPostsSelector';
 import VR360Tab from '@/components/admin/vr360/VR360Tab';
 import type { FloorPlanGroup, FloorPlanItem, FloorPlanTab } from '@/types/floor-plan';
 import { createFloorPlanKey, normalizeFloorPlanGroups, uniqueFloorPlanImages } from '@/lib/projectFloorPlan';
@@ -262,6 +263,7 @@ export default function AdminProjects() {
   
   const [formDescription, setFormDescription] = useState('');
   const [formContent, setFormContent] = useState('');
+  const [formRelatedPostIds, setFormRelatedPostIds] = useState<number[]>([]);
   const [formAmenities, setFormAmenities] = useState<string>('');
   const [formCategoryIds, setFormCategoryIds] = useState<number[]>([]);
   const [formHighlightPoints, setFormHighlightPoints] = useState<string>('');
@@ -639,6 +641,16 @@ export default function AdminProjects() {
       .some((value) => String(value).toLocaleLowerCase('vi').includes(normalizedLocationSearch));
   });
 
+  const { data: relatedCandidatesData = [] } = useQuery({
+    queryKey: ['project-related-post-candidates'],
+    queryFn: async () => (await api.get<Post[]>('/posts?per_page=100&status=published&post_type=news,investment')).data || [],
+    enabled: isFormOpen,
+  });
+  const relatedCandidates = Array.from(new Map([
+    ...relatedCandidatesData,
+    ...(editingProject?.related_posts || []).map((post) => ({ ...post, status: 'published' as const })),
+  ].map((post) => [post.id, post])).values());
+
   const { data: projectStatusesData = [] } = useQuery({
     queryKey: ['admin-project-statuses'],
     queryFn: async () => {
@@ -713,6 +725,7 @@ export default function AdminProjects() {
     setFormTotalFloors('');
     setFormDescription('');
     setFormContent('');
+    setFormRelatedPostIds([]);
     setFormAmenities('');
     setFormCategoryIds([]);
     setFormHighlightPoints('');
@@ -804,6 +817,7 @@ export default function AdminProjects() {
     setFormTotalFloors(project.total_floors || '');
     setFormDescription(project.description || '');
     setFormContent(project.content || '');
+    setFormRelatedPostIds((project.related_posts || []).map((post) => post.id));
     setFormAmenities(asStrings(project.amenities).join(', '));
     setFormCategoryIds(project.categories ? project.categories.map(c => c.id) : []);
     setFormHighlightPoints(asStrings(project.highlight_points).join('\n'));
@@ -997,6 +1011,7 @@ export default function AdminProjects() {
         
         description: formDescription,
         content: formContent,
+        related_post_ids: formRelatedPostIds,
         hero_subtitle: formHeroSubtitle || null,
         badge_text: formBadgeText || null,
         amenities: amenitiesArr,
@@ -3049,6 +3064,14 @@ export default function AdminProjects() {
                         stickyToolbar
                       />
                     </div>
+
+                    <RelatedPostsSelector
+                      candidates={relatedCandidates}
+                      selectedIds={formRelatedPostIds}
+                      onChange={setFormRelatedPostIds}
+                      title="Bài viết liên quan"
+                      description="Chọn tối đa 3 bài viết đã xuất bản. Các bài sẽ hiển thị đúng thứ tự này ngoài trang chi tiết dự án."
+                    />
 
                   </div>
                 )}

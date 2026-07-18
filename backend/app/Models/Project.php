@@ -188,6 +188,14 @@ class Project extends Model
         return $this->belongsToMany(ProjectCategory::class, 'project_category_project');
     }
 
+    public function relatedPosts()
+    {
+        return $this->belongsToMany(Post::class, 'project_related_posts')
+            ->withPivot('sort_order')
+            ->withTimestamps()
+            ->orderBy('project_related_posts.sort_order');
+    }
+
     public function savedByUsers()
     {
         return $this->belongsToMany(User::class, 'saved_projects')->withTimestamps();
