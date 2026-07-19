@@ -44,11 +44,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return {
       title: post.seo_meta?.title || `${post.title} | Masterise Homes`,
       description: post.seo_meta?.description || post.summary || undefined,
-      alternates: { canonical: absoluteUrl(`/tin-tuc/${post.slug}`) },
+      alternates: { canonical: absoluteUrl(`/${post.slug}`) },
     };
   }
 
-  const basePath = `/dau-tu/${post.slug}`;
+  const basePath = `/${post.slug}`;
 
   return {
     title: post.seo_meta?.title || `${post.title} | Masterise Homes`,
@@ -80,10 +80,10 @@ export default async function InvestmentDetailPage({ params }: Props) {
   const { slug } = await params;
   const data = await getInvestmentPost(slug);
   if (!data?.post) notFound();
-  if (data.post.post_type === "news") permanentRedirect(`/tin-tuc/${data.post.slug}`);
+  if (data.post.post_type === "news") permanentRedirect(`/${data.post.slug}`);
 
   const { post, inline_related = [], related = [], previous = null, next = null } = data;
-  const postUrl = `${siteUrl}/dau-tu/${post.slug}`;
+  const postUrl = `${siteUrl}/${post.slug}`;
   const completeContent = [post.intro_content, post.content].filter(Boolean).join("");
   const toc = extractTocFromHtml(completeContent);
   const publishedLabel = formatArticleDate(post.published_at);

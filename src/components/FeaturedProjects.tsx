@@ -94,7 +94,7 @@ export default function FeaturedProjects() {
                       {/* Project Image Area */}
                       <div className="relative h-60 w-full overflow-hidden">
                         {/* Image wrapped in Link */}
-                        <Link href={project.slug ? `/du-an/${project.slug}` : `#project-${project.id}`} className="block w-full h-full">
+                        <Link href={project.slug ? `/${project.slug}` : `#project-${project.id}`} className="block w-full h-full">
                           <Image
                             src={project.image}
                             alt={project.name}
@@ -128,7 +128,7 @@ export default function FeaturedProjects() {
 
                       {/* Card Content details */}
                       <div className="p-6 flex flex-col flex-grow text-left">
-                        <Link href={project.slug ? `/du-an/${project.slug}` : `#project-${project.id}`} className="block hover:text-gold transition-colors duration-300">
+                        <Link href={project.slug ? `/${project.slug}` : `#project-${project.id}`} className="block hover:text-gold transition-colors duration-300">
                           <h3 className="text-lg font-bold text-ink heading-font">
                             {project.name}
                           </h3>

@@ -16,16 +16,22 @@ interface StickyLeadCTAProps {
 export default function StickyLeadCTA({ projectId, projectName }: StickyLeadCTAProps) {
   const [activeModal, setActiveModal] = useState<'price' | 'visit' | null>(null);
   const { hotline, socialLinks } = useSiteSettings();
-  const zaloUrl = socialLinks.zalo.startsWith('http') ? socialLinks.zalo : `https://zalo.me/${socialLinks.zalo}`;
+  const cleanPhone = hotline.replace(/[^\d+]/g, '');
+  const zaloHandle = socialLinks.zalo.trim();
+  const zaloUrl = /^https?:\/\//i.test(zaloHandle)
+    ? zaloHandle
+    : `https://zalo.me/${zaloHandle.replace(/\D/g, '') || zaloHandle}`;
 
   const handleHotlineCall = () => {
+    if (!cleanPhone) return;
     trackEvent('click_hotline', { project_id: projectId });
-    window.open(`tel:${hotline.replace(/\D/g, '')}`);
+    window.location.href = `tel:${cleanPhone}`;
   };
 
   const handleZaloChat = () => {
+    if (!zaloHandle) return;
     trackEvent('click_zalo', { project_id: projectId });
-    window.open(zaloUrl, '_blank');
+    window.open(zaloUrl, '_blank', 'noopener,noreferrer');
   };
 
   const openPriceModal = () => {
@@ -46,7 +52,9 @@ export default function StickyLeadCTA({ projectId, projectName }: StickyLeadCTAP
           {/* Hotline Button */}
           <button
             onClick={handleHotlineCall}
-            className="flex flex-col items-center justify-center h-full text-white hover:text-[#B88746] transition-colors"
+            disabled={!cleanPhone}
+            aria-label={cleanPhone ? `Gọi hotline ${hotline}` : 'Hotline đang cập nhật'}
+            className="flex flex-col items-center justify-center h-full text-white hover:text-[#B88746] transition-colors disabled:pointer-events-none disabled:opacity-40"
           >
             <Phone className="w-5 h-5 mb-1 text-[#B88746]" />
             <span className="text-[10px] font-bold uppercase tracking-wider">Gọi ngay</span>
@@ -55,7 +63,9 @@ export default function StickyLeadCTA({ projectId, projectName }: StickyLeadCTAP
           {/* Zalo Button */}
           <button
             onClick={handleZaloChat}
-            className="flex flex-col items-center justify-center h-full hover:text-[#B88746] transition-colors"
+            disabled={!zaloHandle}
+            aria-label={zaloHandle ? 'Chat Zalo' : 'Zalo đang cập nhật'}
+            className="flex flex-col items-center justify-center h-full hover:text-[#B88746] transition-colors disabled:pointer-events-none disabled:opacity-40"
           >
             <MessageSquare className="w-5 h-5 mb-1 text-sky-400" />
             <span className="text-[10px] font-bold uppercase tracking-wider">Chat Zalo</span>

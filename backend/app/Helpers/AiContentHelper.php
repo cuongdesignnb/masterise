@@ -2,7 +2,7 @@
 
 namespace App\Helpers;
 
-use App\Models\Post;
+use App\Support\PublicSlug;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 
@@ -307,14 +307,6 @@ class AiContentHelper
             $baseSlug = 'post-' . Str::random(6);
         }
 
-        $slug = $baseSlug;
-        $counter = 2;
-
-        while (Post::where('slug', $slug)->exists()) {
-            $slug = $baseSlug . '-' . $counter;
-            $counter++;
-        }
-
-        return $slug;
+        return PublicSlug::unique($baseSlug);
     }
 }

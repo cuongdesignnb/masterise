@@ -36,9 +36,10 @@ import { type FormEvent, type KeyboardEvent as ReactKeyboardEvent, useState, use
 import type { ProjectIconName, ProjectDetail } from "@/types/project-detail";
 import type { FloorPlanItem } from "@/types/floor-plan";
 import { normalizeFloorPlanGroups } from "@/lib/projectFloorPlan";
+import { splitArticleHtmlForInlineLinks } from "@/lib/articleContent";
+import InlineRelatedArticleLinks from "@/components/news-detail/InlineRelatedArticleLinks";
 import ProjectGalleryAlbumSection from "@/components/project-detail/ProjectGalleryAlbumSection";
 import ProjectPricingPolicySection from "@/components/project-detail/ProjectPricingPolicySection";
-import ProjectRelatedPostsSection from "@/components/project-detail/ProjectRelatedPostsSection";
 import VR360Section from "@/components/vr360/VR360Section";
 import { leadService } from "@/services/leadService";
 import RichHtmlContent from "@/components/content/RichHtmlContent";
@@ -349,6 +350,10 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
   const consultInterestOptions = useMemo(() => getConsultInterestOptions(project), [project]);
   const projectVideoEmbedUrl = useMemo(() => project.videoUrl ? getYouTubeEmbedUrl(project.videoUrl) : "", [project.videoUrl]);
   const projectVideoThumbnailUrl = useMemo(() => project.videoUrl ? getYouTubeThumbnailUrl(project.videoUrl) : "", [project.videoUrl]);
+  const projectContentParts = useMemo(() => splitArticleHtmlForInlineLinks(project.content), [project.content]);
+  const inlineRelatedPosts = useMemo(() => project.relatedPosts
+    .filter((post, index, posts) => Boolean(post.slug) && posts.findIndex((candidate) => candidate.id === post.id) === index)
+    .slice(0, 3), [project.relatedPosts]);
   const [activeFloorGroupKey, setActiveFloorGroupKey] = useState(floorPlanGroups[0]?.key ?? "");
   const [activeFloorTabKey, setActiveFloorTabKey] = useState(floorPlanGroups[0]?.tabs[0]?.key ?? "");
   const [activeImageIndex, setActiveImageIndex] = useState<number | null>(null);
@@ -357,6 +362,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
   const [heroTextExpanded, setHeroTextExpanded] = useState(false);
   const [canToggleHeroText, setCanToggleHeroText] = useState(false);
   const [floorPlansExpanded, setFloorPlansExpanded] = useState(false);
+  const [expandedAmenityIndex, setExpandedAmenityIndex] = useState<number | null>(null);
   const [floorPlanLimit, setFloorPlanLimit] = useState(6);
   const [consultStatus, setConsultStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [consultError, setConsultError] = useState("");
@@ -705,7 +711,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
       ? fallbackTitle
       : configuredTitle || fallbackTitle;
     return (
-      <SectionTitle eyebrow={heading?.eyebrow || fallbackEyebrow}>
+      <SectionTitle eyebrow={heading?.eyebrow ?? fallbackEyebrow}>
         {title}
       </SectionTitle>
     );
@@ -960,16 +966,18 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
         ) : null}
 
         {/* TỔNG QUAN DỰ ÁN */}
-        {project.content ? (
+        {project.content || inlineRelatedPosts.length ? (
           <Reveal className="rounded-[22px] border border-line/80 bg-white p-5 shadow-soft sm:p-7">
             <section id="tong-quan" className="scroll-mt-32">
               <ProjectSectionTitle sectionKey="overview" fallbackEyebrow="Tổng quan dự án" fallbackTitle={`Tổng quan ${project.name}`} />
-              <RichHtmlContent html={project.content} className="mt-5" />
+              <div className="mt-5">
+                <RichHtmlContent html={projectContentParts.before} />
+                {inlineRelatedPosts.length ? <InlineRelatedArticleLinks posts={inlineRelatedPosts} /> : null}
+                <RichHtmlContent html={projectContentParts.after} />
+              </div>
             </section>
           </Reveal>
         ) : null}
-
-        <ProjectRelatedPostsSection posts={project.relatedPosts} />
 
         {hasGallery ? <Reveal
           className="rounded-[22px] border border-line/80 bg-white p-4 shadow-soft sm:p-5"
@@ -1119,30 +1127,65 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
           </section>
         </Reveal> : null}
 
-        {hasAmenities ? <Reveal className="rounded-[22px] border border-line/80 bg-white p-5 shadow-soft sm:p-7">
-          <section id="tien-ich" className="scroll-mt-32">
-            <ProjectSectionTitle sectionKey="amenities" fallbackTitle="Tiện ích nổi bật" />
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-3 lg:grid-cols-6">
-              {project.amenities.map((amenity) => (
-                <article key={amenity.title} className="group flex min-w-0 overflow-hidden rounded-[13px] border border-line/70 bg-[#fcfaf6] md:block md:overflow-visible md:border-0 md:bg-transparent">
-                  {amenity.image ? <div className="relative min-h-28 w-[38%] shrink-0 overflow-hidden bg-beige md:aspect-[1.25] md:min-h-0 md:w-full md:rounded-[13px]">
-                    <Image
+        {hasAmenities ? <Reveal className="relative overflow-hidden rounded-[28px] border border-[#e8dcc9] bg-[radial-gradient(circle_at_top_right,rgba(185,137,73,.14),transparent_38%),linear-gradient(145deg,#fffdf9_0%,#f8f2e7_100%)] p-4 shadow-[0_24px_70px_rgba(73,55,30,.09)] sm:p-7 lg:p-9">
+          <div aria-hidden="true" className="pointer-events-none absolute -right-20 -top-24 size-64 rounded-full border border-gold/10" />
+          <section id="tien-ich" className="relative scroll-mt-32">
+            <div className="flex items-start justify-between gap-4">
+              <ProjectSectionTitle sectionKey="amenities" fallbackEyebrow="Đặc quyền sống" fallbackTitle="Tiện ích nổi bật" />
+              <span className="mt-1 hidden shrink-0 items-center gap-2 rounded-full border border-gold/20 bg-white/80 px-3.5 py-2 text-[10px] font-bold uppercase tracking-[0.1em] text-gold-dark shadow-sm sm:inline-flex">
+                <Sparkles size={13} aria-hidden="true" />
+                {project.amenities.length} trải nghiệm
+              </span>
+            </div>
+            <div className="-mx-4 overflow-x-auto px-4 pb-4 sm:-mx-7 sm:px-7 lg:-mx-9 lg:px-9">
+              <div className="flex snap-x snap-mandatory gap-4 lg:gap-5">
+                {project.amenities.map((amenity, index) => (
+                <article
+                  key={`${amenity.title}-${index}`}
+                  className="group flex w-[82vw] shrink-0 snap-start flex-col overflow-hidden rounded-[22px] border border-white/80 bg-white shadow-[0_14px_36px_rgba(73,55,30,.09)] transition duration-500 hover:-translate-y-1 hover:border-gold/25 hover:shadow-[0_22px_48px_rgba(73,55,30,.14)] sm:w-[340px] lg:w-[320px] xl:w-[330px]"
+                >
+                  <div className="relative aspect-[16/10] w-full overflow-hidden bg-beige">
+                    {amenity.image ? <Image
                       src={amenity.image}
                       alt={amenity.title}
                       fill
-                      sizes="(max-width: 767px) 38vw, (max-width: 1024px) 33vw, 16vw"
-                      className="object-cover transition duration-700 group-hover:scale-105"
-                    />
-                  </div> : null}
-                  <div className="flex min-w-0 flex-1 items-start gap-2.5 p-3 md:mt-3 md:p-0">
-                    <ProjectIcon name={amenity.icon} size={18} className="mt-0.5 shrink-0 text-gold" />
-                    <div className="min-w-0">
-                      <h3 className="line-clamp-2 text-[13px] font-bold leading-5 text-ink md:line-clamp-none md:text-[12px]">{amenity.title}</h3>
-                      {amenity.description ? <p className="mt-1 line-clamp-3 text-[12px] leading-5 text-muted md:mt-0 md:line-clamp-none md:text-[11px]">{amenity.description}</p> : null}
+                      sizes="(max-width: 639px) 92vw, (max-width: 1199px) 46vw, 23vw"
+                      className="object-cover transition duration-700 ease-out group-hover:scale-[1.04]"
+                    /> : <div className="absolute inset-0 bg-[linear-gradient(135deg,#e9dfcf,#f8f4ec)]" />}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/5 to-transparent" />
+                    <span aria-hidden="true" className="absolute right-3 top-3 rounded-full border border-white/40 bg-black/20 px-2.5 py-1 text-[10px] font-semibold tracking-[0.12em] text-white backdrop-blur-md">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                    <span className="absolute bottom-3 left-3 grid size-10 place-items-center rounded-full border border-white/70 bg-white/90 text-gold-dark shadow-lg backdrop-blur-md transition duration-500 group-hover:bg-gold group-hover:text-white">
+                      <ProjectIcon name={amenity.icon} size={18} />
+                    </span>
+                  </div>
+                  <div className="flex flex-1 flex-col p-4 sm:p-5">
+                    <h3 className="heading-font line-clamp-2 min-h-[46px] text-[17px] font-semibold leading-[1.35] text-ink sm:text-[18px]">{amenity.title}</h3>
+                    {amenity.description ? <>
+                      <p
+                        id={`amenity-description-${index}`}
+                        className={`mt-2.5 text-[13px] leading-6 text-muted ${expandedAmenityIndex === index ? "" : "line-clamp-3"}`}
+                      >
+                        {amenity.description}
+                      </p>
+                      {amenity.description.length > 115 ? <button
+                        type="button"
+                        aria-controls={`amenity-description-${index}`}
+                        aria-expanded={expandedAmenityIndex === index}
+                        onClick={() => setExpandedAmenityIndex((current) => current === index ? null : index)}
+                        className="mt-2 inline-flex min-h-8 w-fit items-center rounded-full border border-gold/20 bg-[#fffaf2] px-3 text-[11px] font-bold text-gold-dark transition hover:border-gold/40 hover:bg-beige focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50"
+                      >
+                        {expandedAmenityIndex === index ? "Thu gọn" : "Xem thêm"}
+                      </button> : null}
+                    </> : null}
+                    <div aria-hidden="true" className="mt-auto pt-4">
+                      <span className="block h-px w-10 bg-gold/45 transition-all duration-500 group-hover:w-16 group-hover:bg-gold" />
                     </div>
                   </div>
                 </article>
-              ))}
+                ))}
+              </div>
             </div>
           </section>
         </Reveal> : null}

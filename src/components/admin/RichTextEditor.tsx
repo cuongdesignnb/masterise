@@ -2,7 +2,7 @@
 
 import React, { useEffect, useId, useRef, useState } from 'react';
 import MediaSelectModal from '@/components/admin/MediaSelectModal';
-import { Link2, Search, Table2, X } from 'lucide-react';
+import { ImageIcon, Link2, Search, Table2, X } from 'lucide-react';
 import { api } from '@/lib/api';
 import { projectService } from '@/services/projectService';
 import type { Media, Project } from '@/types/api';
@@ -13,6 +13,17 @@ type SavedRange = { index: number; length: number };
 type TableModalState = {
   mode: 'insert' | 'edit';
   html: string;
+  index: number | null;
+};
+
+type ArticleImageValue = {
+  src: string;
+  alt: string;
+  caption: string;
+};
+
+type ImageModalState = ArticleImageValue & {
+  mode: 'insert' | 'edit';
   index: number | null;
 };
 
@@ -51,12 +62,55 @@ function createTableMarkup(rows: number, columns: number) {
   return `<table>${head}${body}</table>`;
 }
 
+function normalizeQuillListMarkup(root: HTMLElement) {
+  const lists = Array.from(root.querySelectorAll('ol, ul'));
+
+  lists.forEach((list) => {
+    const items = Array.from(list.children).filter((child): child is HTMLLIElement => child.tagName === 'LI');
+    if (!items.some((item) => item.hasAttribute('data-list'))) return;
+
+    const fragment = root.ownerDocument.createDocumentFragment();
+    let currentList: HTMLOListElement | HTMLUListElement | null = null;
+    let currentTag = '';
+
+    items.forEach((item) => {
+      const listType = item.getAttribute('data-list') || (list.tagName === 'UL' ? 'bullet' : 'ordered');
+      const nextTag = listType === 'ordered' ? 'OL' : 'UL';
+
+      if (!currentList || currentTag !== nextTag) {
+        currentList = root.ownerDocument.createElement(nextTag.toLowerCase()) as HTMLOListElement | HTMLUListElement;
+        currentList.className = list.className;
+        fragment.appendChild(currentList);
+        currentTag = nextTag;
+      }
+
+      if (listType === 'ordered' || listType === 'bullet') item.removeAttribute('data-list');
+      currentList.appendChild(item);
+    });
+
+    list.replaceWith(fragment);
+  });
+
+  root.querySelectorAll('.ql-ui').forEach((element) => element.remove());
+}
+
+function imageValueFromNode(node: HTMLElement): ArticleImageValue | null {
+  const image = node.matches('img') ? node as HTMLImageElement : node.querySelector('img');
+  if (!image?.getAttribute('src')) return null;
+  return {
+    src: image.getAttribute('src') || '',
+    alt: image.getAttribute('alt') || '',
+    caption: node.matches('figure') ? node.querySelector('figcaption')?.textContent?.trim() || '' : '',
+  };
+}
+
 function serializeEditorHtml(quill: any) {
   const clone = quill.root.cloneNode(true) as HTMLElement;
   clone.querySelectorAll('.ql-multi-range-overlay').forEach((element) => element.remove());
   clone.querySelectorAll('.ql-article-table').forEach((wrapper) => {
     wrapper.replaceWith(...Array.from(wrapper.childNodes));
   });
+  normalizeQuillListMarkup(clone);
   const html = clone.innerHTML;
   return html === '<p><br></p>' ? '' : html;
 }
@@ -97,6 +151,8 @@ export default function RichTextEditor({
   const savedRangeRef = useRef<SavedRange | null>(null);
   const lastSelectionRef = useRef<SavedRange | null>(null);
   const savedRangesRef = useRef<SavedRange[]>([]);
+  const imageSelectionHandledRef = useRef(false);
+  const imageCommitInProgressRef = useRef(false);
   const selectedTableCellRef = useRef<HTMLTableCellElement | null>(null);
   const tableEditorRef = useRef<HTMLDivElement>(null);
   const highlightName = `ql-multi-${useId().replace(/:/g, '')}`;
@@ -107,6 +163,7 @@ export default function RichTextEditor({
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoadingProjects, setIsLoadingProjects] = useState(false);
   const [tableModal, setTableModal] = useState<TableModalState | null>(null);
+  const [imageModal, setImageModal] = useState<ImageModalState | null>(null);
   const [tableRows, setTableRows] = useState(3);
   const [tableColumns, setTableColumns] = useState(3);
   const [activeHeading, setActiveHeading] = useState('');
@@ -213,7 +270,10 @@ export default function RichTextEditor({
 
   const saveCurrentSelection = () => {
     const range = quillRef.current?.getSelection();
-    if (range) lastSelectionRef.current = { index: range.index, length: range.length };
+    if (!range) return;
+    const savedRange = { index: range.index, length: range.length };
+    lastSelectionRef.current = savedRange;
+    savedRangeRef.current = savedRange;
   };
 
   const applyHeadingFormat = (value: string) => {
@@ -280,10 +340,50 @@ export default function RichTextEditor({
     }
   };
 
+  const openImageMediaModal = () => {
+    const quill = quillRef.current;
+    if (!quill) return;
+    const range = savedRangeRef.current || quill.getSelection() || lastSelectionRef.current || { index: Math.max(0, quill.getLength() - 1), length: 0 };
+    savedRangeRef.current = { index: range.index, length: range.length };
+    imageSelectionHandledRef.current = false;
+    setIsMediaModalOpen(true);
+  };
+
+  const confirmImage = () => {
+    const quill = quillRef.current;
+    if (!quill || !imageModal || !imageModal.src || !imageModal.alt.trim() || imageCommitInProgressRef.current) return;
+
+    imageCommitInProgressRef.current = true;
+    const value: ArticleImageValue = {
+      src: imageModal.src,
+      alt: imageModal.alt.trim(),
+      caption: imageModal.caption.trim(),
+    };
+
+    try {
+      if (imageModal.mode === 'edit' && imageModal.index !== null) {
+        quill.deleteText(imageModal.index, 1, 'user');
+        quill.insertEmbed(imageModal.index, 'articleImage', value, 'user');
+        quill.setSelection(imageModal.index + 1, 0, 'silent');
+      } else {
+        const range = savedRangeRef.current || lastSelectionRef.current || { index: Math.max(0, quill.getLength() - 1), length: 0 };
+        if (range.length > 0) quill.deleteText(range.index, range.length, 'user');
+        quill.insertEmbed(range.index, 'articleImage', value, 'user');
+        quill.insertText(range.index + 1, '\n', 'user');
+        quill.setSelection(range.index + 2, 0, 'silent');
+      }
+      onChangeRef.current(serializeEditorHtml(quill));
+      savedRangeRef.current = null;
+      setImageModal(null);
+    } finally {
+      queueMicrotask(() => { imageCommitInProgressRef.current = false; });
+    }
+  };
+
   const openTableForInsert = () => {
     const quill = quillRef.current;
     if (!quill) return;
-    const range = quill.getSelection(true) || { index: Math.max(0, quill.getLength() - 1), length: 0 };
+    const range = savedRangeRef.current || quill.getSelection() || lastSelectionRef.current || { index: Math.max(0, quill.getLength() - 1), length: 0 };
     savedRangeRef.current = range;
     setTableRows(3);
     setTableColumns(3);
@@ -460,7 +560,41 @@ export default function RichTextEditor({
             return extractTableMarkup(node.innerHTML);
           }
         }
+        class ArticleImageBlot extends BlockEmbed {
+          static blotName = 'articleImage';
+          static tagName = 'figure';
+          static className = 'ql-article-image';
+          static create(rawValue: ArticleImageValue | string) {
+            const value = typeof rawValue === 'string'
+              ? { src: rawValue, alt: '', caption: '' }
+              : rawValue;
+            const node = super.create() as HTMLElement;
+            node.setAttribute('contenteditable', 'false');
+            node.setAttribute('role', 'button');
+            node.setAttribute('tabindex', '0');
+            node.setAttribute('aria-label', value.caption ? `Ảnh: ${value.caption}. Nhấp để chỉnh sửa` : 'Ảnh trong bài viết. Nhấp để chỉnh sửa');
+            node.setAttribute('title', 'Nhấp để sửa alt ảnh hoặc chú thích');
+
+            const image = document.createElement('img');
+            image.src = value.src;
+            image.alt = value.alt || '';
+            image.loading = 'lazy';
+            image.decoding = 'async';
+            node.appendChild(image);
+
+            if (value.caption) {
+              const caption = document.createElement('figcaption');
+              caption.textContent = value.caption;
+              node.appendChild(caption);
+            }
+            return node;
+          }
+          static value(node: HTMLElement) {
+            return imageValueFromNode(node) || { src: '', alt: '', caption: '' };
+          }
+        }
         Quill.register(ArticleTableBlot, true);
+        Quill.register(ArticleImageBlot, true);
 
         if (!active || !containerRef.current || quillRef.current) return;
         const editorContainer = document.createElement('div');
@@ -482,13 +616,25 @@ export default function RichTextEditor({
         quill.clipboard.addMatcher('TABLE', (node: Node) => (
           new Delta().insert({ articleTable: extractTableMarkup((node as HTMLElement).outerHTML) })
         ));
+        quill.clipboard.addMatcher('FIGURE', (node: Node, delta: unknown) => {
+          const value = imageValueFromNode(node as HTMLElement);
+          return value ? new Delta().insert({ articleImage: value }) : delta;
+        });
         quillRef.current = quill;
 
         const toolbar = quill.getModule('toolbar') as any;
         const toolbarElement = containerRef.current.querySelector('.ql-toolbar');
+        const captureSelectionBeforeToolbarAction = () => {
+          const range = quill.getSelection();
+          if (!range) return;
+          const savedRange = { index: range.index, length: range.length };
+          lastSelectionRef.current = savedRange;
+          savedRangeRef.current = savedRange;
+        };
+        toolbarElement?.addEventListener('pointerdown', captureSelectionBeforeToolbarAction, true);
         if (toolbarElement && toolbarHostRef.current) toolbarHostRef.current.appendChild(toolbarElement);
         if (toolbar) {
-          toolbar.addHandler('image', () => setIsMediaModalOpen(true));
+          toolbar.addHandler('image', openImageMediaModal);
           ['bold', 'italic', 'underline', 'strike', 'color', 'background', 'align', 'list'].forEach((format) => {
             toolbar.addHandler(format, (formatValue: unknown) => applyToolbarFormat(format, formatValue));
           });
@@ -527,6 +673,17 @@ export default function RichTextEditor({
           event.preventDefault();
         };
         const handleMouseUp = (event: MouseEvent) => {
+          const eventTarget = event.target as HTMLElement;
+          const imageNode = (eventTarget.closest('.ql-article-image') || eventTarget.closest('img')) as HTMLElement | null;
+          if (imageNode && quill.root.contains(imageNode)) {
+            const blot = Quill.find(imageNode.matches('img') ? imageNode : imageNode.closest('.ql-article-image') || imageNode);
+            const value = imageValueFromNode(imageNode);
+            if (blot && value) {
+              setImageModal({ mode: 'edit', index: quill.getIndex(blot as any), ...value });
+            }
+            return;
+          }
+
           const tableWrapper = (event.target as HTMLElement).closest('.ql-article-table') as HTMLElement | null;
           if (tableWrapper) {
             const blot = Quill.find(tableWrapper);
@@ -554,6 +711,7 @@ export default function RichTextEditor({
           }
           requestAnimationFrame(() => {
             const range = quill.getSelection();
+            if (range) lastSelectionRef.current = { index: range.index, length: range.length };
             if (range?.length) {
               setSavedRanges(additive ? [...savedRangesRef.current, range] : [range]);
               if (additive) window.getSelection()?.removeAllRanges();
@@ -569,6 +727,10 @@ export default function RichTextEditor({
             event.preventDefault();
             target.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
           }
+        };
+        const handleKeyUp = () => {
+          const range = quill.getSelection();
+          if (range) lastSelectionRef.current = { index: range.index, length: range.length };
         };
         const handleDragStart = (event: DragEvent) => {
           if (event.ctrlKey || event.metaKey || additiveStartIndex !== null) event.preventDefault();
@@ -609,6 +771,7 @@ export default function RichTextEditor({
         quill.root.addEventListener('mousedown', handleMouseDown);
         quill.root.addEventListener('mouseup', handleMouseUp);
         quill.root.addEventListener('keydown', handleKeyDown);
+        quill.root.addEventListener('keyup', handleKeyUp);
         quill.root.addEventListener('dragstart', handleDragStart);
         quill.root.addEventListener('paste', handlePaste);
         window.addEventListener('resize', handleResize);
@@ -616,8 +779,10 @@ export default function RichTextEditor({
           quill.root.removeEventListener('mousedown', handleMouseDown);
           quill.root.removeEventListener('mouseup', handleMouseUp);
           quill.root.removeEventListener('keydown', handleKeyDown);
+          quill.root.removeEventListener('keyup', handleKeyUp);
           quill.root.removeEventListener('dragstart', handleDragStart);
           quill.root.removeEventListener('paste', handlePaste);
+          toolbarElement?.removeEventListener('pointerdown', captureSelectionBeforeToolbarAction, true);
           window.removeEventListener('resize', handleResize);
         };
       } catch (error) {
@@ -678,17 +843,16 @@ export default function RichTextEditor({
 
   const handleMediaSelect = (url: string | string[]) => {
     const imageUrl = Array.isArray(url) ? url[0] : url;
-    const quill = quillRef.current;
-    if (!imageUrl || !quill) return;
-    const range = quill.getSelection() || { index: quill.getLength(), length: 0 };
-    quill.insertEmbed(range.index, 'image', imageUrl, 'user');
-    quill.setSelection(range.index + 1, 0, 'silent');
+    if (!imageUrl || !quillRef.current || imageSelectionHandledRef.current) return;
+    imageSelectionHandledRef.current = true;
+    setIsMediaModalOpen(false);
+    setImageModal({ mode: 'insert', index: null, src: imageUrl, alt: '', caption: '' });
   };
 
   const openProjectLinkModal = () => {
     const quill = quillRef.current;
     if (!quill) return;
-    savedRangeRef.current = quill.getSelection() || { index: Math.max(0, quill.getLength() - 1), length: 0 };
+    savedRangeRef.current = savedRangeRef.current || quill.getSelection() || lastSelectionRef.current || { index: Math.max(0, quill.getLength() - 1), length: 0 };
     setProjectSearch('');
     setIsLoadingProjects(true);
     setIsProjectModalOpen(true);
@@ -698,7 +862,7 @@ export default function RichTextEditor({
     const quill = quillRef.current;
     const range = savedRangeRef.current;
     if (!quill || !range || !project.slug) return;
-    const href = `/du-an/${project.slug}`;
+    const href = `/${project.slug}`;
     const selectedText = range.length > 0 ? quill.getText(range.index, range.length).trim() : '';
     if (range.length > 0 && selectedText) {
       quill.formatText(range.index, range.length, 'link', href, 'user');
@@ -739,11 +903,11 @@ export default function RichTextEditor({
             </select>
           </label>
           {enableProjectLinks ? (
-            <button type="button" onClick={openProjectLinkModal} className="inline-flex items-center gap-2 rounded-lg border border-[#B88746]/50 bg-[#FFF9F0] px-3 py-2 text-xs font-bold text-[#8F632F] transition hover:border-[#B88746] hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B88746]/40">
+            <button type="button" onPointerDown={saveCurrentSelection} onClick={openProjectLinkModal} className="inline-flex items-center gap-2 rounded-lg border border-[#B88746]/50 bg-[#FFF9F0] px-3 py-2 text-xs font-bold text-[#8F632F] transition hover:border-[#B88746] hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B88746]/40">
               <Link2 className="h-4 w-4" /> Chèn liên kết dự án
             </button>
           ) : null}
-          <button type="button" onClick={openTableForInsert} className="inline-flex items-center gap-2 rounded-lg border border-[#E8DCCB] bg-white px-3 py-2 text-xs font-bold text-[#6E5F51] hover:border-[#B88746] hover:text-[#8F632F]">
+          <button type="button" onPointerDown={saveCurrentSelection} onClick={openTableForInsert} className="inline-flex items-center gap-2 rounded-lg border border-[#E8DCCB] bg-white px-3 py-2 text-xs font-bold text-[#6E5F51] hover:border-[#B88746] hover:text-[#8F632F]">
             <Table2 className="h-4 w-4" /> Chèn bảng
           </button>
         </div>
@@ -755,6 +919,52 @@ export default function RichTextEditor({
       <div ref={containerRef} className="quill-editor-container" />
 
       <MediaSelectModal isOpen={isMediaModalOpen} onClose={() => setIsMediaModalOpen(false)} onSelect={handleMediaSelect} multiple={false} />
+
+      {imageModal ? (
+        <div className="fixed inset-0 z-[125] flex items-center justify-center bg-black/55 p-3 sm:p-5" onMouseDown={(event) => { if (event.target === event.currentTarget) setImageModal(null); }}>
+          <div className="w-full max-w-xl overflow-hidden rounded-2xl border border-[#E8DCCB] bg-white shadow-2xl">
+            <div className="flex items-start justify-between gap-4 border-b border-[#E8DCCB] px-4 py-4 sm:px-5">
+              <div>
+                <h3 className="text-base font-black text-[#1F1B16]">{imageModal.mode === 'insert' ? 'Thông tin ảnh chèn vào nội dung' : 'Chỉnh sửa thông tin ảnh'}</h3>
+                <p className="mt-1 text-xs text-[#8C7A6B]">Alt ảnh giúp SEO và trình đọc màn hình; chú thích sẽ hiển thị ngay dưới ảnh ngoài client.</p>
+              </div>
+              <button type="button" aria-label="Đóng trình chỉnh sửa ảnh" onClick={() => setImageModal(null)} className="rounded-full p-2 text-[#8C7A6B] hover:bg-[#FBF8F2]"><X className="h-4 w-4" /></button>
+            </div>
+            <div className="space-y-4 p-4 sm:p-5">
+              <div className="overflow-hidden rounded-xl border border-[#E8DCCB] bg-[#FBF8F2]">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={imageModal.src} alt={imageModal.alt || 'Xem trước ảnh'} className="max-h-64 w-full object-contain" />
+              </div>
+              <label className="block text-xs font-bold text-[#6E5F51]">
+                Alt ảnh <span className="text-red-600">*</span>
+                <input
+                  autoFocus
+                  value={imageModal.alt}
+                  onChange={(event) => setImageModal((current) => current ? { ...current, alt: event.target.value } : current)}
+                  placeholder="Mô tả ngắn nội dung và mục đích của ảnh"
+                  className="mt-1.5 h-11 w-full rounded-xl border border-[#E8DCCB] bg-white px-3 text-sm font-normal text-[#1F1B16] outline-none focus:border-[#B88746] focus:ring-2 focus:ring-[#B88746]/20"
+                />
+              </label>
+              <label className="block text-xs font-bold text-[#6E5F51]">
+                Ghi chú ảnh <span className="font-normal text-[#8C7A6B]">(không bắt buộc)</span>
+                <textarea
+                  value={imageModal.caption}
+                  onChange={(event) => setImageModal((current) => current ? { ...current, caption: event.target.value } : current)}
+                  placeholder="Nội dung hiển thị ngay bên dưới ảnh"
+                  rows={3}
+                  className="mt-1.5 w-full rounded-xl border border-[#E8DCCB] bg-white px-3 py-2.5 text-sm font-normal text-[#1F1B16] outline-none focus:border-[#B88746] focus:ring-2 focus:ring-[#B88746]/20"
+                />
+              </label>
+            </div>
+            <div className="flex justify-end gap-2 border-t border-[#E8DCCB] bg-[#FBF8F2] px-4 py-3 sm:px-5">
+              <button type="button" onClick={() => setImageModal(null)} className="rounded-lg border border-[#E8DCCB] bg-white px-4 py-2 text-xs font-bold text-[#6E5F51]">Hủy</button>
+              <button type="button" onClick={confirmImage} disabled={!imageModal.alt.trim()} className="inline-flex items-center gap-2 rounded-lg bg-[#B88746] px-4 py-2 text-xs font-bold text-white disabled:cursor-not-allowed disabled:opacity-45">
+                <ImageIcon className="h-4 w-4" /> {imageModal.mode === 'insert' ? 'Chèn một ảnh' : 'Lưu thông tin ảnh'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {tableModal ? (
         <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/55 p-3 sm:p-5" onMouseDown={(event) => { if (event.target === event.currentTarget) setTableModal(null); }}>
@@ -814,7 +1024,7 @@ export default function RichTextEditor({
               {isLoadingProjects ? <p className="py-8 text-center text-sm text-[#8C7A6B]">Đang tải dự án...</p> : filteredProjects.length ? filteredProjects.map((project) => (
                 <button key={project.id} type="button" onClick={() => insertProjectLink(project)} className="block w-full rounded-xl border border-[#E8DCCB]/70 px-4 py-3 text-left transition hover:border-[#B88746] hover:bg-[#FFF9F0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B88746]/40">
                   <span className="block text-sm font-bold text-[#1F1B16]">{project.name}</span>
-                  <span className="mt-1 block text-xs text-[#8C7A6B]">{project.location || `/du-an/${project.slug}`}</span>
+                  <span className="mt-1 block text-xs text-[#8C7A6B]">{project.location || `/${project.slug}`}</span>
                 </button>
               )) : <p className="py-8 text-center text-sm text-[#8C7A6B]">Không tìm thấy dự án phù hợp.</p>}
             </div>
@@ -837,6 +1047,11 @@ export default function RichTextEditor({
         .rich-text-editor-wrapper .ql-container { overflow-x: auto; }
         .rich-text-editor-wrapper .ql-article-table { position: relative; max-width: 100%; overflow-x: auto; border-radius: 12px; outline: none; cursor: pointer; }
         .rich-text-editor-wrapper .ql-article-table:hover, .rich-text-editor-wrapper .ql-article-table:focus-visible { box-shadow: 0 0 0 2px rgba(184,135,70,.45); }
+        .rich-text-editor-wrapper .ql-article-image { position: relative; max-width: 100%; margin: 1rem 0; border-radius: 12px; outline: none; cursor: pointer; }
+        .rich-text-editor-wrapper .ql-article-image:hover, .rich-text-editor-wrapper .ql-article-image:focus-visible { box-shadow: 0 0 0 2px rgba(184,135,70,.45); }
+        .rich-text-editor-wrapper .ql-article-image img { display: block; max-width: 100%; height: auto; margin: 0 auto; border-radius: 12px; }
+        .rich-text-editor-wrapper .ql-article-image figcaption { margin-top: 8px; color: #6E5F51; font-size: 12px; line-height: 1.5; text-align: center; }
+        .rich-text-editor-wrapper .ql-article-image::after { content: 'Sửa alt / ghi chú'; position: absolute; right: 8px; top: 8px; border-radius: 999px; background: rgba(31,27,22,.86); color: #fff; padding: 5px 9px; font-size: 10px; font-weight: 700; pointer-events: none; }
         .rich-text-editor-wrapper .ql-article-table::after { content: 'Nhấp để chỉnh sửa bảng'; position: sticky; right: 8px; bottom: 8px; float: right; margin: -38px 8px 8px 0; border-radius: 999px; background: #1F1B16; color: #fff; padding: 5px 9px; font-size: 10px; font-weight: 700; pointer-events: none; }
         ::highlight(${highlightName}) { color: inherit; background: rgba(184,135,70,.28); text-decoration: underline 2px rgba(143,99,47,.7); }
         .rich-text-editor-wrapper .quill-editor-container { position: relative; min-width: 0; }

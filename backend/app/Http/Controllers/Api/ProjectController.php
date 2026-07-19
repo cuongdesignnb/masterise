@@ -15,6 +15,7 @@ use App\Support\ProjectPriceRange;
 use App\Support\ProjectFloorPlanStructure;
 use App\Support\ProjectStatus;
 use App\Support\PublicContentCache;
+use App\Support\PublicSlug;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -461,9 +462,17 @@ class ProjectController extends Controller
      */
     public function store(Request $request)
     {
+        $requestedSlug = PublicSlug::normalize($request->input('slug') ?: $request->input('name'));
+        $request->merge([
+            'slug' => $request->boolean('slug_is_auto')
+                ? PublicSlug::unique($requestedSlug)
+                : $requestedSlug,
+        ]);
+
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'slug' => 'required|string|max:255|unique:projects',
+            'slug' => ['required', 'string', 'max:255', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/', 'unique:projects,slug', PublicSlug::rule()],
+            'slug_is_auto' => 'sometimes|boolean',
             'code' => 'nullable|string|max:50',
             'developer_id' => 'nullable|integer|exists:developers,id',
             'location_id' => 'nullable|integer|exists:locations,id',
@@ -665,9 +674,14 @@ class ProjectController extends Controller
             ], 404);
         }
 
+        $request->merge([
+            'slug' => PublicSlug::normalize($request->input('slug') ?: $request->input('name')),
+        ]);
+
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'slug' => 'required|string|max:255|unique:projects,slug,' . $id,
+            'slug' => ['required', 'string', 'max:255', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/', Rule::unique('projects', 'slug')->ignore($id), PublicSlug::rule('project', (int) $id)],
+            'slug_is_auto' => 'sometimes|boolean',
             'code' => 'nullable|string|max:50',
             'developer_id' => 'nullable|integer|exists:developers,id',
             'location_id' => 'nullable|integer|exists:locations,id',

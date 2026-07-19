@@ -2,7 +2,9 @@ import Link from "next/link";
 import type { PostCard } from "@/types/api";
 import { getPostDetailHref } from "@/lib/postRoutes";
 
-export default function InlineRelatedArticleLinks({ posts }: { posts: PostCard[] }) {
+type InlineRelatedArticle = Pick<PostCard, "id" | "title" | "slug" | "post_type">;
+
+export default function InlineRelatedArticleLinks({ posts }: { posts: InlineRelatedArticle[] }) {
   if (!posts.length) return null;
 
   return (

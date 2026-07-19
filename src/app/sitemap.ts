@@ -69,7 +69,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       ]);
 
       return {
-        url: `${SITE_URL}/du-an/${project.slug}`,
+        url: `${SITE_URL}/${project.slug}`,
         lastModified: project.updated_at ? new Date(project.updated_at) : new Date(),
         changeFrequency: "weekly",
         priority: project.is_hot || project.is_featured ? 0.9 : 0.82,
@@ -80,9 +80,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const postRoutes: MetadataRoute.Sitemap = postsData
     .filter((post) => post.status === "published")
     .map((post) => {
-      const isNews = post.post_type === "news";
       return {
-        url: `${SITE_URL}/${isNews ? "tin-tuc" : "dau-tu"}/${post.slug}`,
+        url: `${SITE_URL}/${post.slug}`,
         lastModified: post.updated_at ? new Date(post.updated_at) : new Date(),
         changeFrequency: "weekly",
         priority: post.is_featured ? 0.78 : 0.68,

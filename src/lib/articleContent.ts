@@ -110,17 +110,31 @@ export function enhanceArticleTables(content?: string | null) {
   return html.replace(/___ARTICLE_PROTECTED_(\d+)___/g, (_, index) => protectedBlocks[Number(index)] || "");
 }
 
-export function enhanceArticleImages(content?: string | null) {
+function escapeHtmlAttribute(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+export function enhanceArticleImages(content?: string | null, fallbackAlt = "") {
+  let imageIndex = 0;
   return (content || "").replace(/<img\b([^>]*)>/gi, (_full, attributes: string) => {
+    imageIndex += 1;
     let nextAttributes = attributes;
+    if (!/\salt\s*=/i.test(nextAttributes)) {
+      const alt = fallbackAlt ? `${fallbackAlt} - hình ảnh ${imageIndex}` : "";
+      nextAttributes += ` alt="${escapeHtmlAttribute(alt)}"`;
+    }
     if (!/\sloading\s*=/i.test(nextAttributes)) nextAttributes += ' loading="lazy"';
     if (!/\sdecoding\s*=/i.test(nextAttributes)) nextAttributes += ' decoding="async"';
     return `<img${nextAttributes}>`;
   });
 }
 
-export function enhanceArticleHtml(content?: string | null) {
-  return enhanceArticleTables(enhanceArticleImages(enhanceArticleHtmlWithHeadingIds(sanitizeArticleHtml(content))));
+export function enhanceArticleHtml(content?: string | null, fallbackImageAlt = "") {
+  return enhanceArticleTables(enhanceArticleImages(enhanceArticleHtmlWithHeadingIds(sanitizeArticleHtml(content)), fallbackImageAlt));
 }
 
 export function splitArticleIntroAndMain(content?: string | null) {

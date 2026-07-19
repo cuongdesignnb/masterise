@@ -10,7 +10,7 @@ import type { Post } from "@/types/api";
 
 export default function NewsHero({ post, postLabel }: { post: Post | null; postLabel: string }) {
   const { newsPageHero: hero } = useSiteSettings();
-  const postHref = post?.slug ? `/tin-tuc/${post.slug}` : "#bai-viet-moi-nhat";
+  const postHref = post?.slug ? `/${post.slug}` : "#bai-viet-moi-nhat";
 
   return (
     <section className="relative min-h-[420px] w-full overflow-hidden bg-cream pt-[72px] lg:min-h-[460px]">

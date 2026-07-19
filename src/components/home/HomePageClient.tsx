@@ -310,7 +310,7 @@ export default function HomePageClient({ initialHeroSlides = [], initialProjects
                 {projects.map((project) => (
                   <motion.div key={project.id} variants={fadeUp}>
                     <Link
-                      href={`/du-an/${project.slug}`}
+                      href={`/${project.slug}`}
                       className="project-card group block text-left"
                     >
                       {/* Image */}

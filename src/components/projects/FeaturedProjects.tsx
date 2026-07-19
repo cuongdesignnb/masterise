@@ -89,7 +89,7 @@ export default function FeaturedProjects({ initialProjects = [] }: { initialProj
                 <div className="bg-white rounded-[18px] border border-line/50 overflow-hidden hover:-translate-y-1.5 hover:shadow-soft transition-all duration-300 group h-full flex flex-col">
                   {/* Image */}
                   <div className="relative aspect-[4/3] overflow-hidden">
-                    <Link href={project.slug ? `/du-an/${project.slug}` : `#`}>
+                    <Link href={project.slug ? `/${project.slug}` : `#`}>
                       <Image
                         src={project.image}
                         alt={project.name}
@@ -132,7 +132,7 @@ export default function FeaturedProjects({ initialProjects = [] }: { initialProj
 
                   {/* Content */}
                   <div className="p-4 flex flex-col flex-grow">
-                    <Link href={project.slug ? `/du-an/${project.slug}` : `#`} className="hover:text-gold transition-colors">
+                    <Link href={project.slug ? `/${project.slug}` : `#`} className="hover:text-gold transition-colors">
                       <h3 className="heading-font text-sm font-bold text-ink leading-snug">
                         {project.name}
                       </h3>
@@ -151,7 +151,7 @@ export default function FeaturedProjects({ initialProjects = [] }: { initialProj
 
                     <div className="mt-auto pt-3">
                       <Button
-                        href={project.slug ? `/du-an/${project.slug}` : `#`}
+                        href={project.slug ? `/${project.slug}` : `#`}
                         variant="outline"
                         size="sm"
                         icon={<ArrowRight size={12} />}

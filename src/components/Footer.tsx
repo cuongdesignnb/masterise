@@ -8,6 +8,7 @@ import Container from "./Container";
 
 export default function Footer() {
   const { hotline, email, companyAddress, companyName, socialLinks, footerNavigation } = useSiteSettings();
+  const hotlineHref = hotline.replace(/[^\d+]/g, "");
   const resolvedFooterNavigation = footerNavigation.map((column, index) => index !== 0 || column.links.some((link) => link.href === '/tuyen-dung')
     ? column
     : { ...column, links: [...column.links.slice(0, 4), { label: 'Tuyển dụng', href: '/tuyen-dung' }, ...column.links.slice(4)] });
@@ -136,7 +137,17 @@ export default function Footer() {
             <ul className="flex flex-col gap-4">
               <li className="flex items-start gap-2.5">
                 <Phone size={14} className="text-gold mt-1 flex-shrink-0" />
-                <span className="text-sm font-bold text-line/90">{hotline || 'Đang cập nhật'}</span>
+                {hotlineHref ? (
+                  <a
+                    href={`tel:${hotlineHref}`}
+                    className="text-sm font-bold text-line/90 transition-colors hover:text-gold"
+                    aria-label={`Gọi hotline ${hotline}`}
+                  >
+                    {hotline}
+                  </a>
+                ) : (
+                  <span className="text-sm font-bold text-line/90">Đang cập nhật</span>
+                )}
               </li>
               <li className="flex items-start gap-2.5 min-w-0">
                 <Mail size={14} className="text-gold mt-1 flex-shrink-0" />

@@ -62,6 +62,7 @@ export default function ProjectPricingPolicySection({ project }: Props) {
 
   const hasPriceData = rowItems.length > 0 || imageItems.length > 0 || fileItems.length > 0 || noteItems.length > 0;
   const hasPolicyData = project.policies.length > 0;
+  const pricingEyebrow = project.sectionTitles?.pricingPolicy?.eyebrow ?? "Bảng giá & Chính sách";
 
   if (!hasPriceData && !hasPolicyData) return null;
 
@@ -73,10 +74,12 @@ export default function ProjectPricingPolicySection({ project }: Props) {
     <section className="rounded-[24px] border border-line/80 bg-[#fffaf4] p-4 shadow-soft sm:p-6 lg:p-8">
       <div className="mb-6 flex flex-col gap-3 text-left lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <p className="text-[11px] font-bold tracking-[0.16em] text-gold normal-case">
-            {project.sectionTitles?.pricingPolicy?.eyebrow || "Bảng giá & Chính sách"}
-          </p>
-          <h2 className="heading-font mt-2 text-[24px] font-semibold leading-tight text-ink normal-case sm:text-[30px]">
+          {pricingEyebrow ? (
+            <p className="text-[11px] font-bold tracking-[0.16em] text-gold normal-case">
+              {pricingEyebrow}
+            </p>
+          ) : null}
+          <h2 className={`heading-font text-[24px] font-semibold leading-tight text-ink normal-case sm:text-[30px] ${pricingEyebrow ? "mt-2" : ""}`}>
             {project.sectionTitles?.pricingPolicy?.title || "Cập nhật giá bán và chính sách ưu đãi"}
           </h2>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-muted sm:text-[15px]">
@@ -122,7 +125,7 @@ export default function ProjectPricingPolicySection({ project }: Props) {
                     </button>
                     <div className="p-3">
                       {item.title ? <h4 className="text-[13px] font-bold text-ink">{item.title}</h4> : null}
-                      {item.description ? <p className="mt-1 text-[12px] leading-5 text-muted">{item.description}</p> : null}
+                      {item.description ? <p className="mt-1 whitespace-pre-line text-[12px] leading-5 text-muted">{item.description}</p> : null}
                       <a href={item.imageUrl} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-1.5 text-[11px] font-bold text-gold-dark">
                         Mở ảnh gốc <ExternalLink className="h-3.5 w-3.5" />
                       </a>
@@ -153,7 +156,7 @@ export default function ProjectPricingPolicySection({ project }: Props) {
                         </button>
                         <div className="p-3">
                           {item.title ? <h4 className="text-[13px] font-bold text-ink">{item.title}</h4> : null}
-                          {item.description ? <p className="mt-1 text-[12px] leading-5 text-muted">{item.description}</p> : null}
+                          {item.description ? <p className="mt-1 whitespace-pre-line text-[12px] leading-5 text-muted">{item.description}</p> : null}
                           <a href={item.fileUrl} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-1.5 text-[11px] font-bold text-gold-dark">
                             Mở ảnh gốc <ExternalLink className="h-3.5 w-3.5" />
                           </a>
@@ -170,7 +173,7 @@ export default function ProjectPricingPolicySection({ project }: Props) {
                       </span>
                       <span className="min-w-0">
                         <span className="block truncate text-[13px] font-bold text-ink">{item.title || getFileName(item.fileUrl)}</span>
-                        {item.description ? <span className="mt-1 block text-[12px] leading-5 text-muted">{item.description}</span> : null}
+                        {item.description ? <span className="mt-1 block whitespace-pre-line text-[12px] leading-5 text-muted">{item.description}</span> : null}
                         <span className="mt-1 block text-[10px] font-bold text-gold-dark">{item.fileSize || item.fileType || "Tài liệu"}</span>
                       </span>
                     </a>
@@ -195,11 +198,11 @@ export default function ProjectPricingPolicySection({ project }: Props) {
                     <tbody>
                       {rowItems.map((row, index) => (
                         <tr key={`${row.productType}-${index}`} className="border-t border-line/70 transition hover:bg-beige/35">
-                          <td className="px-4 py-3 font-bold text-ink">{row.productType}</td>
-                          <td className="px-4 py-3 text-muted">{row.area}</td>
-                          <td className="px-4 py-3 font-bold text-gold-dark">{row.price}</td>
-                          <td className="px-4 py-3 text-muted">{row.payment || row.note || "-"}</td>
-                          <td className="px-4 py-3 text-muted">{row.status || "-"}</td>
+                          <td className="whitespace-pre-line px-4 py-3 font-bold text-ink">{row.productType}</td>
+                          <td className="whitespace-pre-line px-4 py-3 text-muted">{row.area}</td>
+                          <td className="whitespace-pre-line px-4 py-3 font-bold text-gold-dark">{row.price}</td>
+                          <td className="whitespace-pre-line px-4 py-3 text-muted">{row.payment || row.note || "-"}</td>
+                          <td className="whitespace-pre-line px-4 py-3 text-muted">{row.status || "-"}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -208,12 +211,12 @@ export default function ProjectPricingPolicySection({ project }: Props) {
                 <div className="grid gap-2 md:hidden">
                   {rowItems.map((row, index) => (
                     <article key={`${row.productType}-${index}`} className="rounded-[14px] border border-line/80 bg-[#fcfaf6] p-3">
-                      <h4 className="text-[13px] font-bold text-ink">{row.productType}</h4>
+                      <h4 className="whitespace-pre-line text-[13px] font-bold text-ink">{row.productType}</h4>
                       <div className="mt-2 grid grid-cols-2 gap-2 text-[12px]">
-                        <span className="text-muted">Diện tích: <strong className="text-ink">{row.area}</strong></span>
-                        <span className="text-muted">Giá: <strong className="text-gold-dark">{row.price}</strong></span>
+                        <span className="whitespace-pre-line text-muted">Diện tích: <strong className="text-ink">{row.area}</strong></span>
+                        <span className="whitespace-pre-line text-muted">Giá: <strong className="text-gold-dark">{row.price}</strong></span>
                       </div>
-                      {row.payment || row.status || row.note ? <p className="mt-2 text-[12px] leading-5 text-muted">{row.payment || row.status || row.note}</p> : null}
+                      {row.payment || row.status || row.note ? <p className="mt-2 whitespace-pre-line text-[12px] leading-5 text-muted">{row.payment || row.status || row.note}</p> : null}
                     </article>
                   ))}
                 </div>
@@ -224,8 +227,8 @@ export default function ProjectPricingPolicySection({ project }: Props) {
               <div className="mt-4 grid gap-2">
                 {noteItems.map((item, index) => (
                   <div key={`${item.title}-${index}`} className={`rounded-[14px] border p-3 text-[12px] leading-5 ${item.highlight ? "border-gold/50 bg-[#fff7ea] text-ink" : "border-line/80 bg-[#fcfaf6] text-muted"}`}>
-                    {item.title ? <p className="font-bold text-ink">{item.title}</p> : null}
-                    {item.description ? <p className="mt-1">{item.description}</p> : null}
+                    {item.title ? <p className="whitespace-pre-line font-bold text-ink">{item.title}</p> : null}
+                    {item.description ? <p className="mt-1 whitespace-pre-line">{item.description}</p> : null}
                   </div>
                 ))}
               </div>
@@ -245,7 +248,7 @@ export default function ProjectPricingPolicySection({ project }: Props) {
                 <div className="p-4">
                   {policy.badge ? <span className="mb-2 inline-flex rounded-full bg-[#fff7ea] px-3 py-1 text-[10px] font-bold text-gold-dark">{policy.badge}</span> : null}
                   <h3 className="text-[14px] font-bold leading-5 text-ink">{policy.title}</h3>
-                  {policy.description ? <p className="mt-2 text-[12px] leading-5 text-muted">{policy.description}</p> : null}
+                  {policy.description ? <p className="mt-2 whitespace-pre-line text-[12px] leading-5 text-muted">{policy.description}</p> : null}
                   {policy.bullets.length ? (
                     <ul className="mt-3 space-y-1.5">
                       {policy.bullets.map((bullet) => (

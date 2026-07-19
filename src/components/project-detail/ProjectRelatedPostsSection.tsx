@@ -4,7 +4,7 @@ import { ArrowRight, CalendarDays } from "lucide-react";
 import type { ProjectRelatedPost } from "@/types/api";
 
 function postHref(post: ProjectRelatedPost) {
-  return post.post_type === "investment" ? `/dau-tu/${post.slug}` : `/tin-tuc/${post.slug}`;
+  return `/${post.slug}`;
 }
 
 function formatDate(value?: string | null) {

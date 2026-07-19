@@ -2975,7 +2975,7 @@ export default function AdminSettings() {
 
                                   const filteredProjects = projectsData.map((p: any) => ({
                                     label: p.name,
-                                    href: `/du-an/${p.slug}`
+                                    href: `/${p.slug}`
                                   })).filter((p: any) => p.label.toLowerCase().includes(searchLower));
 
                                   const filteredPostCats = postCategoriesData.map((cat: any) => ({
@@ -2985,7 +2985,7 @@ export default function AdminSettings() {
 
                                   const filteredPosts = postsData.map((p: any) => ({
                                     label: p.title,
-                                    href: `/tin-tuc/${p.slug}`
+                                    href: `/${p.slug}`
                                   })).filter((p: any) => p.label.toLowerCase().includes(searchLower));
 
                                   return (

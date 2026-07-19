@@ -120,7 +120,7 @@ export default function SavedProjects() {
                     {project.price_text || 'Liên hệ'}
                   </span>
                   <Link
-                    href={`/du-an/${project.slug}`}
+                    href={`/${project.slug}`}
                     className="inline-flex items-center gap-1 text-xs font-semibold text-[#1F1B16] hover:text-[#B88746] transition-colors"
                   >
                     Xem chi tiết <ArrowRight className="w-3.5 h-3.5" />

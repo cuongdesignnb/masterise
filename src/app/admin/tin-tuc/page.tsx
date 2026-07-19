@@ -3,7 +3,7 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'next/navigation';
-import { api } from '@/lib/api';
+import { api, formatApiError } from '@/lib/api';
 import { useToast } from '@/components/admin/Toast';
 import { Post, PostCategory, PostMedia, Tag } from '@/types/api';
 import { useAuth } from '@/context/AuthContext';
@@ -141,6 +141,7 @@ function AdminNews() {
   // Form states
   const [formTitle, setFormTitle] = useState('');
   const [formSlug, setFormSlug] = useState('');
+  const [formSlugManuallyEdited, setFormSlugManuallyEdited] = useState(false);
   const [formSummary, setFormSummary] = useState('');
   const [formIntroContent, setFormIntroContent] = useState('');
   const [formContent, setFormContent] = useState('');
@@ -233,6 +234,7 @@ function AdminNews() {
     
     setFormTitle('');
     setFormSlug('');
+    setFormSlugManuallyEdited(false);
     setFormSummary('');
     setFormIntroContent('');
     setFormContent('');
@@ -265,6 +267,7 @@ function AdminNews() {
     
     setFormTitle(post.title);
     setFormSlug(post.slug);
+    setFormSlugManuallyEdited(true);
     setFormSummary(post.summary || '');
     if (post.intro_content !== null && post.intro_content !== undefined) {
       setFormIntroContent(post.intro_content);
@@ -313,6 +316,7 @@ function AdminNews() {
       const payload = {
         title: formTitle,
         slug: formSlug,
+        slug_is_auto: !editingPost && !formSlugManuallyEdited,
         summary: formSummary,
         intro_content: formIntroContent,
         content: formContent,
@@ -347,6 +351,11 @@ function AdminNews() {
     },
     onSuccess: async (response) => {
       const savedPost = response.data;
+      const requestedSlug = formSlug.trim();
+      const autoAdjustedSlug = !editingPost
+        && !formSlugManuallyEdited
+        && Boolean(savedPost?.slug)
+        && savedPost.slug !== requestedSlug;
       let freshPost = savedPost;
 
       if (savedPost?.id) {
@@ -369,11 +378,14 @@ function AdminNews() {
       if (freshPost?.id) setEditingPost(freshPost);
       setFormError('');
       setFieldErrors({});
+      if (autoAdjustedSlug) {
+        toast.info(`Slug đã tồn tại nên hệ thống tự đổi thành /${savedPost.slug}.`);
+      }
       toast.success(editingPost ? 'Đã cập nhật bài viết thành công!' : 'Đã đăng bài viết mới thành công!');
     },
     onError: (err: unknown) => {
       const nextFieldErrors = normalizeApiFieldErrors(err);
-      const message = getApiErrorMessage(err);
+      const message = nextFieldErrors.slug || formatApiError(err, getApiErrorMessage(err));
       setFieldErrors(nextFieldErrors);
       setFormError(message);
       setActiveTab('content');
@@ -473,7 +485,8 @@ function AdminNews() {
   // Post Category Mutations
   const createCategoryMutation = useMutation({
     mutationFn: async (name: string) => {
-      const slug = name
+      const normalizedName = name.trim();
+      const slug = normalizedName
         .toLowerCase()
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '')
@@ -482,14 +495,14 @@ function AdminNews() {
         .trim()
         .replace(/\s+/g, '-')
         .replace(/-+/g, '-');
-      return api.post('/post-categories', { name, slug });
+      return api.post('/post-categories', { name: normalizedName, slug });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-post-categories'] });
       setNewCategoryName('');
     },
-    onError: (err: any) => {
-      toast.error(err.message || 'Lỗi khi tạo danh mục.');
+    onError: (error: unknown) => {
+      toast.error(formatApiError(error, 'Không thể tạo danh mục.'));
     }
   });
 
@@ -819,7 +832,10 @@ function AdminNews() {
                           type="text"
                           required
                           value={formSlug}
-                          onChange={(e) => setFormSlug(e.target.value)}
+                          onChange={(e) => {
+                            setFormSlug(e.target.value);
+                            setFormSlugManuallyEdited(true);
+                          }}
                           className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
                           placeholder="slug-viet-lien-khong-dau"
                         />

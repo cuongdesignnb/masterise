@@ -53,7 +53,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const seoTitle = project.seo_meta?.title || project.name;
   const seoDescription = project.seo_meta?.description || project.description || `Thông tin chi tiết dự án ${project.name}.`;
   const seoImage = project.seo_meta?.og_image || project.banner_image || project.thumbnail || undefined;
-  const projectUrl = absoluteUrl(`/du-an/${project.slug}`);
+  const projectUrl = absoluteUrl(`/${project.slug}`);
 
   return {
     title: seoTitle,
@@ -86,7 +86,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
   }
 
   const projectDetail = mapApiProjectToProjectDetail(projectData);
-  const projectUrl = `${SITE_URL}/du-an/${projectDetail.slug}`;
+  const projectUrl = `${SITE_URL}/${projectDetail.slug}`;
   const projectImages = Array.from(new Set([
     projectDetail.heroImage,
     projectDetail.thumbnail,

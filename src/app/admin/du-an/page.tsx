@@ -218,6 +218,7 @@ export default function AdminProjects() {
   // Form states
   const [formName, setFormName] = useState('');
   const [formSlug, setFormSlug] = useState('');
+  const [formSlugManuallyEdited, setFormSlugManuallyEdited] = useState(false);
   const [formCode, setFormCode] = useState('');
   const [formProjectLabel, setFormProjectLabel] = useState('');
   const [formDeveloperId, setFormDeveloperId] = useState<number | ''>('');
@@ -680,6 +681,7 @@ export default function AdminProjects() {
     // Reset fields
     setFormName('');
     setFormSlug('');
+    setFormSlugManuallyEdited(false);
     setFormCode('');
     setFormProjectLabel('');
     setFormDeveloperId('');
@@ -776,6 +778,7 @@ export default function AdminProjects() {
   const fillProjectForm = (project: Project) => {
     setFormName(project.name);
     setFormSlug(project.slug);
+    setFormSlugManuallyEdited(true);
     setFormCode(project.code || '');
     setFormProjectLabel(project.project_label || '');
     setFormDeveloperId(project.developer_id || '');
@@ -967,6 +970,7 @@ export default function AdminProjects() {
       const payload = {
         name: formName,
         slug: slugValue,
+        slug_is_auto: !editingProject && (!formSlugManuallyEdited || !formSlug.trim()),
         code: formCode || null,
         project_label: formProjectLabel || null,
         developer_id: formDeveloperId !== '' ? Number(formDeveloperId) : null,
@@ -1076,6 +1080,11 @@ export default function AdminProjects() {
     onSuccess: async (response, mode) => {
       debugProjectSave('[PROJECT_SAVE_RESPONSE]', response);
       const savedProject = response.data;
+      const requestedSlug = formSlug.trim() || slugifyProjectName(formName);
+      const autoAdjustedSlug = !editingProject
+        && !formSlugManuallyEdited
+        && Boolean(savedProject?.slug)
+        && savedProject.slug !== requestedSlug;
       let freshProject = savedProject;
 
       if (savedProject?.id) {
@@ -1104,6 +1113,9 @@ export default function AdminProjects() {
       setFormError('');
       setFieldErrors({});
       setLastSavedAt(new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }));
+      if (autoAdjustedSlug) {
+        toast.info(`Slug đã tồn tại nên hệ thống tự đổi thành /${savedProject.slug}.`);
+      }
       if (mode === 'preview') {
         const slugValue = freshProject?.slug || formSlug.trim() || slugifyProjectName(formName);
         window.open(`/admin/du-an/xem-truoc/${slugValue}`, '_blank', 'noopener,noreferrer');
@@ -1118,6 +1130,7 @@ export default function AdminProjects() {
       const normalized = normalizeApiErrors(err);
       setFormError(normalized.message);
       setFieldErrors(normalized.fieldErrors);
+      toast.error(normalized.fieldErrors.slug || normalized.message);
       const firstField = Object.keys(normalized.fieldErrors)[0];
       if (firstField) {
         const targetTab = fieldTabMap[firstField] || 'overview';
@@ -2290,7 +2303,7 @@ export default function AdminProjects() {
                     </td>
                     <td className="px-6 py-4 text-right space-x-1 whitespace-nowrap">
                       <a
-                        href={`/du-an/${project.slug}`}
+                        href={`/${project.slug}`}
                         target="_blank"
                         rel="noreferrer"
                         className="p-1.5 hover:bg-gray-100 text-[#8C7A6B] rounded-lg transition-colors inline-flex items-center"
@@ -2521,7 +2534,10 @@ export default function AdminProjects() {
                           type="text"
                           required
                           value={formSlug}
-                          onChange={(e) => setFormSlug(e.target.value)}
+                          onChange={(e) => {
+                            setFormSlug(e.target.value);
+                            setFormSlugManuallyEdited(true);
+                          }}
                           className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
                           placeholder="vi-du-the-global-city"
                         />

@@ -10,6 +10,7 @@ use App\Models\Post;
 use App\Models\PostCategory;
 use App\Services\InlineArticleImageNormalizer;
 use App\Support\PublicContentCache;
+use App\Support\PublicSlug;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Validator;
@@ -246,9 +247,17 @@ class PostController extends Controller
      */
     public function store(Request $request)
     {
+        $requestedSlug = PublicSlug::normalize($request->input('slug') ?: $request->input('title'));
+        $request->merge([
+            'slug' => $request->boolean('slug_is_auto')
+                ? PublicSlug::unique($requestedSlug)
+                : $requestedSlug,
+        ]);
+
         $validator = Validator::make($request->all(), [
             'title' => 'required|string|max:255',
-            'slug' => 'required|string|max:255|unique:posts',
+            'slug' => ['required', 'string', 'max:255', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/', 'unique:posts,slug', PublicSlug::rule()],
+            'slug_is_auto' => 'sometimes|boolean',
             'post_type' => 'nullable|string|in:news,investment,event',
             'summary' => 'nullable|string',
             'intro_content' => 'nullable|string',
@@ -369,9 +378,14 @@ class PostController extends Controller
             ], 404);
         }
 
+        $request->merge([
+            'slug' => PublicSlug::normalize($request->input('slug') ?: $request->input('title')),
+        ]);
+
         $validator = Validator::make($request->all(), [
             'title' => 'required|string|max:255',
-            'slug' => 'required|string|max:255|unique:posts,slug,'.$id,
+            'slug' => ['required', 'string', 'max:255', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/', \Illuminate\Validation\Rule::unique('posts', 'slug')->ignore($id), PublicSlug::rule('post', (int) $id)],
+            'slug_is_auto' => 'sometimes|boolean',
             'post_type' => 'nullable|string|in:news,investment,event',
             'summary' => 'nullable|string',
             'intro_content' => 'nullable|string',
@@ -521,6 +535,10 @@ class PostController extends Controller
             'name' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:post_categories',
             'description' => 'nullable|string',
+        ], [
+            'name.required' => 'Vui lòng nhập tên danh mục.',
+            'slug.required' => 'Không thể tạo đường dẫn cho danh mục này.',
+            'slug.unique' => 'Danh mục này đã tồn tại. Vui lòng chọn tên khác.',
         ]);
 
         if ($validator->fails()) {
@@ -532,6 +550,7 @@ class PostController extends Controller
         }
 
         $category = PostCategory::create($request->only(['name', 'slug', 'description']));
+        PublicContentCache::invalidate('posts.taxonomy');
 
         return response()->json([
             'success' => true,
@@ -569,6 +588,7 @@ class PostController extends Controller
         }
 
         $category->update($request->only(['name', 'slug', 'description']));
+        PublicContentCache::invalidate('posts.taxonomy');
 
         return response()->json([
             'success' => true,
@@ -600,6 +620,7 @@ class PostController extends Controller
         }
 
         $category->delete();
+        PublicContentCache::invalidate('posts.taxonomy');
 
         return response()->json([
             'success' => true,

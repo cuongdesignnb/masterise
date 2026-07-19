@@ -1,9 +1,7 @@
 import type { Post } from "@/types/api";
 
 export function getPostDetailHref(post: Pick<Post, "post_type" | "slug">) {
-  return post.post_type === "investment" || post.post_type === "event"
-    ? `/dau-tu/${post.slug}`
-    : `/tin-tuc/${post.slug}`;
+  return `/${post.slug}`;
 }
 
 export function updateListSearchParams(

@@ -11,16 +11,22 @@ interface FloatingContactButtonsProps {
 
 export default function FloatingContactButtons({ projectId }: FloatingContactButtonsProps) {
   const { hotline, socialLinks } = useSiteSettings();
-  const zaloUrl = socialLinks.zalo.startsWith('http') ? socialLinks.zalo : `https://zalo.me/${socialLinks.zalo}`;
+  const cleanPhone = hotline.replace(/[^\d+]/g, '');
+  const zaloHandle = socialLinks.zalo.trim();
+  const zaloUrl = /^https?:\/\//i.test(zaloHandle)
+    ? zaloHandle
+    : `https://zalo.me/${zaloHandle.replace(/\D/g, '') || zaloHandle}`;
 
   const handleHotlineCall = () => {
+    if (!cleanPhone) return;
     trackEvent('click_hotline', { project_id: projectId, source: 'floating_button' });
-    window.open(`tel:${hotline.replace(/\D/g, '')}`);
+    window.location.href = `tel:${cleanPhone}`;
   };
 
   const handleZaloChat = () => {
+    if (!zaloHandle) return;
     trackEvent('click_zalo', { project_id: projectId, source: 'floating_button' });
-    window.open(zaloUrl, '_blank');
+    window.open(zaloUrl, '_blank', 'noopener,noreferrer');
   };
 
   return (
@@ -28,11 +34,12 @@ export default function FloatingContactButtons({ projectId }: FloatingContactBut
       {/* Zalo Button */}
       <button
         onClick={handleZaloChat}
-        className="group relative flex items-center justify-center w-12 h-12 lg:w-14 lg:h-14 bg-sky-500 text-white rounded-full shadow-lg hover:shadow-sky-400/30 hover:scale-110 transition-all duration-300 active:scale-95"
-        title="Chat Zalo"
+        disabled={!zaloHandle}
+        className="group relative flex items-center justify-center w-12 h-12 lg:w-14 lg:h-14 bg-sky-500 text-white rounded-full shadow-lg hover:shadow-sky-400/30 hover:scale-110 transition-all duration-300 active:scale-95 disabled:pointer-events-none disabled:opacity-40"
+        title={zaloHandle ? 'Chat Zalo' : 'Zalo đang cập nhật'}
       >
         {/* Pulsing ring */}
-        <span className="absolute inset-0 rounded-full bg-sky-500 opacity-40 animate-ping duration-1000 pointer-events-none" />
+        {zaloHandle ? <span className="absolute inset-0 rounded-full bg-sky-500 opacity-40 animate-ping duration-1000 pointer-events-none" /> : null}
         
         <MessageSquare className="w-6 h-6 relative z-10" />
 
@@ -45,11 +52,12 @@ export default function FloatingContactButtons({ projectId }: FloatingContactBut
       {/* Hotline Button */}
       <button
         onClick={handleHotlineCall}
-        className="group relative flex items-center justify-center w-12 h-12 lg:w-14 lg:h-14 bg-[#B88746] text-white rounded-full shadow-lg hover:shadow-[#B88746]/30 hover:scale-110 transition-all duration-300 active:scale-95"
-        title="Gọi Hotline"
+        disabled={!cleanPhone}
+        className="group relative flex items-center justify-center w-12 h-12 lg:w-14 lg:h-14 bg-[#B88746] text-white rounded-full shadow-lg hover:shadow-[#B88746]/30 hover:scale-110 transition-all duration-300 active:scale-95 disabled:pointer-events-none disabled:opacity-40"
+        title={cleanPhone ? `Gọi Hotline ${hotline}` : 'Hotline đang cập nhật'}
       >
         {/* Pulsing ring */}
-        <span className="absolute inset-0 rounded-full bg-[#B88746] opacity-40 animate-ping duration-1000 pointer-events-none" style={{ animationDelay: '0.2s' }} />
+        {cleanPhone ? <span className="absolute inset-0 rounded-full bg-[#B88746] opacity-40 animate-ping duration-1000 pointer-events-none" style={{ animationDelay: '0.2s' }} /> : null}
 
         <Phone className="w-5 h-5 lg:w-6 lg:h-6 relative z-10 animate-shake" />
 

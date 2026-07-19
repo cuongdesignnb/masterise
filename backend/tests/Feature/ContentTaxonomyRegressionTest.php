@@ -232,4 +232,34 @@ class ContentTaxonomyRegressionTest extends TestCase
         $this->getJson('/api/v1/post-categories?post_type=news,investment&exclude_post_type=event')->assertOk()
             ->assertJsonPath('data.0.posts_count', 11)->assertJsonPath('data.1.posts_count', 4);
     }
+
+    public function test_admin_can_create_post_category_and_duplicate_slug_returns_specific_error(): void
+    {
+        $admin = $this->admin();
+
+        // Prime the public taxonomy cache before creating the category. The
+        // mutation must invalidate it so the admin immediately sees the item.
+        $this->getJson('/api/v1/post-categories')->assertOk()->assertJsonCount(0, 'data');
+
+        $created = $this->actingAs($admin, 'sanctum')->postJson('/api/v1/post-categories', [
+            'name' => 'Góc nhìn thị trường',
+            'slug' => 'goc-nhin-thi-truong',
+        ])->assertCreated()
+            ->assertJsonPath('data.name', 'Góc nhìn thị trường')
+            ->assertJsonPath('data.slug', 'goc-nhin-thi-truong');
+
+        $this->getJson('/api/v1/post-categories')->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.slug', 'goc-nhin-thi-truong');
+
+        $this->actingAs($admin, 'sanctum')->postJson('/api/v1/post-categories', [
+            'name' => 'Góc nhìn thị trường khác',
+            'slug' => 'goc-nhin-thi-truong',
+        ])->assertUnprocessable()
+            ->assertJsonPath('errors.slug.0', 'Danh mục này đã tồn tại. Vui lòng chọn tên khác.');
+
+        $this->actingAs($admin, 'sanctum')->deleteJson('/api/v1/post-categories/'.$created->json('data.id'))
+            ->assertOk();
+        $this->getJson('/api/v1/post-categories')->assertOk()->assertJsonCount(0, 'data');
+    }
 }

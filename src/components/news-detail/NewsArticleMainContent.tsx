@@ -10,13 +10,14 @@ type Props = {
 
 export default function NewsArticleMainContent({ post, related = [] }: Props) {
   const hasOfficialIntro = post.intro_content !== null && post.intro_content !== undefined;
-  const legacyHtml = hasOfficialIntro ? "" : enhanceArticleHtml(post.content || "");
+  const imageAltFallback = post.title.trim();
+  const legacyHtml = hasOfficialIntro ? "" : enhanceArticleHtml(post.content || "", imageAltFallback);
   const legacySplit = splitArticleIntroAndMain(legacyHtml);
   const introHtml = hasOfficialIntro
-    ? enhanceArticleHtml(post.intro_content || "")
+    ? enhanceArticleHtml(post.intro_content || "", imageAltFallback)
     : legacySplit.introHtml;
   const mainHtml = hasOfficialIntro
-    ? enhanceArticleHtml(post.content || "")
+    ? enhanceArticleHtml(post.content || "", imageAltFallback)
     : legacySplit.mainHtml;
   const summaryText = stripHtml(post.summary);
   const introText = stripHtml(introHtml);

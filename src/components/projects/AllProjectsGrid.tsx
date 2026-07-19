@@ -151,7 +151,7 @@ export default function AllProjectsGrid({ initialResponse = null, initialQuery =
                 <div className="bg-white rounded-[16px] border border-line/50 overflow-hidden hover:-translate-y-1 hover:shadow-[0_12px_36px_rgba(87,61,28,0.08)] transition-all duration-300 group">
                   {/* Image */}
                   <div className="relative aspect-[16/10] overflow-hidden">
-                    <Link href={project.slug ? `/du-an/${project.slug}` : `#`}>
+                    <Link href={project.slug ? `/${project.slug}` : `#`}>
                       <Image
                         src={project.image}
                         alt={project.name}
@@ -185,7 +185,7 @@ export default function AllProjectsGrid({ initialResponse = null, initialQuery =
 
                   {/* Content */}
                   <div className="p-4">
-                    <Link href={project.slug ? `/du-an/${project.slug}` : `#`} className="hover:text-gold transition-colors">
+                    <Link href={project.slug ? `/${project.slug}` : `#`} className="hover:text-gold transition-colors">
                       <h3 className="heading-font text-sm font-bold text-ink">
                         {project.name}
                       </h3>
@@ -196,7 +196,7 @@ export default function AllProjectsGrid({ initialResponse = null, initialQuery =
                     </p>
                     <p className="text-[10px] text-muted mt-1">{project.type}</p>
                     <Button
-                      href={project.slug ? `/du-an/${project.slug}` : `#`}
+                      href={project.slug ? `/${project.slug}` : `#`}
                       variant="outline"
                       size="sm"
                       className="w-full mt-3"
