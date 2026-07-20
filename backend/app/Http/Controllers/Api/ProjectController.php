@@ -392,10 +392,10 @@ class ProjectController extends Controller
             ], 404);
         }
 
+        $relatedPosts = $this->projectRelatedPosts($project, false);
         $projectData = $project->toArray();
-        $projectData['related_posts'] = ProjectRelatedPostResource::collection(
-            $this->projectRelatedPosts($project, false)
-        )->resolve(request());
+        $projectData['related_post_ids'] = $relatedPosts->pluck('id')->values()->all();
+        $projectData['related_posts'] = ProjectRelatedPostResource::collection($relatedPosts)->resolve(request());
 
         return $this->noStore(response()->json([
             'success' => true,
@@ -649,9 +649,9 @@ class ProjectController extends Controller
 
         $project->refresh();
         $project->load(['categories', 'seoMeta', 'developerRelation', 'locationRelation.region', 'projectStatusDetail']);
-        $project->setAttribute('related_posts', ProjectRelatedPostResource::collection(
-            $this->projectRelatedPosts($project, false)
-        )->resolve($request));
+        $relatedPosts = $this->projectRelatedPosts($project, false);
+        $project->setAttribute('related_post_ids', $relatedPosts->pluck('id')->values()->all());
+        $project->setAttribute('related_posts', ProjectRelatedPostResource::collection($relatedPosts)->resolve($request));
 
         return $this->noStore(response()->json([
             'success' => true,
@@ -872,9 +872,9 @@ class ProjectController extends Controller
 
         $project->refresh();
         $project->load(['categories', 'seoMeta', 'developerRelation', 'locationRelation.region', 'projectStatusDetail']);
-        $project->setAttribute('related_posts', ProjectRelatedPostResource::collection(
-            $this->projectRelatedPosts($project, false)
-        )->resolve($request));
+        $relatedPosts = $this->projectRelatedPosts($project, false);
+        $project->setAttribute('related_post_ids', $relatedPosts->pluck('id')->values()->all());
+        $project->setAttribute('related_posts', ProjectRelatedPostResource::collection($relatedPosts)->resolve($request));
 
         return $this->noStore(response()->json([
             'success' => true,

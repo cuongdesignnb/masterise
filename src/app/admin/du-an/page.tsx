@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { useToast } from '@/components/admin/Toast';
-import { Post, Project, ProjectCategory, ProjectStatus, ProjectStatusOption } from '@/types/api';
+import { Post, Project, ProjectCategory, ProjectRelatedPost, ProjectStatus, ProjectStatusOption } from '@/types/api';
 import { getProjectStatusColor, getProjectStatusLabel } from '@/lib/projectStatus';
 import { formatVnd } from '@/lib/projectPrice';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -820,7 +820,7 @@ export default function AdminProjects() {
     setFormTotalFloors(project.total_floors || '');
     setFormDescription(project.description || '');
     setFormContent(project.content || '');
-    setFormRelatedPostIds((project.related_posts || []).map((post) => post.id));
+    setFormRelatedPostIds(project.related_post_ids || (project.related_posts || []).map((post) => post.id));
     setFormAmenities(asStrings(project.amenities).join(', '));
     setFormCategoryIds(project.categories ? project.categories.map(c => c.id) : []);
     setFormHighlightPoints(asStrings(project.highlight_points).join('\n'));
@@ -1071,13 +1071,16 @@ export default function AdminProjects() {
         gallery_description: payload.gallery_description,
       });
 
-      if (editingProject) {
-        return api.put<Project>(`/projects/${editingProject.id}`, payload);
-      }
+      const response = editingProject
+        ? await api.put<Project>(`/projects/${editingProject.id}`, payload)
+        : await api.post<Project>('/projects', payload);
 
-      return api.post<Project>('/projects', payload);
+      return {
+        response,
+        submittedRelatedPostIds: [...payload.related_post_ids],
+      };
     },
-    onSuccess: async (response, mode) => {
+    onSuccess: async ({ response, submittedRelatedPostIds }, mode) => {
       debugProjectSave('[PROJECT_SAVE_RESPONSE]', response);
       const savedProject = response.data;
       const requestedSlug = formSlug.trim() || slugifyProjectName(formName);
@@ -1091,6 +1094,32 @@ export default function AdminProjects() {
         const freshResponse = await api.get<Project>(`/admin/projects/${savedProject.id}`);
         debugProjectSave('[PROJECT_FRESH_DETAIL_AFTER_SAVE]', freshResponse);
         freshProject = freshResponse.data || savedProject;
+
+        const candidateRelatedPosts: ProjectRelatedPost[] = relatedCandidates
+          .filter((post) => post.post_type === 'news' || post.post_type === 'investment')
+          .map((post) => ({
+            id: post.id,
+            title: post.title,
+            slug: post.slug,
+            post_type: post.post_type as ProjectRelatedPost['post_type'],
+            excerpt: post.summary || null,
+            summary: post.summary || null,
+            thumbnail: post.thumbnail || null,
+            category: post.category || null,
+            published_at: post.published_at || null,
+          }));
+        const relatedPostById = new Map<number, ProjectRelatedPost>([
+          ...candidateRelatedPosts,
+          ...(savedProject.related_posts || []),
+          ...(freshProject.related_posts || []),
+        ].map((post) => [post.id, post]));
+        freshProject = {
+          ...freshProject,
+          related_post_ids: submittedRelatedPostIds,
+          related_posts: submittedRelatedPostIds
+            .map((id) => relatedPostById.get(id))
+            .filter((post): post is ProjectRelatedPost => Boolean(post)),
+        };
 
         queryClient.setQueriesData({ queryKey: ['admin-projects'] }, (oldData: unknown) => {
           const current = oldData as { data?: Project[] } | undefined;

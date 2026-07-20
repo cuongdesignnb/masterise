@@ -45,6 +45,7 @@ class ProjectRelatedPostsTest extends TestCase
         $this->actingAs($admin, 'sanctum')
             ->putJson("/api/v1/projects/{$project->id}", $payload)
             ->assertOk()
+            ->assertJsonPath('data.related_post_ids', $order)
             ->assertJsonPath('data.related_posts.0.id', $order[0])
             ->assertJsonPath('data.related_posts.2.id', $order[2]);
 
@@ -59,6 +60,7 @@ class ProjectRelatedPostsTest extends TestCase
         $this->actingAs($admin, 'sanctum')
             ->getJson("/api/v1/admin/projects/{$project->id}")
             ->assertOk()
+            ->assertJsonPath('data.related_post_ids', $order)
             ->assertJsonPath('data.related_posts.0.id', $order[0])
             ->assertJsonPath('data.related_posts.2.id', $order[2]);
 
@@ -76,6 +78,38 @@ class ProjectRelatedPostsTest extends TestCase
             $this->assertArrayNotHasKey('media_items', $post);
             $this->assertArrayNotHasKey('tags', $post);
         }
+    }
+
+    public function test_admin_can_create_a_project_with_three_related_posts_and_reopen_it(): void
+    {
+        $admin = User::factory()->create();
+        Role::create(['name' => 'admin', 'guard_name' => 'web']);
+        $admin->assignRole('admin');
+        $category = PostCategory::create(['name' => 'Tin dự án', 'slug' => 'tin-du-an']);
+        $posts = collect([
+            $this->createPost($admin, $category, 'Bài tạo mới 1', 'bai-tao-moi-1', 'news'),
+            $this->createPost($admin, $category, 'Bài tạo mới 2', 'bai-tao-moi-2', 'investment'),
+            $this->createPost($admin, $category, 'Bài tạo mới 3', 'bai-tao-moi-3', 'news'),
+        ]);
+        $order = [$posts[2]->id, $posts[0]->id, $posts[1]->id];
+
+        $created = $this->actingAs($admin, 'sanctum')->postJson('/api/v1/projects', [
+            'name' => 'Dự án tạo mới',
+            'slug' => 'du-an-tao-moi',
+            'project_status' => 'selling',
+            'is_published' => false,
+            'related_post_ids' => $order,
+        ])->assertCreated()
+            ->assertJsonPath('data.related_post_ids', $order)
+            ->assertJsonPath('data.related_posts.0.id', $order[0])
+            ->assertJsonPath('data.related_posts.2.id', $order[2]);
+
+        $this->actingAs($admin, 'sanctum')
+            ->getJson('/api/v1/admin/projects/'.$created->json('data.id'))
+            ->assertOk()
+            ->assertJsonPath('data.related_post_ids', $order)
+            ->assertJsonPath('data.related_posts.0.id', $order[0])
+            ->assertJsonPath('data.related_posts.2.id', $order[2]);
     }
 
     public function test_related_posts_validation_rejects_too_many_duplicates_drafts_and_events(): void

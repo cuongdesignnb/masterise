@@ -158,6 +158,7 @@ export interface Project {
   scale: string | null;
   amenities: string[] | null;
   categories?: ProjectCategory[];
+  related_post_ids?: number[];
   related_posts?: ProjectRelatedPost[];
   seo_meta?: SeoMeta | null;
   created_at: string;
