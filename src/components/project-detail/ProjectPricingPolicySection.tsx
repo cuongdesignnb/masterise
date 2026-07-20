@@ -101,7 +101,6 @@ export default function ProjectPricingPolicySection({ project }: Props) {
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
                 <h3 className="text-sm font-bold text-ink">Bảng giá & tài liệu giá</h3>
-                <p className="mt-1 text-xs leading-5 text-muted">Ảnh, file và dòng giá được lấy từ dữ liệu admin.</p>
               </div>
               <BadgeDollarSign className="h-8 w-8 text-gold" />
             </div>

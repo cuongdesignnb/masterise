@@ -187,6 +187,7 @@ export function normalizeContactPageContent(
   const order = asSafeArray(source.sectionOrder)
     .filter((key): key is ContactSectionKey => typeof key === "string" && CONTACT_SECTION_KEYS.includes(key as ContactSectionKey));
   const validOrder = order.length === CONTACT_SECTION_KEYS.length && new Set(order).size === CONTACT_SECTION_KEYS.length;
+  const achievementDescription = text(achievements, "description", defaults.achievements.description);
 
   const result: ContactPageContent = {
     sectionOrder: validOrder ? order : [...CONTACT_SECTION_KEYS],
@@ -245,7 +246,9 @@ export function normalizeContactPageContent(
       sortOrder: asSafeNumber(achievements.sortOrder, defaults.achievements.sortOrder),
       label: text(achievements, "label", defaults.achievements.label),
       title: text(achievements, "title", defaults.achievements.title),
-      description: text(achievements, "description", defaults.achievements.description),
+      description: achievementDescription === "Các số liệu và dấu mốc chỉ hiển thị sau khi được quản trị viên xác nhận."
+        ? defaults.achievements.description
+        : achievementDescription,
       metricsEnabled: asSafeBoolean(achievements.metricsEnabled, defaults.achievements.metricsEnabled),
       milestonesEnabled: asSafeBoolean(achievements.milestonesEnabled, defaults.achievements.milestonesEnabled),
       metrics: normalizeAchievements(achievements.metrics),

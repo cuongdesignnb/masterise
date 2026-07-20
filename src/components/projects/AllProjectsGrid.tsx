@@ -19,7 +19,7 @@ import type { ApiResponse, Project, ProjectCategoryOption } from "@/types/api";
 
 const sortOptions = [
   { value: "latest", label: "Mới nhất", sortBy: "created_at", sortOrder: "desc" },
-  { value: "manual", label: "Thứ tự admin", sortBy: "sort_order", sortOrder: "asc" },
+  { value: "manual", label: "Mặc định", sortBy: "sort_order", sortOrder: "asc" },
   { value: "opening", label: "Mở bán gần nhất", sortBy: "open_sale_at", sortOrder: "asc" },
   { value: "price_asc", label: "Giá thấp đến cao", sortBy: "price_min", sortOrder: "asc" },
   { value: "price_desc", label: "Giá cao đến thấp", sortBy: "price_min", sortOrder: "desc" },

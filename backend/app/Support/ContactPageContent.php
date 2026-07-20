@@ -98,7 +98,7 @@ final class ContactPageContent
                 'sortOrder' => 50,
                 'label' => 'NĂNG LỰC & DẤU ẤN',
                 'title' => 'Uy tín được xây dựng bằng trải nghiệm thực tế',
-                'description' => 'Các số liệu và dấu mốc chỉ hiển thị sau khi được quản trị viên xác nhận.',
+                'description' => 'Những dấu ấn nổi bật trên hành trình kiến tạo giá trị bền vững.',
                 'metricsEnabled' => true,
                 'milestonesEnabled' => true,
                 'metrics' => [],
@@ -311,6 +311,10 @@ final class ContactPageContent
 
         foreach (self::SECTION_KEYS as $section) {
             $result[$section] = self::normalizeRecord($value[$section] ?? null, $default[$section]);
+        }
+
+        if (trim((string) $result['achievements']['description']) === 'Các số liệu và dấu mốc chỉ hiển thị sau khi được quản trị viên xác nhận.') {
+            $result['achievements']['description'] = $default['achievements']['description'];
         }
 
         $listSchemas = [

@@ -69,7 +69,7 @@ export const defaultContactPageContent: ContactPageContent = {
     cta: { label: "Trao đổi cùng chuyên viên", url: "#global-contact-form" },
   },
   salesTeam: { enabled: true, sortOrder: 40, label: "CHUYÊN VIÊN TƯ VẤN", title: "Đội ngũ Sale đồng hành cùng Quý khách", description: "Lựa chọn chuyên viên phù hợp với khu vực hoặc dự án Quý khách quan tâm.", items: [] },
-  achievements: { enabled: true, sortOrder: 50, label: "NĂNG LỰC & DẤU ẤN", title: "Uy tín được xây dựng bằng trải nghiệm thực tế", description: "Các số liệu và dấu mốc chỉ hiển thị sau khi được quản trị viên xác nhận.", metricsEnabled: true, milestonesEnabled: true, metrics: [], milestones: [] },
+  achievements: { enabled: true, sortOrder: 50, label: "NĂNG LỰC & DẤU ẤN", title: "Uy tín được xây dựng bằng trải nghiệm thực tế", description: "Những dấu ấn nổi bật trên hành trình kiến tạo giá trị bền vững.", metricsEnabled: true, milestonesEnabled: true, metrics: [], milestones: [] },
   contactForm: {
     enabled: true, sortOrder: 60, label: "TƯ VẤN CÁ NHÂN HÓA", title: "Bắt đầu cuộc trò chuyện cùng chúng tôi",
     description: "Để lại thông tin, đội ngũ tư vấn sẽ liên hệ và hỗ trợ Quý khách lựa chọn dự án phù hợp.", officeTitle: "Không gian kết nối & tư vấn",
