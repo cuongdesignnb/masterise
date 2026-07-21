@@ -1,9 +1,18 @@
 import type { Metadata } from 'next';
 import CareerListClient from '@/components/career/CareerListClient';
 import { getServerApiUrl } from '@/lib/serverApi';
-import { absoluteUrl } from '@/config/seo';
+import { SITE_URL } from '@/config/seo';
 import type { CareerOptions } from '@/types/career';
 import type { CareerJob } from '@/types/career';
+import { buildMetadata } from '@/lib/seo/buildMetadata';
+import { getSiteEntityConfig } from '@/services/siteEntityServerService';
+import {
+  buildOperatorNode,
+  buildWebSiteNode,
+  buildWebPageNode,
+  buildBreadcrumbSchema,
+} from '@/lib/seo/schema';
+import JsonLd from '@/components/seo/JsonLd';
 
 async function options(): Promise<CareerOptions> {
   const response = await fetch(`${getServerApiUrl()}/career/options`, { cache: 'no-store', headers: { Accept: 'application/json' } });
@@ -12,9 +21,15 @@ async function options(): Promise<CareerOptions> {
 }
 
 export async function generateMetadata(): Promise<Metadata> {
-  const data = await options(); const content = data.page_content;
-  return { title: content.seo_title || 'Tuyển dụng | Masterise Homes', description: content.seo_description || content.description,
-    alternates: { canonical: absoluteUrl('/tuyen-dung') }, openGraph: { title: content.seo_title || content.title, description: content.seo_description || content.description, images: content.hero_image ? [content.hero_image] : undefined, url: absoluteUrl('/tuyen-dung'), type: 'website' } };
+  const data = await options();
+  const content = data.page_content;
+
+  return buildMetadata({
+    title: content.seo_title || 'Tuyển dụng | Masterise Homes',
+    description: content.seo_description || content.description || 'Cơ hội nghề nghiệp và tuyển dụng tại Masterise Homes.',
+    path: '/tuyen-dung',
+    ogImage: content.hero_image || undefined,
+  });
 }
 
 async function jobs(): Promise<{ data: CareerJob[]; meta: { total: number; last_page: number } }> {
@@ -26,4 +41,32 @@ async function jobs(): Promise<{ data: CareerJob[]; meta: { total: number; last_
   } catch { return { data: [], meta: { total: 0, last_page: 1 } }; }
 }
 
-export default async function CareerPage() { const [initialOptions, initialJobs] = await Promise.all([options(), jobs()]); return <CareerListClient initialOptions={initialOptions} initialJobs={initialJobs.data} initialMeta={initialJobs.meta} />; }
+export default async function CareerPage() {
+  const [initialOptions, initialJobs, siteEntity] = await Promise.all([options(), jobs(), getSiteEntityConfig()]);
+  const pageUrl = `${SITE_URL}/tuyen-dung`;
+
+  const operatorNode = buildOperatorNode(siteEntity);
+  const websiteNode = buildWebSiteNode();
+  const webpageNode = {
+    ...buildWebPageNode(pageUrl, 'Tuyển dụng Masterise Homes', 'Cơ hội nghề nghiệp và môi trường làm việc đẳng cấp quốc tế'),
+    '@type': 'CollectionPage',
+  };
+  const breadcrumbNode = buildBreadcrumbSchema(pageUrl, [
+    { name: "Trang chủ", item: "/" },
+    { name: "Tuyển dụng", item: "/tuyen-dung" },
+  ]);
+
+  const graph = [
+    operatorNode,
+    websiteNode,
+    webpageNode,
+    breadcrumbNode,
+  ].filter(Boolean);
+
+  return (
+    <>
+      <JsonLd schema={{ "@context": "https://schema.org", "@graph": graph }} />
+      <CareerListClient initialOptions={initialOptions} initialJobs={initialJobs.data} initialMeta={initialJobs.meta} />
+    </>
+  );
+}

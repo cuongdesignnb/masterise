@@ -47,7 +47,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     sitemapEntry("/tin-tuc", 0.8, "daily"),
     sitemapEntry("/dau-tu", 0.8, "daily"),
     sitemapEntry("/chuyen-trang", 0.65, "weekly"),
-    sitemapEntry("/ai-summary", 0.55, "monthly"),
     sitemapEntry("/gioi-thieu", 0.7, "monthly"),
     sitemapEntry("/lien-he", 0.7, "monthly"),
     sitemapEntry("/tuyen-dung", 0.75, "daily"),

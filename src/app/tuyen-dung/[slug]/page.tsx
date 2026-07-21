@@ -4,6 +4,16 @@ import CareerDetailClient from '@/components/career/CareerDetailClient';
 import { getServerApiUrl } from '@/lib/serverApi';
 import { absoluteUrl, SITE_NAME, SITE_URL } from '@/config/seo';
 import type { CareerJob, CareerOptions } from '@/types/career';
+import { buildMetadata } from '@/lib/seo/buildMetadata';
+import { getSiteEntityConfig } from '@/services/siteEntityServerService';
+import {
+  buildOperatorNode,
+  buildWebSiteNode,
+  buildWebPageNode,
+  buildBreadcrumbSchema,
+  buildJobPostingSchema,
+} from '@/lib/seo/schema';
+import JsonLd from '@/components/seo/JsonLd';
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -22,31 +32,74 @@ async function applicationRules(): Promise<CareerOptions['application_rules']> {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const data = await detail((await params).slug);
-  if (!data) return { title: 'Không tìm thấy vị trí | Masterise Homes' };
+  if (!data) {
+    return buildMetadata({
+      title: 'Không tìm thấy vị trí | Masterise Homes',
+      noindex: true,
+    });
+  }
+
   const { job } = data;
-  return {
-    title: job.seo_title || `${job.title} | Tuyển dụng Masterise Homes`, description: job.seo_description || job.short_description || undefined,
-    keywords: job.seo_keywords || undefined, alternates: { canonical: absoluteUrl(`/tuyen-dung/${job.slug}`) },
-    robots: job.accepting_applications ? undefined : { index: false, follow: true },
-    openGraph: { title: job.seo_title || job.title, description: job.seo_description || job.short_description || undefined,
-      images: job.banner_image || job.thumbnail ? [absoluteUrl(job.banner_image || job.thumbnail || '')] : undefined,
-      url: absoluteUrl(`/tuyen-dung/${job.slug}`), type: 'website' },
-  };
+  const description = job.seo_description || job.short_description || `Thông tin tuyển dụng vị trí ${job.title} tại Masterise Homes.`;
+  const image = job.banner_image || job.thumbnail ? absoluteUrl(job.banner_image || job.thumbnail || '') : undefined;
+
+  return buildMetadata({
+    title: job.seo_title || `${job.title} | Tuyển dụng Masterise Homes`,
+    description,
+    keywords: job.seo_keywords || undefined,
+    path: `/tuyen-dung/${job.slug}`,
+    ogImage: image,
+    noindex: !job.accepting_applications,
+  });
 }
 
 export default async function CareerDetailPage({ params }: Props) {
-  const [data, rules] = await Promise.all([detail((await params).slug), applicationRules()]);
+  const { slug } = await params;
+  const [data, rules, siteEntity] = await Promise.all([
+    detail(slug),
+    applicationRules(),
+    getSiteEntityConfig(),
+  ]);
+
   if (!data) notFound();
   const { job } = data;
-  const schema: Record<string, unknown> = {
-    '@context': 'https://schema.org', '@type': 'JobPosting', title: job.title, description: job.description || job.short_description,
-    datePosted: job.published_at, validThrough: job.application_deadline, employmentType: job.employment_type.toUpperCase(),
-    hiringOrganization: { '@type': 'Organization', name: SITE_NAME, sameAs: SITE_URL },
-    jobLocation: { '@type': 'Place', address: { '@type': 'PostalAddress', streetAddress: job.location, addressCountry: 'VN' } },
-    identifier: { '@type': 'PropertyValue', name: SITE_NAME, value: job.code }, url: absoluteUrl(`/tuyen-dung/${job.slug}`),
-  };
-  if (job.salary_min || job.salary_max) schema.baseSalary = { '@type': 'MonetaryAmount', currency: job.salary_currency,
-    value: { '@type': 'QuantitativeValue', minValue: job.salary_min, maxValue: job.salary_max, unitText: 'MONTH' } };
-  Object.keys(schema).forEach(key => schema[key] == null && delete schema[key]);
-  return <><script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema).replace(/</g, '\\u003c') }} /><CareerDetailClient job={job} related={data.related} applicationRules={rules} /></>;
+  const jobUrl = `${SITE_URL}/tuyen-dung/${job.slug}`;
+  const description = job.seo_description || job.short_description || `Thông tin tuyển dụng vị trí ${job.title} tại Masterise Homes.`;
+
+  // Build JSON-LD Graph Nodes
+  const operatorNode = buildOperatorNode(siteEntity);
+  const websiteNode = buildWebSiteNode();
+  const webpageNode = buildWebPageNode(jobUrl, job.title, description, `${jobUrl}#job`);
+  const breadcrumbNode = buildBreadcrumbSchema(jobUrl, [
+    { name: "Trang chủ", item: "/" },
+    { name: "Tuyển dụng", item: "/tuyen-dung" },
+    { name: job.title, item: `/tuyen-dung/${job.slug}` },
+  ]);
+
+  const jobPostingNode = buildJobPostingSchema(jobUrl, {
+    title: job.title,
+    description: job.description || job.short_description || job.title,
+    datePosted: job.published_at || new Date().toISOString(),
+    validThrough: job.application_deadline || undefined,
+    employmentType: (job.employment_type?.toUpperCase() as any) || 'FULL_TIME',
+    streetAddress: job.location || 'Trụ sở Masterise Homes',
+    salaryMin: job.salary_min ? Number(job.salary_min) : undefined,
+    salaryMax: job.salary_max ? Number(job.salary_max) : undefined,
+    salaryCurrency: job.salary_currency || 'VND',
+  });
+
+  const graph = [
+    operatorNode,
+    websiteNode,
+    webpageNode,
+    breadcrumbNode,
+    jobPostingNode,
+  ].filter(Boolean);
+
+  return (
+    <>
+      <JsonLd schema={{ "@context": "https://schema.org", "@graph": graph }} />
+      <CareerDetailClient job={job} related={data.related} applicationRules={rules} />
+    </>
+  );
 }

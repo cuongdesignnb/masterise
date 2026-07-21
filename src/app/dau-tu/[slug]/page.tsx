@@ -11,13 +11,22 @@ import NewsArticleSidebar from "@/components/news-detail/NewsArticleSidebar";
 import NewsArticleMetaFooter from "@/components/news-detail/NewsArticleMetaFooter";
 import NewsMediaBlocks from "@/components/news-detail/NewsMediaBlocks";
 import NewsRelatedSection from "@/components/news-detail/NewsRelatedSection";
-import { extractTocFromHtml, formatArticleDate, readingMinutes } from "@/lib/articleContent";
+import { extractTocFromHtml, formatArticleDate, readingMinutes, stripHtml } from "@/lib/articleContent";
 import ArticleToc from "@/components/news-detail/ArticleToc";
 import { fetchApi } from "@/lib/serverApi";
 import type { PostDetailData } from "@/types/api";
 import { absoluteUrl, SITE_NAME, SITE_URL } from "@/config/seo";
-
-const siteUrl = SITE_URL;
+import { buildMetadata } from "@/lib/seo/buildMetadata";
+import { getSiteEntityConfig } from "@/services/siteEntityServerService";
+import {
+  buildOperatorNode,
+  buildWebSiteNode,
+  buildWebPageNode,
+  buildBreadcrumbSchema,
+  buildNewsArticleSchema,
+  buildEventSchema,
+} from "@/lib/seo/schema";
+import JsonLd from "@/components/seo/JsonLd";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -37,105 +46,89 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const post = data?.post;
 
   if (!post) {
-    return { title: "Không tìm thấy nội dung đầu tư | Masterise Homes" };
+    return buildMetadata({
+      title: "Không tìm thấy nội dung đầu tư | Masterise Homes",
+      noindex: true,
+    });
   }
 
-  if (post.post_type === "news") {
-    return {
-      title: post.seo_meta?.title || `${post.title} | Masterise Homes`,
-      description: post.seo_meta?.description || post.summary || undefined,
-      alternates: { canonical: absoluteUrl(`/${post.slug}`) },
-    };
-  }
+  const description = post.seo_meta?.description || post.summary || stripHtml(post.content || "").slice(0, 180);
+  const seoImage = post.thumbnail ? absoluteUrl(post.thumbnail) : undefined;
 
-  const basePath = `/${post.slug}`;
-
-  return {
+  return buildMetadata({
     title: post.seo_meta?.title || `${post.title} | Masterise Homes`,
-    description: post.seo_meta?.description || post.summary || undefined,
+    description,
     keywords: post.seo_meta?.keywords || undefined,
-    alternates: { canonical: absoluteUrl(basePath) },
-    openGraph: {
-      title: post.seo_meta?.og_title || post.title,
-      description: post.seo_meta?.og_description || post.summary || undefined,
-      url: absoluteUrl(basePath),
-      siteName: SITE_NAME,
-      images: post.thumbnail ? [absoluteUrl(post.thumbnail)] : undefined,
-      type: "article",
-      locale: "vi_VN",
-      publishedTime: post.published_at || undefined,
-      modifiedTime: post.updated_at || undefined,
-      authors: [post.author?.name || "Masterise Homes"],
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: post.seo_meta?.title || post.title,
-      description: post.seo_meta?.description || post.summary || undefined,
-      images: post.thumbnail ? [absoluteUrl(post.thumbnail)] : undefined,
-    },
-  };
+    path: `/${post.slug}`,
+    ogType: "article",
+    ogImage: seoImage,
+    publishedTime: post.published_at || undefined,
+    modifiedTime: post.updated_at || undefined,
+    authors: [post.author?.name || "Masterise Homes"],
+    section: "Đầu tư",
+  });
 }
 
 export default async function InvestmentDetailPage({ params }: Props) {
   const { slug } = await params;
-  const data = await getInvestmentPost(slug);
+  const [data, siteEntity] = await Promise.all([
+    getInvestmentPost(slug),
+    getSiteEntityConfig(),
+  ]);
+
   if (!data?.post) notFound();
   if (data.post.post_type === "news") permanentRedirect(`/${data.post.slug}`);
 
   const { post, inline_related = [], related = [], previous = null, next = null } = data;
-  const postUrl = `${siteUrl}/${post.slug}`;
+  const postUrl = `${SITE_URL}/${post.slug}`;
+  const metaDescription = post.seo_meta?.description || post.summary || stripHtml(post.content || "").slice(0, 180);
   const completeContent = [post.intro_content, post.content].filter(Boolean).join("");
   const toc = extractTocFromHtml(completeContent);
   const publishedLabel = formatArticleDate(post.published_at);
   const minutes = readingMinutes(completeContent || post.summary);
 
   const isEvent = post.post_type === "event" && post.event_start_at;
-  const jsonLd = isEvent
-    ? {
-        "@context": "https://schema.org",
-        "@type": "Event",
-        name: post.title,
-        description: post.summary,
-        image: post.thumbnail ? absoluteUrl(post.thumbnail) : undefined,
-        startDate: post.event_start_at,
-        endDate: post.event_end_at,
-        location: post.event_location ? { "@type": "Place", name: post.event_location } : undefined,
-      }
-    : {
-        "@context": "https://schema.org",
-        "@type": "Article",
-        "@id": `${postUrl}#article`,
-        headline: post.title,
-        description: post.summary,
-        image: post.thumbnail ? [absoluteUrl(post.thumbnail)] : undefined,
-        datePublished: post.published_at,
-        dateModified: post.updated_at,
-        author: { "@type": "Person", name: post.author?.name || "Masterise Homes" },
-        publisher: {
-          "@type": "Organization",
-          name: SITE_NAME,
-          logo: { "@type": "ImageObject", url: `${siteUrl}/logo.png` },
-        },
-        mainEntityOfPage: {
-          "@type": "WebPage",
-          "@id": postUrl,
-        },
-      };
 
-  const jsonLdBreadcrumb = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Trang chủ", item: siteUrl },
-      { "@type": "ListItem", position: 2, name: "Đầu tư", item: `${siteUrl}/dau-tu` },
-      { "@type": "ListItem", position: 3, name: post.title, item: postUrl },
-    ],
-  };
+  // Build JSON-LD Graph Nodes
+  const operatorNode = buildOperatorNode(siteEntity);
+  const websiteNode = buildWebSiteNode();
+  const webpageNode = buildWebPageNode(postUrl, post.title, metaDescription, isEvent ? `${postUrl}#event` : `${postUrl}#article`);
+  const breadcrumbNode = buildBreadcrumbSchema(postUrl, [
+    { name: "Trang chủ", item: "/" },
+    { name: "Đầu tư", item: "/dau-tu" },
+    { name: post.title, item: `/${post.slug}` },
+  ]);
+
+  const mainEntityNode = isEvent
+    ? buildEventSchema(postUrl, {
+        name: post.title,
+        description: metaDescription,
+        startDate: post.event_start_at!,
+        endDate: post.event_end_at || undefined,
+        imageUrl: post.thumbnail ? absoluteUrl(post.thumbnail) : undefined,
+        locationName: post.event_location || "Dự án Masterise Homes",
+      })
+    : buildNewsArticleSchema(postUrl, {
+        headline: post.title,
+        description: metaDescription,
+        images: post.thumbnail ? [absoluteUrl(post.thumbnail)] : [],
+        datePublished: post.published_at || post.created_at,
+        dateModified: post.updated_at || post.published_at || post.created_at,
+        authorName: post.author?.name || SITE_NAME,
+        authorType: post.author?.name ? "Person" : "Organization",
+      });
+
+  const graph = [
+    operatorNode,
+    websiteNode,
+    webpageNode,
+    breadcrumbNode,
+    mainEntityNode,
+  ].filter(Boolean);
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBreadcrumb).replace(/</g, "\\u003c") }} />
+      <JsonLd schema={{ "@context": "https://schema.org", "@graph": graph }} />
       <Header />
       <MobileTabBar />
       <main className="relative z-10 bg-[#FBF8F2] pb-16 lg:pb-0">

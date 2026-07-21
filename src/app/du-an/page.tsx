@@ -1,41 +1,42 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { SITE_URL } from "@/config/seo";
+import { SITE_NAME, SITE_URL } from "@/config/seo";
 import { fetchApiResponse } from "@/lib/serverApi";
 import type { ApiResponse, Project, ProjectCategoryOption, ProjectStatusOption, RegionOption } from "@/types/api";
 import ProjectsClient from "./ProjectsClient";
-
-const siteUrl = SITE_URL;
-
-export const metadata: Metadata = {
-  title: "Dự án Masterise Homes | Bộ sưu tập bất động sản hàng hiệu",
-  description:
-    "Khám phá danh mục dự án Masterise Homes với các bộ sưu tập căn hộ hạng sang, biệt thự cao cấp, shophouse, branded residences và bất động sản nghỉ dưỡng tại những vị trí chiến lược.",
-  keywords: [
-    "dự án Masterise Homes",
-    "Masterise Homes",
-    "The Global City",
-    "Lumière Riverside",
-    "Masteri Centre Point",
-    "Grand Marina Saigon",
-    "căn hộ hạng sang",
-    "biệt thự cao cấp",
-    "shophouse",
-    "branded residences",
-    "bất động sản cao cấp",
-  ],
-  openGraph: {
-    title: "Dự án Masterise Homes",
-    description:
-      "Tuyển chọn các dự án bất động sản hàng hiệu, kiến tạo chuẩn sống quốc tế và giá trị bền vững.",
-    type: "website",
-    locale: "vi_VN",
-  },
-  alternates: { canonical: "/du-an" },
-};
+import { buildMetadata } from "@/lib/seo/buildMetadata";
+import { getSiteEntityConfig } from "@/services/siteEntityServerService";
+import {
+  buildOperatorNode,
+  buildWebSiteNode,
+  buildWebPageNode,
+  buildBreadcrumbSchema,
+  buildItemListSchema,
+} from "@/lib/seo/schema";
+import JsonLd from "@/components/seo/JsonLd";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 const first = (value: string | string[] | undefined) => Array.isArray(value) ? value[0] : value;
+
+export async function generateMetadata({ searchParams }: { searchParams: Promise<SearchParams> }): Promise<Metadata> {
+  const query = await searchParams;
+  const hasFilters = !!(
+    first(query.q) ||
+    first(query.region) ||
+    first(query.category) ||
+    first(query.project_status) ||
+    first(query.price_range) ||
+    (first(query.page) && first(query.page) !== "1")
+  );
+
+  return buildMetadata({
+    title: "Dự án Masterise Homes | Bộ sưu tập bất động sản hàng hiệu",
+    description:
+      "Khám phá danh mục dự án Masterise Homes với các bộ sưu tập căn hộ hạng sang, biệt thự cao cấp, shophouse, branded residences và bất động sản nghỉ dưỡng tại những vị trí chiến lược.",
+    path: "/du-an",
+    noindex: hasFilters,
+  });
+}
 
 export default async function ProjectsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const query = await searchParams;
@@ -49,54 +50,47 @@ export default async function ProjectsPage({ searchParams }: { searchParams: Pro
   projectParams.per_page = "12";
   projectParams.page = first(query.page) || "1";
   const projectQuery = new URLSearchParams(projectParams).toString();
-  const [initialProjects, initialFeatured, regions, categories, statuses] = await Promise.all([
+
+  const [initialProjects, initialFeatured, regions, categories, statuses, siteEntity] = await Promise.all([
     fetchApiResponse<ApiResponse<Project[]>>(`/projects?${projectQuery}`, { revalidate: 180, tags: ["projects"] }),
     fetchApiResponse<ApiResponse<Project[]>>("/projects/featured?limit=6", { revalidate: 300, tags: ["projects-featured"] }),
     fetchApiResponse<ApiResponse<RegionOption[]>>("/projects/regions", { revalidate: 600, tags: ["project-taxonomy"] }),
     fetchApiResponse<ApiResponse<ProjectCategoryOption[]>>("/project-categories", { revalidate: 600, tags: ["project-taxonomy"] }),
     fetchApiResponse<ApiResponse<ProjectStatusOption[]>>("/project-statuses", { revalidate: 600, tags: ["project-taxonomy"] }),
+    getSiteEntityConfig(),
   ]);
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "Organization",
-        name: "Masterise Homes",
-        url: siteUrl,
-        logo: `${siteUrl}/logo.png`,
-      },
-      {
-        "@type": "BreadcrumbList",
-        itemListElement: [
-          {
-            "@type": "ListItem",
-            position: 1,
-            name: "Trang chủ",
-            item: siteUrl,
-          },
-          {
-            "@type": "ListItem",
-            position: 2,
-            name: "Dự án",
-            item: `${siteUrl}/du-an`,
-          },
-        ],
-      },
-      {
-        "@type": "CollectionPage",
-        name: "Dự án Masterise Homes",
-        description:
-          "Danh sách dự án bất động sản cao cấp của Masterise Homes theo khu vực, loại hình, trạng thái và mức giá.",
-      },
-    ],
+
+  const pageUrl = `${SITE_URL}/du-an`;
+  const projectsList = initialProjects?.data || [];
+
+  const operatorNode = buildOperatorNode(siteEntity);
+  const websiteNode = buildWebSiteNode();
+  const webpageNode = {
+    ...buildWebPageNode(pageUrl, "Dự án Masterise Homes", "Danh sách dự án bất động sản cao cấp của Masterise Homes"),
+    '@type': 'CollectionPage',
   };
+  const breadcrumbNode = buildBreadcrumbSchema(pageUrl, [
+    { name: "Trang chủ", item: "/" },
+    { name: "Dự án", item: "/du-an" },
+  ]);
+
+  const itemListNode = projectsList.length > 0 ? buildItemListSchema(
+    pageUrl,
+    "Danh sách dự án Masterise Homes",
+    projectsList.map((p) => ({ name: p.name, url: `/${p.slug}` }))
+  ) : null;
+
+  const graph = [
+    operatorNode,
+    websiteNode,
+    webpageNode,
+    breadcrumbNode,
+    itemListNode,
+  ].filter(Boolean);
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      <JsonLd schema={{ "@context": "https://schema.org", "@graph": graph }} />
       <Suspense fallback={
         <div className="py-20 flex justify-center items-center">
           <div className="w-10 h-10 border-4 border-gold border-t-transparent rounded-full animate-spin" />
