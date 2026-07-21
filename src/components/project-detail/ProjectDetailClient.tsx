@@ -1218,7 +1218,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                     setActiveFloorTabKey(group.tabs[0]?.key || "");
                     setFloorPlansExpanded(false);
                   }}
-                  className={`shrink-0 rounded-full border px-5 py-2.5 text-[11px] font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50 ${
+                  className={`shrink-0 rounded-full border px-5 py-2.5 text-[13px] font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50 sm:text-sm ${
                     activeFloorGroup?.key === group.key ? "border-gold bg-gold text-white" : "border-line bg-white text-muted hover:border-gold/60 hover:text-gold-dark"
                   }`}
                 >
@@ -1245,7 +1245,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                     tabIndex={resolvedActiveFloorTabKey === tab.key ? 0 : -1}
                     onKeyDown={(event) => handleFloorTabKeyDown(event, tabKeys, resolvedActiveFloorTabKey, selectFloorTab)}
                     onClick={() => selectFloorTab(tab.key)}
-                    className={`shrink-0 rounded-[6px] px-4 py-2 text-[10px] font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50 ${
+                    className={`shrink-0 rounded-[6px] px-4 py-2.5 text-[13px] font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50 sm:text-sm ${
                       resolvedActiveFloorTabKey === tab.key ? "gold-gradient text-white" : "bg-beige/60 text-muted hover:bg-beige hover:text-gold-dark"
                     }`}
                   >
@@ -1299,23 +1299,23 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                     </div> : null}
                   </div>
                   <div className="p-3 sm:p-4">
-                    <p className="text-[10px] font-bold tracking-[0.08em] text-gold normal-case">
+                    <p className="text-[12px] font-bold tracking-[0.06em] text-gold normal-case sm:text-[13px]">
                       {plan.productType || activeFloorTabLabel} · Mẫu {String(index + 1).padStart(2, "0")}
                     </p>
-                    <h3 className="mt-1 text-sm font-bold text-ink">{plan.name}</h3>
-                    <div className="mt-2 space-y-1.5 text-[12px] leading-5 text-muted">
+                    <h3 className="mt-1 text-base font-bold text-ink">{plan.name}</h3>
+                    <div className="mt-2 space-y-1.5 text-[13px] leading-5 text-muted sm:text-sm sm:leading-6">
                       {plan.area ? <p>Diện tích: <strong className="text-ink">{plan.area}</strong></p> : null}
                       {plan.totalArea && plan.totalArea !== plan.area ? <p>Tổng diện tích sàn: <strong className="text-ink">{plan.totalArea}</strong></p> : null}
                       {plan.price ? <p>Giá tham khảo: <strong className="text-ink">{plan.price}</strong></p> : null}
                       {plan.bedrooms ? <p>Phòng ngủ: <strong className="text-ink">{plan.bedrooms}</strong></p> : null}
                       {plan.status ? <p>Tình trạng: <strong className="text-ink">{plan.status}</strong></p> : null}
                     </div>
-                    {plan.description ? <p className="mt-3 text-[12px] leading-5 text-muted">{plan.description}</p> : null}
+                    {plan.description ? <p className="mt-3 whitespace-pre-line text-[13px] leading-5 text-muted sm:text-sm sm:leading-6">{plan.description}</p> : null}
                     {thumbnailImage ? (
                       <button
                         type="button"
                         onClick={() => openFloorPlanImages(plan)}
-                        className="mt-4 w-full rounded-[5px] border border-gold/45 py-2 text-[9px] font-bold text-gold-dark transition hover:bg-gold hover:text-white"
+                        className="mt-4 w-full rounded-[5px] border border-gold/45 py-2.5 text-[11px] font-bold text-gold-dark transition hover:bg-gold hover:text-white"
                       >
                         XEM ẢNH LỚN
                       </button>
