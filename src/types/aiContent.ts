@@ -21,6 +21,18 @@ export interface AiSettingsPublic {
   ai_provider: string;
   api_key_configured: boolean;
   api_key_masked?: string;
+  content_api_key_configured?: boolean;
+  content_api_key_masked?: string;
+  image_api_key_configured?: boolean;
+  image_api_key_masked?: string;
+  openai_base_url: string;
+  openai_wire_api: 'chat_completions' | 'responses';
+  openai_model: string;
+  openai_reasoning_effort: 'minimal' | 'low' | 'medium' | 'high';
+  openai_max_tokens: number;
+  openai_image_base_url: string;
+  openai_image_model: string;
+  openai_image_quality: 'low' | 'medium' | 'high' | 'auto' | 'standard' | 'hd';
   ai_text_model: string;
   ai_image_model: string;
   ai_enable_model_fallback: boolean;
@@ -41,6 +53,10 @@ export interface AiSettingsPublic {
   last_scheduler_run_at?: string | null;
   ai_openai_api_key?: string;
   clear_ai_openai_api_key?: boolean;
+  openai_api_key?: string;
+  clear_openai_api_key?: boolean;
+  openai_image_api_key?: string;
+  clear_openai_image_api_key?: boolean;
 }
 
 export interface AiContentBatch {

@@ -82,7 +82,7 @@ class GenerateAiArticleWithImageJob implements ShouldQueue
             $jobRecord->update(['prompt' => $prompt]);
 
             $textResponse = $openai->generateArticleWithResponsesApi($prompt, $this->settings);
-            $jsonString = $textResponse['data']['choices'][0]['message']['content'] ?? null;
+            $jsonString = $textResponse['content'] ?? $textResponse['data']['choices'][0]['message']['content'] ?? null;
 
             if (!$jsonString) {
                 throw new \Exception('No content returned from OpenAI API.');
@@ -132,23 +132,21 @@ class GenerateAiArticleWithImageJob implements ShouldQueue
                         $this->settings['image_quality'] ?? null
                     );
 
-                    // Decode base64 image and save locally
                     $imageData = base64_decode($base64Image);
-                    $fileName = 'ai-' . Str::slug($articleData['title']) . '-' . time() . '.png';
+                    $storedImage = $this->prepareImageForStorage($imageData);
+                    $fileName = 'ai-' . Str::slug($articleData['title']) . '-' . time() . '.' . $storedImage['extension'];
                     
-                    // Path format: public/media/ai/YYYY/MM/filename.png
                     $yearMonth = now()->format('Y/m');
                     $savedPath = "media/ai/{$yearMonth}/{$fileName}";
                     
-                    Storage::disk('public')->put($savedPath, $imageData);
+                    Storage::disk('public')->put($savedPath, $storedImage['contents']);
                     $publicUrl = Storage::disk('public')->url($savedPath);
 
-                    // Create media record
-                    $media = Media::create([
+                    Media::create([
                         'name' => 'Thumbnail AI: ' . $articleData['title'],
                         'file_name' => $fileName,
-                        'mime_type' => 'image/png',
-                        'size' => strlen($imageData),
+                        'mime_type' => $storedImage['mime_type'],
+                        'size' => strlen($storedImage['contents']),
                         'path' => $savedPath,
                         'url' => $publicUrl,
                         'uploaded_by' => $this->createdBy,
@@ -203,7 +201,8 @@ class GenerateAiArticleWithImageJob implements ShouldQueue
                 'tokens_output' => $tokensOutput,
                 'response_metadata' => [
                     'model_used' => $textResponse['model_used'] ?? null,
-                    'image_model' => $enableImage ? Setting::get('ai_image_model', 'gpt-image-1') : null,
+                    'wire_api' => $textResponse['wire_api'] ?? null,
+                    'image_model' => $enableImage ? Setting::get('openai_image_model', Setting::get('ai_image_model', 'gpt-image-2')) : null,
                     'image_status' => $enableImage ? ($imageJobFailed ? 'failed' : 'completed') : 'disabled'
                 ],
                 'finished_at' => now(),
@@ -248,5 +247,32 @@ class GenerateAiArticleWithImageJob implements ShouldQueue
         } else {
             $batch->update(['status' => 'processing']);
         }
+    }
+
+    protected function prepareImageForStorage(string $imageData): array
+    {
+        if (function_exists('imagecreatefromstring') && function_exists('imagewebp')) {
+            $image = @imagecreatefromstring($imageData);
+            if ($image !== false) {
+                ob_start();
+                imagewebp($image, null, 88);
+                $webp = ob_get_clean();
+                imagedestroy($image);
+
+                if (is_string($webp) && $webp !== '') {
+                    return [
+                        'contents' => $webp,
+                        'extension' => 'webp',
+                        'mime_type' => 'image/webp',
+                    ];
+                }
+            }
+        }
+
+        return [
+            'contents' => $imageData,
+            'extension' => 'png',
+            'mime_type' => 'image/png',
+        ];
     }
 }

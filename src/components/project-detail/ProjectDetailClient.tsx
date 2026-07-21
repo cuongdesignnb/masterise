@@ -656,6 +656,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
       return !productSummaryLabels.has(label) && !compactProductLabels.has(label);
     })
     .slice(0, 4);
+  const mobileSummaryStats = project.stats.slice(0, 6);
   const activeFloorGroup = floorPlanGroups.find((group) => group.key === activeFloorGroupKey) || floorPlanGroups[0];
   const resolvedActiveFloorTabKey = activeFloorTabKey === "__all__" || activeFloorGroup?.tabs.some((tab) => tab.key === activeFloorTabKey)
     ? activeFloorTabKey
@@ -786,15 +787,44 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                 </button>
               ) : null}
             </div>
-            {mobileHeroFacts.length ? (
-              <div className="mt-5 grid grid-cols-2 gap-3">
-                {mobileHeroFacts.map((fact) => (
-                  <div key={`${fact.label}-${fact.value}`} className="rounded-[14px] border border-line/80 bg-[#fcfaf6] p-3">
-                    <ProjectIcon name={fact.icon} size={17} className="text-gold" />
-                    <p className="mt-2 text-[10px] text-muted">{fact.label}</p>
-                    <p className="mt-0.5 text-[12px] font-bold leading-5 text-ink">{fact.value}</p>
+            {mobileHeroFacts.length || mobileSummaryStats.length ? (
+              <div className="mt-5 space-y-3 rounded-[16px] border border-line/70 bg-[#fcfaf6]/80 py-3">
+                {mobileHeroFacts.length ? (
+                  <div className="overflow-x-auto px-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                    <div className="flex snap-x gap-2.5">
+                      {mobileHeroFacts.map((fact) => (
+                        <div
+                          key={`${fact.label}-${fact.value}`}
+                          className="flex h-[82px] min-w-[158px] snap-start items-start gap-2 rounded-[12px] border border-line/80 bg-white px-3 py-2.5 shadow-[0_8px_22px_rgba(87,61,28,.06)]"
+                        >
+                          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gold/10 text-gold">
+                            <ProjectIcon name={fact.icon} size={14} />
+                          </span>
+                          <span className="min-w-0">
+                            <span className="block text-[9px] leading-4 text-muted line-clamp-1">{fact.label}</span>
+                            <span className="mt-0.5 block text-[11px] font-bold leading-[17px] text-ink line-clamp-2">{fact.value}</span>
+                          </span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                ))}
+                ) : null}
+
+                {mobileSummaryStats.length ? (
+                  <div className="overflow-x-auto px-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                    <div className="flex snap-x gap-2.5">
+                      {mobileSummaryStats.map((stat) => (
+                        <div
+                          key={`${stat.label}-${stat.value}`}
+                          className="h-[64px] min-w-[112px] snap-start rounded-[12px] border border-gold/15 bg-white px-3 py-2 text-center shadow-[0_8px_22px_rgba(87,61,28,.05)]"
+                        >
+                          <span className="block truncate text-[17px] font-bold leading-6 text-gold">{stat.value}</span>
+                          <span className="mt-0.5 block text-[9px] font-medium leading-4 text-muted line-clamp-1">{stat.label}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
               </div>
             ) : null}
           </div>
@@ -930,7 +960,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
           </div>
         </Reveal> : null}
 
-        {hasStats ? <Reveal className="rounded-[18px] border border-line/80 bg-[#fcfaf6] px-5 py-6 shadow-sm">
+        {hasStats ? <Reveal className="hidden rounded-[18px] border border-line/80 bg-[#fcfaf6] px-5 py-6 shadow-sm md:block">
           <div className="grid grid-cols-2 gap-y-6 sm:grid-cols-3 lg:grid-cols-5 lg:gap-0">
             {project.stats.map((stat, index) => (
               <div

@@ -135,12 +135,12 @@ export default function AiWritePage() {
   // Loading phase messages
   const steps = [
     'Đang phân tích tiêu đề và từ khóa...',
-    'Đang khởi tạo kết nối OpenAI API...',
+    'Đang khởi tạo kết nối AI Provider viết bài...',
     'Đang lập dàn ý bài viết chuẩn SEO...',
     'Đang viết nội dung chi tiết từng phần (Quá trình này có thể mất 15-30 giây)...',
     'Đang tối ưu hóa thẻ heading H2/H3 và cấu trúc bài viết...',
     'Đang tạo prompt sinh ảnh đại diện phù hợp...',
-    'Đang chạy OpenAI Image API sinh ảnh minh họa...',
+    'Đang chạy OpenAI Image API riêng để sinh ảnh minh họa...',
     'Đang tải ảnh, giải mã base64 và lưu trữ cục bộ...',
     'Đang làm sạch và lọc thẻ HTML độc hại...',
     'Hoàn tất! Đang chuyển hướng sang Trình biên tập tin tức...'

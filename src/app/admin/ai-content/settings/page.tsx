@@ -24,14 +24,16 @@ import {
 } from 'lucide-react';
 
 const TEXT_MODEL_OPTIONS = [
-  { value: 'gpt-4o-mini', label: 'gpt-4o-mini - \u1ed5n \u0111\u1ecbnh, ti\u1ebft ki\u1ec7m' },
-  { value: 'gpt-4o', label: 'gpt-4o - ch\u1ea5t l\u01b0\u1ee3ng cao' },
-  { value: 'gpt-5-mini', label: 'gpt-5-mini - model m\u1edbi' },
-  { value: 'gpt-5', label: 'gpt-5 - ch\u1ea5t l\u01b0\u1ee3ng cao' },
+  { value: 'gpt-5.5', label: 'gpt-5.5 - AI Provider mặc định' },
+  { value: 'gpt-5-mini', label: 'gpt-5-mini - tiết kiệm' },
+  { value: 'gpt-5', label: 'gpt-5 - chất lượng cao' },
+  { value: 'gpt-4o-mini', label: 'gpt-4o-mini - legacy tiết kiệm' },
+  { value: 'gpt-4o', label: 'gpt-4o - legacy chất lượng cao' },
 ];
 
 const IMAGE_MODEL_OPTIONS = [
-  { value: 'gpt-image-1', label: 'gpt-image-1 - khuy\u1ebfn ngh\u1ecb' },
+  { value: 'gpt-image-2', label: 'gpt-image-2 - OpenAI chính hãng' },
+  { value: 'gpt-image-1', label: 'gpt-image-1 - legacy' },
   { value: 'dall-e-3', label: 'dall-e-3 - legacy' },
   { value: 'dall-e-2', label: 'dall-e-2 - c\u0169, ch\u1ec9 n\u00ean d\u00f9ng 1024x1024' },
 ];
@@ -43,8 +45,10 @@ function normalizeImageOptionsForModel(model: string, current: Partial<AiSetting
     return {
       ...current,
       ai_image_model: model,
+      openai_image_model: model,
       ai_default_image_size: size && ['1024x1024', '1536x1024', '1024x1536', 'auto'].includes(size) ? size : '1536x1024',
       ai_default_image_quality: quality && ['low', 'medium', 'high', 'auto'].includes(quality) ? quality : 'medium',
+      openai_image_quality: quality && ['low', 'medium', 'high', 'auto'].includes(quality) ? (quality as AiSettingsPublic['openai_image_quality']) : 'medium',
     };
   }
 
@@ -54,16 +58,20 @@ function normalizeImageOptionsForModel(model: string, current: Partial<AiSetting
     return {
       ...current,
       ai_image_model: model,
+      openai_image_model: model,
       ai_default_image_size: size && ['1024x1024', '1792x1024', '1024x1792'].includes(size) ? size : '1792x1024',
       ai_default_image_quality: quality && ['standard', 'hd'].includes(quality) ? quality : 'standard',
+      openai_image_quality: quality && ['standard', 'hd'].includes(quality) ? (quality as AiSettingsPublic['openai_image_quality']) : 'standard',
     };
   }
 
   return {
     ...current,
     ai_image_model: model,
+    openai_image_model: model,
     ai_default_image_size: '1024x1024',
     ai_default_image_quality: 'standard',
+    openai_image_quality: 'standard',
   };
 }
 
@@ -113,6 +121,7 @@ export default function AiSettingsPage() {
 
   // API key is write-only after saving.
   const [apiKeyInput, setApiKeyInput] = useState('');
+  const [imageApiKeyInput, setImageApiKeyInput] = useState('');
 
   // Test connection state
   const [testStatus, setTestStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
@@ -150,6 +159,7 @@ export default function AiSettingsPage() {
     if (settingsResponse?.data) {
       setFormData(settingsResponse.data);
       setApiKeyInput('');
+      setImageApiKeyInput('');
     }
   }, [settingsResponse]);
 
@@ -158,8 +168,24 @@ export default function AiSettingsPage() {
     mutationFn: (payload: Partial<AiSettingsPublic>) => {
       const dataToSave = { ...payload };
       if (apiKeyInput.trim()) {
-        dataToSave.ai_openai_api_key = apiKeyInput;
+        dataToSave.openai_api_key = apiKeyInput;
       }
+      if (imageApiKeyInput.trim()) {
+        dataToSave.openai_image_api_key = imageApiKeyInput;
+      }
+
+      dataToSave.openai_model = dataToSave.openai_model || dataToSave.ai_text_model || 'gpt-5.5';
+      dataToSave.ai_text_model = dataToSave.openai_model;
+      dataToSave.openai_image_model = dataToSave.openai_image_model || dataToSave.ai_image_model || 'gpt-image-2';
+      dataToSave.ai_image_model = dataToSave.openai_image_model;
+      dataToSave.openai_image_quality = dataToSave.openai_image_quality || (dataToSave.ai_default_image_quality as AiSettingsPublic['openai_image_quality']) || 'medium';
+      dataToSave.ai_default_image_quality = dataToSave.ai_default_image_quality || dataToSave.openai_image_quality || 'medium';
+      dataToSave.openai_base_url = dataToSave.openai_base_url || 'https://modelapi.vn/v1';
+      dataToSave.openai_wire_api = dataToSave.openai_wire_api || 'chat_completions';
+      dataToSave.openai_reasoning_effort = dataToSave.openai_reasoning_effort || 'high';
+      dataToSave.openai_max_tokens = dataToSave.openai_max_tokens || 4096;
+      dataToSave.openai_image_base_url = dataToSave.openai_image_base_url || 'https://api.openai.com/v1';
+
       return aiContentService.updateAiSettings(dataToSave);
     },
     onSuccess: () => {
@@ -174,17 +200,28 @@ export default function AiSettingsPage() {
   // Test Connection Mutation
   const testConnectionMutation = useMutation({
     mutationFn: () => {
-      const payload: { ai_openai_api_key?: string; ai_text_model?: string } = {
-        ai_text_model: formData.ai_text_model || 'gpt-4o-mini',
+      const payload: {
+        openai_api_key?: string;
+        openai_base_url?: string;
+        openai_wire_api?: 'chat_completions' | 'responses';
+        openai_model?: string;
+        openai_reasoning_effort?: 'minimal' | 'low' | 'medium' | 'high';
+        openai_max_tokens?: number;
+      } = {
+        openai_base_url: formData.openai_base_url || 'https://modelapi.vn/v1',
+        openai_wire_api: formData.openai_wire_api || 'chat_completions',
+        openai_model: formData.openai_model || formData.ai_text_model || 'gpt-5.5',
+        openai_reasoning_effort: formData.openai_reasoning_effort || 'high',
+        openai_max_tokens: formData.openai_max_tokens || 4096,
       };
       if (apiKeyInput.trim()) {
-        payload.ai_openai_api_key = apiKeyInput;
+        payload.openai_api_key = apiKeyInput;
       }
       return aiContentService.testAiConnection(payload);
     },
     onMutate: () => {
       setTestStatus('testing');
-      setTestMessage(`Đang kiểm tra model ${formData.ai_text_model || 'gpt-4o-mini'}...`);
+      setTestMessage(`Đang kiểm tra model ${formData.openai_model || formData.ai_text_model || 'gpt-5.5'}...`);
     },
     onSuccess: (res) => {
       setTestStatus('success');
@@ -207,13 +244,16 @@ export default function AiSettingsPage() {
     }
 
     setFormData(prev => {
-      if (name === 'ai_image_model') {
+      if (name === 'ai_image_model' || name === 'openai_image_model') {
         return normalizeImageOptionsForModel(String(val), prev);
       }
 
       return {
         ...prev,
-        [name]: val
+        [name]: val,
+        ...(name === 'openai_model' ? { ai_text_model: val } : {}),
+        ...(name === 'openai_image_quality' ? { ai_default_image_quality: val } : {}),
+        ...(name === 'ai_default_image_quality' ? { openai_image_quality: val } : {}),
       };
     });
   };
@@ -266,40 +306,68 @@ export default function AiSettingsPage() {
                 <Key className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-heading font-semibold text-lg text-[#1F1B16]">Kết nối OpenAI API</h3>
-                <p className="text-xs text-[#8C7A6B]">Cung cấp mã kết nối OpenAI API để kích hoạt các tính năng AI</p>
+                <h3 className="font-heading font-semibold text-lg text-[#1F1B16]">AI Provider viết bài</h3>
+                <p className="text-xs text-[#8C7A6B]">Dùng API tương thích OpenAI như modelapi.vn để sinh nội dung bài viết</p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Nhà cung cấp AI</label>
-                <select
-                  name="ai_provider"
-                  value={formData.ai_provider || 'openai'}
+                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">AI Provider Base URL</label>
+                <input
+                  type="url"
+                  name="openai_base_url"
+                  value={formData.openai_base_url || 'https://modelapi.vn/v1'}
                   onChange={handleInputChange}
-                  disabled={true} // Locked to openai
-                  className="w-full px-4 py-3 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] text-[#1F1B16] opacity-80"
-                >
-                  <option value="openai">OpenAI (ChatGPT / DALL-E)</option>
-                </select>
+                  disabled={!isWritable}
+                  placeholder="https://modelapi.vn/v1"
+                  className="w-full px-4 py-3 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] text-[#1F1B16] focus:outline-none focus:border-[#B88746] transition-all"
+                />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">OpenAI API Key</label>
+                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">AI Provider API Key</label>
                 <div className="space-y-2">
                   <input
                     type="password"
                     value={apiKeyInput}
                     onChange={(e) => setApiKeyInput(e.target.value)}
                     disabled={!isWritable}
-                    placeholder={formData.api_key_configured ? 'Nhập API key mới nếu muốn thay đổi' : 'Nhập sk-...'}
+                    placeholder={formData.content_api_key_configured || formData.api_key_configured ? 'Nhập key mới nếu muốn thay đổi' : 'Nhập API key provider viết bài'}
                     className={`w-full px-4 py-3 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] text-[#1F1B16] focus:outline-none focus:border-[#B88746] transition-all ${!isWritable ? 'opacity-85 cursor-not-allowed' : ''}`}
                   />
                   <p className="text-[11px] leading-relaxed text-[#8C7A6B]">
-                    Vì lý do bảo mật, hệ thống không hiển thị lại API key đã lưu. Nếu key bị lộ, hãy tạo key mới trong OpenAI Dashboard rồi dán lại vào đây.
+                    Key viết bài được lưu riêng, không dùng cho OpenAI Image API.
                   </p>
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Wire API</label>
+                <select
+                  name="openai_wire_api"
+                  value={formData.openai_wire_api || 'chat_completions'}
+                  onChange={handleInputChange}
+                  disabled={!isWritable}
+                  className="w-full px-4 py-3 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] text-[#1F1B16] focus:outline-none focus:border-[#B88746] transition-all"
+                >
+                  <option value="chat_completions">Chat Completions</option>
+                  <option value="responses">Responses API</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Max Output Tokens</label>
+                <input
+                  type="number"
+                  name="openai_max_tokens"
+                  value={formData.openai_max_tokens || 4096}
+                  onChange={handleInputChange}
+                  disabled={!isWritable}
+                  min={1}
+                  max={128000}
+                  className="w-full px-4 py-3 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] text-[#1F1B16] focus:outline-none focus:border-[#B88746] transition-all"
+                />
               </div>
             </div>
 
@@ -322,10 +390,10 @@ export default function AiSettingsPage() {
                   )}
                 </button>
 
-                {formData.api_key_configured && (
+                {(formData.content_api_key_configured || formData.api_key_configured) && (
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-medium border border-emerald-200">
                     <CheckCircle2 className="w-3.5 h-3.5" />
-                    Đã cấu hình API Key trong hệ thống
+                    Đã cấu hình key viết bài
                   </span>
                 )}
               </div>
@@ -366,10 +434,10 @@ export default function AiSettingsPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Model viết bài (Mặc định)</label>
+                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Model viết bài</label>
                 <select
-                  name="ai_text_model"
-                  value={formData.ai_text_model || 'gpt-4o-mini'}
+                  name="openai_model"
+                  value={formData.openai_model || formData.ai_text_model || 'gpt-5.5'}
                   onChange={handleInputChange}
                   disabled={!isWritable}
                   className="w-full px-4 py-3 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] text-[#1F1B16] focus:outline-none focus:border-[#B88746] transition-all"
@@ -382,10 +450,10 @@ export default function AiSettingsPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Model sinh ảnh (Mặc định)</label>
+                <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Model sinh ảnh</label>
                 <select
-                  name="ai_image_model"
-                  value={formData.ai_image_model || 'gpt-image-1'}
+                  name="openai_image_model"
+                  value={formData.openai_image_model || formData.ai_image_model || 'gpt-image-2'}
                   onChange={handleInputChange}
                   disabled={!isWritable}
                   className="w-full px-4 py-3 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] text-[#1F1B16] focus:outline-none focus:border-[#B88746] transition-all"
@@ -400,6 +468,36 @@ export default function AiSettingsPage() {
 
             {/* Fallback settings */}
             <div className="border-t border-[#FBF8F2] pt-6 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">OpenAI Image Base URL</label>
+                  <input
+                    type="url"
+                    name="openai_image_base_url"
+                    value={formData.openai_image_base_url || 'https://api.openai.com/v1'}
+                    onChange={handleInputChange}
+                    disabled={!isWritable}
+                    placeholder="https://api.openai.com/v1"
+                    className="w-full px-4 py-3 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] text-[#1F1B16] focus:outline-none focus:border-[#B88746] transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">OpenAI Image API Key</label>
+                  <input
+                    type="password"
+                    value={imageApiKeyInput}
+                    onChange={(e) => setImageApiKeyInput(e.target.value)}
+                    disabled={!isWritable}
+                    placeholder={formData.image_api_key_configured ? 'Nhập key ảnh mới nếu muốn thay đổi' : 'Nhập key OpenAI chính hãng cho ảnh'}
+                    className="w-full px-4 py-3 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] text-[#1F1B16] focus:outline-none focus:border-[#B88746] transition-all"
+                  />
+                  {formData.image_api_key_configured && (
+                    <span className="text-[10px] text-emerald-700 mt-1 block">Đã cấu hình key ảnh riêng.</span>
+                  )}
+                </div>
+              </div>
+
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <label className="block text-sm font-semibold text-[#1F1B16]">Kích hoạt Model dự phòng (Fallback)</label>
@@ -545,12 +643,12 @@ export default function AiSettingsPage() {
                     <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Kích thước ảnh đại diện</label>
                     <select
                       name="ai_default_image_size"
-                      value={formData.ai_default_image_size || (formData.ai_image_model?.startsWith('gpt-image') ? '1536x1024' : '1024x1024')}
+                      value={formData.ai_default_image_size || ((formData.openai_image_model || formData.ai_image_model)?.startsWith('gpt-image') ? '1536x1024' : '1024x1024')}
                       onChange={handleInputChange}
                       disabled={!isWritable}
                       className="w-full px-4 py-3 rounded-xl border border-[#E8DCCB] bg-white text-[#1F1B16] focus:outline-none focus:border-[#B88746]"
                     >
-                      {imageSizeOptions(formData.ai_image_model || 'gpt-image-1').map((option) => (
+                      {imageSizeOptions(formData.openai_image_model || formData.ai_image_model || 'gpt-image-2').map((option) => (
                         <option key={option.value} value={option.value}>{option.label}</option>
                       ))}
                     </select>
@@ -560,12 +658,12 @@ export default function AiSettingsPage() {
                     <label className="block text-xs font-semibold text-[#8C7A6B] uppercase tracking-wider mb-2">Chất lượng ảnh</label>
                     <select
                       name="ai_default_image_quality"
-                      value={formData.ai_default_image_quality || (formData.ai_image_model?.startsWith('gpt-image') ? 'medium' : 'standard')}
+                      value={formData.ai_default_image_quality || ((formData.openai_image_model || formData.ai_image_model)?.startsWith('gpt-image') ? 'medium' : 'standard')}
                       onChange={handleInputChange}
                       disabled={!isWritable}
                       className="w-full px-4 py-3 rounded-xl border border-[#E8DCCB] bg-white text-[#1F1B16] focus:outline-none focus:border-[#B88746]"
                     >
-                      {imageQualityOptions(formData.ai_image_model || 'gpt-image-1').map((option) => (
+                      {imageQualityOptions(formData.openai_image_model || formData.ai_image_model || 'gpt-image-2').map((option) => (
                         <option key={option.value} value={option.value}>{option.label}</option>
                       ))}
                     </select>

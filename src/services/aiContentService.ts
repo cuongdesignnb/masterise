@@ -13,7 +13,16 @@ export const aiContentService = {
     return api.post<void>('/admin/ai-content/settings', payload);
   },
 
-  testAiConnection: async (payload: { ai_openai_api_key?: string; ai_text_model?: string }): Promise<ApiResponse<void>> => {
+  testAiConnection: async (payload: {
+    openai_api_key?: string;
+    openai_base_url?: string;
+    openai_wire_api?: 'chat_completions' | 'responses';
+    openai_model?: string;
+    openai_reasoning_effort?: 'minimal' | 'low' | 'medium' | 'high';
+    openai_max_tokens?: number;
+    ai_openai_api_key?: string;
+    ai_text_model?: string;
+  }): Promise<ApiResponse<void>> => {
     return api.post<void>('/admin/ai-content/settings/test-connection', payload);
   },
 

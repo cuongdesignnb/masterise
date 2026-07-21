@@ -173,7 +173,7 @@ class AiContentController extends Controller
             'type' => 'regenerate_image',
             'status' => 'processing',
             'provider' => 'openai',
-            'image_model' => Setting::get('ai_image_model', 'gpt-image-1'),
+            'image_model' => Setting::get('openai_image_model', Setting::get('ai_image_model', 'gpt-image-2')),
             'post_id' => $post->id,
             'created_by' => $user->id,
             'started_at' => now(),
@@ -192,19 +192,20 @@ class AiContentController extends Controller
             );
 
             $imageData = base64_decode($base64Image);
-            $fileName = 'ai-re-' . Str::slug($post->title) . '-' . time() . '.png';
+            $storedImage = $this->prepareImageForStorage($imageData);
+            $fileName = 'ai-re-' . Str::slug($post->title) . '-' . time() . '.' . $storedImage['extension'];
             $yearMonth = now()->format('Y/m');
             $savedPath = "media/ai/{$yearMonth}/{$fileName}";
 
-            Storage::disk('public')->put($savedPath, $imageData);
+            Storage::disk('public')->put($savedPath, $storedImage['contents']);
             $publicUrl = Storage::disk('public')->url($savedPath);
 
             // Create media record
             Media::create([
                 'name' => 'Thumbnail AI Regenerated: ' . $post->title,
                 'file_name' => $fileName,
-                'mime_type' => 'image/png',
-                'size' => strlen($imageData),
+                'mime_type' => $storedImage['mime_type'],
+                'size' => strlen($storedImage['contents']),
                 'path' => $savedPath,
                 'url' => $publicUrl,
                 'uploaded_by' => $user->id,
@@ -357,5 +358,32 @@ class AiContentController extends Controller
                 'total' => $jobs->total(),
             ]
         ]);
+    }
+
+    protected function prepareImageForStorage(string $imageData): array
+    {
+        if (function_exists('imagecreatefromstring') && function_exists('imagewebp')) {
+            $image = @imagecreatefromstring($imageData);
+            if ($image !== false) {
+                ob_start();
+                imagewebp($image, null, 88);
+                $webp = ob_get_clean();
+                imagedestroy($image);
+
+                if (is_string($webp) && $webp !== '') {
+                    return [
+                        'contents' => $webp,
+                        'extension' => 'webp',
+                        'mime_type' => 'image/webp',
+                    ];
+                }
+            }
+        }
+
+        return [
+            'contents' => $imageData,
+            'extension' => 'png',
+            'mime_type' => 'image/png',
+        ];
     }
 }
