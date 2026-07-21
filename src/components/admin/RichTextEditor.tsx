@@ -750,12 +750,13 @@ export default function RichTextEditor({
           if (!imageItems.length) return;
 
           event.preventDefault();
+          event.stopPropagation();
+          event.stopImmediatePropagation();
           const selection = quill.getSelection() || lastSelectionRef.current || { index: Math.max(0, quill.getLength() - 1), length: 0 };
-          let insertAt = selection.index;
           setPastedImageStatus('uploading');
 
           try {
-            if (selection.length > 0) quill.deleteText(selection.index, selection.length, 'user');
+            const uploadedImageUrls: string[] = [];
             for (const [imageIndex, item] of imageItems.entries()) {
               const source = item.getAsFile();
               if (!source) continue;
@@ -763,17 +764,30 @@ export default function RichTextEditor({
               const file = new File([source], `anh-dan-${Date.now()}-${imageIndex + 1}.${extension}`, { type: source.type });
               const response = await api.upload<Media>('/media/upload', file);
               if (!response.data?.url) throw new Error('Media Library không trả về URL ảnh.');
-              quill.insertEmbed(insertAt, 'image', response.data.url, 'user');
-              insertAt += 1;
-              quill.insertText(insertAt, '\n', 'user');
-              insertAt += 1;
+              uploadedImageUrls.push(response.data.url);
             }
+
+            if (!uploadedImageUrls.length) throw new Error('Clipboard không chứa ảnh hợp lệ.');
+
+            const imageOps = uploadedImageUrls.flatMap((url) => [
+              { insert: { image: url } },
+              { insert: '\n' },
+            ]);
+            isUpdatingRef.current = true;
+            quill.updateContents([
+              { retain: selection.index },
+              ...(selection.length > 0 ? [{ delete: selection.length }] : []),
+              ...imageOps,
+            ], 'silent');
+            const insertAt = selection.index + (uploadedImageUrls.length * 2);
             quill.setSelection(insertAt, 0, 'silent');
             onChangeRef.current(serializeEditorHtml(quill));
             setPastedImageStatus('idle');
           } catch (error) {
             console.error('Failed to upload pasted image:', error);
             setPastedImageStatus('error');
+          } finally {
+            isUpdatingRef.current = false;
           }
         };
         const handleResize = () => refreshRangeHighlight();
@@ -782,7 +796,7 @@ export default function RichTextEditor({
         quill.root.addEventListener('keydown', handleKeyDown);
         quill.root.addEventListener('keyup', handleKeyUp);
         quill.root.addEventListener('dragstart', handleDragStart);
-        quill.root.addEventListener('paste', handlePaste);
+        quill.root.addEventListener('paste', handlePaste, true);
         window.addEventListener('resize', handleResize);
         (quill as any).__articleCleanup = () => {
           quill.root.removeEventListener('mousedown', handleMouseDown);
@@ -790,7 +804,7 @@ export default function RichTextEditor({
           quill.root.removeEventListener('keydown', handleKeyDown);
           quill.root.removeEventListener('keyup', handleKeyUp);
           quill.root.removeEventListener('dragstart', handleDragStart);
-          quill.root.removeEventListener('paste', handlePaste);
+          quill.root.removeEventListener('paste', handlePaste, true);
           toolbarElement?.removeEventListener('pointerdown', captureSelectionBeforeToolbarAction, true);
           window.removeEventListener('resize', handleResize);
         };

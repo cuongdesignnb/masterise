@@ -1103,13 +1103,13 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
         ) : null}
 
         {hasConnectivity ? <Reveal className="rounded-[22px] border border-line/80 bg-white p-5 shadow-soft sm:p-7">
-          <section id="vi-tri" className={`scroll-mt-32 grid items-center gap-8 ${project.mapImageUrl ? "lg:grid-cols-[310px_minmax(0,1fr)]" : ""}`}>
-            <div>
-              <ProjectSectionTitle sectionKey="location" fallbackEyebrow="Vị trí chiến lược" fallbackTitle="Kết nối toàn diện" />
-              {project.locationDescription ? (
-                <p className="mb-6 text-sm leading-6 text-muted sm:text-[15px] sm:leading-7">{project.locationDescription}</p>
-              ) : null}
-              <div className="space-y-4">
+          <section id="vi-tri" className="scroll-mt-32">
+            <ProjectSectionTitle sectionKey="location" fallbackEyebrow="Vị trí chiến lược" fallbackTitle="Kết nối toàn diện" />
+            {project.locationDescription ? (
+              <p className="mb-6 max-w-5xl text-sm leading-6 text-muted sm:text-[15px] sm:leading-7">{project.locationDescription}</p>
+            ) : null}
+            <div className={`grid items-start gap-8 ${project.mapImageUrl ? "lg:grid-cols-2" : ""}`}>
+              <div className={`space-y-4 ${project.mapImageUrl ? "order-1 lg:order-2" : ""}`}>
                 {project.connectivity.map((item) => (
                   <div key={item.time} className="flex items-center gap-3">
                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-beige text-gold">
@@ -1122,8 +1122,12 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                   </div>
                 ))}
               </div>
+              {project.mapImageUrl ? (
+                <div className="order-2 lg:order-1">
+                  <LocationMap projectName={project.name} mapImageUrl={project.mapImageUrl} />
+                </div>
+              ) : null}
             </div>
-            {project.mapImageUrl ? <LocationMap projectName={project.name} mapImageUrl={project.mapImageUrl} /> : null}
           </section>
         </Reveal> : null}
 
