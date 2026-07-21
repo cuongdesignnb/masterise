@@ -778,47 +778,52 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                 </button>
               ) : null}
             </div>
-            {mobileHeroFacts.length || mobileSummaryStats.length ? (
-              <div className="mt-5 space-y-3 rounded-[16px] border border-line/70 bg-[#fcfaf6]/80 py-3">
-                {mobileHeroFacts.length ? (
-                  <div className="overflow-x-auto px-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                    <div className="flex snap-x gap-2.5">
-                      {mobileHeroFacts.map((fact) => (
-                        <div
-                          key={`${fact.label}-${fact.value}`}
-                          className="flex h-[82px] min-w-[158px] snap-start items-start gap-2 rounded-[12px] border border-line/80 bg-white px-3 py-2.5 shadow-[0_8px_22px_rgba(87,61,28,.06)]"
-                        >
-                          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gold/10 text-gold">
-                            <ProjectIcon name={fact.icon} size={14} />
-                          </span>
-                          <span className="min-w-0">
-                            <span className="block text-[9px] leading-4 text-muted line-clamp-1">{fact.label}</span>
-                            <span className="mt-0.5 block text-[11px] font-bold leading-[17px] text-ink line-clamp-2">{fact.value}</span>
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
-
-                {mobileSummaryStats.length ? (
-                  <div className="overflow-x-auto px-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                    <div className="flex snap-x gap-2.5">
-                      {mobileSummaryStats.map((stat) => (
-                        <div
-                          key={`${stat.label}-${stat.value}`}
-                          className="h-[64px] min-w-[112px] snap-start rounded-[12px] border border-gold/15 bg-white px-3 py-2 text-center shadow-[0_8px_22px_rgba(87,61,28,.05)]"
-                        >
-                          <span className="block truncate text-[17px] font-bold leading-6 text-gold">{stat.value}</span>
-                          <span className="mt-0.5 block text-[9px] font-medium leading-4 text-muted line-clamp-1">{stat.label}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
-              </div>
-            ) : null}
           </div>
+
+          {mobileHeroFacts.length ? (
+            <section
+              aria-label="Điểm nổi bật dự án"
+              className="rounded-[22px] border border-line/75 bg-white/90 p-4 shadow-soft backdrop-blur-md"
+            >
+              <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-gold">Điểm nổi bật</p>
+              <div className="mt-3 grid gap-2.5">
+                {mobileHeroFacts.map((fact) => (
+                  <div
+                    key={`${fact.label}-${fact.value}`}
+                    className="flex min-h-[74px] items-center gap-3 rounded-[14px] border border-line/80 bg-[#fcfaf6] px-3 py-2.5"
+                  >
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gold/10 text-gold">
+                      <ProjectIcon name={fact.icon} size={15} />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-[10px] leading-4 text-muted line-clamp-1">{fact.label}</span>
+                      <span className="mt-0.5 block text-[12px] font-bold leading-[18px] text-ink line-clamp-2">{fact.value}</span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          ) : null}
+
+          {mobileSummaryStats.length ? (
+            <section
+              aria-label="Thông số nhanh dự án"
+              className="rounded-[22px] border border-line/75 bg-[#fcfaf6] p-4 shadow-soft"
+            >
+              <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-gold">Thông số nhanh</p>
+              <div className="mt-3 grid grid-cols-3 gap-2">
+                {mobileSummaryStats.map((stat) => (
+                  <div
+                    key={`${stat.label}-${stat.value}`}
+                    className="min-h-[68px] rounded-[14px] border border-gold/15 bg-white px-2 py-2.5 text-center shadow-[0_8px_22px_rgba(87,61,28,.04)]"
+                  >
+                    <span className="block text-[16px] font-bold leading-5 text-gold line-clamp-1">{stat.value}</span>
+                    <span className="mt-1 block text-[9px] font-medium leading-3.5 text-muted line-clamp-2">{stat.label}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          ) : null}
         </motion.section>
 
         <motion.section
