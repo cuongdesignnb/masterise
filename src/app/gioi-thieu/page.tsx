@@ -9,11 +9,12 @@ import {
   buildWebSiteNode,
   buildWebPageNode,
   buildBreadcrumbSchema,
+  buildOperatorContext,
 } from "@/lib/seo/schema";
 import JsonLd from "@/components/seo/JsonLd";
 
 export const metadata: Metadata = buildMetadata({
-  title: "Giới thiệu Masterise Homes | Nhà phát triển bất động sản hàng hiệu",
+  title: "Giới thiệu nhà phát triển bất động sản hàng hiệu",
   description:
     "Tìm hiểu về Masterise Homes – nhà phát triển bất động sản hàng hiệu tại Việt Nam, kiến tạo chuẩn sống quốc tế, phát triển bền vững và những công trình biểu tượng.",
   keywords: [
@@ -34,7 +35,7 @@ export default async function GioiThieuPage() {
   const pageUrl = `${SITE_URL}/gioi-thieu`;
 
   const operatorNode = buildOperatorNode(siteEntity);
-  const websiteNode = buildWebSiteNode();
+  const websiteNode = buildWebSiteNode(buildOperatorContext(siteEntity));
   const webpageNode = buildWebPageNode(
     pageUrl,
     "Giới thiệu Masterise Homes",

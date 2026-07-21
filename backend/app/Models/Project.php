@@ -233,7 +233,7 @@ class Project extends Model
         }
 
         $published = $this->getRelation('reviews')->filter(function ($r) {
-            return ($r->moderation_status === 'approved' || $r->moderation_status === null) && ($r->is_published ?? true);
+            return $r->moderation_status === 'approved' && $r->is_published === true;
         });
 
         $count = $published->count();

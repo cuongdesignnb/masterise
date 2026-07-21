@@ -18,6 +18,7 @@ import type { PostDetailData } from "@/types/api";
 import { absoluteUrl, SITE_NAME, SITE_URL } from "@/config/seo";
 import { buildMetadata } from "@/lib/seo/buildMetadata";
 import { getSiteEntityConfig } from "@/services/siteEntityServerService";
+import { getSeoFeatureFlags } from "@/services/seoFeatureFlagsServerService";
 import {
   buildOperatorNode,
   buildWebSiteNode,
@@ -25,6 +26,7 @@ import {
   buildBreadcrumbSchema,
   buildNewsArticleSchema,
   buildEventSchema,
+  buildOperatorContext,
 } from "@/lib/seo/schema";
 import JsonLd from "@/components/seo/JsonLd";
 
@@ -47,7 +49,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!post) {
     return buildMetadata({
-      title: "Không tìm thấy nội dung đầu tư | Masterise Homes",
+      title: "Không tìm thấy nội dung đầu tư",
       noindex: true,
     });
   }
@@ -56,7 +58,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const seoImage = post.thumbnail ? absoluteUrl(post.thumbnail) : undefined;
 
   return buildMetadata({
-    title: post.seo_meta?.title || `${post.title} | Masterise Homes`,
+    title: post.seo_meta?.title ? { absolute: post.seo_meta.title } : post.title,
     description,
     keywords: post.seo_meta?.keywords || undefined,
     path: `/${post.slug}`,
@@ -71,9 +73,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function InvestmentDetailPage({ params }: Props) {
   const { slug } = await params;
-  const [data, siteEntity] = await Promise.all([
+  const [data, siteEntity, featureFlags] = await Promise.all([
     getInvestmentPost(slug),
     getSiteEntityConfig(),
+    getSeoFeatureFlags(),
   ]);
 
   if (!data?.post) notFound();
@@ -87,11 +90,21 @@ export default async function InvestmentDetailPage({ params }: Props) {
   const publishedLabel = formatArticleDate(post.published_at);
   const minutes = readingMinutes(completeContent || post.summary);
 
-  const isEvent = post.post_type === "event" && post.event_start_at;
+  const hasOfflineLocation = Boolean(post.event_location_name && post.event_street_address && post.event_country);
+  const hasOnlineLocation = Boolean(post.event_online_url);
+  const hasEligibleLocation = post.event_attendance_mode === 'Online'
+    ? hasOnlineLocation
+    : post.event_attendance_mode === 'Mixed'
+      ? hasOfflineLocation && hasOnlineLocation
+      : hasOfflineLocation;
+  const isEvent = featureFlags.eventSchema
+    && post.post_type === "event"
+    && Boolean(post.event_start_at && post.event_attendance_mode && post.event_status && hasEligibleLocation);
 
   // Build JSON-LD Graph Nodes
+  const operatorContext = buildOperatorContext(siteEntity);
   const operatorNode = buildOperatorNode(siteEntity);
-  const websiteNode = buildWebSiteNode();
+  const websiteNode = buildWebSiteNode(operatorContext);
   const webpageNode = buildWebPageNode(postUrl, post.title, metaDescription, isEvent ? `${postUrl}#event` : `${postUrl}#article`);
   const breadcrumbNode = buildBreadcrumbSchema(postUrl, [
     { name: "Trang chủ", item: "/" },
@@ -106,8 +119,21 @@ export default async function InvestmentDetailPage({ params }: Props) {
         startDate: post.event_start_at!,
         endDate: post.event_end_at || undefined,
         imageUrl: post.thumbnail ? absoluteUrl(post.thumbnail) : undefined,
-        locationName: post.event_location || "Dự án Masterise Homes",
-      })
+        locationName: post.event_location_name || undefined,
+        streetAddress: post.event_street_address || undefined,
+        locality: post.event_locality || undefined,
+        region: post.event_region || undefined,
+        postalCode: post.event_postal_code || undefined,
+        country: post.event_country || undefined,
+        attendanceMode: post.event_attendance_mode!,
+        eventStatus: post.event_status!,
+        organizerName: post.event_organizer_name || undefined,
+        organizerUrl: post.event_organizer_url || undefined,
+        onlineUrl: post.event_online_url || undefined,
+        price: post.event_price ? Number(post.event_price) : undefined,
+        currency: post.event_currency || undefined,
+        availability: post.event_availability || undefined,
+      }, operatorContext)
     : buildNewsArticleSchema(postUrl, {
         headline: post.title,
         description: metaDescription,
@@ -116,7 +142,7 @@ export default async function InvestmentDetailPage({ params }: Props) {
         dateModified: post.updated_at || post.published_at || post.created_at,
         authorName: post.author?.name || SITE_NAME,
         authorType: post.author?.name ? "Person" : "Organization",
-      });
+      }, operatorContext);
 
   const graph = [
     operatorNode,
@@ -150,6 +176,21 @@ export default async function InvestmentDetailPage({ params }: Props) {
                       <p>
                         <span className="font-bold text-[#1F1B16]">Địa điểm:</span> {post.event_location}
                       </p>
+                    )}
+                    {post.event_location_name && (
+                      <p><span className="font-bold text-[#1F1B16]">Địa điểm tổ chức:</span> {post.event_location_name}</p>
+                    )}
+                    {post.event_street_address && (
+                      <p>
+                        <span className="font-bold text-[#1F1B16]">Địa chỉ:</span>{' '}
+                        {[post.event_street_address, post.event_locality, post.event_region, post.event_country].filter(Boolean).join(', ')}
+                      </p>
+                    )}
+                    {post.event_online_url && (
+                      <p><span className="font-bold text-[#1F1B16]">Tham dự trực tuyến:</span> <a className="underline" href={post.event_online_url}>Mở liên kết</a></p>
+                    )}
+                    {post.event_organizer_name && (
+                      <p><span className="font-bold text-[#1F1B16]">Đơn vị tổ chức:</span> {post.event_organizer_name}</p>
                     )}
                   </div>
                   {post.event_register_url && (

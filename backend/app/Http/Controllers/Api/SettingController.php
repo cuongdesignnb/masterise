@@ -7,6 +7,7 @@ use App\Models\Setting;
 use App\Support\ContactPageContent;
 use App\Support\SiteEntityContent;
 use App\Support\PublicContentCache;
+use App\Support\SeoFeatureFlags;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
@@ -25,6 +26,7 @@ class SettingController extends Controller
             foreach ($keys as $key) {
                 $values[$key] = Setting::get($key);
             }
+            $values = array_merge($values, SeoFeatureFlags::all());
             $values['contact_page_content'] = ContactPageContent::normalize(
                 is_array($values['contact_page_content']) ? $values['contact_page_content'] : [],
                 is_array($values['contact_departments']) ? $values['contact_departments'] : [],
@@ -84,7 +86,15 @@ class SettingController extends Controller
 
         $settings = $request->settings;
         foreach ($settings as $index => &$item) {
-            if ($item['key'] === 'contact_page_content') {
+            if (in_array($item['key'], SeoFeatureFlags::KEYS, true)) {
+                if ($item['type'] !== 'boolean' || !is_bool($item['value'])) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Cờ tính năng SEO phải là boolean.',
+                        'errors' => ["settings.{$index}.value" => ['Giá trị phải là true hoặc false.']],
+                    ], 422);
+                }
+            } elseif ($item['key'] === 'contact_page_content') {
                 if ($item['type'] !== 'json') {
                     return response()->json([
                         'success' => false,

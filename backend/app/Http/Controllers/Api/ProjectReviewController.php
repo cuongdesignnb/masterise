@@ -3,75 +3,127 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\PublicProjectReviewResource;
 use App\Models\Project;
 use App\Models\ProjectReview;
-use App\Http\Resources\ProjectReviewResource;
+use App\Support\NextCacheRevalidator;
+use App\Support\PublicContentCache;
+use App\Support\SeoFeatureFlags;
+use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class ProjectReviewController extends Controller
 {
-    /**
-     * Get published reviews for a project.
-     */
-    public function index($slug)
+    public function index(Request $request, string $slug)
     {
-        $project = Project::where('slug', $slug)->where('is_published', true)->firstOrFail();
+        $project = Project::query()->where('slug', $slug)->where('is_published', true)->firstOrFail();
+        $scope = ProjectReview::query()->published()->where('project_id', $project->id);
+        $aggregateRow = (clone $scope)
+            ->selectRaw('COUNT(*) as review_count, AVG(rating) as rating_value')
+            ->first();
+        $count = (int) ($aggregateRow?->review_count ?? 0);
+        $aggregate = $count > 0 ? [
+            'ratingValue' => round((float) $aggregateRow->rating_value, 1),
+            'ratingCount' => $count,
+            'reviewCount' => $count,
+            'bestRating' => 5,
+            'worstRating' => 1,
+        ] : null;
 
-        $reviews = ProjectReview::published()
-            ->where('project_id', $project->id)
-            ->orderBy('reviewed_at', 'desc')
-            ->paginate(10);
+        $reviews = (clone $scope)->orderByDesc('reviewed_at')->paginate(10);
 
         return response()->json([
             'success' => true,
-            'data' => ProjectReviewResource::collection($reviews->items()),
+            'data' => [
+                'items' => PublicProjectReviewResource::collection($reviews->items())->resolve($request),
+                'aggregate' => $aggregate,
+            ],
             'meta' => [
                 'current_page' => $reviews->currentPage(),
                 'last_page' => $reviews->lastPage(),
                 'per_page' => $reviews->perPage(),
                 'total' => $reviews->total(),
             ],
-            'summary' => $project->review_summary,
         ]);
     }
 
-    /**
-     * Submit a public review for a project (pending moderation).
-     */
-    public function store(Request $request, $id)
+    public function challenge(int $id)
     {
-        // Honeypot bot protection
-        if ($request->filled('website_hp')) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Cảm ơn bạn đã gửi đánh giá!',
-            ], 200);
+        abort_unless(SeoFeatureFlags::enabled('public_project_review_submission_enabled'), 404);
+        Project::query()->where('is_published', true)->findOrFail($id);
+
+        $issuedAt = now()->timestamp;
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'token' => Crypt::encryptString(json_encode([
+                    'project_id' => $id,
+                    'issued_at' => $issuedAt,
+                    'nonce' => (string) Str::uuid(),
+                ], JSON_THROW_ON_ERROR)),
+                'issued_at' => $issuedAt,
+                'minimum_fill_seconds' => 3,
+            ],
+        ])->header('Cache-Control', 'no-store');
+    }
+
+    public function store(Request $request, int $id)
+    {
+        if (!SeoFeatureFlags::enabled('public_project_review_submission_enabled')) {
+            return response()->json(['success' => false, 'message' => 'Chức năng gửi đánh giá hiện chưa được mở.'], 404);
         }
 
-        $project = Project::where('is_published', true)->findOrFail($id);
+        if ($request->filled('website_hp')) {
+            Log::notice('Project review honeypot triggered.', ['project_id' => $id, 'ip' => $request->ip()]);
+            return response()->json(['success' => true, 'message' => 'Cảm ơn bạn đã gửi đánh giá!']);
+        }
 
-        $validator = Validator::make($request->all(), [
-            'reviewer_name' => 'required|string|max:100',
+        $project = Project::query()->where('is_published', true)->findOrFail($id);
+        $validated = $request->validate([
+            'reviewer_name' => 'required|string|min:2|max:100',
             'reviewer_role' => 'nullable|string|max:100',
             'rating' => 'required|numeric|min:1|max:5',
             'review_body' => 'required|string|min:10|max:2000',
+            'website_hp' => 'nullable|max:0',
+            'submission_token' => 'required|string|max:2048',
+            'consent' => 'accepted',
         ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Dữ liệu đánh giá chưa hợp lệ.',
-                'errors' => $validator->errors()
-            ], 422);
+        try {
+            $challenge = json_decode(Crypt::decryptString($validated['submission_token']), true, flags: JSON_THROW_ON_ERROR);
+            $age = now()->timestamp - (int) ($challenge['issued_at'] ?? 0);
+            if ((int) ($challenge['project_id'] ?? 0) !== $project->id || $age < 3 || $age > 1800) {
+                throw new \RuntimeException('Invalid review submission challenge.');
+            }
+        } catch (DecryptException|\JsonException|\RuntimeException $exception) {
+            Log::notice('Project review challenge rejected.', ['project_id' => $id, 'ip' => $request->ip()]);
+            return response()->json(['success' => false, 'message' => 'Phiên gửi đánh giá không hợp lệ. Vui lòng mở lại biểu mẫu.'], 422);
         }
 
-        $review = ProjectReview::create([
+        $reviewerName = trim(strip_tags($validated['reviewer_name']));
+        $reviewBody = trim(strip_tags($validated['review_body']));
+        $duplicate = ProjectReview::query()
+            ->where('project_id', $project->id)
+            ->where('reviewer_name', $reviewerName)
+            ->where('review_body', $reviewBody)
+            ->where('created_at', '>=', now()->subDay())
+            ->exists();
+        if ($duplicate) {
+            Log::notice('Duplicate project review rejected.', ['project_id' => $id, 'ip' => $request->ip()]);
+            return response()->json(['success' => false, 'message' => 'Đánh giá này đã được gửi trước đó.'], 422);
+        }
+
+        ProjectReview::create([
             'project_id' => $project->id,
-            'reviewer_name' => strip_tags(trim($request->reviewer_name)),
-            'reviewer_role' => $request->reviewer_role ? strip_tags(trim($request->reviewer_role)) : 'Khách hàng',
-            'rating' => (float) $request->rating,
-            'review_body' => strip_tags(trim($request->review_body)),
+            'reviewer_name' => $reviewerName,
+            'reviewer_role' => filled($validated['reviewer_role'] ?? null)
+                ? trim(strip_tags($validated['reviewer_role']))
+                : 'Khách hàng',
+            'rating' => (float) $validated['rating'],
+            'review_body' => $reviewBody,
             'reviewed_at' => now(),
             'source_type' => 'website',
             'is_verified' => false,
@@ -79,10 +131,18 @@ class ProjectReviewController extends Controller
             'is_published' => false,
         ]);
 
+        $this->invalidate($project);
+
         return response()->json([
             'success' => true,
-            'message' => 'Cảm ơn bạn đã gửi đánh giá! Đánh giá của bạn sẽ được hiển thị sau khi duyệt.',
-            'data' => new ProjectReviewResource($review),
+            'message' => 'Cảm ơn bạn! Đánh giá đã được tiếp nhận và đang chờ kiểm duyệt.',
         ], 201);
+    }
+
+    private function invalidate(Project $project): void
+    {
+        $tags = ["project-{$project->slug}", "project-reviews-{$project->slug}"];
+        PublicContentCache::invalidate('projects.list', 'projects.featured', ...$tags);
+        NextCacheRevalidator::tags($tags);
     }
 }

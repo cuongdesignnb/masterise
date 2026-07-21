@@ -1,4 +1,5 @@
 import type { FloorPlanGroup } from './floor-plan';
+import type { ProjectReviewBundle } from './project-review';
 
 export interface User {
   id: number;
@@ -161,6 +162,7 @@ export interface Project {
   related_post_ids?: number[];
   related_posts?: ProjectRelatedPost[];
   seo_meta?: SeoMeta | null;
+  reviews?: ProjectReviewBundle;
   created_at: string;
   updated_at: string;
 }
@@ -205,6 +207,20 @@ export interface Post {
   event_end_at?: string | null;
   event_location?: string | null;
   event_register_url?: string | null;
+  event_location_name?: string | null;
+  event_street_address?: string | null;
+  event_locality?: string | null;
+  event_region?: string | null;
+  event_postal_code?: string | null;
+  event_country?: string | null;
+  event_attendance_mode?: 'Offline' | 'Online' | 'Mixed' | null;
+  event_status?: 'Scheduled' | 'Cancelled' | 'Postponed' | 'Rescheduled' | null;
+  event_organizer_name?: string | null;
+  event_organizer_url?: string | null;
+  event_online_url?: string | null;
+  event_price?: string | null;
+  event_currency?: string | null;
+  event_availability?: 'InStock' | 'PreOrder' | 'SoldOut' | null;
   category?: PostCategory;
   author?: User;
   tags?: Tag[];

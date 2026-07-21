@@ -38,7 +38,11 @@ export async function getSiteEntityConfig(): Promise<SiteEntityConfig> {
     const parsed = typeof rawEntity === 'string' ? JSON.parse(rawEntity) : rawEntity;
     const validated = validateSiteEntity(parsed);
 
-    return validated || FALLBACK_SITE_ENTITY;
+    if (!validated || json?.data?.seo_site_entity_enabled !== true) {
+      return FALLBACK_SITE_ENTITY;
+    }
+
+    return validated;
   } catch (error) {
     console.error('Error in getSiteEntityConfig:', error);
     return FALLBACK_SITE_ENTITY;

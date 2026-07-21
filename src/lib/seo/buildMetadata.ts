@@ -41,7 +41,7 @@ export function cleanUrl(urlStr: string): string {
     // Build normalized URL
     const search = url.search;
     return `${url.origin}${path}${search}`;
-  } catch (e) {
+  } catch {
     return urlStr.replace(/\/$/, '');
   }
 }
@@ -78,6 +78,8 @@ export function buildMetadata(options: BuildMetadataOptions = {}): Metadata {
     }
   }
 
+  titleObj ??= { absolute: `${SITE_NAME} - Bất động sản cao cấp và hạng sang` };
+
   const displayTitle = typeof titleObj === 'object' && 'absolute' in titleObj 
     ? titleObj.absolute 
     : (titleObj ? `${titleObj} | ${SITE_NAME}` : `${SITE_NAME} - Bất động sản cao cấp và hạng sang`);
@@ -105,33 +107,40 @@ export function buildMetadata(options: BuildMetadataOptions = {}): Metadata {
       };
 
   // Open Graph
-  const openGraph: any = {
-    type: ogType,
-    locale: 'vi_VN',
-    url: canonicalUrl,
-    siteName: SITE_NAME,
-    title: typeof title === 'object' && 'absolute' in title ? title.absolute : (title || displayTitle),
-    description,
-    images: [{ url: ogImage, width: 1200, height: 630, alt: displayTitle }],
-  };
-
-  if (ogType === 'article') {
-    if (publishedTime) openGraph.publishedTime = publishedTime;
-    if (modifiedTime) openGraph.modifiedTime = modifiedTime;
-    if (authors && authors.length > 0) openGraph.authors = authors;
-    if (section) openGraph.section = section;
-  }
+  const openGraph: NonNullable<Metadata['openGraph']> = ogType === 'article'
+    ? {
+        type: 'article',
+        locale: 'vi_VN',
+        url: canonicalUrl,
+        siteName: SITE_NAME,
+        title: displayTitle,
+        description,
+        images: [{ url: ogImage, width: 1200, height: 630, alt: displayTitle }],
+        publishedTime,
+        modifiedTime,
+        authors: authors && authors.length > 0 ? authors : undefined,
+        section,
+      }
+    : {
+        type: 'website',
+        locale: 'vi_VN',
+        url: canonicalUrl,
+        siteName: SITE_NAME,
+        title: displayTitle,
+        description,
+        images: [{ url: ogImage, width: 1200, height: 630, alt: displayTitle }],
+      };
 
   // Twitter Card
   const twitter: NonNullable<Metadata['twitter']> = {
     card: 'summary_large_image',
-    title: typeof title === 'object' && 'absolute' in title ? title.absolute : (title || displayTitle),
+    title: displayTitle,
     description,
     images: [ogImage],
   };
 
   return {
-    title: typeof title === 'object' && 'absolute' in title ? { absolute: title.absolute } : title,
+    title: titleObj,
     description,
     keywords: keywords ? (Array.isArray(keywords) ? keywords.join(', ') : keywords) : undefined,
     alternates: {

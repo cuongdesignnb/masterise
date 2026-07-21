@@ -13,6 +13,7 @@ import {
   buildWebSiteNode,
   buildWebPageNode,
   buildBreadcrumbSchema,
+  buildOperatorContext,
 } from "@/lib/seo/schema";
 import JsonLd from "@/components/seo/JsonLd";
 
@@ -82,7 +83,7 @@ export default async function LienHePage() {
   const pageUrl = `${SITE_URL}/lien-he`;
 
   const operatorNode = buildOperatorNode(siteEntity);
-  const websiteNode = buildWebSiteNode();
+  const websiteNode = buildWebSiteNode(buildOperatorContext(siteEntity));
   const webpageNode = {
     ...buildWebPageNode(pageUrl, content.seo.title, content.seo.description, `${SITE_URL}/#organization`),
     '@type': 'ContactPage',

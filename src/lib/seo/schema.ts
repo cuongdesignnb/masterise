@@ -1,6 +1,24 @@
 import { SITE_NAME, SITE_URL, OPERATOR_LOGO } from '@/config/seo';
 import { SiteEntityConfig } from '@/config/siteEntity';
 
+export interface OperatorContext {
+  enabled: boolean;
+  id?: string;
+  name?: string;
+  url?: string;
+}
+
+export function buildOperatorContext(config: SiteEntityConfig): OperatorContext {
+  if (!config.enabled) return { enabled: false };
+
+  return {
+    enabled: true,
+    id: `${SITE_URL}/#organization`,
+    name: config.name,
+    url: config.url,
+  };
+}
+
 // 1. Build Base Operator Node
 export function buildOperatorNode(config: SiteEntityConfig) {
   if (!config.enabled) return null;
@@ -46,15 +64,13 @@ export function buildOperatorNode(config: SiteEntityConfig) {
 }
 
 // 2. Build WebSite Node
-export function buildWebSiteNode(hasOrganization = true) {
+export function buildWebSiteNode(operator: OperatorContext = { enabled: false }) {
   return {
     '@type': 'WebSite',
     '@id': `${SITE_URL}/#website`,
     url: SITE_URL,
     name: SITE_NAME,
-    publisher: hasOrganization 
-      ? { '@id': `${SITE_URL}/#organization` }
-      : { '@type': 'Organization', name: SITE_NAME, url: SITE_URL },
+    publisher: operator.enabled && operator.id ? { '@id': operator.id } : undefined,
   };
 }
 
@@ -188,19 +204,19 @@ export interface ProductInput {
   name: string;
   description: string;
   images?: string[];
-  offers?: any;
-  aggregateRating?: any;
-  reviews?: any[];
+  offers?: Record<string, unknown>;
+  aggregateRating?: Record<string, unknown>;
+  reviews?: Array<Record<string, unknown>>;
 }
 
-export function buildProductNode(canonical: string, input: ProductInput) {
+export function buildProductNode(canonical: string, input: ProductInput, operator: OperatorContext = { enabled: false }) {
   return {
     '@type': 'Product',
     '@id': `${canonical}#product`,
     name: input.name,
     description: input.description,
     image: input.images && input.images.length > 0 ? input.images : undefined,
-    brand: { '@id': `${SITE_URL}/#organization` },
+    brand: operator.enabled && operator.id ? { '@id': operator.id } : undefined,
     offers: input.offers || undefined,
     aggregateRating: input.aggregateRating || undefined,
     review: input.reviews && input.reviews.length > 0 ? input.reviews : undefined,
@@ -219,10 +235,7 @@ export interface ArticleInput {
   publisherName?: string;
 }
 
-export function buildNewsArticleSchema(canonical: string, input: ArticleInput) {
-  const authorType = input.authorType || 'Organization';
-  const authorName = input.authorName || SITE_NAME;
-
+export function buildNewsArticleSchema(canonical: string, input: ArticleInput, operator: OperatorContext = { enabled: false }) {
   return {
     '@type': 'NewsArticle',
     '@id': `${canonical}#article`,
@@ -234,12 +247,11 @@ export function buildNewsArticleSchema(canonical: string, input: ArticleInput) {
     dateModified: input.dateModified || input.datePublished,
     mainEntityOfPage: canonical,
     inLanguage: 'vi-VN',
-    author: {
-      '@type': authorType,
-      name: authorName,
-      url: authorType === 'Organization' ? SITE_URL : undefined,
-    },
-    publisher: { '@id': `${SITE_URL}/#organization` },
+    author: input.authorName ? {
+      '@type': input.authorType || 'Person',
+      name: input.authorName,
+    } : undefined,
+    publisher: operator.enabled && operator.id ? { '@id': operator.id } : undefined,
   };
 }
 
@@ -250,20 +262,23 @@ export interface EventInput {
   startDate: string;
   endDate?: string;
   imageUrl?: string;
-  locationName: string;
+  locationName?: string;
   streetAddress?: string;
   locality?: string;
   region?: string;
   postalCode?: string;
-  attendanceMode?: 'Offline' | 'Online' | 'Mixed';
-  eventStatus?: 'Scheduled' | 'Cancelled' | 'Postponed' | 'Rescheduled';
+  country?: string;
+  attendanceMode: 'Offline' | 'Online' | 'Mixed';
+  eventStatus: 'Scheduled' | 'Cancelled' | 'Postponed' | 'Rescheduled';
   organizerName?: string;
+  organizerUrl?: string;
+  onlineUrl?: string;
   price?: number;
   currency?: string;
   availability?: string;
 }
 
-export function buildEventSchema(canonical: string, input: EventInput) {
+export function buildEventSchema(canonical: string, input: EventInput, operator: OperatorContext = { enabled: false }) {
   const attendanceModeMap = {
     Offline: 'https://schema.org/OfflineEventAttendanceMode',
     Online: 'https://schema.org/OnlineEventAttendanceMode',
@@ -277,28 +292,37 @@ export function buildEventSchema(canonical: string, input: EventInput) {
     Rescheduled: 'https://schema.org/EventRescheduled',
   };
 
-  const location = input.attendanceMode === 'Online'
-    ? { '@type': 'VirtualLocation', url: canonical }
-    : {
+  const physicalLocation = {
         '@type': 'Place',
         name: input.locationName,
         address: {
           '@type': 'PostalAddress',
-          streetAddress: input.streetAddress || input.locationName,
+          streetAddress: input.streetAddress || undefined,
           addressLocality: input.locality || undefined,
           addressRegion: input.region || undefined,
           postalCode: input.postalCode || undefined,
-          addressCountry: 'VN',
+          addressCountry: input.country,
         },
       };
+  const virtualLocation = input.onlineUrl ? { '@type': 'VirtualLocation', url: input.onlineUrl } : undefined;
+  const location = input.attendanceMode === 'Online'
+    ? virtualLocation
+    : input.attendanceMode === 'Mixed'
+      ? [physicalLocation, virtualLocation].filter(Boolean)
+      : physicalLocation;
 
-  const offers = input.price !== undefined
+  const availabilityMap = {
+    InStock: 'https://schema.org/InStock',
+    PreOrder: 'https://schema.org/PreOrder',
+    SoldOut: 'https://schema.org/OutOfStock',
+  } as const;
+  const offers = input.price !== undefined && input.currency
     ? {
         '@type': 'Offer',
         price: input.price,
-        priceCurrency: input.currency || 'VND',
+        priceCurrency: input.currency,
         url: canonical,
-        availability: input.availability === 'InStock' ? 'https://schema.org/InStock' : 'https://schema.org/PreOrder',
+        availability: input.availability ? availabilityMap[input.availability as keyof typeof availabilityMap] : undefined,
       }
     : undefined;
 
@@ -308,16 +332,16 @@ export function buildEventSchema(canonical: string, input: EventInput) {
     name: input.name,
     description: input.description,
     startDate: input.startDate,
-    endDate: input.endDate || input.startDate,
+    endDate: input.endDate,
     image: input.imageUrl ? [input.imageUrl] : undefined,
-    eventAttendanceMode: attendanceModeMap[input.attendanceMode || 'Offline'],
-    eventStatus: statusMap[input.eventStatus || 'Scheduled'],
+    eventAttendanceMode: attendanceModeMap[input.attendanceMode],
+    eventStatus: statusMap[input.eventStatus],
     location,
-    organizer: {
-      '@type': 'Organization',
-      name: input.organizerName || SITE_NAME,
-      url: SITE_URL,
-    },
+    organizer: input.organizerName
+      ? { '@type': 'Organization', name: input.organizerName, url: input.organizerUrl || undefined }
+      : operator.enabled && operator.id
+        ? { '@id': operator.id }
+        : undefined,
     offers,
   };
 }
@@ -333,22 +357,27 @@ export interface JobInput {
   locality?: string;
   region?: string;
   postalCode?: string;
+  country?: string;
+  jobLocationType?: 'TELECOMMUTE';
+  applicantLocationCountry?: string;
+  identifier?: string;
+  directApply?: boolean;
   salaryMin?: number;
   salaryMax?: number;
   salaryUnit?: 'MONTH' | 'YEAR' | 'WEEK' | 'DAY' | 'HOUR';
   salaryCurrency?: string;
 }
 
-export function buildJobPostingSchema(canonical: string, input: JobInput) {
-  const baseSalary = input.salaryMin && input.salaryMin > 0
+export function buildJobPostingSchema(canonical: string, input: JobInput, operator: OperatorContext = { enabled: false }) {
+  const baseSalary = input.salaryMin && input.salaryMin > 0 && input.salaryUnit && input.salaryCurrency
     ? {
         '@type': 'MonetaryAmount',
-        currency: input.salaryCurrency || 'VND',
+        currency: input.salaryCurrency,
         value: {
           '@type': 'QuantitativeValue',
           minValue: input.salaryMin,
           maxValue: input.salaryMax && input.salaryMax >= input.salaryMin ? input.salaryMax : input.salaryMin,
-          unitText: input.salaryUnit || 'MONTH',
+          unitText: input.salaryUnit,
         },
       }
     : undefined;
@@ -360,21 +389,27 @@ export function buildJobPostingSchema(canonical: string, input: JobInput) {
     description: input.description,
     datePosted: input.datePosted,
     validThrough: input.validThrough || undefined,
-    employmentType: input.employmentType || 'FULL_TIME',
-    hiringOrganization: {
-      '@id': `${SITE_URL}/#organization`,
-    },
-    jobLocation: {
+    employmentType: input.employmentType,
+    hiringOrganization: operator.enabled && operator.id ? { '@id': operator.id } : undefined,
+    jobLocation: input.jobLocationType === 'TELECOMMUTE' ? undefined : {
       '@type': 'Place',
       address: {
         '@type': 'PostalAddress',
-        streetAddress: input.streetAddress || 'Trụ sở chính',
+        streetAddress: input.streetAddress,
         addressLocality: input.locality || undefined,
         addressRegion: input.region || undefined,
         postalCode: input.postalCode || undefined,
-        addressCountry: 'VN',
+        addressCountry: input.country,
       },
     },
+    jobLocationType: input.jobLocationType,
+    applicantLocationRequirements: input.applicantLocationCountry
+      ? { '@type': 'Country', name: input.applicantLocationCountry }
+      : undefined,
+    identifier: input.identifier
+      ? { '@type': 'PropertyValue', name: operator.name, value: input.identifier }
+      : undefined,
+    directApply: input.directApply,
     baseSalary,
   };
 }

@@ -11,11 +11,12 @@ import {
   buildWebPageNode,
   buildBreadcrumbSchema,
   buildItemListSchema,
+  buildOperatorContext,
 } from '@/lib/seo/schema';
 import JsonLd from '@/components/seo/JsonLd';
 
 export const metadata = buildMetadata({
-  title: 'Chuyên trang | Masterise Homes',
+  title: 'Chuyên trang',
   description: 'Tổng hợp các chuyên trang, chính sách và nội dung thông tin từ Masterise Homes.',
   path: '/chuyen-trang',
 });
@@ -28,7 +29,7 @@ export default async function ChuyenTrangListPage() {
   const pageUrl = `${SITE_URL}/chuyen-trang`;
 
   const operatorNode = buildOperatorNode(siteEntity);
-  const websiteNode = buildWebSiteNode();
+  const websiteNode = buildWebSiteNode(buildOperatorContext(siteEntity));
   const webpageNode = {
     ...buildWebPageNode(pageUrl, 'Chuyên trang Masterise Homes', 'Tổng hợp các chuyên trang, chính sách và thông tin'),
     '@type': 'CollectionPage',

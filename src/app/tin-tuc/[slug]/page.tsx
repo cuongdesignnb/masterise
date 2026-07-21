@@ -16,7 +16,7 @@ import { extractTocFromHtml, formatArticleDate, readingMinutes, stripHtml } from
 import ArticleToc from "@/components/news-detail/ArticleToc";
 import { fetchApiResponse } from "@/lib/serverApi";
 import type { ApiResponse, PostDetailData } from "@/types/api";
-import { absoluteUrl, SITE_NAME, SITE_URL } from "@/config/seo";
+import { absoluteUrl, SITE_URL } from "@/config/seo";
 import { buildMetadata } from "@/lib/seo/buildMetadata";
 import { getSiteEntityConfig } from "@/services/siteEntityServerService";
 import {
@@ -25,6 +25,7 @@ import {
   buildWebPageNode,
   buildBreadcrumbSchema,
   buildNewsArticleSchema,
+  buildOperatorContext,
 } from "@/lib/seo/schema";
 import JsonLd from "@/components/seo/JsonLd";
 
@@ -77,7 +78,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!post) {
     return buildMetadata({
-      title: "Không tìm thấy bài viết | Masterise Homes",
+      title: "Không tìm thấy bài viết",
       noindex: true,
     });
   }
@@ -86,7 +87,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const seoImage = post.thumbnail ? absoluteUrl(post.thumbnail) : undefined;
 
   return buildMetadata({
-    title: post.seo_meta?.title || `${post.title} | Masterise Homes`,
+    title: post.seo_meta?.title ? { absolute: post.seo_meta.title } : post.title,
     description,
     keywords: post.seo_meta?.keywords || undefined,
     path: `/${post.slug}`,
@@ -119,8 +120,9 @@ export default async function NewsArticleDetailPage({ params }: Props) {
   const minutes = readingMinutes(completeContent || post.summary);
 
   // Schema graph building
+  const operatorContext = buildOperatorContext(siteEntity);
   const operatorNode = buildOperatorNode(siteEntity);
-  const websiteNode = buildWebSiteNode();
+  const websiteNode = buildWebSiteNode(operatorContext);
   const webpageNode = buildWebPageNode(postUrl, post.title, metaDescription, `${postUrl}#article`);
   const breadcrumbNode = buildBreadcrumbSchema(postUrl, [
     { name: "Trang chủ", item: "/" },
@@ -134,9 +136,9 @@ export default async function NewsArticleDetailPage({ params }: Props) {
     images: post.thumbnail ? [absoluteUrl(post.thumbnail)] : [],
     datePublished: post.published_at || post.created_at,
     dateModified: post.updated_at || post.published_at || post.created_at,
-    authorName: post.author?.name || SITE_NAME,
-    authorType: post.author?.name ? "Person" : "Organization",
-  });
+    authorName: post.author?.name || undefined,
+    authorType: "Person",
+  }, operatorContext);
 
   const videoSchemas = videos.map((video, idx) => ({
     "@type": "VideoObject",

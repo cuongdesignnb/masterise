@@ -12,6 +12,7 @@ import {
   buildWebPageNode,
   buildBreadcrumbSchema,
   buildItemListSchema,
+  buildOperatorContext,
 } from '@/lib/seo/schema';
 import JsonLd from '@/components/seo/JsonLd';
 
@@ -26,7 +27,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const content = data.page_content;
 
   return buildMetadata({
-    title: content.seo_title || 'Tuyển dụng | Masterise Homes',
+    title: content.seo_title ? { absolute: content.seo_title } : 'Tuyển dụng',
     description: content.seo_description || content.description || 'Cơ hội nghề nghiệp và tuyển dụng tại Masterise Homes.',
     path: '/tuyen-dung',
     ogImage: content.hero_image || undefined,
@@ -46,8 +47,9 @@ export default async function CareerPage() {
   const [initialOptions, initialJobs, siteEntity] = await Promise.all([options(), jobs(), getSiteEntityConfig()]);
   const pageUrl = `${SITE_URL}/tuyen-dung`;
 
+  const operatorContext = buildOperatorContext(siteEntity);
   const operatorNode = buildOperatorNode(siteEntity);
-  const websiteNode = buildWebSiteNode();
+  const websiteNode = buildWebSiteNode(operatorContext);
   const webpageNode = {
     ...buildWebPageNode(pageUrl, 'Tuyển dụng Masterise Homes', 'Cơ hội nghề nghiệp và môi trường làm việc đẳng cấp quốc tế'),
     '@type': 'CollectionPage',
@@ -58,7 +60,9 @@ export default async function CareerPage() {
   ]);
 
   const itemList = (initialJobs.data || []).map(j => ({ name: j.title, url: `/tuyen-dung/${j.slug}` }));
-  const itemListNode = buildItemListSchema(pageUrl, "Cơ hội nghề nghiệp Masterise Homes", itemList.length > 0 ? itemList : [{ name: "Tuyển dụng Masterise Homes", url: "/tuyen-dung" }]);
+  const itemListNode = itemList.length > 0
+    ? buildItemListSchema(pageUrl, "Cơ hội nghề nghiệp Masterise Homes", itemList)
+    : null;
 
   const graph = [
     operatorNode,

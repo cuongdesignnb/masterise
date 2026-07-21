@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Helpers\AiContentHelper;
 use App\Http\Resources\ProjectRelatedPostResource;
 use App\Http\Resources\ProjectListResource;
+use App\Http\Resources\PublicProjectReviewResource;
 use App\Models\Project;
 use App\Models\ProjectCategory;
 use App\Models\ProjectStatusDefinition;
@@ -372,7 +373,11 @@ class ProjectController extends Controller
             ->get();
 
         $projectData = $project->toArray();
-        $projectData['review_summary'] = $project->review_summary;
+        unset($projectData['reviews']);
+        $projectData['reviews'] = [
+            'items' => PublicProjectReviewResource::collection($project->getRelation('reviews'))->resolve(request()),
+            'aggregate' => $project->review_summary,
+        ];
         $projectData['related_posts'] = ProjectRelatedPostResource::collection(
             $this->projectRelatedPosts($project, true)
         )->resolve(request());

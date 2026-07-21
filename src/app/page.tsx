@@ -6,7 +6,7 @@ import { fetchApiResponse } from "@/lib/serverApi";
 import type { ApiResponse, Post, Project } from "@/types/api";
 import { buildMetadata } from "@/lib/seo/buildMetadata";
 import { getSiteEntityConfig } from "@/services/siteEntityServerService";
-import { buildOperatorNode, buildWebSiteNode, buildWebPageNode } from "@/lib/seo/schema";
+import { buildOperatorContext, buildOperatorNode, buildWebSiteNode, buildWebPageNode } from "@/lib/seo/schema";
 import JsonLd from "@/components/seo/JsonLd";
 
 export const metadata: Metadata = buildMetadata({
@@ -22,7 +22,7 @@ export default async function Home() {
   ]);
 
   const operatorNode = buildOperatorNode(siteEntity);
-  const websiteNode = buildWebSiteNode();
+  const websiteNode = buildWebSiteNode(buildOperatorContext(siteEntity));
   const webpageNode = buildWebPageNode(SITE_URL, `${SITE_NAME} - Bất động sản cao cấp và hạng sang`, SITE_DESCRIPTION);
 
   const graph = [

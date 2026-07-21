@@ -36,11 +36,11 @@ export const pageService = {
     if (params?.q) searchParams.append('q', params.q);
     if (params?.status) searchParams.append('status', params.status);
     const query = searchParams.toString();
-    return api.get<StaticPage[]>(`/pages${query ? `?${query}` : ''}`);
+    return api.get<StaticPage[]>(`/admin/pages${query ? `?${query}` : ''}`);
   },
 
   async getPageBySlugOrId(slugOrId: string | number): Promise<ApiResponse<StaticPage>> {
-    return api.get<StaticPage>(`/pages/${slugOrId}`);
+    return api.get<StaticPage>(`/admin/pages/${slugOrId}`);
   },
 
   async createPage(data: {

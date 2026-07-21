@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Page;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -14,15 +15,20 @@ class PageController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Page::query()->with(['creator', 'seoMeta']);
+        return $this->pageList($request, Page::query()->with('seoMeta')->where('status', 'published'));
+    }
 
-        // Check if user is staff (super_admin, admin, marketing)
-        $user = $request->user('sanctum');
-        if (!$user || !$user->hasAnyRole(['super_admin', 'admin', 'marketing'])) {
-            $query->where('status', 'published');
-        } elseif ($request->has('status') && !empty($request->status) && $request->status !== 'all') {
-            $query->where('status', $request->status);
+    public function adminIndex(Request $request)
+    {
+        $query = Page::query()->with(['creator', 'seoMeta']);
+        if ($request->filled('status') && $request->input('status') !== 'all') {
+            $query->where('status', $request->input('status'));
         }
+        return $this->pageList($request, $query);
+    }
+
+    private function pageList(Request $request, Builder $query)
+    {
 
         // Search by query
         if ($request->has('q') && !empty($request->q)) {
@@ -53,12 +59,7 @@ class PageController extends Controller
      */
     public function show(Request $request, $slugOrId)
     {
-        $page = null;
-        if (is_numeric($slugOrId)) {
-            $page = Page::with(['creator', 'seoMeta'])->find($slugOrId);
-        } else {
-            $page = Page::with(['creator', 'seoMeta'])->where('slug', $slugOrId)->first();
-        }
+        $page = Page::with('seoMeta')->where('slug', $slugOrId)->where('status', 'published')->first();
 
         if (!$page) {
             return response()->json([
@@ -67,21 +68,16 @@ class PageController extends Controller
             ], 404);
         }
 
-        // Access check for drafts
-        if ($page->status === 'draft') {
-            $user = $request->user('sanctum');
-            if (!$user || !$user->hasAnyRole(['super_admin', 'admin', 'marketing'])) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Unauthorized access to draft page'
-                ], 403);
-            }
-        }
-
         return response()->json([
             'success' => true,
             'data' => $page
         ], 200);
+    }
+
+    public function adminShow(int $id)
+    {
+        $page = Page::with(['creator', 'seoMeta'])->findOrFail($id);
+        return response()->json(['success' => true, 'data' => $page]);
     }
 
     /**

@@ -48,6 +48,11 @@ class CareerJobAdminController extends Controller
             'status' => ['required', Rule::in(CareerJob::STATUSES)], 'is_featured' => 'boolean', 'is_published' => 'boolean',
             'sort_order' => 'integer|min:0', 'thumbnail' => 'nullable|string|max:2048', 'banner_image' => 'nullable|string|max:2048',
             'seo_title' => 'nullable|string|max:190', 'seo_description' => 'nullable|string|max:500', 'seo_keywords' => 'nullable|string|max:500',
+            'schema_street_address' => 'nullable|string|max:255', 'schema_locality' => 'nullable|string|max:120',
+            'schema_region' => 'nullable|string|max:120', 'schema_postal_code' => 'nullable|string|max:20',
+            'schema_country' => 'nullable|string|size:2', 'schema_applicant_country' => 'nullable|string|size:2',
+            'schema_salary_unit' => ['nullable', Rule::in(['MONTH', 'YEAR', 'WEEK', 'DAY', 'HOUR'])],
+            'schema_direct_apply' => 'sometimes|boolean',
         ]);
         $data['slug'] = Str::slug($data['slug'] ?: $data['title']);
         foreach (['description', 'responsibilities', 'requirements', 'benefits', 'working_time', 'additional_information'] as $field) {

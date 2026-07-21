@@ -48,7 +48,8 @@ Route::group(['prefix' => 'v1'], function() {
     Route::get('/projects/options', [ProjectController::class, 'options']);
     Route::get('/projects/{slug}', [ProjectController::class, 'show']);
     Route::get('/projects/{slug}/reviews', [ProjectReviewController::class, 'index']);
-    Route::post('/projects/{id}/reviews', [ProjectReviewController::class, 'store']);
+    Route::get('/projects/{id}/reviews/challenge', [ProjectReviewController::class, 'challenge']);
+    Route::post('/projects/{id}/reviews', [ProjectReviewController::class, 'store'])->middleware('throttle:3,10');
     Route::get('/project-categories', [ProjectController::class, 'categories']);
     Route::get('/project-statuses', [ProjectStatusController::class, 'index']);
 
@@ -156,13 +157,15 @@ Route::group(['prefix' => 'v1'], function() {
             Route::delete('/projects/{id}', [ProjectController::class, 'destroy']);
             
             // Project Reviews Admin
-            Route::get('/admin/project-reviews', [ProjectReviewAdminController::class, 'index']);
-            Route::post('/admin/project-reviews', [ProjectReviewAdminController::class, 'store']);
-            Route::get('/admin/project-reviews/{id}', [ProjectReviewAdminController::class, 'show']);
-            Route::put('/admin/project-reviews/{id}', [ProjectReviewAdminController::class, 'update']);
-            Route::post('/admin/project-reviews/{id}/approve', [ProjectReviewAdminController::class, 'approve']);
-            Route::post('/admin/project-reviews/{id}/reject', [ProjectReviewAdminController::class, 'reject']);
-            Route::delete('/admin/project-reviews/{id}', [ProjectReviewAdminController::class, 'destroy']);
+            Route::middleware('role:super_admin|admin|marketing')->group(function () {
+                Route::get('/admin/project-reviews', [ProjectReviewAdminController::class, 'index']);
+                Route::post('/admin/project-reviews', [ProjectReviewAdminController::class, 'store']);
+                Route::get('/admin/project-reviews/{id}', [ProjectReviewAdminController::class, 'show']);
+                Route::put('/admin/project-reviews/{id}', [ProjectReviewAdminController::class, 'update']);
+                Route::post('/admin/project-reviews/{id}/approve', [ProjectReviewAdminController::class, 'approve']);
+                Route::post('/admin/project-reviews/{id}/reject', [ProjectReviewAdminController::class, 'reject']);
+                Route::delete('/admin/project-reviews/{id}', [ProjectReviewAdminController::class, 'destroy']);
+            });
             Route::get('/admin/project-statuses', [ProjectStatusController::class, 'adminIndex']);
             Route::post('/project-statuses', [ProjectStatusController::class, 'store']);
             Route::put('/project-statuses/{id}', [ProjectStatusController::class, 'update']);
@@ -182,7 +185,8 @@ Route::group(['prefix' => 'v1'], function() {
             Route::delete('/tags/{tag}', [TagController::class, 'destroy']);
 
             // Static Pages Admin CRUD
-            Route::get('/pages', [PageController::class, 'index']);
+            Route::get('/admin/pages', [PageController::class, 'adminIndex']);
+            Route::get('/admin/pages/{id}', [PageController::class, 'adminShow']);
             Route::post('/pages', [PageController::class, 'store']);
             Route::put('/pages/{id}', [PageController::class, 'update']);
             Route::delete('/pages/{id}', [PageController::class, 'destroy']);

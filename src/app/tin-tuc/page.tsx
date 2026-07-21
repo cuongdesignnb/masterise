@@ -20,6 +20,7 @@ import {
   buildWebPageNode,
   buildBreadcrumbSchema,
   buildItemListSchema,
+  buildOperatorContext,
 } from "@/lib/seo/schema";
 import JsonLd from "@/components/seo/JsonLd";
 
@@ -36,7 +37,7 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
   );
 
   return buildMetadata({
-    title: "Tin tức & Góc nhìn thị trường | Masterise Homes",
+    title: "Tin tức & Góc nhìn thị trường",
     description: "Cập nhật tin tức mới nhất về dự án, xu hướng thị trường bất động sản, pháp lý, kiến trúc và phong cách sống từ Masterise Homes.",
     keywords: ["tin tức Masterise Homes", "tin tức bất động sản", "thị trường bất động sản", "dự án Masterise Homes"],
     path: "/tin-tuc",
@@ -73,7 +74,7 @@ export default async function NewsPage({ searchParams }: { searchParams: Promise
   const newsList = initialPosts?.data || [];
 
   const operatorNode = buildOperatorNode(siteEntity);
-  const websiteNode = buildWebSiteNode();
+  const websiteNode = buildWebSiteNode(buildOperatorContext(siteEntity));
   const webpageNode = {
     ...buildWebPageNode(pageUrl, "Tin tức & Góc nhìn thị trường", "Cập nhật tin tức mới nhất về bất động sản"),
     '@type': 'CollectionPage',

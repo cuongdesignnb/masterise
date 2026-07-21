@@ -296,6 +296,14 @@ export default function AdminSettings() {
   const [entityBrandName, setEntityBrandName] = useState('');
   const [entityBrandUrl, setEntityBrandUrl] = useState('');
   const [entityAuthNote, setEntityAuthNote] = useState('');
+  const [seoFlags, setSeoFlags] = useState({
+    seo_site_entity_enabled: false,
+    seo_project_product_schema_enabled: false,
+    seo_project_review_schema_enabled: false,
+    seo_event_schema_enabled: false,
+    seo_job_schema_enabled: false,
+    public_project_review_submission_enabled: false,
+  });
 
   // Fetch settings list
   const { data: settingsList = [], isLoading } = useQuery({
@@ -320,6 +328,10 @@ export default function AdminSettings() {
           }
         }
         return item.value;
+      };
+      const getBool = (key: string) => {
+        const item = settingsList.find((setting) => setting.key === key);
+        return item?.value === '1' || item?.value === 'true';
       };
 
       setCompanyName(getVal('company_name'));
@@ -346,6 +358,14 @@ export default function AdminSettings() {
       setEntityBrandName(entity?.brand?.name || '');
       setEntityBrandUrl(entity?.brand?.url || '');
       setEntityAuthNote(entity?.authorizationNote || '');
+      setSeoFlags({
+        seo_site_entity_enabled: getBool('seo_site_entity_enabled'),
+        seo_project_product_schema_enabled: getBool('seo_project_product_schema_enabled'),
+        seo_project_review_schema_enabled: getBool('seo_project_review_schema_enabled'),
+        seo_event_schema_enabled: getBool('seo_event_schema_enabled'),
+        seo_job_schema_enabled: getBool('seo_job_schema_enabled'),
+        public_project_review_submission_enabled: getBool('public_project_review_submission_enabled'),
+      });
 
       setMailHost(getVal('mail_host'));
       setMailPort(getVal('mail_port') || '587');
@@ -801,7 +821,8 @@ export default function AdminSettings() {
               authorizationNote: entityAuthNote
             },
             type: 'json'
-          }
+          },
+          ...Object.entries(seoFlags).map(([key, value]) => ({ key, value, type: 'boolean' as const }))
         ]
       };
 
@@ -3356,6 +3377,31 @@ export default function AdminSettings() {
                   <p className="text-xs text-[#8C7A6B] mt-1">
                     Cấu hình chủ thể đại lý/đơn vị phân phối chính thức để xuất schema Organization/RealEstateAgent chuẩn hóa SEO.
                   </p>
+                </div>
+
+                <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+                  <h4 className="text-xs font-bold uppercase text-[#1F1B16]">Cổng bật Schema và đánh giá công khai</h4>
+                  <p className="mt-1 text-[11px] text-[#7A6042]">Mặc định tất cả đều tắt. Chỉ bật sau khi dữ liệu pháp lý, giá, review, Event hoặc Job đã được xác minh.</p>
+                  <div className="mt-4 grid gap-3 md:grid-cols-2">
+                    {([
+                      ['seo_site_entity_enabled', 'Site Entity / Organization'],
+                      ['seo_project_product_schema_enabled', 'Product / Offer dự án'],
+                      ['seo_project_review_schema_enabled', 'Review / AggregateRating'],
+                      ['seo_event_schema_enabled', 'Event'],
+                      ['seo_job_schema_enabled', 'JobPosting'],
+                      ['public_project_review_submission_enabled', 'Biểu mẫu gửi đánh giá công khai'],
+                    ] as const).map(([key, label]) => (
+                      <label key={key} className="flex items-center justify-between gap-3 rounded-lg border border-amber-100 bg-white p-3 text-xs font-semibold">
+                        <span>{label}</span>
+                        <input
+                          type="checkbox"
+                          checked={seoFlags[key]}
+                          onChange={(event) => setSeoFlags((current) => ({ ...current, [key]: event.target.checked }))}
+                          className="size-4 accent-[#B88746]"
+                        />
+                      </label>
+                    ))}
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

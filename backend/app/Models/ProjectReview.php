@@ -59,4 +59,13 @@ class ProjectReview extends Model
         return $query->where('moderation_status', 'approved')
                      ->where('is_published', true);
     }
+
+    protected static function booted(): void
+    {
+        static::saving(function (ProjectReview $review): void {
+            if (in_array($review->moderation_status, ['pending', 'rejected'], true)) {
+                $review->is_published = false;
+            }
+        });
+    }
 }

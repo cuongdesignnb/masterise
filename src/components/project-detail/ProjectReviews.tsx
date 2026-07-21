@@ -1,15 +1,23 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Star, CheckCircle2, MessageSquare, Send, ThumbsUp } from 'lucide-react';
-import { ProjectReview, ProjectReviewSummary } from '@/types/project-review';
-import { api } from '@/lib/api';
+import Link from 'next/link';
+import { Star, CheckCircle2, MessageSquare, Send } from 'lucide-react';
+import type { PublicProjectReview, ProjectReviewAggregate } from '@/types/project-review';
+import { api, formatApiError } from '@/lib/api';
 
 interface ProjectReviewsProps {
   projectId: number;
   projectName: string;
-  reviews?: ProjectReview[];
-  summary?: ProjectReviewSummary | null;
+  reviews?: PublicProjectReview[];
+  summary?: ProjectReviewAggregate | null;
+  submissionEnabled?: boolean;
+}
+
+interface ReviewChallenge {
+  token: string;
+  issued_at: number;
+  minimum_fill_seconds: number;
 }
 
 export default function ProjectReviews({
@@ -17,6 +25,7 @@ export default function ProjectReviews({
   projectName,
   reviews = [],
   summary = null,
+  submissionEnabled = false,
 }: ProjectReviewsProps) {
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState('');
@@ -26,11 +35,30 @@ export default function ProjectReviews({
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [challengeToken, setChallengeToken] = useState('');
+  const [websiteHp, setWebsiteHp] = useState('');
+  const [consent, setConsent] = useState(false);
+
+  const toggleForm = async () => {
+    if (showForm) {
+      setShowForm(false);
+      return;
+    }
+
+    setError(null);
+    try {
+      const response = await api.get<ReviewChallenge>(`/projects/${projectId}/reviews/challenge`);
+      setChallengeToken(response.data.token);
+      setShowForm(true);
+    } catch (err: unknown) {
+      setError(formatApiError(err, 'Chưa thể mở biểu mẫu đánh giá. Vui lòng thử lại.'));
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !body.trim()) {
-      setError('Vui lòng điền đầy đủ họ tên và nội dung đánh giá.');
+    if (!name.trim() || !body.trim() || !challengeToken || !consent) {
+      setError('Vui lòng điền đủ thông tin và đồng ý chính sách bảo mật.');
       return;
     }
 
@@ -43,14 +71,19 @@ export default function ProjectReviews({
         reviewer_role: role.trim() || 'Khách hàng',
         rating,
         review_body: body.trim(),
+        website_hp: websiteHp,
+        submission_token: challengeToken,
+        consent,
       });
 
       setSubmitted(true);
       setName('');
       setRole('');
       setBody('');
-    } catch (err: any) {
-      setError(err?.response?.data?.message || 'Có lỗi xảy ra khi gửi đánh giá. Vui lòng thử lại.');
+      setConsent(false);
+      setChallengeToken('');
+    } catch (err: unknown) {
+      setError(formatApiError(err, 'Có lỗi xảy ra khi gửi đánh giá. Vui lòng thử lại.'));
     } finally {
       setSubmitting(false);
     }
@@ -80,20 +113,22 @@ export default function ProjectReviews({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h2 className="text-2xl font-heading font-[#1F1B16]">
-              Đánh giá & Trải nghiệm thực tế
+              Đánh giá dự án
             </h2>
             <p className="text-xs text-[#8C7A6B] mt-1">
-              Ý kiến và trải nghiệm thực tế từ các cư dân, nhà đầu tư tại {projectName}
+              Ý kiến công khai đã qua kiểm duyệt nội dung về {projectName}
             </p>
           </div>
 
-          <button
-            onClick={() => setShowForm(!showForm)}
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#B88746] text-white text-xs font-bold rounded-xl hover:bg-[#A3753C] transition-all shadow-sm self-start sm:self-auto"
-          >
-            <MessageSquare className="w-4 h-4" />
-            {showForm ? 'Đóng biểu mẫu' : 'Viết đánh giá'}
-          </button>
+          {submissionEnabled && (
+            <button
+              onClick={toggleForm}
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#B88746] text-white text-xs font-bold rounded-xl hover:bg-[#A3753C] transition-all shadow-sm self-start sm:self-auto"
+            >
+              <MessageSquare className="w-4 h-4" />
+              {showForm ? 'Đóng biểu mẫu' : 'Viết đánh giá'}
+            </button>
+          )}
         </div>
 
         {/* Aggregate Summary Header if exists */}
@@ -106,18 +141,20 @@ export default function ProjectReviews({
               <div className="space-y-1">
                 {renderStars(summary.ratingValue)}
                 <p className="text-xs text-[#8C7A6B]">
-                  Dựa trên <strong className="text-[#1F1B16]">{summary.reviewCount}</strong> đánh giá đã xác minh
+                  Dựa trên <strong className="text-[#1F1B16]">{summary.reviewCount}</strong> đánh giá đã duyệt
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-2 text-xs text-[#8C7A6B]">
               <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-              Tất cả đánh giá đều được kiểm duyệt minh bạch và độc lập
+              Đánh giá công khai đã qua kiểm duyệt nội dung
             </div>
           </div>
         ) : (
           <div className="bg-[#FBF8F2] border border-[#E8DCCB] rounded-2xl p-6 text-center text-xs text-[#8C7A6B]">
-            Dự án chưa có đánh giá công khai nào. Hãy là người đầu tiên chia sẻ cảm nhận!
+            {submissionEnabled
+              ? 'Dự án chưa có đánh giá công khai nào. Bạn có thể gửi ý kiến để quản trị viên kiểm duyệt.'
+              : 'Dự án chưa có đánh giá công khai nào.'}
           </div>
         )}
 
@@ -133,6 +170,17 @@ export default function ProjectReviews({
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="absolute -left-[9999px]" aria-hidden="true">
+                  <label htmlFor={`review-website-${projectId}`}>Website</label>
+                  <input
+                    id={`review-website-${projectId}`}
+                    type="text"
+                    tabIndex={-1}
+                    autoComplete="off"
+                    value={websiteHp}
+                    onChange={(event) => setWebsiteHp(event.target.value)}
+                  />
+                </div>
                 {error && (
                   <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl">
                     {error}
@@ -185,6 +233,22 @@ export default function ProjectReviews({
                   </div>
                 </div>
 
+                <label className="flex items-start gap-2 text-[11px] leading-relaxed text-[#6F6255]">
+                  <input
+                    type="checkbox"
+                    checked={consent}
+                    onChange={(event) => setConsent(event.target.checked)}
+                    className="mt-0.5 accent-[#B88746]"
+                    required
+                  />
+                  <span>
+                    Tôi đồng ý để website xử lý nội dung đã gửi theo{' '}
+                    <Link href="/chuyen-trang/chinh-sach-bao-mat" className="font-semibold text-[#9A6B2F] underline">
+                      chính sách bảo mật
+                    </Link>.
+                  </span>
+                </label>
+
                 <div>
                   <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Nội dung đánh giá <span className="text-red-500">*</span></label>
                   <textarea
@@ -236,12 +300,12 @@ export default function ProjectReviews({
                   </div>
 
                   <p className="text-xs text-[#1F1B16]/90 leading-relaxed italic">
-                    "{rev.review_body}"
+                    &ldquo;{rev.review_body}&rdquo;
                   </p>
                 </div>
 
                 <div className="pt-2 border-t border-[#E8DCCB]/40 flex items-center justify-between text-[10px] text-[#8C7A6B]">
-                  <span>{new Date(rev.reviewed_at).toLocaleDateString('vi-VN')}</span>
+                  <span>{rev.reviewed_at ? new Date(rev.reviewed_at).toLocaleDateString('vi-VN') : ''}</span>
                   {rev.is_verified && (
                     <span className="inline-flex items-center gap-1 text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/60">
                       <CheckCircle2 className="w-3 h-3" /> Xác minh thực tế

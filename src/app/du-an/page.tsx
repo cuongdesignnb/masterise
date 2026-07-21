@@ -12,6 +12,7 @@ import {
   buildWebPageNode,
   buildBreadcrumbSchema,
   buildItemListSchema,
+  buildOperatorContext,
 } from "@/lib/seo/schema";
 import JsonLd from "@/components/seo/JsonLd";
 
@@ -30,7 +31,7 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
   );
 
   return buildMetadata({
-    title: "Dự án Masterise Homes | Bộ sưu tập bất động sản hàng hiệu",
+    title: "Bộ sưu tập dự án bất động sản hàng hiệu",
     description:
       "Khám phá danh mục dự án Masterise Homes với các bộ sưu tập căn hộ hạng sang, biệt thự cao cấp, shophouse, branded residences và bất động sản nghỉ dưỡng tại những vị trí chiến lược.",
     path: "/du-an",
@@ -64,7 +65,7 @@ export default async function ProjectsPage({ searchParams }: { searchParams: Pro
   const projectsList = initialProjects?.data || [];
 
   const operatorNode = buildOperatorNode(siteEntity);
-  const websiteNode = buildWebSiteNode();
+  const websiteNode = buildWebSiteNode(buildOperatorContext(siteEntity));
   const webpageNode = {
     ...buildWebPageNode(pageUrl, "Dự án Masterise Homes", "Danh sách dự án bất động sản cao cấp của Masterise Homes"),
     '@type': 'CollectionPage',

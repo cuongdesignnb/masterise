@@ -12,6 +12,7 @@ import {
   buildWebSiteNode,
   buildWebPageNode,
   buildBreadcrumbSchema,
+  buildOperatorContext,
 } from '@/lib/seo/schema';
 import JsonLd from '@/components/seo/JsonLd';
 
@@ -25,7 +26,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   if (!page) {
     return buildMetadata({
-      title: 'Không tìm thấy chuyên trang | Masterise Homes',
+      title: 'Không tìm thấy chuyên trang',
       description: 'Chuyên trang không tồn tại hoặc chưa được xuất bản.',
       noindex: true,
     });
@@ -37,7 +38,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     page.title;
 
   return buildMetadata({
-    title: page.seo_meta?.title || `${page.title} | Masterise Homes`,
+    title: page.seo_meta?.title ? { absolute: page.seo_meta.title } : page.title,
     description,
     keywords: page.seo_meta?.keywords
       ? page.seo_meta.keywords.split(',').map((keyword) => keyword.trim())
@@ -61,7 +62,7 @@ export default async function ChuyenTrangDetailPage({ params }: PageProps) {
   const description = page.seo_meta?.description || page.content?.replace(/<[^>]*>/g, '').slice(0, 160) || page.title;
 
   const operatorNode = buildOperatorNode(siteEntity);
-  const websiteNode = buildWebSiteNode();
+  const websiteNode = buildWebSiteNode(buildOperatorContext(siteEntity));
   const webpageNode = buildWebPageNode(pageUrl, page.title, description);
   const breadcrumbNode = buildBreadcrumbSchema(pageUrl, [
     { name: "Trang chủ", item: "/" },

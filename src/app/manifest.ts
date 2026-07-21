@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'Masterise Homes',
     short_name: 'Masterise',
-    description: 'Hệ thống thông tin và cập nhật dự án Masterise Homes chính thức',
+    description: 'Hệ thống thông tin và cập nhật dự án bất động sản',
     start_url: '/',
     display: 'standalone',
     background_color: '#1F1B16',

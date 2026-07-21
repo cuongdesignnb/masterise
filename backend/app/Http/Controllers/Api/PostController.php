@@ -266,10 +266,7 @@ class PostController extends Controller
             'status' => 'required|string|in:draft,published,scheduled',
             'is_featured' => 'boolean',
             'post_category_id' => 'required|exists:post_categories,id',
-            'event_start_at' => 'nullable|date',
-            'event_end_at' => 'nullable|date|after_or_equal:event_start_at',
-            'event_location' => 'nullable|string|max:255',
-            'event_register_url' => 'nullable|string|max:255',
+            ...$this->eventValidationRules(),
             'media_items' => 'nullable|array',
             'media_items.*.type' => 'required_with:media_items|string|in:image,video_upload,youtube,document',
             'media_items.*.title' => 'nullable|string|max:255',
@@ -339,6 +336,7 @@ class PostController extends Controller
             'event_end_at' => $request->event_end_at,
             'event_location' => $request->event_location,
             'event_register_url' => $request->event_register_url,
+            ...$request->only($this->eventFieldNames()),
         ]);
 
         // Create SEO Meta
@@ -394,10 +392,7 @@ class PostController extends Controller
             'status' => 'required|string|in:draft,published,scheduled',
             'is_featured' => 'boolean',
             'post_category_id' => 'required|exists:post_categories,id',
-            'event_start_at' => 'nullable|date',
-            'event_end_at' => 'nullable|date|after_or_equal:event_start_at',
-            'event_location' => 'nullable|string|max:255',
-            'event_register_url' => 'nullable|string|max:255',
+            ...$this->eventValidationRules(),
             'media_items' => 'nullable|array',
             'media_items.*.type' => 'required_with:media_items|string|in:image,video_upload,youtube,document',
             'media_items.*.title' => 'nullable|string|max:255',
@@ -467,6 +462,7 @@ class PostController extends Controller
             'event_end_at' => $request->event_end_at,
             'event_location' => $request->event_location,
             'event_register_url' => $request->event_register_url,
+            ...$request->only($this->eventFieldNames()),
         ]);
 
         // Update or create SEO Meta
@@ -765,6 +761,7 @@ class PostController extends Controller
             'id', 'title', 'slug', 'post_type', 'summary', 'intro_content', 'content', 'thumbnail',
             'status', 'is_featured', 'post_category_id', 'author_id', 'published_at',
             'event_start_at', 'event_end_at', 'event_location', 'event_register_url',
+            ...$this->eventFieldNames(),
             'created_at', 'updated_at',
         ];
     }
@@ -784,6 +781,40 @@ class PostController extends Controller
             ...$this->postCardRelations(),
             'seoMeta',
             'mediaItems',
+        ];
+    }
+
+    private function eventFieldNames(): array
+    {
+        return [
+            'event_location_name', 'event_street_address', 'event_locality', 'event_region',
+            'event_postal_code', 'event_country', 'event_attendance_mode', 'event_status',
+            'event_organizer_name', 'event_organizer_url', 'event_online_url', 'event_price',
+            'event_currency', 'event_availability',
+        ];
+    }
+
+    private function eventValidationRules(): array
+    {
+        return [
+            'event_start_at' => 'nullable|date',
+            'event_end_at' => 'nullable|date|after_or_equal:event_start_at',
+            'event_location' => 'nullable|string|max:255',
+            'event_register_url' => 'nullable|url:http,https|max:512',
+            'event_location_name' => 'nullable|string|max:255',
+            'event_street_address' => 'nullable|string|max:255',
+            'event_locality' => 'nullable|string|max:120',
+            'event_region' => 'nullable|string|max:120',
+            'event_postal_code' => 'nullable|string|max:20',
+            'event_country' => 'nullable|string|size:2',
+            'event_attendance_mode' => 'nullable|in:Offline,Online,Mixed',
+            'event_status' => 'nullable|in:Scheduled,Cancelled,Postponed,Rescheduled',
+            'event_organizer_name' => 'nullable|string|max:255',
+            'event_organizer_url' => 'nullable|url:http,https|max:512',
+            'event_online_url' => 'nullable|url:http,https|max:512',
+            'event_price' => 'nullable|numeric|min:0',
+            'event_currency' => 'nullable|string|size:3',
+            'event_availability' => 'nullable|in:InStock,PreOrder,SoldOut',
         ];
     }
 }
