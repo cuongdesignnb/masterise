@@ -16,7 +16,7 @@ class ProjectReviewController extends Controller
      */
     public function index($slug)
     {
-        $project = Project::where('slug', $slug)->firstOrFail();
+        $project = Project::where('slug', $slug)->where('is_published', true)->firstOrFail();
 
         $reviews = ProjectReview::published()
             ->where('project_id', $project->id)
@@ -41,7 +41,15 @@ class ProjectReviewController extends Controller
      */
     public function store(Request $request, $id)
     {
-        $project = Project::findOrFail($id);
+        // Honeypot bot protection
+        if ($request->filled('website_hp')) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Cảm ơn bạn đã gửi đánh giá!',
+            ], 200);
+        }
+
+        $project = Project::where('is_published', true)->findOrFail($id);
 
         $validator = Validator::make($request->all(), [
             'reviewer_name' => 'required|string|max:100',
@@ -60,10 +68,10 @@ class ProjectReviewController extends Controller
 
         $review = ProjectReview::create([
             'project_id' => $project->id,
-            'reviewer_name' => trim($request->reviewer_name),
-            'reviewer_role' => $request->reviewer_role ? trim($request->reviewer_role) : 'Khách hàng',
+            'reviewer_name' => strip_tags(trim($request->reviewer_name)),
+            'reviewer_role' => $request->reviewer_role ? strip_tags(trim($request->reviewer_role)) : 'Khách hàng',
             'rating' => (float) $request->rating,
-            'review_body' => trim($request->review_body),
+            'review_body' => strip_tags(trim($request->review_body)),
             'reviewed_at' => now(),
             'source_type' => 'website',
             'is_verified' => false,

@@ -11,7 +11,6 @@ class Project extends Model
     protected $appends = [
         'region_details',
         'region_name',
-        'review_summary',
     ];
 
     protected $fillable = [
@@ -229,13 +228,20 @@ class Project extends Model
 
     public function getReviewSummaryAttribute()
     {
-        $publishedReviews = $this->reviews()->where('moderation_status', 'approved')->where('is_published', true);
-        $count = $publishedReviews->count();
+        if (!$this->relationLoaded('reviews')) {
+            return null;
+        }
+
+        $published = $this->getRelation('reviews')->filter(function ($r) {
+            return ($r->moderation_status === 'approved' || $r->moderation_status === null) && ($r->is_published ?? true);
+        });
+
+        $count = $published->count();
         if ($count === 0) {
             return null;
         }
 
-        $avg = round($publishedReviews->avg('rating'), 1);
+        $avg = round($published->avg('rating'), 1);
 
         return [
             'ratingValue' => (float) $avg,

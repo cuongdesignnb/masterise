@@ -87,9 +87,11 @@ class ProjectReviewAdminController extends Controller
             'is_verified' => $request->boolean('is_verified', true),
             'moderation_status' => 'approved',
             'is_published' => $isPublished,
-            'approved_by' => auth()->id(),
+            'approved_by' => $request->user()?->id,
             'approved_at' => now(),
         ]);
+
+        \App\Support\PublicContentCache::invalidate('projects.list', 'projects.featured');
 
         return response()->json([
             'success' => true,
@@ -141,6 +143,8 @@ class ProjectReviewAdminController extends Controller
             'is_verified', 'is_published', 'source_type', 'source_url'
         ]));
 
+        \App\Support\PublicContentCache::invalidate('projects.list', 'projects.featured');
+
         return response()->json([
             'success' => true,
             'message' => 'Cập nhật đánh giá thành công!',
@@ -151,16 +155,18 @@ class ProjectReviewAdminController extends Controller
     /**
      * Approve review.
      */
-    public function approve($id)
+    public function approve(Request $request, $id)
     {
         $review = ProjectReview::findOrFail($id);
         $review->update([
             'moderation_status' => 'approved',
             'is_published' => true,
-            'approved_by' => auth()->id(),
+            'approved_by' => $request->user()?->id,
             'approved_at' => now(),
             'rejected_reason' => null,
         ]);
+
+        \App\Support\PublicContentCache::invalidate('projects.list', 'projects.featured');
 
         return response()->json([
             'success' => true,

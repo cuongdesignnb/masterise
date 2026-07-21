@@ -337,7 +337,13 @@ class ProjectController extends Controller
     public function show($slug)
     {
         $query = Project::where('slug', $slug)
-            ->with(['categories', 'seoMeta', 'developerRelation', 'locationRelation.region']);
+            ->with([
+                'categories',
+                'seoMeta',
+                'developerRelation',
+                'locationRelation.region',
+                'reviews' => fn ($q) => $q->where('is_published', true)->where('moderation_status', 'approved')->orderBy('created_at', 'desc'),
+            ]);
         $user = request()->user('sanctum');
         $canViewUnpublished = $user && $user->hasAnyRole(['super_admin', 'admin', 'marketing']);
 
@@ -366,6 +372,7 @@ class ProjectController extends Controller
             ->get();
 
         $projectData = $project->toArray();
+        $projectData['review_summary'] = $project->review_summary;
         $projectData['related_posts'] = ProjectRelatedPostResource::collection(
             $this->projectRelatedPosts($project, true)
         )->resolve(request());
