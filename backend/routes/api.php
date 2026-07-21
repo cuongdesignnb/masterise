@@ -14,6 +14,8 @@ use App\Http\Controllers\Api\DeveloperController;
 use App\Http\Controllers\Api\LocationController;
 use App\Http\Controllers\Api\RegionController;
 use App\Http\Controllers\Api\ProjectStatusController;
+use App\Http\Controllers\Api\ProjectReviewController;
+use App\Http\Controllers\Api\Admin\ProjectReviewAdminController;
 use App\Http\Controllers\Api\HeroBannerController;
 use App\Http\Controllers\Api\FaqController;
 use App\Http\Controllers\Api\TestimonialController;
@@ -45,6 +47,8 @@ Route::group(['prefix' => 'v1'], function() {
     Route::get('/projects/regions', [ProjectController::class, 'regions']);
     Route::get('/projects/options', [ProjectController::class, 'options']);
     Route::get('/projects/{slug}', [ProjectController::class, 'show']);
+    Route::get('/projects/{slug}/reviews', [ProjectReviewController::class, 'index']);
+    Route::post('/projects/{id}/reviews', [ProjectReviewController::class, 'store']);
     Route::get('/project-categories', [ProjectController::class, 'categories']);
     Route::get('/project-statuses', [ProjectStatusController::class, 'index']);
 
@@ -150,6 +154,15 @@ Route::group(['prefix' => 'v1'], function() {
             Route::post('/projects', [ProjectController::class, 'store']);
             Route::put('/projects/{id}', [ProjectController::class, 'update']);
             Route::delete('/projects/{id}', [ProjectController::class, 'destroy']);
+            
+            // Project Reviews Admin
+            Route::get('/admin/project-reviews', [ProjectReviewAdminController::class, 'index']);
+            Route::post('/admin/project-reviews', [ProjectReviewAdminController::class, 'store']);
+            Route::get('/admin/project-reviews/{id}', [ProjectReviewAdminController::class, 'show']);
+            Route::put('/admin/project-reviews/{id}', [ProjectReviewAdminController::class, 'update']);
+            Route::post('/admin/project-reviews/{id}/approve', [ProjectReviewAdminController::class, 'approve']);
+            Route::post('/admin/project-reviews/{id}/reject', [ProjectReviewAdminController::class, 'reject']);
+            Route::delete('/admin/project-reviews/{id}', [ProjectReviewAdminController::class, 'destroy']);
             Route::get('/admin/project-statuses', [ProjectStatusController::class, 'adminIndex']);
             Route::post('/project-statuses', [ProjectStatusController::class, 'store']);
             Route::put('/project-statuses/{id}', [ProjectStatusController::class, 'update']);

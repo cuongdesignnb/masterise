@@ -11,6 +11,7 @@ class Project extends Model
     protected $appends = [
         'region_details',
         'region_name',
+        'review_summary',
     ];
 
     protected $fillable = [
@@ -219,5 +220,29 @@ class Project extends Model
     public function vrTour()
     {
         return $this->hasOne(ProjectVrTour::class, 'project_id');
+    }
+
+    public function reviews()
+    {
+        return $this->hasMany(ProjectReview::class);
+    }
+
+    public function getReviewSummaryAttribute()
+    {
+        $publishedReviews = $this->reviews()->where('moderation_status', 'approved')->where('is_published', true);
+        $count = $publishedReviews->count();
+        if ($count === 0) {
+            return null;
+        }
+
+        $avg = round($publishedReviews->avg('rating'), 1);
+
+        return [
+            'ratingValue' => (float) $avg,
+            'ratingCount' => $count,
+            'reviewCount' => $count,
+            'bestRating' => 5,
+            'worstRating' => 1,
+        ];
     }
 }
