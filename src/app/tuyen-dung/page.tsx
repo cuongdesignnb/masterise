@@ -11,6 +11,7 @@ import {
   buildWebSiteNode,
   buildWebPageNode,
   buildBreadcrumbSchema,
+  buildItemListSchema,
 } from '@/lib/seo/schema';
 import JsonLd from '@/components/seo/JsonLd';
 
@@ -56,11 +57,15 @@ export default async function CareerPage() {
     { name: "Tuyển dụng", item: "/tuyen-dung" },
   ]);
 
+  const itemList = (initialJobs.data || []).map(j => ({ name: j.title, url: `/tuyen-dung/${j.slug}` }));
+  const itemListNode = buildItemListSchema(pageUrl, "Cơ hội nghề nghiệp Masterise Homes", itemList.length > 0 ? itemList : [{ name: "Tuyển dụng Masterise Homes", url: "/tuyen-dung" }]);
+
   const graph = [
     operatorNode,
     websiteNode,
     webpageNode,
     breadcrumbNode,
+    itemListNode,
   ].filter(Boolean);
 
   return (

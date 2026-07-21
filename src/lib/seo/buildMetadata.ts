@@ -9,6 +9,7 @@ export interface BuildMetadataOptions {
   ogType?: 'website' | 'article';
   ogImage?: string;
   noindex?: boolean;
+  follow?: boolean;
   publishedTime?: string;
   modifiedTime?: string;
   authors?: string[];
@@ -54,6 +55,7 @@ export function buildMetadata(options: BuildMetadataOptions = {}): Metadata {
     ogType = 'website',
     ogImage = DEFAULT_OG_IMAGE,
     noindex = false,
+    follow = true,
     publishedTime,
     modifiedTime,
     authors,
@@ -64,21 +66,30 @@ export function buildMetadata(options: BuildMetadataOptions = {}): Metadata {
   const rawCanonical = path.startsWith('http') ? path : `${SITE_URL}${path.startsWith('/') ? path : `/${path}`}`;
   const canonicalUrl = cleanUrl(rawCanonical);
 
-  // Parse title
-  const finalTitle = title
-    ? typeof title === 'object' && 'absolute' in title
-      ? title.absolute
-      : `${title} | ${SITE_NAME}`
-    : `${SITE_NAME} - Bất động sản cao cấp và hạng sang`;
+  // Determine title string & check for double branding
+  let titleObj: string | { absolute: string } | undefined;
+  if (title) {
+    if (typeof title === 'object' && 'absolute' in title) {
+      titleObj = title;
+    } else if (typeof title === 'string' && title.includes(SITE_NAME)) {
+      titleObj = { absolute: title };
+    } else {
+      titleObj = title;
+    }
+  }
 
-  // Robots meta
+  const displayTitle = typeof titleObj === 'object' && 'absolute' in titleObj 
+    ? titleObj.absolute 
+    : (titleObj ? `${titleObj} | ${SITE_NAME}` : `${SITE_NAME} - Bất động sản cao cấp và hạng sang`);
+
+  // Robots meta: handle noindex, follow correctly
   const robots = noindex
     ? {
         index: false,
-        follow: false,
+        follow: follow,
         googleBot: {
           index: false,
-          follow: false,
+          follow: follow,
         },
       }
     : {
@@ -99,9 +110,9 @@ export function buildMetadata(options: BuildMetadataOptions = {}): Metadata {
     locale: 'vi_VN',
     url: canonicalUrl,
     siteName: SITE_NAME,
-    title: typeof title === 'object' && 'absolute' in title ? title.absolute : (title || finalTitle),
+    title: typeof title === 'object' && 'absolute' in title ? title.absolute : (title || displayTitle),
     description,
-    images: [{ url: ogImage, width: 1200, height: 630, alt: finalTitle }],
+    images: [{ url: ogImage, width: 1200, height: 630, alt: displayTitle }],
   };
 
   if (ogType === 'article') {
@@ -114,7 +125,7 @@ export function buildMetadata(options: BuildMetadataOptions = {}): Metadata {
   // Twitter Card
   const twitter: NonNullable<Metadata['twitter']> = {
     card: 'summary_large_image',
-    title: typeof title === 'object' && 'absolute' in title ? title.absolute : (title || finalTitle),
+    title: typeof title === 'object' && 'absolute' in title ? title.absolute : (title || displayTitle),
     description,
     images: [ogImage],
   };

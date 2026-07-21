@@ -46,13 +46,15 @@ export function buildOperatorNode(config: SiteEntityConfig) {
 }
 
 // 2. Build WebSite Node
-export function buildWebSiteNode() {
+export function buildWebSiteNode(hasOrganization = true) {
   return {
     '@type': 'WebSite',
     '@id': `${SITE_URL}/#website`,
     url: SITE_URL,
     name: SITE_NAME,
-    publisher: { '@id': `${SITE_URL}/#organization` },
+    publisher: hasOrganization 
+      ? { '@id': `${SITE_URL}/#organization` }
+      : { '@type': 'Organization', name: SITE_NAME, url: SITE_URL },
   };
 }
 

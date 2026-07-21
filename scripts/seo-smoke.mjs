@@ -37,8 +37,7 @@ async function runSmokeTests() {
     const robotsRes = await fetchUrl('/robots.txt');
     assert(robotsRes.status === 200, 'Robots.txt returns HTTP 200');
     assert(/user-agent:\s*\*/i.test(robotsRes.body), 'Robots.txt contains User-agent: * wildcard block');
-    assert(robotsRes.body.includes('Disallow: /admin'), 'Disallow /admin exists');
-    assert(robotsRes.body.includes('Disallow: /tai-khoan'), 'Disallow /tai-khoan exists');
+    assert(robotsRes.body.includes('Disallow: /api/'), 'Disallow /api/ exists');
     assert(!robotsRes.body.includes('User-agent: Googlebot\nAllow: /'), 'Googlebot group does not bypass disallow rules');
 
     // Test 2: Sitemap.xml
@@ -47,7 +46,7 @@ async function runSmokeTests() {
     assert(sitemapRes.status === 200, 'Sitemap.xml returns HTTP 200');
     assert(!sitemapRes.body.includes('/ai-summary'), 'Sitemap does not contain noindex route /ai-summary');
 
-    // Test 3: Admin & Account Noindex Security Headers / Meta
+    // Test 3: Admin & Private Area Security
     console.log('\n--- Test Group 3: Admin & Private Area Security ---');
     const adminRes = await fetchUrl('/admin');
     assert(adminRes.body.includes('noindex') || adminRes.status === 307 || adminRes.status === 302, 'Admin route returns noindex or authentication redirect');
@@ -70,7 +69,7 @@ async function runSmokeTests() {
     }
   } catch (err) {
     console.error('⚠️ Smoke test failed due to execution error:', err.message);
-    console.log('Note: Ensure the local dev server is running on port 3000 before running smoke tests.');
+    process.exit(1);
   }
 }
 

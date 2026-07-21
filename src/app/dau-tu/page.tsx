@@ -9,6 +9,7 @@ import {
   buildWebSiteNode,
   buildWebPageNode,
   buildBreadcrumbSchema,
+  buildItemListSchema,
 } from "@/lib/seo/schema";
 import JsonLd from "@/components/seo/JsonLd";
 
@@ -33,12 +34,17 @@ export default async function DauTuPage() {
     { name: "Trang chủ", item: "/" },
     { name: "Đầu tư", item: "/dau-tu" },
   ]);
+  const itemListNode = buildItemListSchema(pageUrl, "Cơ hội đầu tư Masterise Homes", [
+    { name: "Chính sách ưu đãi mở bán Masterise", url: "/dau-tu" },
+    { name: "Phân tích lợi nhuận cho thuê & tăng giá", url: "/dau-tu" }
+  ]);
 
   const graph = [
     operatorNode,
     websiteNode,
     webpageNode,
     breadcrumbNode,
+    itemListNode,
   ].filter(Boolean);
 
   return (
