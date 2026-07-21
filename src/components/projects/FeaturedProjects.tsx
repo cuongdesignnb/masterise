@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, ChevronLeft, ChevronRight, MapPin, Heart, Star } from "lucide-react";
@@ -18,6 +18,7 @@ import type { Project } from "@/types/api";
 
 export default function FeaturedProjects({ initialProjects = [] }: { initialProjects?: Project[] }) {
   const sliderRef = useRef<HTMLDivElement>(null);
+  const [activeProjectIndex, setActiveProjectIndex] = useState(0);
   const { data: projects = [], isLoading, error, refetch } = useQuery({
     queryKey: ["projects-page-featured"],
     queryFn: async () => {
@@ -38,10 +39,48 @@ export default function FeaturedProjects({ initialProjects = [] }: { initialProj
     return () => window.clearTimeout(timeout);
   }, []);
 
-  const scrollProjects = (direction: -1 | 1) => {
+  const scrollToProject = useCallback((index: number) => {
     const slider = sliderRef.current;
     if (!slider) return;
-    slider.scrollBy({ left: direction * Math.max(280, slider.clientWidth * 0.85), behavior: "smooth" });
+
+    const slides = Array.from(slider.children) as HTMLElement[];
+    const target = slides[index];
+    if (!target) return;
+
+    const left = target.offsetLeft - (slider.clientWidth - target.clientWidth) / 2;
+    slider.scrollTo({ left: Math.max(0, left), behavior: "smooth" });
+    setActiveProjectIndex(index);
+  }, []);
+
+  const scrollProjects = (direction: -1 | 1) => {
+    const nextIndex = Math.min(
+      projects.length - 1,
+      Math.max(0, activeProjectIndex + direction),
+    );
+    scrollToProject(nextIndex);
+  };
+
+  const syncActiveProject = () => {
+    const slider = sliderRef.current;
+    if (!slider) return;
+
+    const slides = Array.from(slider.children) as HTMLElement[];
+    if (!slides.length) return;
+
+    const viewportCenter = slider.scrollLeft + slider.clientWidth / 2;
+    let closestIndex = 0;
+    let closestDistance = Number.POSITIVE_INFINITY;
+
+    slides.forEach((slide, index) => {
+      const slideCenter = slide.offsetLeft + slide.clientWidth / 2;
+      const distance = Math.abs(slideCenter - viewportCenter);
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closestIndex = index;
+      }
+    });
+
+    setActiveProjectIndex(closestIndex);
   };
 
   return (
@@ -65,7 +104,8 @@ export default function FeaturedProjects({ initialProjects = [] }: { initialProj
               <button
                 type="button"
                 onClick={() => scrollProjects(-1)}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-line bg-white text-ink transition-colors hover:border-gold hover:text-gold"
+                disabled={activeProjectIndex === 0}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-line bg-white text-ink transition-colors hover:border-gold hover:text-gold disabled:cursor-not-allowed disabled:opacity-35"
                 aria-label="Xem dự án phía trước"
               >
                 <ChevronLeft size={17} />
@@ -73,7 +113,8 @@ export default function FeaturedProjects({ initialProjects = [] }: { initialProj
               <button
                 type="button"
                 onClick={() => scrollProjects(1)}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-line bg-white text-ink transition-colors hover:border-gold hover:text-gold"
+                disabled={activeProjectIndex === projects.length - 1}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-line bg-white text-ink transition-colors hover:border-gold hover:text-gold disabled:cursor-not-allowed disabled:opacity-35"
                 aria-label="Xem dự án tiếp theo"
               >
                 <ChevronRight size={17} />
@@ -110,19 +151,24 @@ export default function FeaturedProjects({ initialProjects = [] }: { initialProj
         {!isLoading && !error && projects.length > 0 && (
           <div
             ref={sliderRef}
-            className="hide-scrollbar -mx-4 flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth px-4 pb-4 sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0"
+            onScroll={syncActiveProject}
+            className="hide-scrollbar flex w-full snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth pb-2 sm:gap-5 lg:pb-4"
             aria-label="Danh mục dự án tiêu biểu"
+            aria-roledescription="carousel"
           >
             {projects.map((project, idx) => (
               <MotionWrapper
                 key={project.id || project.slug || idx}
                 delay={0.06 * idx}
-                className="w-[82vw] max-w-[340px] shrink-0 snap-start sm:w-[calc((100%-1.25rem)/2)] sm:max-w-none lg:w-[calc((100%-2.5rem)/3)] xl:w-[calc((100%-5rem)/5)]"
+                className="w-full shrink-0 snap-center sm:w-[calc((100%-1.25rem)/2)] lg:w-[calc((100%-2.5rem)/3)] xl:w-[calc((100%-5rem)/5)]"
               >
-                <div className="bg-white rounded-[18px] border border-line/50 overflow-hidden hover:-translate-y-1.5 hover:shadow-soft transition-all duration-300 group h-full flex flex-col">
+                <article
+                  aria-label={`${project.name}, dự án ${idx + 1} trên ${projects.length}`}
+                  className="group flex h-full flex-col overflow-hidden rounded-[24px] border border-line/60 bg-white shadow-[0_12px_34px_rgba(87,61,28,0.08)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-soft sm:rounded-[18px] sm:shadow-none"
+                >
                   {/* Image */}
-                  <div className="relative aspect-[4/3] overflow-hidden">
-                    <Link href={project.slug ? `/${project.slug}` : `#`}>
+                  <div className="relative aspect-[16/10] overflow-hidden sm:aspect-[4/3]">
+                    <Link href={project.slug ? `/${project.slug}` : `#`} className="relative block h-full w-full">
                       <Image
                         src={project.image}
                         alt={project.name}
@@ -164,21 +210,21 @@ export default function FeaturedProjects({ initialProjects = [] }: { initialProj
                   </div>
 
                   {/* Content */}
-                  <div className="p-4 flex flex-col flex-grow">
+                  <div className="flex flex-grow flex-col p-5 sm:p-4">
                     <Link href={project.slug ? `/${project.slug}` : `#`} className="hover:text-gold transition-colors">
-                      <h3 className="heading-font text-sm font-bold text-ink leading-snug">
+                      <h3 className="heading-font text-base font-bold leading-snug text-ink sm:text-sm">
                         {project.name}
                       </h3>
                     </Link>
 
-                    <div className="flex items-center gap-1 text-[11px] text-muted mt-1">
+                    <div className="mt-1.5 flex items-center gap-1 text-xs text-muted sm:text-[11px]">
                       <MapPin size={12} className="shrink-0 text-muted/70" />
                       <span>{project.location}</span>
                     </div>
 
-                    <p className="mt-1 text-[10px] font-medium text-muted">{project.type}</p>
+                    <p className="mt-1 text-[11px] font-semibold text-gold/90 sm:text-[10px]">{project.type}</p>
 
-                    <p className="text-[11px] text-muted mt-1.5 leading-relaxed line-clamp-2">
+                    <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-muted sm:mt-1.5 sm:text-[11px]">
                       {project.description}
                     </p>
 
@@ -189,20 +235,60 @@ export default function FeaturedProjects({ initialProjects = [] }: { initialProj
                         size="sm"
                         icon={<ArrowRight size={12} />}
                         iconPosition="right"
-                        className="w-full"
+                        className="h-11 w-full rounded-xl sm:h-auto sm:rounded-[4px]"
                       >
                         Xem chi tiết
                       </Button>
                     </div>
                   </div>
-                </div>
+                </article>
               </MotionWrapper>
             ))}
           </div>
         )}
 
+        {!isLoading && !error && projects.length > 1 && (
+          <div className="mt-4 flex items-center justify-center gap-4 sm:hidden" aria-label="Điều khiển slide dự án">
+            <button
+              type="button"
+              onClick={() => scrollProjects(-1)}
+              disabled={activeProjectIndex === 0}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-line bg-white text-ink shadow-sm transition hover:border-gold hover:text-gold disabled:cursor-not-allowed disabled:opacity-35"
+              aria-label="Dự án trước"
+            >
+              <ChevronLeft size={18} />
+            </button>
+
+            <div className="flex items-center justify-center gap-2" role="tablist" aria-label="Chọn dự án">
+              {projects.map((project, index) => (
+                <button
+                  key={project.id || project.slug || index}
+                  type="button"
+                  role="tab"
+                  aria-selected={activeProjectIndex === index}
+                  aria-label={`Xem dự án ${index + 1}: ${project.name}`}
+                  onClick={() => scrollToProject(index)}
+                  className={`h-2 rounded-full transition-all duration-300 ${
+                    activeProjectIndex === index ? "w-6 bg-gold" : "w-2 bg-line hover:bg-gold/55"
+                  }`}
+                />
+              ))}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => scrollProjects(1)}
+              disabled={activeProjectIndex === projects.length - 1}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-line bg-white text-ink shadow-sm transition hover:border-gold hover:text-gold disabled:cursor-not-allowed disabled:opacity-35"
+              aria-label="Dự án tiếp theo"
+            >
+              <ChevronRight size={18} />
+            </button>
+          </div>
+        )}
+
         {/* Mobile "see all" link */}
-        <div className="sm:hidden mt-6 text-center">
+        <div className="mt-6 text-center sm:hidden">
           <Link
             href="#tat-ca-du-an"
             className="inline-flex items-center gap-1 text-gold text-xs font-semibold hover:text-gold-dark transition-colors"

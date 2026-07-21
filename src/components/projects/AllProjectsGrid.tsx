@@ -89,26 +89,32 @@ export default function AllProjectsGrid({ initialResponse = null, initialQuery =
   };
 
   return (
-    <section id="tat-ca-du-an" className="scroll-mt-24 py-10">
+    <section id="tat-ca-du-an" className="scroll-mt-24 py-8 sm:py-10">
       <Container>
         {/* Header */}
         <MotionWrapper>
-          <div className="mb-6">
+          <div className="mb-5">
             <span className="uppercase text-[11px] font-bold tracking-wider text-gold">
               TẤT CẢ DỰ ÁN
             </span>
+            <div className="mt-2 flex items-end justify-between gap-4">
+              <h2 className="heading-font text-2xl font-bold text-ink sm:text-3xl">Danh sách dự án</h2>
+              {!isLoading && !error && (
+                <span className="shrink-0 text-xs font-semibold text-muted">{meta.total} dự án</span>
+              )}
+            </div>
           </div>
         </MotionWrapper>
 
         {/* Sort */}
         <MotionWrapper delay={0.05}>
-          <div className="flex justify-end mb-6">
-            <label className="relative inline-flex items-center text-xs text-muted bg-white border border-line/50 rounded-xl hover:border-gold transition">
+          <div className="mb-6 flex justify-end">
+            <label className="relative inline-flex w-full items-center justify-between rounded-xl border border-line/50 bg-white text-xs text-muted transition hover:border-gold sm:w-auto">
               <span className="sr-only">Sắp xếp dự án</span>
               <select
                 value={sortValue}
                 onChange={(event) => setSortValue(event.target.value as typeof sortValue)}
-                className="appearance-none bg-transparent py-2 pl-3 pr-8 text-xs font-semibold text-muted focus:outline-none cursor-pointer"
+                className="min-w-0 flex-1 cursor-pointer appearance-none bg-transparent py-3 pl-3 pr-8 text-xs font-semibold text-muted focus:outline-none sm:flex-none sm:py-2"
               >
                 {sortOptions.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -116,7 +122,7 @@ export default function AllProjectsGrid({ initialResponse = null, initialQuery =
                   </option>
                 ))}
               </select>
-              <ChevronDown className="w-3.5 h-3.5" />
+              <ChevronDown className="mr-3 h-3.5 w-3.5 shrink-0" />
             </label>
           </div>
         </MotionWrapper>
@@ -142,16 +148,16 @@ export default function AllProjectsGrid({ initialResponse = null, initialQuery =
 
         {/* Grid */}
         {!isLoading && !error && projectCards.length > 0 && (
-          <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 transition-opacity ${isFetching ? "opacity-60" : "opacity-100"}`}>
+          <div className={`grid grid-cols-1 gap-6 transition-opacity sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 ${isFetching ? "opacity-60" : "opacity-100"}`}>
             {projectCards.map((project, idx) => {
               const marketingLabel = getProjectMarketingLabel(project.project_label, project.project_status, project.project_status_detail);
               const statusColor = getProjectStatusColor(project.project_status_detail);
               return (
               <MotionWrapper key={project.id} delay={0.06 * idx}>
-                <div className="bg-white rounded-[16px] border border-line/50 overflow-hidden hover:-translate-y-1 hover:shadow-[0_12px_36px_rgba(87,61,28,0.08)] transition-all duration-300 group">
+                <article className="group overflow-hidden rounded-[24px] border border-line/60 bg-white shadow-[0_12px_34px_rgba(87,61,28,0.07)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_36px_rgba(87,61,28,0.1)] sm:rounded-[16px] sm:shadow-none">
                   {/* Image */}
                   <div className="relative aspect-[16/10] overflow-hidden">
-                    <Link href={project.slug ? `/${project.slug}` : `#`}>
+                    <Link href={project.slug ? `/${project.slug}` : `#`} className="relative block h-full w-full">
                       <Image
                         src={project.image}
                         alt={project.name}
@@ -178,34 +184,39 @@ export default function AllProjectsGrid({ initialResponse = null, initialQuery =
                       </span>
                     )}
                     {/* Heart */}
-                    <button className="absolute top-3 right-3 w-7 h-7 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white transition cursor-pointer">
+                    <button type="button" aria-label={`Lưu dự án ${project.name}`} className="absolute right-3 top-3 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-white/85 shadow-sm backdrop-blur-sm transition hover:bg-white">
                       <Heart className="w-3.5 h-3.5 text-muted" />
                     </button>
                   </div>
 
                   {/* Content */}
-                  <div className="p-4">
+                  <div className="p-5 sm:p-4">
                     <Link href={project.slug ? `/${project.slug}` : `#`} className="hover:text-gold transition-colors">
-                      <h3 className="heading-font text-sm font-bold text-ink">
+                      <h3 className="heading-font text-base font-bold leading-snug text-ink sm:text-sm">
                         {project.name}
                       </h3>
                     </Link>
-                    <p className="flex items-center gap-1 text-[11px] text-muted mt-1">
-                      <MapPin className="w-3 h-3 text-gold" />
-                      {project.location}
+                    <p className="mt-1.5 flex items-start gap-1.5 text-xs leading-5 text-muted sm:text-[11px]">
+                      <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-gold sm:h-3 sm:w-3" />
+                      <span className="line-clamp-2">{project.location}</span>
                     </p>
-                    <p className="text-[10px] text-muted mt-1">{project.type}</p>
+                    <p className="mt-2 inline-flex rounded-full bg-gold/8 px-2.5 py-1 text-[10px] font-bold text-gold-dark">{project.type}</p>
+                    {project.description && (
+                      <p className="mt-2 line-clamp-2 text-xs leading-5 text-muted sm:text-[11px]">
+                        {project.description}
+                      </p>
+                    )}
                     <Button
                       href={project.slug ? `/${project.slug}` : `#`}
                       variant="outline"
                       size="sm"
-                      className="w-full mt-3"
+                      className="mt-4 h-11 w-full rounded-xl sm:mt-3 sm:h-auto sm:rounded-[4px]"
                       icon={<ArrowRight size={12} />}
                     >
                       Xem chi tiết
                     </Button>
                   </div>
-                </div>
+                </article>
               </MotionWrapper>
               );
             })}
@@ -213,12 +224,12 @@ export default function AllProjectsGrid({ initialResponse = null, initialQuery =
         )}
 
         {!isLoading && !error && meta.last_page > 1 && (
-          <nav aria-label="Project pagination" className="mt-8 flex items-center justify-center gap-2">
-            <button type="button" disabled={meta.current_page <= 1 || isFetching} onClick={() => goToPage(meta.current_page - 1)} className="inline-flex h-9 items-center gap-1 rounded-lg border border-line bg-white px-3 text-xs font-bold disabled:opacity-40">
+          <nav aria-label="Project pagination" className="mt-8 flex flex-wrap items-center justify-center gap-2">
+            <button type="button" disabled={meta.current_page <= 1 || isFetching} onClick={() => goToPage(meta.current_page - 1)} className="inline-flex h-10 items-center gap-1 rounded-xl border border-line bg-white px-3 text-xs font-bold disabled:opacity-40 sm:h-9 sm:rounded-lg">
               <ArrowLeft size={13} />Trang trước
             </button>
             <span className="px-3 text-xs font-semibold text-muted">{meta.current_page}/{meta.last_page}</span>
-            <button type="button" disabled={meta.current_page >= meta.last_page || isFetching} onClick={() => goToPage(meta.current_page + 1)} className="inline-flex h-9 items-center gap-1 rounded-lg border border-line bg-white px-3 text-xs font-bold disabled:opacity-40">
+            <button type="button" disabled={meta.current_page >= meta.last_page || isFetching} onClick={() => goToPage(meta.current_page + 1)} className="inline-flex h-10 items-center gap-1 rounded-xl border border-line bg-white px-3 text-xs font-bold disabled:opacity-40 sm:h-9 sm:rounded-lg">
               Trang sau<ArrowRight size={13} />
             </button>
           </nav>
