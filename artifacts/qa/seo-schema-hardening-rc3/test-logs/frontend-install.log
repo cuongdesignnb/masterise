@@ -1,0 +1,27 @@
+timestamp: 2026-07-21T18:29:30.6477292Z
+commit SHA: aae40a369c6f9dac62a5dfc742870084e1a0ad96
+command: npm ci
+
+npm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: 'eslint-visitor-keys@5.0.1',
+npm warn EBADENGINE   required: { node: '^20.19.0 || ^22.13.0 || >=24' },
+npm warn EBADENGINE   current: { node: 'v20.15.1', npm: '10.7.0' }
+npm warn EBADENGINE }
+npm warn deprecated lodash.isequal@4.5.0: This package is deprecated. Use require('node:util').isDeepStrictEqual instead.
+
+added 379 packages, and audited 380 packages in 27s
+
+147 packages are looking for funding
+  run `npm fund` for details
+
+5 vulnerabilities (1 low, 2 moderate, 2 high)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+
+exit code: 0

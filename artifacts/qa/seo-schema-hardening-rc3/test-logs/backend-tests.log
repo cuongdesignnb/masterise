@@ -1,0 +1,268 @@
+timestamp: 2026-07-21T18:34:14.0180300Z
+commit SHA: aae40a369c6f9dac62a5dfc742870084e1a0ad96
+command: docker compose exec -T php php artisan test
+
+time="2026-07-22T01:34:14+07:00" level=warning msg="D:\\BDS\\docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+
+   PASS  Tests\Unit\AiContentHelperTableTest
+  ✓ sanitizer preserves rich table structure and safe attributes         0.21s
+
+   PASS  Tests\Unit\ExampleTest
+  ✓ that true is true                                                    0.11s
+
+   PASS  Tests\Feature\AdminPostPublishClientFlowTest
+  ✓ admin can publish news and client endpoints receive it               8.58s
+  ✓ draft news is hidden from client endpoints                           0.31s
+  ✓ featured news are filtered and sorted before latest fallback         0.14s
+  ✓ related news exclude drafts self duplicates and other post types     0.15s
+
+   PASS  Tests\Feature\AdminProjectSaveProofTest
+  ✓ admin project save returns and reloads fresh detail fields           0.19s
+  ✓ public project label query is ignored but labels remain in response  0.14s
+  ✓ featured projects prioritize hot then manual sort order              0.14s
+
+   PASS  Tests\Feature\AiProviderIntegrationTest
+  ✓ content provider uses chat completions with configured base url and… 0.50s
+  ✓ responses api payload and output text are supported                  0.13s
+  ✓ image provider uses separate openai key and images endpoint          0.14s
+  ✓ missing image key does not fallback to content key                   0.15s
+  ✓ http base urls are rejected                                          0.25s
+  ✓ settings response never returns plain api keys                       0.15s
+
+   PASS  Tests\Feature\CareerModuleTest
+  ✓ public only returns active published jobs                            0.17s
+  ✓ public filters and search are applied by backend                     0.14s
+  ✓ detail returns related and no private application data               0.14s
+  ✓ valid application is saved privately and email job is queued         0.81s
+  ✓ application validation rejects missing or invalid identity fields    0.36s
+  ✓ cv wrong mime and oversize are rejected                              0.32s
+  ✓ closed job does not accept application                               0.75s
+  ✓ duplicate application is blocked for one hour                        0.17s
+  ✓ public settings do not expose hr or smtp credentials                 0.47s
+  ✓ cv download requires authentication and permission                   0.34s
+  ✓ admin update keeps overview and responsibilities independent         0.24s
+  ✓ status change records activity and unicode remains intact            0.15s
+
+   PASS  Tests\Feature\ContactPageContentRegressionTest
+  ✓ 01 public settings returns normalized contact page content           0.25s
+  ✓ 02 admin can save complete contact page content                      0.15s
+  ✓ 03 invalid json shape and raw html are rejected                      0.15s
+  ✓ 04 unsafe url and unknown icon are rejected                          0.20s
+  ✓ 05 duplicate stable id is rejected                                   0.17s
+  ✓ 06 legacy contact departments are migrated without data loss         0.14s
+  ✓ 07 ensure setting never overwrites existing admin content            0.19s
+  ✓ 08 public settings never exposes private mail or token values        0.26s
+  ✓ 09 null and malformed contact payload is normalized before save and… 0.17s
+  ✓ 10 legacy stored nulls are normalized in public and admin apis with… 0.15s
+
+   PASS  Tests\Feature\ContentTaxonomyRegressionTest
+  ✓ table round trip tags and manual related order are preserved         0.18s
+  ✓ related validation rejects self duplicates drafts and wrong type an… 0.16s
+  ✓ tag crud sync filter duplicate and delete detach                     0.17s
+  ✓ tag filters stay within news and investment markets                  0.15s
+  ✓ regions are normalized unique public only and static route precedes… 0.36s
+  ✓ post pagination category tag and investment scope keep market and e… 0.19s
+  ✓ admin can create post category and duplicate slug returns specific…  0.16s
+
+   PASS  Tests\Feature\DynamicProjectStatusAndRegionFilterTest
+  ✓ 01 migration seeds five legacy statuses and one default              0.15s
+  ✓ 02 admin can create dynamic status and duplicates are rejected       0.16s
+  ✓ 03 admin can update name color order and change default              0.14s
+  ✓ 04 unused status can be deleted but used and default statuses are b… 0.14s
+  ✓ 05 used slug is locked and published status cannot be disabled       0.15s
+  ✓ 06 project accepts active dynamic status and rejects unknown or ina… 0.25s
+  ✓ 07 public status endpoint only returns active and counts published…  0.14s
+  ✓ 08 dynamic status filter and legacy aliases work                     0.16s
+  ✓ 09 region endpoint counts only published and filter does not mix re… 0.14s
+  ✓ 10 region combines with status category and price without duplicate… 0.15s
+  ✓ 11 backfill assigns all published projects and reuses matching loca… 0.14s
+  ✓ 12 status color is restricted to the safe palette                    0.15s
+
+   PASS  Tests\Feature\DynamicRegionsRegressionTest
+  ✓ 01 admin can create region                                           0.15s
+  ✓ 02 region name is unique case insensitively                          0.15s
+  ✓ 03 region slug is unique                                             0.26s
+  ✓ 04 admin can update region without implicitly changing slug          0.14s
+  ✓ 05 admin can deactivate region                                       0.14s
+  ✓ 06 used region cannot be deleted                                     0.30s
+  ✓ 07 admin can create location with active region                      0.36s
+  ✓ 08 location cannot be created without region                         0.50s
+  ✓ 09 location index returns region and projects count                  0.19s
+  ✓ 10 locations can be filtered by region slug                          0.21s
+  ✓ 11 project derives region from location                              0.15s
+  ✓ 12 frontend cannot override location region                          0.15s
+  ✓ 13 new project cannot be published without location region           0.24s
+  ✓ 14 public projects can be filtered by region slug                    0.14s
+  ✓ 15 public region count only includes published projects              0.14s
+  ✓ 16 inactive region is not exposed in public filter                   0.14s
+  ✓ 17 legacy location is backfilled safely                              0.14s
+  ✓ 18 conflicting legacy regions are not overwritten                    0.13s
+
+   PASS  Tests\Feature\EventSchemaEligibilityTest
+  ✓ event structured fields persist without fabricated fallbacks         0.14s
+
+   PASS  Tests\Feature\ExampleTest
+  ✓ the application returns a successful response                        0.77s
+
+   PASS  Tests\Feature\ExpiredJobSchemaEligibilityTest
+  ✓ expired and closed jobs are not publicly visible                     0.16s
+
+   PASS  Tests\Feature\InlineArticleImageNormalizerTest
+  ✓ base64 image is saved to media library and reused                    0.66s
+  ✓ admin cannot persist base64 images in article content                0.29s
+  ✓ data migration is idempotent and preserves invalid articles          0.32s
+
+   PASS  Tests\Feature\MissingProjectTypesBackfillTest
+  ✓ 01 backfill assigns all missing types and preserves public behavior  0.28s
+  ✓ 02 down only removes relations added by this migration               0.23s
+  ✓ 03 backfill processes available projects when other expected slugs…  0.21s
+  ✓ 04 backfill ignores unrelated production projects                    0.15s
+  ✓ 05 missing category is logged and skipped safely                     0.13s
+  ✓ 06 empty projects table is a safe no op                              0.14s
+
+   PASS  Tests\Feature\ProjectFloorPlanGroupsRegressionTest
+  ✓ migration adds canonical column and legacy conversion preserves tab… 0.24s
+  ✓ migration backfills legacy rows without overwriting legacy columns   0.13s
+  ✓ canonical save reload dual writes legacy and keeps stable keys       0.16s
+  ✓ legacy only request is converted but canonical wins when both are p… 0.15s
+  ✓ nested validation rejects duplicate keys and invalid images          0.17s
+
+   PASS  Tests\Feature\ProjectPriceFilterRegressionTest
+  ✓ 01 under 5 uses starting price only                                  0.15s
+  ✓ 02 five billion boundary belongs to 5 10 only                        0.15s
+  ✓ 03 ten billion boundary belongs to 10 20                             0.14s
+  ✓ 04 twenty billion boundary belongs to 20 50                          0.14s
+  ✓ 05 fifty billion boundary belongs to above 50                        0.24s
+  ✓ 06 each project belongs to exactly one range                         0.14s
+  ✓ 07 project without price is excluded from specific range             0.13s
+  ✓ 08 project without price is included without price filter            0.13s
+  ✓ 09 category combines with price range                                0.14s
+  ✓ 10 region combines with price range                                  0.14s
+  ✓ 11 project status combines with price range                          0.14s
+  ✓ 12 total price validation rejects negative and inverted values       0.16s
+  ✓ 13 price per sqm validation rejects negative and inverted values     0.27s
+  ✓ 14 create save reload keeps prices and generates display text        0.15s
+  ✓ 15 migration moves legacy sqm price and sets total price by slug     0.14s
+  ✓ 16 project seeder creates normalized price data                      0.20s
+  ✓ 17 price sort puts null last in both directions                      0.15s
+  ✓ 18 api never uses price text for range filtering                     0.13s
+  ✓ 19 invalid price range is rejected                                   0.13s
+
+   PASS  Tests\Feature\ProjectRelatedPostsTest
+  ✓ admin can save three related posts in the selected order and public… 0.18s
+  ✓ admin can create a project with three related posts and reopen it    0.23s
+  ✓ related posts validation rejects too many duplicates drafts and eve… 0.17s
+
+   PASS  Tests\Feature\ProjectReviewAggregateTest
+  ✓ aggregate uses the same public scope as items                        0.18s
+
+   PASS  Tests\Feature\ProjectReviewApiContractTest
+  ✓ public resource does not expose moderation fields                    0.16s
+  ✓ admin resource includes project summary                              0.17s
+  ✓ project detail uses the same review bundle contract                  0.17s
+
+   PASS  Tests\Feature\ProjectReviewCacheInvalidationTest
+  ✓ moderation increments project cache versions                         0.16s
+
+   PASS  Tests\Feature\ProjectReviewModerationTest
+  ✓ admin can approve and reject with reason                             0.15s
+
+   PASS  Tests\Feature\ProjectReviewPermissionTest
+  ✓ admin review routes enforce authentication and roles                 0.26s
+
+   PASS  Tests\Feature\ProjectReviewPublicScopeTest
+  ✓ only approved and published reviews are public                       0.14s
+  ✓ unpublished project has no public review endpoint                    0.14s
+
+   PASS  Tests\Feature\ProjectReviewStateTransitionTest
+  ✓ pending and rejected reviews cannot remain published                 0.14s
+  ✓ admin update rejects illegal published pending state                 0.25s
+
+   PASS  Tests\Feature\ProjectReviewValidationTest
+  ✓ submission is disabled by default                                    0.14s
+  ✓ enabled submission requires content challenge and consent            0.35s
+  ✓ public submission is throttled                                       0.18s
+
+   PASS  Tests\Feature\ProjectTypeVsLabelRegressionTest
+  ✓ 01 public category endpoint returns dynamic project types only       0.14s
+  ✓ 02 category count only counts published projects                     0.14s
+  ✓ 03 draft only category is not exposed publicly                       0.14s
+  ✓ 04 category slug filter returns matching project                     0.14s
+  ✓ 05 project outside selected category is not returned                 0.14s
+  ✓ 06 project with multiple categories appears once                     0.24s
+  ✓ 07 category without published projects is hidden                     0.14s
+  ✓ 08 project label does not change category filter results             0.14s
+  ✓ 09 public project label query is ignored                             0.14s
+  ✓ 10 api still returns project label for marketing badge               0.14s
+  ✓ 11 admin create syncs project types                                  0.23s
+  ✓ 12 admin update replaces project types                               0.16s
+  ✓ 13 admin reload keeps selected project types                         0.14s
+  ✓ 14 duplicate category slug is rejected                               0.15s
+  ✓ 15 used category cannot be deleted                                   0.14s
+  ✓ 16 project status filter combines with category                      0.14s
+  ✓ 17 region filter combines with category                              0.14s
+  ✓ 18 price filter combines with category                               0.14s
+  ✓ 19 category name is unique case insensitively and slug can be gener… 0.14s
+  ✓ 20 updating project types preserves collection relations             0.24s
+
+   PASS  Tests\Feature\PublicListPerformanceTest
+  ✓ project list is paginated and excludes detail fields                 0.14s
+  ✓ public project page size is capped and options are minimal           0.16s
+  ✓ post list excludes content and drops base64 thumbnail                0.14s
+  ✓ project update invalidates public list cache                         0.14s
+  ✓ post unpublish invalidates list and featured cache                   0.15s
+  ✓ public settings cache is invalidated on update                       0.24s
+  ✓ public settings expose homepage content and invalidate it after upd… 0.15s
+  ✓ homepage hero only returns active banners in slide order             0.15s
+
+   PASS  Tests\Feature\PublicPageSeoContractTest
+  ✓ public page routes only expose published content                     0.16s
+  ✓ admin page routes require an authorized role                         0.14s
+
+   PASS  Tests\Feature\PublicPostDetailPerformanceTest
+  ✓ detail uses slim cards for every related position                    0.15s
+  ✓ detail cache is invalidated when post changes                        0.15s
+  ✓ detail second request is served without database queries             0.15s
+  ✓ detail cache is invalidated when media changes                       0.23s
+
+   PASS  Tests\Feature\PublicSlugRegressionTest
+  ✓ auto generated post slug gets next available suffix across content…  0.14s
+  ✓ manually entered post slug conflicting with project returns validat… 0.15s
+  ✓ manually entered project slug conflicting with post returns validat… 0.15s
+  ✓ reserved system route is rejected                                    0.16s
+  ✓ ai generated slug uses the same global collision check               0.13s
+
+   PASS  Tests\Feature\SeoFeatureFlagsTest
+  ✓ all schema flags default to false                                    0.13s
+  ✓ only known boolean setting can enable a flag                         0.13s
+
+   PASS  Tests\Feature\UnifiedProjectStatusRegressionTest
+  ✓ 01 migration creates project status                                  0.15s
+  ✓ 02 maps upcoming to coming soon                                      0.24s
+  ✓ 03 maps selling to selling                                           0.14s
+  ✓ 04 maps completed to handover                                        0.14s
+  ✓ 05 keeps sold out                                                    0.13s
+  ✓ 06 keeps handing over                                                0.14s
+  ✓ 07 valid sales status wins when legacy fields conflict               0.13s
+  ✓ 08 legacy status column is removed                                   0.15s
+  ✓ 09 legacy sales status column is removed                             0.16s
+  ✓ 10 admin can create project with project status                      0.17s
+  ✓ 11 admin can update project status                                   0.22s
+  ✓ 12 invalid project status is rejected                                0.16s
+  ✓ 13 public filter supports every project status                       0.15s
+  ✓ 14 admin filter supports every project status                        0.17s
+  ✓ 15 filter does not return other statuses                             0.14s
+  ✓ 16 project detail returns project status                             0.13s
+  ✓ 17 api response does not expose legacy fields                        0.15s
+  ✓ 18 is published remains independent                                  0.13s
+  ✓ 19 draft project is not exposed publicly                             0.25s
+  ✓ 20 price row status is not affected                                  0.35s
+  ✓ 21 timeline and handover fields are not affected                     0.14s
+  ✓ 22 legacy query aliases are temporarily supported                    0.14s
+  ✓ 23 migration keeps legacy columns when values are unmappable         0.16s
+
+  Tests:    191 passed (892 assertions)
+  Duration: 49.63s
+
+
+exit code: 0
