@@ -256,18 +256,11 @@ function ProjectIcon({
 
 function SectionTitle({
   children,
-  eyebrow,
 }: {
   children: React.ReactNode;
-  eyebrow?: string;
 }) {
   return (
     <div className="mb-5">
-      {eyebrow ? (
-        <p className="mb-1.5 text-[11px] font-bold tracking-[0.14em] text-gold normal-case">
-          {eyebrow}
-        </p>
-      ) : null}
       <h2 className="heading-font text-[24px] font-semibold leading-tight tracking-[0.02em] text-ink normal-case sm:text-[30px]">
         {children}
       </h2>
@@ -700,11 +693,9 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
   const ProjectSectionTitle = ({
     sectionKey,
     fallbackTitle,
-    fallbackEyebrow,
   }: {
     sectionKey: string;
     fallbackTitle: string;
-    fallbackEyebrow?: string;
   }) => {
     const heading = project.sectionTitles?.[sectionKey];
     const configuredTitle = heading?.title?.trim();
@@ -712,7 +703,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
       ? fallbackTitle
       : configuredTitle || fallbackTitle;
     return (
-      <SectionTitle eyebrow={heading?.eyebrow ?? fallbackEyebrow}>
+      <SectionTitle>
         {title}
       </SectionTitle>
     );
@@ -999,7 +990,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
         {project.content || inlineRelatedPosts.length ? (
           <Reveal className="rounded-[22px] border border-line/80 bg-white p-5 shadow-soft sm:p-7">
             <section id="tong-quan" className="scroll-mt-32">
-              <ProjectSectionTitle sectionKey="overview" fallbackEyebrow="Tổng quan dự án" fallbackTitle={`Tổng quan ${project.name}`} />
+              <ProjectSectionTitle sectionKey="overview" fallbackTitle={`Tổng quan ${project.name}`} />
               <div className="mt-5">
                 <RichHtmlContent html={projectContentParts.before} />
                 {inlineRelatedPosts.length ? <InlineRelatedArticleLinks posts={inlineRelatedPosts} /> : null}
@@ -1134,7 +1125,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
 
         {hasConnectivity ? <Reveal className="rounded-[22px] border border-line/80 bg-white p-5 shadow-soft sm:p-7">
           <section id="vi-tri" className="scroll-mt-32">
-            <ProjectSectionTitle sectionKey="location" fallbackEyebrow="Vị trí chiến lược" fallbackTitle="Kết nối toàn diện" />
+            <ProjectSectionTitle sectionKey="location" fallbackTitle="Kết nối toàn diện" />
             {project.locationDescription ? (
               <p className="mb-6 whitespace-pre-line text-sm leading-6 text-muted sm:text-[15px] sm:leading-7">{project.locationDescription}</p>
             ) : null}
@@ -1165,7 +1156,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
           <div aria-hidden="true" className="pointer-events-none absolute -right-20 -top-24 size-64 rounded-full border border-gold/10" />
           <section id="tien-ich" className="relative scroll-mt-32">
             <div className="flex items-start justify-between gap-4">
-              <ProjectSectionTitle sectionKey="amenities" fallbackEyebrow="Đặc quyền sống" fallbackTitle="Tiện ích nổi bật" />
+              <ProjectSectionTitle sectionKey="amenities" fallbackTitle="Tiện ích nổi bật" />
               <span className="mt-1 hidden shrink-0 items-center gap-2 rounded-full border border-gold/20 bg-white/80 px-3.5 py-2 text-[10px] font-bold uppercase tracking-[0.1em] text-gold-dark shadow-sm sm:inline-flex">
                 <Sparkles size={13} aria-hidden="true" />
                 {project.amenities.length} trải nghiệm
@@ -1226,7 +1217,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
 
         {hasFloorSection ? <Reveal>
           <section id="mat-bang" className="scroll-mt-32">
-            <ProjectSectionTitle sectionKey="floorPlans" fallbackEyebrow="Mặt bằng" fallbackTitle="Mặt bằng điển hình" />
+            <ProjectSectionTitle sectionKey="floorPlans" fallbackTitle="Mặt bằng điển hình" />
             {floorPlanGroups.length > 1 ? <div className="scrollbar-none mb-3 flex max-w-full gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Nhóm mặt bằng">
               {floorPlanGroups.map((group) => (
                 <button
@@ -1373,7 +1364,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
 
         {hasHandoverStandards ? <Reveal>
           <section id="tieu-chuan-ban-giao" className="scroll-mt-32">
-            <ProjectSectionTitle sectionKey="handover" fallbackEyebrow="Bàn giao" fallbackTitle="Tiêu chuẩn bàn giao" />
+            <ProjectSectionTitle sectionKey="handover" fallbackTitle="Tiêu chuẩn bàn giao" />
             <div className="-mx-4 overflow-x-auto px-4 pb-2 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
               <div className="flex snap-x snap-mandatory gap-3">
               {project.handoverStandards.map((item, index) => (

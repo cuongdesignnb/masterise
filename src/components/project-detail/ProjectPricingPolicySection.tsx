@@ -62,7 +62,6 @@ export default function ProjectPricingPolicySection({ project }: Props) {
 
   const hasPriceData = rowItems.length > 0 || imageItems.length > 0 || fileItems.length > 0 || noteItems.length > 0;
   const hasPolicyData = project.policies.length > 0;
-  const pricingEyebrow = project.sectionTitles?.pricingPolicy?.eyebrow ?? "Bảng giá & Chính sách";
 
   if (!hasPriceData && !hasPolicyData) return null;
 
@@ -74,12 +73,7 @@ export default function ProjectPricingPolicySection({ project }: Props) {
     <section className="rounded-[24px] border border-line/80 bg-[#fffaf4] p-4 shadow-soft sm:p-6 lg:p-8">
       <div className="mb-6 flex flex-col gap-3 text-left lg:flex-row lg:items-end lg:justify-between">
         <div>
-          {pricingEyebrow ? (
-            <p className="text-[11px] font-bold tracking-[0.16em] text-gold normal-case">
-              {pricingEyebrow}
-            </p>
-          ) : null}
-          <h2 className={`heading-font text-[24px] font-semibold leading-tight text-ink normal-case sm:text-[30px] ${pricingEyebrow ? "mt-2" : ""}`}>
+          <h2 className="heading-font text-[24px] font-semibold leading-tight text-ink normal-case sm:text-[30px]">
             {project.sectionTitles?.pricingPolicy?.title || "Cập nhật giá bán và chính sách ưu đãi"}
           </h2>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-muted sm:text-[15px]">

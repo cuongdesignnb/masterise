@@ -460,13 +460,13 @@ function normalizeConnectivity(value: unknown, nearbyPlaces: string[] | null | u
 }
 
 const defaultProjectSectionTitles: Record<string, { eyebrow?: string; title?: string }> = {
-  overview: { eyebrow: "Tổng quan dự án", title: "" },
-  location: { eyebrow: "Vị trí chiến lược", title: "Kết nối toàn diện" },
+  overview: { title: "" },
+  location: { title: "Kết nối toàn diện" },
   amenities: { title: "Tiện ích nổi bật" },
-  floorPlans: { eyebrow: "Mặt bằng", title: "Mặt bằng điển hình" },
-  handover: { eyebrow: "Bàn giao", title: "Tiêu chuẩn bàn giao" },
+  floorPlans: { title: "Mặt bằng điển hình" },
+  handover: { title: "Tiêu chuẩn bàn giao" },
   productInfo: { title: "Sản phẩm & Bảng giá" },
-  pricingPolicy: { eyebrow: "Bảng giá", title: "Bảng giá & Chính sách" },
+  pricingPolicy: { title: "Bảng giá & Chính sách" },
   policies: { title: "Chính sách bán hàng" },
   timeline: { title: "Tiến độ thi công" },
   investment: { title: "Vì sao nên đầu tư?" },
@@ -487,7 +487,7 @@ function normalizeSectionTitles(value: unknown): Record<string, { eyebrow?: stri
       return [
         key,
         {
-          eyebrow: typeof item.eyebrow === "string" ? item.eyebrow : fallback.eyebrow,
+          eyebrow: "",
           title: typeof item.title === "string" ? item.title : fallback.title,
         },
       ];

@@ -101,13 +101,13 @@ type ProjectSectionTitleKey =
 type ProjectSectionTitles = Record<ProjectSectionTitleKey, { eyebrow: string; title: string }>;
 
 const defaultProjectSectionTitles: ProjectSectionTitles = {
-  overview: { eyebrow: 'Tổng quan dự án', title: '' },
-  location: { eyebrow: 'Vị trí chiến lược', title: 'Kết nối toàn diện' },
+  overview: { eyebrow: '', title: '' },
+  location: { eyebrow: '', title: 'Kết nối toàn diện' },
   amenities: { eyebrow: '', title: 'Tiện ích nổi bật' },
-  floorPlans: { eyebrow: 'Mặt bằng', title: 'Mặt bằng điển hình' },
-  handover: { eyebrow: 'Bàn giao', title: 'Tiêu chuẩn bàn giao' },
+  floorPlans: { eyebrow: '', title: 'Mặt bằng điển hình' },
+  handover: { eyebrow: '', title: 'Tiêu chuẩn bàn giao' },
   productInfo: { eyebrow: '', title: 'Sản phẩm & Bảng giá' },
-  pricingPolicy: { eyebrow: 'Bảng giá', title: 'Bảng giá & Chính sách' },
+  pricingPolicy: { eyebrow: '', title: 'Bảng giá & Chính sách' },
   policies: { eyebrow: '', title: 'Chính sách bán hàng' },
   timeline: { eyebrow: '', title: 'Tiến độ thi công' },
   investment: { eyebrow: '', title: 'Vì sao nên đầu tư?' },
@@ -141,7 +141,7 @@ const normalizeProjectSectionTitles = (value: unknown): ProjectSectionTitles => 
   return projectSectionTitleLabels.reduce((acc, item) => {
     const current = record[item.key] || {};
     acc[item.key] = {
-      eyebrow: typeof current.eyebrow === 'string' ? current.eyebrow : defaultProjectSectionTitles[item.key].eyebrow,
+      eyebrow: '',
       title: typeof current.title === 'string' ? current.title : defaultProjectSectionTitles[item.key].title,
     };
     return acc;
@@ -2512,34 +2512,23 @@ export default function AdminProjects() {
                       <div className="mb-3">
                         <h3 className="text-sm font-bold text-[#1F1B16]">Tiêu đề section ngoài client</h3>
                         <p className="mt-1 text-xs text-[#8C7A6B]">
-                          Nhập chữ hoa/thường thế nào thì trang chi tiết dự án hiển thị đúng như vậy. Ô nhãn nhỏ có thể bỏ trống.
+                          Nhập chữ hoa/thường thế nào thì trang chi tiết dự án hiển thị đúng như vậy.
                         </p>
                       </div>
                       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                         {projectSectionTitleLabels.map((item) => (
                           <div key={item.key} className="rounded-xl border border-[#E8DCCB] bg-white p-3">
                             <p className="mb-2 text-xs font-bold text-[#1F1B16]">{item.label}</p>
-                            <div className="grid gap-2 sm:grid-cols-[0.8fr_1.2fr]">
-                              <input
-                                value={formSectionTitles[item.key]?.eyebrow || ''}
-                                onChange={(e) => setFormSectionTitles(prev => ({
-                                  ...prev,
-                                  [item.key]: { ...prev[item.key], eyebrow: e.target.value }
-                                }))}
-                                className={inputClass}
-                                placeholder="Nhãn nhỏ"
-                              />
-                              <textarea
-                                value={formSectionTitles[item.key]?.title || ''}
-                                onChange={(e) => setFormSectionTitles(prev => ({
-                                  ...prev,
-                                  [item.key]: { ...prev[item.key], title: e.target.value }
-                                }))}
-                                rows={item.key === 'contact' ? 2 : 1}
-                                className={inputClass}
-                                placeholder="Tiêu đề hiển thị"
-                              />
-                            </div>
+                            <textarea
+                              value={formSectionTitles[item.key]?.title || ''}
+                              onChange={(e) => setFormSectionTitles(prev => ({
+                                ...prev,
+                                [item.key]: { ...prev[item.key], eyebrow: '', title: e.target.value }
+                              }))}
+                              rows={item.key === 'contact' ? 2 : 1}
+                              className={inputClass}
+                              placeholder="Tiêu đề hiển thị"
+                            />
                           </div>
                         ))}
                       </div>
