@@ -1106,7 +1106,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
           <section id="vi-tri" className="scroll-mt-32">
             <ProjectSectionTitle sectionKey="location" fallbackEyebrow="Vị trí chiến lược" fallbackTitle="Kết nối toàn diện" />
             {project.locationDescription ? (
-              <p className="mb-6 max-w-5xl text-sm leading-6 text-muted sm:text-[15px] sm:leading-7">{project.locationDescription}</p>
+              <p className="mb-6 whitespace-pre-line text-sm leading-6 text-muted sm:text-[15px] sm:leading-7">{project.locationDescription}</p>
             ) : null}
             <div className={`grid items-start gap-8 ${project.mapImageUrl ? "lg:grid-cols-2" : ""}`}>
               <div className={`space-y-4 ${project.mapImageUrl ? "order-1 lg:order-2" : ""}`}>
