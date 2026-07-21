@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, MapPin, Heart, Star } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight, MapPin, Heart, Star } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { projectService } from "@/services/projectService";
 import { mapApiProjectToProjectCard } from "@/adapters/projectAdapter";
@@ -17,6 +17,7 @@ import { getProjectMarketingLabel, getProjectStatusLabel, getProjectStatusColor 
 import type { Project } from "@/types/api";
 
 export default function FeaturedProjects({ initialProjects = [] }: { initialProjects?: Project[] }) {
+  const sliderRef = useRef<HTMLDivElement>(null);
   const { data: projects = [], isLoading, error, refetch } = useQuery({
     queryKey: ["projects-page-featured"],
     queryFn: async () => {
@@ -37,6 +38,12 @@ export default function FeaturedProjects({ initialProjects = [] }: { initialProj
     return () => window.clearTimeout(timeout);
   }, []);
 
+  const scrollProjects = (direction: -1 | 1) => {
+    const slider = sliderRef.current;
+    if (!slider) return;
+    slider.scrollBy({ left: direction * Math.max(280, slider.clientWidth * 0.85), behavior: "smooth" });
+  };
+
   return (
     <section id="du-an-noi-bat" className="scroll-mt-28 py-10">
       <Container>
@@ -54,13 +61,31 @@ export default function FeaturedProjects({ initialProjects = [] }: { initialProj
                 Danh mục dự án tiêu biểu
               </h2>
             </div>
-            <Link
-              href="#tat-ca-du-an"
-              className="hidden sm:inline-flex items-center gap-1 text-gold text-xs font-semibold hover:text-gold-dark transition-colors"
-            >
-              Xem tất cả dự án
-              <ArrowRight size={13} />
-            </Link>
+            <div className="hidden shrink-0 items-center gap-2 sm:flex">
+              <button
+                type="button"
+                onClick={() => scrollProjects(-1)}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-line bg-white text-ink transition-colors hover:border-gold hover:text-gold"
+                aria-label="Xem dự án phía trước"
+              >
+                <ChevronLeft size={17} />
+              </button>
+              <button
+                type="button"
+                onClick={() => scrollProjects(1)}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-line bg-white text-ink transition-colors hover:border-gold hover:text-gold"
+                aria-label="Xem dự án tiếp theo"
+              >
+                <ChevronRight size={17} />
+              </button>
+              <Link
+                href="#tat-ca-du-an"
+                className="hidden sm:inline-flex items-center gap-1 text-gold text-xs font-semibold hover:text-gold-dark transition-colors"
+              >
+                Xem tất cả dự án
+                <ArrowRight size={13} />
+              </Link>
+            </div>
           </div>
         </MotionWrapper>
 
@@ -81,11 +106,19 @@ export default function FeaturedProjects({ initialProjects = [] }: { initialProj
           />
         )}
 
-        {/* Projects grid */}
+        {/* Projects slider */}
         {!isLoading && !error && projects.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
+          <div
+            ref={sliderRef}
+            className="hide-scrollbar -mx-4 flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth px-4 pb-4 sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0"
+            aria-label="Danh mục dự án tiêu biểu"
+          >
             {projects.map((project, idx) => (
-              <MotionWrapper key={idx} delay={0.06 * idx}>
+              <MotionWrapper
+                key={project.id || project.slug || idx}
+                delay={0.06 * idx}
+                className="w-[82vw] max-w-[340px] shrink-0 snap-start sm:w-[calc((100%-1.25rem)/2)] sm:max-w-none lg:w-[calc((100%-2.5rem)/3)] xl:w-[calc((100%-5rem)/5)]"
+              >
                 <div className="bg-white rounded-[18px] border border-line/50 overflow-hidden hover:-translate-y-1.5 hover:shadow-soft transition-all duration-300 group h-full flex flex-col">
                   {/* Image */}
                   <div className="relative aspect-[4/3] overflow-hidden">

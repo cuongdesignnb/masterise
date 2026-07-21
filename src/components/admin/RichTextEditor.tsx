@@ -346,6 +346,7 @@ export default function RichTextEditor({
     const range = savedRangeRef.current || quill.getSelection() || lastSelectionRef.current || { index: Math.max(0, quill.getLength() - 1), length: 0 };
     savedRangeRef.current = { index: range.index, length: range.length };
     imageSelectionHandledRef.current = false;
+    imageCommitInProgressRef.current = false;
     setIsMediaModalOpen(true);
   };
 
@@ -360,23 +361,30 @@ export default function RichTextEditor({
       caption: imageModal.caption.trim(),
     };
 
+    isUpdatingRef.current = true;
     try {
       if (imageModal.mode === 'edit' && imageModal.index !== null) {
-        quill.deleteText(imageModal.index, 1, 'user');
-        quill.insertEmbed(imageModal.index, 'articleImage', value, 'user');
+        quill.updateContents([
+          { retain: imageModal.index },
+          { delete: 1 },
+          { insert: { articleImage: value } },
+        ], 'silent');
         quill.setSelection(imageModal.index + 1, 0, 'silent');
       } else {
         const range = savedRangeRef.current || lastSelectionRef.current || { index: Math.max(0, quill.getLength() - 1), length: 0 };
-        if (range.length > 0) quill.deleteText(range.index, range.length, 'user');
-        quill.insertEmbed(range.index, 'articleImage', value, 'user');
-        quill.insertText(range.index + 1, '\n', 'user');
+        quill.updateContents([
+          { retain: range.index },
+          ...(range.length > 0 ? [{ delete: range.length }] : []),
+          { insert: { articleImage: value } },
+          { insert: '\n' },
+        ], 'silent');
         quill.setSelection(range.index + 2, 0, 'silent');
       }
       onChangeRef.current(serializeEditorHtml(quill));
       savedRangeRef.current = null;
       setImageModal(null);
     } finally {
-      queueMicrotask(() => { imageCommitInProgressRef.current = false; });
+      isUpdatingRef.current = false;
     }
   };
 
@@ -679,6 +687,7 @@ export default function RichTextEditor({
             const blot = Quill.find(imageNode.matches('img') ? imageNode : imageNode.closest('.ql-article-image') || imageNode);
             const value = imageValueFromNode(imageNode);
             if (blot && value) {
+              imageCommitInProgressRef.current = false;
               setImageModal({ mode: 'edit', index: quill.getIndex(blot as any), ...value });
             }
             return;
@@ -845,6 +854,7 @@ export default function RichTextEditor({
     const imageUrl = Array.isArray(url) ? url[0] : url;
     if (!imageUrl || !quillRef.current || imageSelectionHandledRef.current) return;
     imageSelectionHandledRef.current = true;
+    imageCommitInProgressRef.current = false;
     setIsMediaModalOpen(false);
     setImageModal({ mode: 'insert', index: null, src: imageUrl, alt: '', caption: '' });
   };
