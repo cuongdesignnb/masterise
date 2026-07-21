@@ -101,7 +101,7 @@ export function enhanceArticleTables(content?: string | null) {
     // One- and two-column tables should fit the article on phones. Wider
     // tables retain a readable column width and scroll inside their wrapper.
     const minWidth = columnCount <= 2
-      ? 0
+      ? 100
       : Math.min(1400, columnCount * 140);
 
     return `<div class="article-table-scroll" role="region" tabindex="0" aria-label="Bảng dữ liệu trong bài viết" data-column-count="${columnCount}" style="--article-table-min-width: ${minWidth}px">${table}</div>`;

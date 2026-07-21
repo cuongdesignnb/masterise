@@ -50,12 +50,25 @@ export default function NewsArticleMainContent({ post, related = [] }: Props) {
         <RichHtmlContent html={mainHtml} />
       </article>
       <style>{`
-        .article-table-scroll { width: 100%; min-width: 0; max-width: 100%; overflow-x: auto; margin: 1.5rem 0; border-radius: 14px; overscroll-behavior-inline: contain; -webkit-overflow-scrolling: touch; }
-        .article-table-scroll table { width: 100%; min-width: max(100%, var(--article-table-min-width, 680px)); table-layout: fixed; border-collapse: collapse; background: #fff; }
-        .article-table-scroll th, .article-table-scroll td { min-width: 0; border: 1px solid #e8dccb; padding: 10px 12px; vertical-align: top; white-space: normal; overflow-wrap: anywhere; word-break: normal; }
-        .article-table-scroll thead th { background: #fbf8f2; color: #1f1b16; font-weight: 700; }
+        .article-table-scroll { width: 100%; min-width: 0; max-width: 100%; overflow-x: auto; margin: 1.5rem 0; border: 1px solid #e8dccb; border-radius: 16px; background: #fff; box-shadow: 0 12px 30px rgba(87, 61, 28, .06); overscroll-behavior-inline: contain; -webkit-overflow-scrolling: touch; }
+        .article-table-scroll table { width: 100%; min-width: max(100%, var(--article-table-min-width, 680px)); table-layout: fixed; border-collapse: separate; border-spacing: 0; background: #fff; }
+        .article-table-scroll th, .article-table-scroll td { min-width: 0; border-right: 1px solid #e8dccb; border-bottom: 1px solid #e8dccb; padding: 11px 12px; vertical-align: top; white-space: normal; overflow-wrap: anywhere; word-break: normal; }
+        .article-table-scroll th:last-child, .article-table-scroll td:last-child { border-right: 0; }
+        .article-table-scroll tr:last-child > th, .article-table-scroll tr:last-child > td { border-bottom: 0; }
+        .article-table-scroll thead th, .article-table-scroll tr:first-child > th { background: #fbf8f2; color: #1f1b16; font-weight: 800; }
+        .article-table-scroll[data-column-count="1"] table,
+        .article-table-scroll[data-column-count="2"] table { min-width: 100%; table-layout: fixed; }
+        .article-table-scroll[data-column-count="2"] th:first-child,
+        .article-table-scroll[data-column-count="2"] td:first-child { width: 42%; }
+        .article-table-scroll[data-column-count="2"] th,
+        .article-table-scroll[data-column-count="2"] td { font-size: 13px; line-height: 1.55; }
         .article-table-scroll:focus-visible { outline: 2px solid #b88746; outline-offset: 2px; }
-        @media (min-width: 640px) { .article-table-scroll table { table-layout: auto; } }
+        @media (min-width: 640px) {
+          .article-table-scroll table { table-layout: auto; }
+          .article-table-scroll[data-column-count="1"] table,
+          .article-table-scroll[data-column-count="2"] table { table-layout: fixed; }
+          .article-table-scroll th, .article-table-scroll td { padding: 12px 14px; }
+        }
       `}</style>
     </section>
   );
