@@ -7,7 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test:contact": "node scripts/run-contact-page-tests.mjs"
+    "test:contact": "node scripts/run-contact-page-tests.mjs",
+    "test:seo": "node scripts/seo-smoke.mjs",
+    "test:seo:assets": "node scripts/validate-seo-assets.mjs",
+    "test:seo:schema": "node scripts/run-seo-schema-tests.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",

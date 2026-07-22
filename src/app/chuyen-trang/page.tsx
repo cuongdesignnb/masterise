@@ -2,17 +2,60 @@ import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { getPublicPages } from '@/services/pageServerService';
+import { SITE_URL } from '@/config/seo';
+import { buildMetadata } from '@/lib/seo/buildMetadata';
+import { getSiteEntityConfig } from '@/services/siteEntityServerService';
+import {
+  buildOperatorNode,
+  buildWebSiteNode,
+  buildWebPageNode,
+  buildBreadcrumbSchema,
+  buildItemListSchema,
+  buildOperatorContext,
+} from '@/lib/seo/schema';
+import JsonLd from '@/components/seo/JsonLd';
 
-export const metadata = {
-  title: 'Chuyên trang | Masterise Homes',
+export const metadata = buildMetadata({
+  title: 'Chuyên trang',
   description: 'Tổng hợp các chuyên trang, chính sách và nội dung thông tin từ Masterise Homes.',
-};
+  path: '/chuyen-trang',
+});
 
 export default async function ChuyenTrangListPage() {
-  const pages = await getPublicPages();
+  const [pages, siteEntity] = await Promise.all([
+    getPublicPages(),
+    getSiteEntityConfig(),
+  ]);
+  const pageUrl = `${SITE_URL}/chuyen-trang`;
+
+  const operatorNode = buildOperatorNode(siteEntity);
+  const websiteNode = buildWebSiteNode(buildOperatorContext(siteEntity));
+  const webpageNode = {
+    ...buildWebPageNode(pageUrl, 'Chuyên trang Masterise Homes', 'Tổng hợp các chuyên trang, chính sách và thông tin', { breadcrumbId: `${pageUrl}#breadcrumb` }),
+    '@type': 'CollectionPage',
+  };
+  const breadcrumbNode = buildBreadcrumbSchema(pageUrl, [
+    { name: "Trang chủ", item: "/" },
+    { name: "Chuyên trang", item: "/chuyen-trang" },
+  ]);
+
+  const itemListNode = pages.length > 0 ? buildItemListSchema(
+    pageUrl,
+    "Danh sách chuyên trang Masterise Homes",
+    pages.map((p) => ({ name: p.title, url: `/chuyen-trang/${p.slug}` }))
+  ) : null;
+
+  const graph = [
+    operatorNode,
+    websiteNode,
+    webpageNode,
+    breadcrumbNode,
+    itemListNode,
+  ].filter(Boolean);
 
   return (
     <>
+      <JsonLd schema={{ "@context": "https://schema.org", "@graph": graph }} />
       <Header />
       <main className="bg-[#FBF8F2] pt-[96px] text-[#1F1B16]">
         <section className="mx-auto w-full max-w-[1180px] px-4 pb-16 pt-8 sm:px-6 lg:px-8">

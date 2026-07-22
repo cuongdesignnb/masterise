@@ -1,0 +1,54 @@
+timestamp: 2026-07-21T18:35:28.7411565Z
+commit SHA: aae40a369c6f9dac62a5dfc742870084e1a0ad96
+command: SEO_BASE_URL=http://localhost:8746 npm run test:seo:assets
+
+
+> temp-next-app@0.1.0 test:seo:assets
+> node scripts/validate-seo-assets.mjs
+
+PASS public/brand/operator-logo-512.png signature matches png
+PASS public/brand/operator-logo-512.png decoded MIME is png
+PASS public/brand/operator-logo-512.png is 512x512
+PASS public/brand/operator-logo-512.png is not empty or a tiny placeholder
+PASS public/brand/operator-logo-512.png is not a single-colour image
+PASS /brand/operator-logo-512.png returns HTTP 200
+PASS public/icons/icon-192.png signature matches png
+PASS public/icons/icon-192.png decoded MIME is png
+PASS public/icons/icon-192.png is 192x192
+PASS public/icons/icon-192.png is not empty or a tiny placeholder
+PASS public/icons/icon-192.png is not a single-colour image
+PASS /icons/icon-192.png returns HTTP 200
+PASS public/icons/icon-512.png signature matches png
+PASS public/icons/icon-512.png decoded MIME is png
+PASS public/icons/icon-512.png is 512x512
+PASS public/icons/icon-512.png is not empty or a tiny placeholder
+PASS public/icons/icon-512.png is not a single-colour image
+PASS /icons/icon-512.png returns HTTP 200
+PASS src/app/icon.png signature matches png
+PASS src/app/icon.png decoded MIME is png
+PASS src/app/icon.png is 512x512
+PASS src/app/icon.png is not empty or a tiny placeholder
+PASS src/app/icon.png is not a single-colour image
+PASS /icon.png returns HTTP 200
+PASS src/app/apple-icon.png signature matches png
+PASS src/app/apple-icon.png decoded MIME is png
+PASS src/app/apple-icon.png is 180x180
+PASS src/app/apple-icon.png is not empty or a tiny placeholder
+PASS src/app/apple-icon.png is not a single-colour image
+PASS /apple-icon.png returns HTTP 200
+PASS public/og-default.jpg signature matches jpeg
+PASS public/og-default.jpg decoded MIME is jpeg
+PASS public/og-default.jpg is 1200x630
+PASS public/og-default.jpg is not empty or a tiny placeholder
+PASS public/og-default.jpg is not a single-colour image
+PASS /og-default.jpg returns HTTP 200
+PASS src/app/favicon.ico has an ICO signature
+PASS src/app/favicon.ico is not empty or a tiny placeholder
+PASS src/app/favicon.ico contains 16, 32 and 48 pixel entries
+PASS /favicon.ico returns HTTP 200
+PASS /favicon.ico returns image/x-icon
+PASS /twitter-image returns HTTP 200
+PASS /twitter-image returns image/png
+PASS /twitter-image is 1200x630
+
+exit code: 0

@@ -18,6 +18,7 @@ class CareerJob extends Model
         'vacancies' => 'integer', 'sort_order' => 'integer',
         'is_featured' => 'boolean', 'is_published' => 'boolean',
         'application_deadline' => 'datetime', 'published_at' => 'datetime', 'closed_at' => 'datetime',
+        'schema_direct_apply' => 'boolean',
     ];
 
     protected $appends = ['status_label', 'employment_type_label', 'accepting_applications'];

@@ -21,7 +21,6 @@ import {
   Quote,
   ShieldCheck,
   Sparkles,
-  Star,
   Store,
   Trees,
   TrendingUp,
@@ -1474,7 +1473,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                     <Quote size={25} fill="currentColor" className="shrink-0 text-gold/35" />
                     <p className="text-[13px] leading-6 text-muted">{testimonial.content}</p>
                   </div>
-                  <div className="mt-5 flex items-center justify-between gap-3">
+                  <div className="mt-5 flex items-center gap-3">
                     <div className="flex min-w-0 items-center gap-3">
                       <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full border border-gold/30">
                         <Image
@@ -1489,11 +1488,6 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                         <h3 className="truncate text-[12px] font-bold">{testimonial.name}</h3>
                         <p className="text-[11px] text-muted">{testimonial.role}</p>
                       </div>
-                    </div>
-                    <div className="flex shrink-0 text-[#d79a2c]">
-                      {Array.from({ length: 5 }).map((_, index) => (
-                        <Star key={index} size={12} fill="currentColor" />
-                      ))}
                     </div>
                   </div>
                 </article>

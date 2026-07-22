@@ -2,6 +2,11 @@
 
 return [
 
+    'next_revalidation' => [
+        'url' => env('NEXT_REVALIDATION_URL'),
+        'secret' => env('NEXT_REVALIDATION_SECRET'),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Third Party Services

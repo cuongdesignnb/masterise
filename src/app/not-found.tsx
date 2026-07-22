@@ -8,6 +8,10 @@ import Header from "@/components/Header";
 export const metadata: Metadata = {
   title: "Không tìm thấy trang",
   description: "Trang bạn đang tìm kiếm không tồn tại hoặc đã được chuyển sang địa chỉ khác.",
+  robots: {
+    index: false,
+    follow: true,
+  },
 };
 
 export default function NotFound() {

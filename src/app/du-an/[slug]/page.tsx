@@ -3,11 +3,27 @@ import { notFound } from "next/navigation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProjectDetailClient from "@/components/project-detail/ProjectDetailClient";
+import ProjectReviews from "@/components/project-detail/ProjectReviews";
 import StickyLeadCTA from "@/components/lead/StickyLeadCTA";
 import FloatingContactButtons from "@/components/lead/FloatingContactButtons";
+import JsonLd from "@/components/seo/JsonLd";
 import { getProjectForSEO } from "@/services/projectServerService";
+import { getSiteEntityConfig } from "@/services/siteEntityServerService";
+import { getSeoFeatureFlags } from "@/services/seoFeatureFlagsServerService";
 import { mapApiProjectToProjectDetail } from "@/adapters/projectAdapter";
 import { absoluteUrl, SITE_NAME, SITE_URL } from "@/config/seo";
+import { buildMetadata } from "@/lib/seo/buildMetadata";
+import {
+  buildOperatorNode,
+  buildWebSiteNode,
+  buildWebPageNode,
+  buildBreadcrumbSchema,
+  buildPlaceNode,
+  buildResidenceNode,
+  buildOffersNode,
+  buildProductNode,
+  buildOperatorContext,
+} from "@/lib/seo/schema";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -44,42 +60,33 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const project = await getProjectForSEO(slug);
 
   if (!project) {
-    return {
+    return buildMetadata({
       title: "Không tìm thấy dự án",
       description: "Dự án không tồn tại hoặc đã bị gỡ xuống.",
-    };
+      noindex: true,
+    });
   }
 
-  const seoTitle = project.seo_meta?.title || project.name;
+  const seoTitle = project.seo_meta?.title ? { absolute: project.seo_meta.title } : project.name;
   const seoDescription = project.seo_meta?.description || project.description || `Thông tin chi tiết dự án ${project.name}.`;
   const seoImage = project.seo_meta?.og_image || project.banner_image || project.thumbnail || undefined;
   const projectUrl = absoluteUrl(`/${project.slug}`);
 
-  return {
+  return buildMetadata({
     title: seoTitle,
     description: seoDescription,
-    alternates: { canonical: projectUrl },
-    openGraph: {
-      title: project.seo_meta?.og_title || seoTitle,
-      description: project.seo_meta?.og_description || seoDescription,
-      url: projectUrl,
-      type: "website",
-      locale: "vi_VN",
-      siteName: SITE_NAME,
-      images: seoImage ? [{ url: absoluteUrl(seoImage) }] : undefined,
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: project.seo_meta?.og_title || seoTitle,
-      description: project.seo_meta?.og_description || seoDescription,
-      images: seoImage ? [absoluteUrl(seoImage)] : undefined,
-    },
-  };
+    path: `/${project.slug}`,
+    ogImage: seoImage ? absoluteUrl(seoImage) : undefined,
+  });
 }
 
 export default async function ProjectDetailPage({ params }: PageProps) {
   const { slug } = await params;
-  const projectData = await getProjectForSEO(slug);
+  const [projectData, siteEntity, featureFlags] = await Promise.all([
+    getProjectForSEO(slug),
+    getSiteEntityConfig(),
+    getSeoFeatureFlags(),
+  ]);
 
   if (!projectData) {
     notFound();
@@ -95,63 +102,92 @@ export default async function ProjectDetailPage({ params }: PageProps) {
     projectDetail.mapImageUrl,
   ].filter(Boolean).map((image) => absoluteUrl(image as string))));
 
-  const offer = projectDetail.schemaPrice || projectData.price_text
-    ? {
-        "@type": "Offer",
-        priceCurrency: projectDetail.schemaPriceCurrency || "VND",
-        price: projectDetail.schemaPrice || undefined,
-        availability: projectDetail.schemaAvailability || undefined,
-        url: projectUrl,
-      }
-    : undefined;
+  // Numerical Price / Offer Nodes
+  const priceMin = projectData.price_min ? Number(projectData.price_min) : undefined;
+  const priceMax = projectData.price_max ? Number(projectData.price_max) : undefined;
+  const schemaPrice = projectDetail.schemaPrice ? Number(projectDetail.schemaPrice) : undefined;
 
-  const offerItems = [
-    ...projectDetail.floorPlans.map((item, index) => ({
-      "@type": "Offer",
-      position: index + 1,
-      name: item.name || item.productType || `Sản phẩm ${index + 1}`,
-      description: item.description || item.area || item.totalArea || undefined,
-      priceCurrency: projectDetail.schemaPriceCurrency || "VND",
-      availability: projectDetail.schemaAvailability || "https://schema.org/InStock",
-      url: projectUrl,
-    })),
-    ...projectDetail.priceRows
-      .filter((item) => item.kind === "row")
-      .map((item, index) => ({
-        "@type": "Offer",
-        position: projectDetail.floorPlans.length + index + 1,
-        name: item.productType || `Bảng giá ${index + 1}`,
-        description: [item.area, item.payment, item.status, item.note].filter(Boolean).join(" - ") || undefined,
-        price: item.price || undefined,
-        priceCurrency: projectDetail.schemaPriceCurrency || "VND",
-        availability: projectDetail.schemaAvailability || "https://schema.org/InStock",
-        url: projectUrl,
-      })),
-  ];
+  const offerNode = buildOffersNode(projectUrl, {
+    price: schemaPrice || (priceMin && !priceMax ? priceMin : undefined),
+    lowPrice: priceMin && priceMax && priceMax > priceMin ? priceMin : undefined,
+    highPrice: priceMin && priceMax && priceMax > priceMin ? priceMax : undefined,
+    priceCurrency: projectDetail.schemaPriceCurrency || "VND",
+    availability: projectDetail.schemaAvailability || undefined,
+  });
 
-  const faqSchema = projectDetail.faqs.length
-    ? {
-        "@type": "FAQPage",
-        "@id": `${projectUrl}#faq`,
-        mainEntity: projectDetail.faqs.map((faq) => ({
-          "@type": "Question",
-          name: faq.question,
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: stripHtml(faq.answer),
-          },
-        })),
-      }
-    : null;
+  // Real Reviews and Summary from Backend
+  const reviewsList = projectData.reviews?.items ?? [];
+  const reviewSummary = projectData.reviews?.aggregate ?? null;
 
-  const offerCatalog = offerItems.length
-    ? {
-        "@type": "OfferCatalog",
-        "@id": `${projectUrl}#offers`,
-        name: `Sản phẩm và bảng giá ${projectDetail.name}`,
-        itemListElement: offerItems,
-      }
-    : null;
+  const aggregateRatingNode = reviewSummary && reviewSummary.ratingCount > 0 ? {
+    "@type": "AggregateRating",
+    ratingValue: reviewSummary.ratingValue,
+    ratingCount: reviewSummary.ratingCount,
+    reviewCount: reviewSummary.reviewCount,
+    bestRating: 5,
+    worstRating: 1,
+  } : undefined;
+
+  const reviewNodes = reviewsList.map((rev) => ({
+    "@type": "Review",
+    author: {
+      "@type": "Person",
+      name: rev.reviewer_name,
+    },
+    datePublished: rev.reviewed_at || undefined,
+    reviewBody: rev.review_body,
+    reviewRating: {
+      "@type": "Rating",
+      ratingValue: Number(rev.rating),
+      bestRating: 5,
+      worstRating: 1,
+    },
+  }));
+
+  // Eligibility Gate: Only emit Product schema if there is a valid offer or real reviews
+  const schemaReviewSummary = featureFlags.projectReviewSchema ? aggregateRatingNode : undefined;
+  const schemaReviewNodes = featureFlags.projectReviewSchema ? reviewNodes : [];
+  const isProductEligible = featureFlags.projectProductSchema
+    && (!!offerNode || !!schemaReviewSummary || schemaReviewNodes.length > 0);
+
+  const effectiveSiteEntity = {
+    ...siteEntity,
+    enabled: featureFlags.siteEntity && siteEntity.enabled,
+  };
+  const operatorContext = buildOperatorContext(effectiveSiteEntity);
+
+  const productNode = isProductEligible ? buildProductNode(projectUrl, {
+    name: projectDetail.name,
+    description: projectDetail.description,
+    images: projectImages,
+    offers: offerNode || undefined,
+    aggregateRating: schemaReviewSummary,
+    reviews: schemaReviewNodes.length > 0 ? schemaReviewNodes : undefined,
+  }, operatorContext) : null;
+
+  // Base Semantic Graph Nodes
+  const operatorNode = buildOperatorNode(effectiveSiteEntity);
+  const websiteNode = buildWebSiteNode(operatorContext);
+  const webpageNode = buildWebPageNode(projectUrl, projectDetail.name, projectDetail.description, { aboutId: `${projectUrl}#residence`, breadcrumbId: `${projectUrl}#breadcrumb` });
+  const breadcrumbNode = buildBreadcrumbSchema(projectUrl, [
+    { name: "Trang chủ", item: "/" },
+    { name: "Dự án", item: "/du-an" },
+    { name: projectDetail.name, item: `/${projectDetail.slug}` },
+  ]);
+  const placeNode = buildPlaceNode(
+    projectUrl,
+    projectDetail.name,
+    projectData.address || projectData.location || projectDetail.address,
+    projectData.lat ?? undefined,
+    projectData.lng ?? undefined
+  );
+  const residenceNode = buildResidenceNode(
+    projectUrl,
+    projectDetail.name,
+    projectDetail.description,
+    projectDetail.address,
+    projectImages
+  );
 
   const videoSchema = projectDetail.videoUrl
     ? {
@@ -166,92 +202,31 @@ export default async function ProjectDetailPage({ params }: PageProps) {
       }
     : null;
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "Organization",
-        "@id": `${SITE_URL}/#organization`,
-        name: SITE_NAME,
-        url: SITE_URL,
-        logo: `${SITE_URL}/logo.png`,
-      },
-      {
-        "@type": "WebPage",
-        "@id": `${projectUrl}#webpage`,
-        url: projectUrl,
-        name: projectDetail.name,
-        description: projectDetail.description,
-        about: { "@id": `${projectUrl}#project` },
-        primaryImageOfPage: projectImages[0] ? { "@type": "ImageObject", url: projectImages[0] } : undefined,
-      },
-      {
-        "@type": "BreadcrumbList",
-        "@id": `${projectUrl}#breadcrumb`,
-        itemListElement: [
-          { "@type": "ListItem", position: 1, name: "Trang chủ", item: SITE_URL },
-          { "@type": "ListItem", position: 2, name: "Dự án", item: `${SITE_URL}/du-an` },
-          { "@type": "ListItem", position: 3, name: projectDetail.name, item: projectUrl },
-        ],
-      },
-      {
-        "@type": "Product",
-        "@id": `${projectUrl}#project`,
-        name: projectDetail.name,
-        image: projectImages,
-        brand: { "@type": "Brand", name: SITE_NAME },
-        description: projectDetail.description,
-        category: "Real Estate Project",
-        ...(offer ? { offers: offer } : {}),
-      },
-      {
-        "@type": "Residence",
-        "@id": `${projectUrl}#residence`,
-        name: projectDetail.name,
-        description: projectDetail.description,
-        url: projectUrl,
-        image: projectImages,
-        address: projectDetail.address,
-      },
-      {
-        "@type": "Place",
-        "@id": `${projectUrl}#place`,
-        name: projectDetail.name,
-        address: {
-          "@type": "PostalAddress",
-          streetAddress: projectData.address || projectData.location || projectDetail.address,
-          addressLocality: projectData.district || projectData.province || undefined,
-          addressRegion: projectData.province || undefined,
-          addressCountry: "VN",
-        },
-        geo: projectData.lat && projectData.lng ? {
-          "@type": "GeoCoordinates",
-          latitude: projectData.lat,
-          longitude: projectData.lng,
-        } : undefined,
-      },
-      offerCatalog,
-      faqSchema,
-      ...projectImages.slice(0, 8).map((image, index) => ({
-        "@type": "ImageObject",
-        "@id": `${projectUrl}#image-${index + 1}`,
-        url: image,
-        caption: `${projectDetail.name} - hình ảnh ${index + 1}`,
-      })),
-      videoSchema,
-    ].filter(Boolean),
-  };
+  const graph = [
+    operatorNode,
+    websiteNode,
+    webpageNode,
+    breadcrumbNode,
+    placeNode,
+    residenceNode,
+    productNode,
+    videoSchema,
+  ].filter(Boolean);
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
-        }}
-      />
+      <JsonLd schema={{ "@context": "https://schema.org", "@graph": graph }} />
       <Header />
       <ProjectDetailClient project={projectDetail} />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <ProjectReviews
+          projectId={projectDetail.id || projectData.id}
+          projectName={projectDetail.name}
+          reviews={reviewsList}
+          summary={reviewSummary}
+          submissionEnabled={featureFlags.publicProjectReviewSubmission}
+        />
+      </div>
       <StickyLeadCTA projectId={projectDetail.id || projectData.id} projectName={projectDetail.name} />
       <FloatingContactButtons projectId={projectDetail.id || projectData.id} />
       <Footer />

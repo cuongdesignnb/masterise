@@ -1,0 +1,88 @@
+timestamp: 2026-07-21T18:33:42.4367567Z
+commit SHA: aae40a369c6f9dac62a5dfc742870084e1a0ad96
+command: docker compose exec -T php php artisan migrate:fresh --env=testing --force (isolated SQLite)
+
+time="2026-07-22T01:33:43+07:00" level=warning msg="D:\\BDS\\docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+
+   INFO  Preparing database.
+
+  Creating migration table ..................................... 288.43ms DONE
+
+   INFO  Running migrations.
+
+  0001_01_01_000000_create_users_table ......................... 165.37ms DONE
+  0001_01_01_000001_create_cache_table .......................... 39.42ms DONE
+  0001_01_01_000002_create_jobs_table ........................... 57.88ms DONE
+  2024_01_20_000001_create_hero_banners_table .................... 5.54ms DONE
+  2024_01_20_000002_create_faqs_table ............................ 5.17ms DONE
+  2024_01_20_000003_create_testimonials_table .................... 5.32ms DONE
+  2024_01_20_000004_create_partners_table ........................ 4.73ms DONE
+  2026_06_13_033625_create_personal_access_tokens_table ......... 21.99ms DONE
+  2026_06_13_033627_create_permission_tables ................... 567.10ms DONE
+  2026_06_13_033706_create_customer_profiles_table ............... 5.73ms DONE
+  2026_06_13_033711_create_project_categories_table .............. 9.29ms DONE
+  2026_06_13_033716_create_projects_table ........................ 9.60ms DONE
+  2026_06_13_033721_create_project_category_project_table ........ 4.87ms DONE
+  2026_06_13_033726_create_post_categories_table ................. 9.29ms DONE
+  2026_06_13_033731_create_posts_table ........................... 9.29ms DONE
+  2026_06_13_033737_create_tags_table ............................ 8.85ms DONE
+  2026_06_13_033742_create_taggables_table ...................... 14.02ms DONE
+  2026_06_13_033747_create_leads_table .......................... 12.52ms DONE
+  2026_06_13_033752_create_lead_notes_table ...................... 5.48ms DONE
+  2026_06_13_033758_create_appointments_table .................... 5.25ms DONE
+  2026_06_13_033803_create_saved_projects_table .................. 5.42ms DONE
+  2026_06_13_033808_create_media_table ........................... 4.76ms DONE
+  2026_06_13_033813_create_seo_meta_table ....................... 13.68ms DONE
+  2026_06_13_033818_create_settings_table ........................ 8.99ms DONE
+  2026_06_13_150000_create_developers_table ..................... 10.16ms DONE
+  2026_06_13_150001_create_locations_table ...................... 10.14ms DONE
+  2026_06_13_150002_add_extended_fields_to_projects_table ...... 156.70ms DONE
+  2026_06_15_000000_update_leads_table ......................... 100.82ms DONE
+  2026_06_15_000001_create_lead_activities_table ................ 10.30ms DONE
+  2026_06_15_000002_create_lead_assignments_table ................ 5.46ms DONE
+  2026_06_15_000003_create_project_vr_tours_table ............... 12.87ms DONE
+  2026_06_15_000004_create_project_vr_scenes_table .............. 22.38ms DONE
+  2026_06_15_000005_create_project_vr_hotspots_table ............ 22.49ms DONE
+  2026_06_15_000006_add_vr_fields_to_leads_table ............... 158.30ms DONE
+  2026_06_16_023255_create_ai_content_batches_table ............. 18.28ms DONE
+  2026_06_16_023305_create_ai_generation_jobs_table ............. 27.45ms DONE
+  2026_06_16_023316_update_posts_table_for_ai_and_scheduling .... 37.67ms DONE
+  2026_06_18_000001_add_sales_flags_to_projects_table ........... 22.52ms DONE
+  2026_06_18_000002_add_type_and_event_fields_to_posts_table .... 33.34ms DONE
+  2026_06_21_020031_create_pages_table ........................... 9.61ms DONE
+  2026_06_21_094006_add_map_image_url_to_projects_table .......... 6.52ms DONE
+  2026_06_21_100300_add_location_description_to_projects_table ... 5.26ms DONE
+  2026_06_21_110000_add_detail_content_fields_to_projects_table  129.42ms DONE
+  2026_06_25_230000_widen_project_media_url_columns .............. 0.10ms DONE
+  2026_06_30_090000_add_handover_standards_to_projects_table ..... 7.40ms DONE
+  2026_06_30_100000_add_project_label_to_projects_table .......... 5.82ms DONE
+  2026_07_02_000001_create_post_media_table ...................... 9.03ms DONE
+  2026_07_02_120000_add_section_titles_to_projects_table ......... 5.83ms DONE
+  2026_07_02_130000_add_detail_gallery_to_projects_table ........ 21.42ms DONE
+  2026_07_12_000001_create_post_related_posts_table ............. 17.41ms DONE
+  2026_07_12_000002_normalize_project_regions .................... 8.65ms DONE
+  2026_07_12_000003_add_intro_content_to_posts_table ............. 7.00ms DONE
+  2026_07_12_000004_map_project_city_regions ................... 997.13ms DONE
+  2026_07_12_000005_repair_ring_road_article_table_headers ....... 0.37ms DONE
+  2026_07_13_000006_enforce_project_regions_from_region_and_province  1.27ms DONE
+  2026_07_13_000007_create_regions_table ........................ 14.48ms DONE
+  2026_07_13_000008_add_region_id_to_locations_table ............ 28.70ms DONE
+  2026_07_13_000009_seed_and_backfill_regions ................... 62.37ms DONE
+  2026_07_13_000010_unify_project_status ........................ 93.55ms DONE
+  2026_07_14_000011_classify_project_categories ................. 10.24ms DONE
+  2026_07_14_000012_assign_missing_project_types ................. 5.89ms DONE
+  2026_07_14_000013_normalize_project_prices .................... 52.34ms DONE
+  2026_07_14_000014_add_floor_plan_groups_to_projects_table ...... 6.45ms DONE
+  2026_07_15_000015_create_project_statuses_table ............... 70.50ms DONE
+  2026_07_15_000016_backfill_project_locations_for_region_filters  60.42ms DONE
+  2026_07_16_000001_create_contact_page_content_setting ........ 712.46ms DONE
+  2026_07_16_100000_create_career_module_tables ................. 89.05ms DONE
+  2026_07_16_100001_add_career_permissions ..................... 558.51ms DONE
+  2026_07_16_110000_add_public_listing_indexes .................. 22.54ms DONE
+  2026_07_17_010000_normalize_post_inline_images ................ 11.87ms DONE
+  2026_07_18_000001_create_project_related_posts_table .......... 13.95ms DONE
+  2026_07_21_000000_create_project_reviews_table ................ 22.88ms DONE
+  2026_07_22_000000_add_seo_eligibility_fields ................. 121.32ms DONE
+
+
+exit code: 0

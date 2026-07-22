@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Helpers\AiContentHelper;
 use App\Http\Resources\ProjectRelatedPostResource;
 use App\Http\Resources\ProjectListResource;
+use App\Http\Resources\PublicProjectReviewResource;
 use App\Models\Project;
 use App\Models\ProjectCategory;
 use App\Models\ProjectStatusDefinition;
@@ -337,7 +338,13 @@ class ProjectController extends Controller
     public function show($slug)
     {
         $query = Project::where('slug', $slug)
-            ->with(['categories', 'seoMeta', 'developerRelation', 'locationRelation.region']);
+            ->with([
+                'categories',
+                'seoMeta',
+                'developerRelation',
+                'locationRelation.region',
+                'reviews' => fn ($q) => $q->where('is_published', true)->where('moderation_status', 'approved')->orderBy('created_at', 'desc'),
+            ]);
         $user = request()->user('sanctum');
         $canViewUnpublished = $user && $user->hasAnyRole(['super_admin', 'admin', 'marketing']);
 
@@ -366,6 +373,11 @@ class ProjectController extends Controller
             ->get();
 
         $projectData = $project->toArray();
+        unset($projectData['reviews']);
+        $projectData['reviews'] = [
+            'items' => PublicProjectReviewResource::collection($project->getRelation('reviews'))->resolve(request()),
+            'aggregate' => $project->review_summary,
+        ];
         $projectData['related_posts'] = ProjectRelatedPostResource::collection(
             $this->projectRelatedPosts($project, true)
         )->resolve(request());

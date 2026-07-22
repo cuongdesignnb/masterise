@@ -1,0 +1,99 @@
+name: SEO Schema RC3
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [chore/seo-schema-hardening]
+
+concurrency:
+  group: seo-schema-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npx tsc --noEmit
+      - run: npm run test:seo:schema
+      - run: npm run test:seo:assets
+      - run: npm run build
+        env:
+          NEXT_PUBLIC_API_URL: http://127.0.0.1:8747/api/v1
+
+  backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, sqlite3, pdo_sqlite
+          coverage: none
+      - uses: ramsey/composer-install@v3
+        with:
+          working-directory: backend
+      - run: cp .env.example .env
+      - run: php artisan key:generate
+      - name: Prepare isolated testing database
+        run: |
+          touch database/database.sqlite
+          DB_CONNECTION=sqlite DB_DATABASE="$PWD/database/database.sqlite" php artisan migrate:fresh --env=testing --force
+      - run: php artisan test
+
+  integration-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    needs: [frontend, backend]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, sqlite3, pdo_sqlite
+          coverage: none
+      - uses: ramsey/composer-install@v3
+        with:
+          working-directory: backend
+      - run: npm ci
+      - name: Prepare isolated testing database
+        working-directory: backend
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          touch database/database.sqlite
+          DB_CONNECTION=sqlite DB_DATABASE="$PWD/database/database.sqlite" php artisan migrate:fresh --force
+      - name: Start backend and frontend
+        env:
+          NEXT_PUBLIC_API_URL: http://127.0.0.1:8747/api/v1
+        run: |
+          (cd backend && DB_CONNECTION=sqlite DB_DATABASE="$PWD/database/database.sqlite" php artisan serve --host=127.0.0.1 --port=8747 > /tmp/backend.log 2>&1 &)
+          npm run build
+          npm run start -- --hostname 127.0.0.1 --port 8746 > /tmp/frontend.log 2>&1 &
+          for i in {1..60}; do curl -fsS http://127.0.0.1:8746/ >/dev/null && break; sleep 2; done
+          curl -fsS http://127.0.0.1:8746/ >/dev/null
+      - name: Run base route smoke with explicit fixture skips
+        env:
+          SEO_BASE_URL: http://127.0.0.1:8746
+          SEO_SMOKE_STRICT: '0'
+        run: npm run test:seo
+      - if: failure()
+        run: |
+          cat /tmp/backend.log || true
+          cat /tmp/frontend.log || true

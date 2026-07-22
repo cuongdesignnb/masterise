@@ -152,6 +152,13 @@ function AdminNews() {
   const [formEventEndAt, setFormEventEndAt] = useState('');
   const [formEventLocation, setFormEventLocation] = useState('');
   const [formEventRegisterUrl, setFormEventRegisterUrl] = useState('');
+  const [formEventSeo, setFormEventSeo] = useState({
+    event_location_name: '', event_street_address: '', event_locality: '', event_region: '',
+    event_postal_code: '', event_country: 'VN', event_attendance_mode: 'Offline' as 'Offline' | 'Online' | 'Mixed',
+    event_status: 'Scheduled' as 'Scheduled' | 'Cancelled' | 'Postponed' | 'Rescheduled',
+    event_organizer_name: '', event_organizer_url: '', event_online_url: '', event_price: '',
+    event_currency: 'VND', event_availability: 'InStock' as 'InStock' | 'PreOrder' | 'SoldOut',
+  });
   const [formStatus, setFormStatus] = useState<'draft' | 'published' | 'scheduled'>('draft');
   const [formIsFeatured, setFormIsFeatured] = useState(false);
   const [formCategoryId, setFormCategoryId] = useState<number | ''>('');
@@ -245,6 +252,12 @@ function AdminNews() {
     setFormEventEndAt('');
     setFormEventLocation('');
     setFormEventRegisterUrl('');
+    setFormEventSeo({
+      event_location_name: '', event_street_address: '', event_locality: '', event_region: '',
+      event_postal_code: '', event_country: 'VN', event_attendance_mode: 'Offline', event_status: 'Scheduled',
+      event_organizer_name: '', event_organizer_url: '', event_online_url: '', event_price: '',
+      event_currency: 'VND', event_availability: 'InStock',
+    });
     setFormStatus('draft');
     setFormIsFeatured(false);
     setFormCategoryId(categoriesData && categoriesData.length > 0 ? categoriesData[0].id : '');
@@ -296,6 +309,22 @@ function AdminNews() {
     setFormEventEndAt(post.event_end_at ? post.event_end_at.slice(0, 16) : '');
     setFormEventLocation(post.event_location || '');
     setFormEventRegisterUrl(post.event_register_url || '');
+    setFormEventSeo({
+      event_location_name: post.event_location_name || '',
+      event_street_address: post.event_street_address || '',
+      event_locality: post.event_locality || '',
+      event_region: post.event_region || '',
+      event_postal_code: post.event_postal_code || '',
+      event_country: post.event_country || 'VN',
+      event_attendance_mode: post.event_attendance_mode || 'Offline',
+      event_status: post.event_status || 'Scheduled',
+      event_organizer_name: post.event_organizer_name || '',
+      event_organizer_url: post.event_organizer_url || '',
+      event_online_url: post.event_online_url || '',
+      event_price: post.event_price || '',
+      event_currency: post.event_currency || 'VND',
+      event_availability: post.event_availability || 'InStock',
+    });
     setFormStatus(post.status);
     setFormIsFeatured(post.is_featured);
     setFormCategoryId(post.post_category_id);
@@ -326,6 +355,7 @@ function AdminNews() {
         event_end_at: formEventEndAt || null,
         event_location: formEventLocation || null,
         event_register_url: formEventRegisterUrl || null,
+        ...Object.fromEntries(Object.entries(formEventSeo).map(([key, value]) => [key, value || null])),
         status: formStatus,
         is_featured: formIsFeatured,
         post_category_id: Number(formCategoryId),
@@ -913,6 +943,68 @@ function AdminNews() {
                             className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
                             placeholder="https://..."
                           />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Hình thức tham dự</label>
+                          <select value={formEventSeo.event_attendance_mode} onChange={(e) => setFormEventSeo((value) => ({ ...value, event_attendance_mode: e.target.value as 'Offline' | 'Online' | 'Mixed' }))} className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm">
+                            <option value="Offline">Trực tiếp</option><option value="Online">Trực tuyến</option><option value="Mixed">Kết hợp</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Trạng thái sự kiện</label>
+                          <select value={formEventSeo.event_status} onChange={(e) => setFormEventSeo((value) => ({ ...value, event_status: e.target.value as 'Scheduled' | 'Cancelled' | 'Postponed' | 'Rescheduled' }))} className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm">
+                            <option value="Scheduled">Đã lên lịch</option><option value="Postponed">Tạm hoãn</option><option value="Rescheduled">Đổi lịch</option><option value="Cancelled">Đã hủy</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Tên địa điểm chuẩn Schema</label>
+                          <input value={formEventSeo.event_location_name} onChange={(e) => setFormEventSeo((value) => ({ ...value, event_location_name: e.target.value }))} className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm" placeholder="Tên địa điểm thật" />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Địa chỉ đường phố</label>
+                          <input value={formEventSeo.event_street_address} onChange={(e) => setFormEventSeo((value) => ({ ...value, event_street_address: e.target.value }))} className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm" placeholder="Số nhà, tên đường" />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Quận/Huyện</label>
+                          <input value={formEventSeo.event_locality} onChange={(e) => setFormEventSeo((value) => ({ ...value, event_locality: e.target.value }))} className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm" />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Tỉnh/Thành phố</label>
+                          <input value={formEventSeo.event_region} onChange={(e) => setFormEventSeo((value) => ({ ...value, event_region: e.target.value }))} className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm" />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">URL tham dự online</label>
+                          <input type="url" value={formEventSeo.event_online_url} onChange={(e) => setFormEventSeo((value) => ({ ...value, event_online_url: e.target.value }))} className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm" placeholder="https://..." />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Đơn vị tổ chức</label>
+                          <input value={formEventSeo.event_organizer_name} onChange={(e) => setFormEventSeo((value) => ({ ...value, event_organizer_name: e.target.value }))} className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm" />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Mã bưu chính</label>
+                          <input value={formEventSeo.event_postal_code} onChange={(e) => setFormEventSeo((value) => ({ ...value, event_postal_code: e.target.value }))} className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm" />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Mã quốc gia</label>
+                          <input value={formEventSeo.event_country} onChange={(e) => setFormEventSeo((value) => ({ ...value, event_country: e.target.value.toUpperCase() }))} maxLength={2} className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm" placeholder="VN" />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">URL đơn vị tổ chức</label>
+                          <input type="url" value={formEventSeo.event_organizer_url} onChange={(e) => setFormEventSeo((value) => ({ ...value, event_organizer_url: e.target.value }))} className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm" placeholder="https://..." />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Giá vé thực</label>
+                          <input type="number" min="0" step="0.01" value={formEventSeo.event_price} onChange={(e) => setFormEventSeo((value) => ({ ...value, event_price: e.target.value }))} className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm" placeholder="Để trống nếu không có giá" />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Tiền tệ</label>
+                          <input value={formEventSeo.event_currency} onChange={(e) => setFormEventSeo((value) => ({ ...value, event_currency: e.target.value.toUpperCase() }))} maxLength={3} className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm" placeholder="VND" />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Tình trạng vé</label>
+                          <select value={formEventSeo.event_availability} onChange={(e) => setFormEventSeo((value) => ({ ...value, event_availability: e.target.value as 'InStock' | 'PreOrder' | 'SoldOut' }))} className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm">
+                            <option value="InStock">Còn chỗ</option><option value="PreOrder">Sắp mở</option><option value="SoldOut">Hết chỗ</option>
+                          </select>
                         </div>
                       </div>
                     )}

@@ -12,6 +12,10 @@ export interface CareerJob {
   status: CareerJobStatus; status_label: string; is_featured: boolean; is_published: boolean;
   accepting_applications: boolean; sort_order: number; thumbnail?: string | null; banner_image?: string | null;
   seo_title?: string | null; seo_description?: string | null; seo_keywords?: string | null;
+  schema_street_address?: string | null; schema_locality?: string | null; schema_region?: string | null;
+  schema_postal_code?: string | null; schema_country?: string | null; schema_applicant_country?: string | null;
+  schema_salary_unit?: 'MONTH' | 'YEAR' | 'WEEK' | 'DAY' | 'HOUR' | null;
+  schema_direct_apply?: boolean;
   applications_count?: number; created_at: string; updated_at: string;
 }
 

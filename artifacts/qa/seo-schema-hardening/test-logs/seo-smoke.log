@@ -1,0 +1,34 @@
+
+> temp-next-app@0.1.0 test:seo
+> node scripts/seo-smoke.mjs
+
+
+🔍 ======================================================
+🚀 RUNNING SEO & SCHEMA HARDENING SMOKE TESTS against http://localhost:8746
+======================================================
+
+--- Test Group 1: Robots.txt Specification ---
+ ✅ PASS: Robots.txt returns HTTP 200
+ ✅ PASS: Robots.txt contains User-agent: * wildcard block
+ ✅ PASS: Disallow /admin exists
+ ✅ PASS: Disallow /tai-khoan exists
+ ✅ PASS: Googlebot group does not bypass disallow rules
+
+--- Test Group 2: Sitemap.xml Cleanliness ---
+ ✅ PASS: Sitemap.xml returns HTTP 200
+ ❌ FAIL: Sitemap does not contain noindex route /ai-summary
+
+--- Test Group 3: Admin & Private Area Security ---
+ ✅ PASS: Admin route returns noindex or authentication redirect
+
+--- Test Group 4: Structured Data JSON-LD Graph ---
+ ✅ PASS: Homepage returns HTTP 200
+ ✅ PASS: Homepage contains application/ld+json script tag
+ ✅ PASS: Homepage JSON-LD contains linked @graph
+ ✅ PASS: Graph contains Organization @id link
+ ✅ PASS: Graph contains WebSite @id link
+
+======================================================
+📊 SUMMARY: Passed 12 tests, Failed 1 tests
+======================================================
+

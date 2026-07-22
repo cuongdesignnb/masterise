@@ -1,0 +1,89 @@
+timestamp: 2026-07-22T01:32:48.3953405Z
+commit SHA: eb74f0d6c36db7a2c6e50611e0f7382e783b1fc8
+command: npm run build
+
+
+> temp-next-app@0.1.0 build
+> next build
+
+▲ Next.js 16.2.7 (Turbopack)
+- Environments: .env.local
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 4.3s
+  Running TypeScript ...
+  Finished TypeScript in 10.0s ...
+  Collecting page data using 15 workers ...
+  Generating static pages using 15 workers (0/52) ...
+  Generating static pages using 15 workers (13/52)
+  Generating static pages using 15 workers (26/52)
+  Generating static pages using 15 workers (39/52)
+`z-index` is currently not supported.
+✓ Generating static pages using 15 workers (52/52) in 1078ms
+  Finalizing page optimization ...
+
+Route (app)                        Revalidate  Expire
+┌ ƒ /
+├ ○ /_not-found
+├ ƒ /[slug]
+├ ○ /admin
+├ ○ /admin/ai-content/bulk
+├ ○ /admin/ai-content/drafts
+├ ○ /admin/ai-content/jobs
+├ ○ /admin/ai-content/schedule
+├ ○ /admin/ai-content/settings
+├ ○ /admin/ai-content/write
+├ ○ /admin/banners
+├ ○ /admin/cai-dat
+├ ○ /admin/developers
+├ ○ /admin/du-an
+├ ƒ /admin/du-an/xem-truoc/[slug]
+├ ○ /admin/faq
+├ ○ /admin/lead-dashboard
+├ ○ /admin/leads
+├ ○ /admin/lich-hen
+├ ○ /admin/locations
+├ ○ /admin/media
+├ ○ /admin/pages
+├ ○ /admin/partners
+├ ○ /admin/project-reviews
+├ ○ /admin/seo
+├ ○ /admin/testimonials
+├ ○ /admin/tin-tuc
+├ ○ /admin/tuyen-dung
+├ ○ /admin/tuyen-dung/ung-vien
+├ ○ /admin/users
+├ ○ /ai-summary
+├ ƒ /api/revalidate/seo
+├ ○ /apple-icon.png
+├ ○ /chuyen-trang                          1m      1y
+├ ƒ /chuyen-trang/[slug]
+├ ○ /dang-ky
+├ ○ /dang-nhap
+├ ○ /dau-tu                                1m      1y
+├ ƒ /dau-tu/[slug]
+├ ƒ /du-an
+├ ƒ /du-an/[slug]
+├ ○ /gioi-thieu                            1m      1y
+├ ○ /icon.png
+├ ƒ /lien-he
+├ ƒ /llms.txt
+├ ○ /manifest.webmanifest
+├ ○ /robots.txt
+├ ○ /sitemap.xml                           1m      1y
+├ ○ /tai-khoan
+├ ○ /tai-khoan/du-an
+├ ○ /tai-khoan/ho-so
+├ ○ /tai-khoan/lich-hen
+├ ƒ /tin-tuc
+├ ƒ /tin-tuc/[slug]
+├ ƒ /tuyen-dung
+├ ƒ /tuyen-dung/[slug]
+└ ○ /twitter-image
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+
+exit code: 0

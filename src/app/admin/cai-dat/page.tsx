@@ -60,8 +60,8 @@ interface DepartmentItem {
 export default function AdminSettings() {
   const queryClient = useQueryClient();
   const toast = useToast();
-  const [activeTab, setActiveTab] = useState<'general' | 'homepage' | 'about' | 'contact' | 'projects_page' | 'news_page' | 'smtp' | 'footer'>('general');
-  const [mediaTarget, setMediaTarget] = useState<{ type: 'logo' | 'home_about_image' | 'projects_hero_image' | 'projects_cta_image' | 'news_hero_image' | 'about_hero_image' | 'about_intro_image_0' | 'about_intro_image_1' | 'about_intro_image_2' | 'about_sustainability_image' | 'about_brand_story_image' | 'about_contact_cta_image' | 'about_collection_image'; index?: number } | null>(null);
+  const [activeTab, setActiveTab] = useState<'general' | 'homepage' | 'about' | 'contact' | 'projects_page' | 'news_page' | 'smtp' | 'footer' | 'site_entity'>('general');
+  const [mediaTarget, setMediaTarget] = useState<{ type: 'logo' | 'entity_logo' | 'home_about_image' | 'projects_hero_image' | 'projects_cta_image' | 'news_hero_image' | 'about_hero_image' | 'about_intro_image_0' | 'about_intro_image_1' | 'about_intro_image_2' | 'about_sustainability_image' | 'about_brand_story_image' | 'about_contact_cta_image' | 'about_collection_image'; index?: number } | null>(null);
 
   const [footerNavigation, setFooterNavigation] = useState<{ title: string; links: { label: string; href: string }[] }[]>([]);
   const [suggestTarget, setSuggestTarget] = useState<{ colIdx: number; linkIdx: number } | null>(null);
@@ -278,6 +278,33 @@ export default function AdminSettings() {
 
   const [aboutSubTab, setAboutSubTab] = useState<'hero' | 'intro' | 'vision_mission' | 'values_awards' | 'eco_sustainability' | 'brand_faq' | 'contact_cta' | 'collections'>('hero');
 
+  // Site Entity states
+  const [entityEnabled, setEntityEnabled] = useState(false);
+  const [entityType, setEntityType] = useState<'Organization' | 'RealEstateAgent'>('Organization');
+  const [entityName, setEntityName] = useState('');
+  const [entityLegalName, setEntityLegalName] = useState('');
+  const [entityTaxId, setEntityTaxId] = useState('');
+  const [entityUrl, setEntityUrl] = useState('');
+  const [entityLogoUrl, setEntityLogoUrl] = useState('');
+  const [entityEmail, setEntityEmail] = useState('');
+  const [entityTelephone, setEntityTelephone] = useState('');
+  const [entityStreetAddress, setEntityStreetAddress] = useState('');
+  const [entityLocality, setEntityLocality] = useState('');
+  const [entityRegion, setEntityRegion] = useState('');
+  const [entityPostalCode, setEntityPostalCode] = useState('');
+  const [entitySameAs, setEntitySameAs] = useState<string[]>([]);
+  const [entityBrandName, setEntityBrandName] = useState('');
+  const [entityBrandUrl, setEntityBrandUrl] = useState('');
+  const [entityAuthNote, setEntityAuthNote] = useState('');
+  const [seoFlags, setSeoFlags] = useState({
+    seo_site_entity_enabled: false,
+    seo_project_product_schema_enabled: false,
+    seo_project_review_schema_enabled: false,
+    seo_event_schema_enabled: false,
+    seo_job_schema_enabled: false,
+    public_project_review_submission_enabled: false,
+  });
+
   // Fetch settings list
   const { data: settingsList = [], isLoading } = useQuery({
     queryKey: ['admin-settings'],
@@ -302,12 +329,43 @@ export default function AdminSettings() {
         }
         return item.value;
       };
+      const getBool = (key: string) => {
+        const item = settingsList.find((setting) => setting.key === key);
+        return item?.value === '1' || item?.value === 'true';
+      };
 
       setCompanyName(getVal('company_name'));
       setCompanyAddress(getVal('company_address'));
       setHotline(getVal('hotline'));
       setEmail(getVal('email'));
       setLogoUrl(getVal('logo_url'));
+
+      const entity = getVal('site_entity', 'json');
+      setEntityEnabled(!!entity?.enabled);
+      setEntityType(entity?.type === 'RealEstateAgent' ? 'RealEstateAgent' : 'Organization');
+      setEntityName(entity?.name || '');
+      setEntityLegalName(entity?.legalName || '');
+      setEntityTaxId(entity?.taxId || '');
+      setEntityUrl(entity?.url || '');
+      setEntityLogoUrl(entity?.logoUrl || '');
+      setEntityEmail(entity?.email || '');
+      setEntityTelephone(entity?.telephone || '');
+      setEntityStreetAddress(entity?.address?.streetAddress || '');
+      setEntityLocality(entity?.address?.addressLocality || '');
+      setEntityRegion(entity?.address?.addressRegion || '');
+      setEntityPostalCode(entity?.address?.postalCode || '');
+      setEntitySameAs(Array.isArray(entity?.sameAs) ? entity.sameAs : []);
+      setEntityBrandName(entity?.brand?.name || '');
+      setEntityBrandUrl(entity?.brand?.url || '');
+      setEntityAuthNote(entity?.authorizationNote || '');
+      setSeoFlags({
+        seo_site_entity_enabled: getBool('seo_site_entity_enabled'),
+        seo_project_product_schema_enabled: getBool('seo_project_product_schema_enabled'),
+        seo_project_review_schema_enabled: getBool('seo_project_review_schema_enabled'),
+        seo_event_schema_enabled: getBool('seo_event_schema_enabled'),
+        seo_job_schema_enabled: getBool('seo_job_schema_enabled'),
+        public_project_review_submission_enabled: getBool('public_project_review_submission_enabled'),
+      });
 
       setMailHost(getVal('mail_host'));
       setMailPort(getVal('mail_port') || '587');
@@ -735,7 +793,36 @@ export default function AdminSettings() {
             key: 'footer_navigation',
             value: footerNavigation,
             type: 'json'
-          }
+          },
+          {
+            key: 'site_entity',
+            value: {
+              enabled: entityEnabled,
+              type: entityType,
+              name: entityName,
+              legalName: entityLegalName,
+              taxId: entityTaxId,
+              url: entityUrl,
+              logoUrl: entityLogoUrl,
+              email: entityEmail,
+              telephone: entityTelephone,
+              address: {
+                streetAddress: entityStreetAddress,
+                addressLocality: entityLocality,
+                addressRegion: entityRegion,
+                postalCode: entityPostalCode,
+                addressCountry: 'VN'
+              },
+              sameAs: entitySameAs.filter(Boolean),
+              brand: {
+                name: entityBrandName,
+                url: entityBrandUrl
+              },
+              authorizationNote: entityAuthNote
+            },
+            type: 'json'
+          },
+          ...Object.entries(seoFlags).map(([key, value]) => ({ key, value, type: 'boolean' as const }))
         ]
       };
 
@@ -787,6 +874,8 @@ export default function AdminSettings() {
     if (!mediaTarget) return;
     if (mediaTarget.type === 'logo') {
       setLogoUrl(url as string);
+    } else if (mediaTarget.type === 'entity_logo') {
+      setEntityLogoUrl(url as string);
     } else if (mediaTarget.type === 'home_about_image') {
       setHomePageContent(prev => ({ ...prev, aboutImage: url as string }));
     } else if (mediaTarget.type === 'projects_hero_image') {
@@ -881,6 +970,7 @@ export default function AdminSettings() {
           { id: 'contact', label: 'Cấu hình Liên hệ', icon: Briefcase },
           { id: 'projects_page', label: 'Cấu hình trang Dự án', icon: Building2 },
           { id: 'news_page', label: 'Cấu hình trang Tin tức', icon: Newspaper },
+          { id: 'site_entity', label: 'Chủ thể & SEO Schema', icon: FileText },
           { id: 'smtp', label: 'Cấu hình SMTP & Email', icon: Mail },
           { id: 'footer', label: 'Cấu hình Footer', icon: LinkIcon }
         ].map(tab => {
@@ -3271,6 +3361,299 @@ export default function AdminSettings() {
                       <span className="text-[10px] text-gray-400">Nên có tối đa 3-4 cột để hiển thị đẹp nhất</span>
                     </button>
                   )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'site_entity' && (
+            <div className="space-y-6 animate-fadeIn">
+              <div className="bg-white border border-[#E8DCCB] rounded-2xl p-6 shadow-sm space-y-6">
+                <div>
+                  <h3 className="text-lg font-heading font-medium text-[#1F1B16] border-b border-[#E8DCCB]/60 pb-2 flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-[#B88746]" />
+                    Cấu hình Chủ thể vận hành & SEO Schema
+                  </h3>
+                  <p className="text-xs text-[#8C7A6B] mt-1">
+                    Cấu hình chủ thể đại lý/đơn vị phân phối chính thức để xuất schema Organization/RealEstateAgent chuẩn hóa SEO.
+                  </p>
+                </div>
+
+                <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+                  <h4 className="text-xs font-bold uppercase text-[#1F1B16]">Cổng bật Schema và đánh giá công khai</h4>
+                  <p className="mt-1 text-[11px] text-[#7A6042]">Mặc định tất cả đều tắt. Chỉ bật sau khi dữ liệu pháp lý, giá, review, Event hoặc Job đã được xác minh.</p>
+                  <div className="mt-4 grid gap-3 md:grid-cols-2">
+                    {([
+                      ['seo_site_entity_enabled', 'Site Entity / Organization'],
+                      ['seo_project_product_schema_enabled', 'Product / Offer dự án'],
+                      ['seo_project_review_schema_enabled', 'Review / AggregateRating'],
+                      ['seo_event_schema_enabled', 'Event'],
+                      ['seo_job_schema_enabled', 'JobPosting'],
+                      ['public_project_review_submission_enabled', 'Biểu mẫu gửi đánh giá công khai'],
+                    ] as const).map(([key, label]) => (
+                      <label key={key} className="flex items-center justify-between gap-3 rounded-lg border border-amber-100 bg-white p-3 text-xs font-semibold">
+                        <span>{label}</span>
+                        <input
+                          type="checkbox"
+                          checked={seoFlags[key]}
+                          onChange={(event) => setSeoFlags((current) => ({ ...current, [key]: event.target.checked }))}
+                          className="size-4 accent-[#B88746]"
+                        />
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Enabled switch */}
+                  <div className="col-span-2 flex items-center justify-between p-4 bg-[#FBF8F2] border border-[#E8DCCB] rounded-xl">
+                    <div>
+                      <h4 className="text-xs font-bold text-[#1F1B16] uppercase">Kích hoạt Chủ thể vận hành (Site Entity Schema)</h4>
+                      <p className="text-[11px] text-[#8C7A6B] mt-0.5">Cho phép Google nhận biết pháp nhân/đại lý vận hành website này.</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={entityEnabled}
+                        onChange={(e) => setEntityEnabled(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#B88746]"></div>
+                    </label>
+                  </div>
+
+                  {/* Entity Type select */}
+                  <div>
+                    <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Loại hình chủ thể</label>
+                    <select
+                      value={entityType}
+                      onChange={(e) => setEntityType(e.target.value as any)}
+                      className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl text-xs focus:outline-none focus:border-[#B88746] bg-white text-[#1F1B16]"
+                    >
+                      <option value="Organization">Organization (Tổ chức / Doanh nghiệp)</option>
+                      <option value="RealEstateAgent">RealEstateAgent (Đại lý Bất động sản)</option>
+                    </select>
+                  </div>
+
+                  {/* Name */}
+                  <div>
+                    <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Tên chủ thể (Name) <span className="text-red-500">*</span></label>
+                    <input
+                      type="text"
+                      value={entityName}
+                      onChange={(e) => setEntityName(e.target.value)}
+                      placeholder="Ví dụ: Đại lý Bất động sản Masterise"
+                      className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl text-xs focus:outline-none focus:border-[#B88746]"
+                    />
+                  </div>
+
+                  {/* Legal Name */}
+                  <div>
+                    <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Tên pháp lý đầy đủ (Legal Name)</label>
+                    <input
+                      type="text"
+                      value={entityLegalName}
+                      onChange={(e) => setEntityLegalName(e.target.value)}
+                      placeholder="Ví dụ: Công ty Cổ phần Đầu tư Bất động sản Việt Nam"
+                      className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl text-xs focus:outline-none focus:border-[#B88746]"
+                    />
+                  </div>
+
+                  {/* Tax ID */}
+                  <div>
+                    <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Mã số thuế (Tax ID)</label>
+                    <input
+                      type="text"
+                      value={entityTaxId}
+                      onChange={(e) => setEntityTaxId(e.target.value)}
+                      placeholder="Ví dụ: 0102345678"
+                      className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl text-xs focus:outline-none focus:border-[#B88746]"
+                    />
+                  </div>
+
+                  {/* Website URL */}
+                  <div>
+                    <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Đường dẫn Website chính thức <span className="text-red-500">*</span></label>
+                    <input
+                      type="text"
+                      value={entityUrl}
+                      onChange={(e) => setEntityUrl(e.target.value)}
+                      placeholder="Ví dụ: https://masterise-homes.net.vn"
+                      className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl text-xs focus:outline-none focus:border-[#B88746]"
+                    />
+                  </div>
+
+                  {/* Logo URL */}
+                  <div>
+                    <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Đường dẫn Logo chủ thể (URL)</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={entityLogoUrl}
+                        onChange={(e) => setEntityLogoUrl(e.target.value)}
+                        placeholder="Ví dụ: https://masterise-homes.net.vn/brand/operator-logo-512.png"
+                        className="flex-1 px-3 py-2 border border-[#E8DCCB] rounded-xl text-xs focus:outline-none focus:border-[#B88746]"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setMediaTarget({ type: 'entity_logo' })}
+                        className="px-3 py-2 bg-[#B88746]/10 text-[#B88746] rounded-xl text-xs font-semibold hover:bg-[#B88746]/20 transition-all"
+                      >
+                        Chọn ảnh
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Email */}
+                  <div>
+                    <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Email liên hệ chính thức</label>
+                    <input
+                      type="email"
+                      value={entityEmail}
+                      onChange={(e) => setEntityEmail(e.target.value)}
+                      placeholder="Ví dụ: info@masterise-homes.net.vn"
+                      className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl text-xs focus:outline-none focus:border-[#B88746]"
+                    />
+                  </div>
+
+                  {/* Telephone */}
+                  <div>
+                    <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Số điện thoại liên hệ chính thức</label>
+                    <input
+                      type="text"
+                      value={entityTelephone}
+                      onChange={(e) => setEntityTelephone(e.target.value)}
+                      placeholder="Ví dụ: +84988888888"
+                      className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl text-xs focus:outline-none focus:border-[#B88746]"
+                    />
+                  </div>
+
+                  {/* Address Section */}
+                  <div className="col-span-2 border border-[#E8DCCB] rounded-xl p-4 space-y-4 bg-[#FBF8F2]/30">
+                    <h4 className="text-xs font-bold text-[#1F1B16] uppercase">Địa chỉ trụ sở chủ thể</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <div className="md:col-span-2">
+                        <label className="block text-[10px] font-semibold text-[#8C7A6B] mb-1">Số nhà, Tên đường (Street)</label>
+                        <input
+                          type="text"
+                          value={entityStreetAddress}
+                          onChange={(e) => setEntityStreetAddress(e.target.value)}
+                          placeholder="Ví dụ: Tòa nhà Masterise, Số 10 Mai Chí Thọ"
+                          className="w-full px-3 py-1.5 border border-[#E8DCCB] rounded-lg text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-semibold text-[#8C7A6B] mb-1">Quận / Huyện (Locality)</label>
+                        <input
+                          type="text"
+                          value={entityLocality}
+                          onChange={(e) => setEntityLocality(e.target.value)}
+                          placeholder="Ví dụ: Quận 2"
+                          className="w-full px-3 py-1.5 border border-[#E8DCCB] rounded-lg text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-semibold text-[#8C7A6B] mb-1">Tỉnh / Thành phố (Region)</label>
+                        <input
+                          type="text"
+                          value={entityRegion}
+                          onChange={(e) => setEntityRegion(e.target.value)}
+                          placeholder="Ví dụ: TP. Hồ Chí Minh"
+                          className="w-full px-3 py-1.5 border border-[#E8DCCB] rounded-lg text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-semibold text-[#8C7A6B] mb-1">Mã bưu chính (Postal Code)</label>
+                        <input
+                          type="text"
+                          value={entityPostalCode}
+                          onChange={(e) => setEntityPostalCode(e.target.value)}
+                          placeholder="Ví dụ: 70000"
+                          className="w-full px-3 py-1.5 border border-[#E8DCCB] rounded-lg text-xs focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Brand Section */}
+                  <div className="col-span-2 border border-[#E8DCCB] rounded-xl p-4 space-y-4 bg-[#FBF8F2]/30">
+                    <h4 className="text-xs font-bold text-[#1F1B16] uppercase">Thương hiệu đại diện (Brand)</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-[10px] font-semibold text-[#8C7A6B] mb-1">Tên thương hiệu</label>
+                        <input
+                          type="text"
+                          value={entityBrandName}
+                          onChange={(e) => setEntityBrandName(e.target.value)}
+                          placeholder="Ví dụ: Masterise Homes"
+                          className="w-full px-3 py-1.5 border border-[#E8DCCB] rounded-lg text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-semibold text-[#8C7A6B] mb-1">URL thương hiệu</label>
+                        <input
+                          type="text"
+                          value={entityBrandUrl}
+                          onChange={(e) => setEntityBrandUrl(e.target.value)}
+                          placeholder="Ví dụ: https://masterisehomes.com"
+                          className="w-full px-3 py-1.5 border border-[#E8DCCB] rounded-lg text-xs focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* SameAs (Social profiles) */}
+                  <div className="col-span-2 border border-[#E8DCCB] rounded-xl p-4 space-y-4 bg-[#FBF8F2]/30">
+                    <div className="flex justify-between items-center">
+                      <h4 className="text-xs font-bold text-[#1F1B16] uppercase">Social Profiles / sameAs URL</h4>
+                      <button
+                        type="button"
+                        onClick={() => setEntitySameAs([...entitySameAs, ''])}
+                        className="px-2.5 py-1 bg-[#B88746] text-white text-[10px] font-bold rounded-lg hover:bg-[#A3753C] transition-all"
+                      >
+                        + Thêm mạng xã hội
+                      </button>
+                    </div>
+                    {entitySameAs.map((url, idx) => (
+                      <div key={idx} className="flex gap-2 items-center">
+                        <input
+                          type="text"
+                          value={url}
+                          onChange={(e) => {
+                            const newSame = [...entitySameAs];
+                            newSame[idx] = e.target.value;
+                            setEntitySameAs(newSame);
+                          }}
+                          placeholder="Ví dụ: https://facebook.com/masterisehomesofficial"
+                          className="flex-1 px-3 py-1.5 border border-[#E8DCCB] rounded-lg text-xs focus:outline-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newSame = entitySameAs.filter((_, i) => i !== idx);
+                            setEntitySameAs(newSame);
+                          }}
+                          className="p-1.5 text-red-500 hover:text-red-700 bg-red-50 rounded-lg"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                    {entitySameAs.length === 0 && (
+                      <p className="text-[10px] text-gray-400 italic">Chưa cấu hình liên kết social.</p>
+                    )}
+                  </div>
+
+                  {/* Authorization Note */}
+                  <div className="col-span-2">
+                    <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Ghi chú ủy quyền pháp lý / đại lý chính thức</label>
+                    <textarea
+                      value={entityAuthNote}
+                      onChange={(e) => setEntityAuthNote(e.target.value)}
+                      placeholder="Ví dụ: Chúng tôi là đơn vị phân phối chính thức F1 của Masterise Homes tại Việt Nam..."
+                      className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl text-xs focus:outline-none focus:border-[#B88746] h-20 resize-y"
+                    />
+                  </div>
                 </div>
               </div>
             </div>

@@ -6,6 +6,16 @@ import { defaultContactPageContent } from "@/data/defaultContactPageContent";
 import { getServerApiUrl } from "@/lib/serverApi";
 import type { ContactPageSiteDetails } from "@/types/contact-page";
 import ContactClient from "./ContactClient";
+import { buildMetadata } from "@/lib/seo/buildMetadata";
+import { getSiteEntityConfig } from "@/services/siteEntityServerService";
+import {
+  buildOperatorNode,
+  buildWebSiteNode,
+  buildWebPageNode,
+  buildBreadcrumbSchema,
+  buildOperatorContext,
+} from "@/lib/seo/schema";
+import JsonLd from "@/components/seo/JsonLd";
 
 interface PublicSettingsResponse {
   success: boolean;
@@ -54,60 +64,61 @@ export async function generateMetadata(): Promise<Metadata> {
   const { content } = await getContactPageData();
   const seo = content.seo;
   const ogImage = seo.ogImage ? absoluteUrl(seo.ogImage) : undefined;
-  return {
+
+  return buildMetadata({
     title: seo.title || defaultContactPageContent.seo.title,
     description: seo.description || defaultContactPageContent.seo.description,
     keywords: seo.keywords ? seo.keywords.split(",").map((keyword) => keyword.trim()).filter(Boolean) : undefined,
-    alternates: { canonical: "/lien-he" },
-    openGraph: {
-      title: seo.ogTitle || seo.title,
-      description: seo.ogDescription || seo.description,
-      type: "website",
-      locale: "vi_VN",
-      url: `${SITE_URL}/lien-he`,
-      ...(ogImage ? { images: [{ url: ogImage }] } : {}),
-    },
-  };
+    path: "/lien-he",
+    ogImage,
+  });
 }
 
 export default async function LienHePage() {
-  const { content, site } = await getContactPageData();
+  const [{ content, site }, siteEntity] = await Promise.all([
+    getContactPageData(),
+    getSiteEntityConfig(),
+  ]);
   const faqItems = content.faqs.enabled ? activeSorted(content.faqs.items) : [];
-  const organization: Record<string, unknown> = {
-    "@type": "Organization",
-    "@id": `${SITE_URL}/#organization`,
-    name: site.companyName,
-    url: SITE_URL,
+  const pageUrl = `${SITE_URL}/lien-he`;
+
+  const operatorContext = buildOperatorContext(siteEntity);
+  const operatorNode = buildOperatorNode(siteEntity);
+  const websiteNode = buildWebSiteNode(operatorContext);
+  const webpageNode = {
+    ...buildWebPageNode(pageUrl, content.seo.title, content.seo.description, {
+      aboutId: operatorContext.enabled && operatorContext.id ? operatorContext.id : undefined,
+      breadcrumbId: `${pageUrl}#breadcrumb`,
+    }),
+    '@type': 'ContactPage',
   };
-  if (site.logoUrl) organization.logo = absoluteUrl(site.logoUrl);
-  if (site.email) organization.email = site.email;
-  if (site.companyAddress) organization.address = { "@type": "PostalAddress", streetAddress: site.companyAddress, addressCountry: "VN" };
-  if (site.hotline) organization.contactPoint = { "@type": "ContactPoint", telephone: site.hotline, contactType: "customer service", areaServed: "VN", availableLanguage: ["Vietnamese", "English"] };
+  const breadcrumbNode = buildBreadcrumbSchema(pageUrl, [
+    { name: "Trang chủ", item: "/" },
+    { name: "Liên hệ", item: "/lien-he" },
+  ]);
 
-  const graph: Record<string, unknown>[] = [
-    organization,
-    {
-      "@type": "BreadcrumbList",
-      itemListElement: [
-        { "@type": "ListItem", position: 1, name: "Trang chủ", item: SITE_URL },
-        { "@type": "ListItem", position: 2, name: "Liên hệ", item: `${SITE_URL}/lien-he` },
-      ],
-    },
-    {
-      "@type": "ContactPage",
-      name: content.seo.title,
-      description: content.seo.description,
-      url: `${SITE_URL}/lien-he`,
-      mainEntity: { "@id": `${SITE_URL}/#organization` },
-    },
-  ];
-  if (faqItems.length) graph.push({
+  const faqNode = faqItems.length > 0 ? {
     "@type": "FAQPage",
-    mainEntity: faqItems.map((faq) => ({ "@type": "Question", name: faq.question, acceptedAnswer: { "@type": "Answer", text: faq.answer } })),
-  });
+    "@id": `${pageUrl}#faq`,
+    mainEntity: faqItems.map((faq) => ({
+      "@type": "Question",
+      name: faq.question,
+      acceptedAnswer: { "@type": "Answer", text: faq.answer },
+    })),
+  } : null;
 
-  return <>
-    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({ "@context": "https://schema.org", "@graph": graph }).replace(/</g, "\\u003c") }} />
-    <ContactClient initialContent={content} siteDetails={site} />
-  </>;
+  const graph = [
+    operatorNode,
+    websiteNode,
+    webpageNode,
+    breadcrumbNode,
+    faqNode,
+  ].filter(Boolean);
+
+  return (
+    <>
+      <JsonLd schema={{ "@context": "https://schema.org", "@graph": graph }} />
+      <ContactClient initialContent={content} siteDetails={site} />
+    </>
+  );
 }

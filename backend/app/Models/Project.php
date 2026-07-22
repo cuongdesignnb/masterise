@@ -220,4 +220,35 @@ class Project extends Model
     {
         return $this->hasOne(ProjectVrTour::class, 'project_id');
     }
+
+    public function reviews()
+    {
+        return $this->hasMany(ProjectReview::class);
+    }
+
+    public function getReviewSummaryAttribute()
+    {
+        if (!$this->relationLoaded('reviews')) {
+            return null;
+        }
+
+        $published = $this->getRelation('reviews')->filter(function ($r) {
+            return $r->moderation_status === 'approved' && $r->is_published === true;
+        });
+
+        $count = $published->count();
+        if ($count === 0) {
+            return null;
+        }
+
+        $avg = round($published->avg('rating'), 1);
+
+        return [
+            'ratingValue' => (float) $avg,
+            'ratingCount' => $count,
+            'reviewCount' => $count,
+            'bestRating' => 5,
+            'worstRating' => 1,
+        ];
+    }
 }

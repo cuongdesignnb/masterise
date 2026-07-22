@@ -9,6 +9,14 @@ export const metadata: Metadata = {
   description:
     "Bản tóm tắt có cấu trúc về Masterise Homes, dự án nổi bật, chuyên trang, tin tức và thông tin liên hệ dành cho người đọc và AI crawler.",
   alternates: { canonical: `${SITE_URL}/ai-summary` },
+  robots: {
+    index: false,
+    follow: true,
+    googleBot: {
+      index: false,
+      follow: true,
+    },
+  },
 };
 
 const featuredProjects = [

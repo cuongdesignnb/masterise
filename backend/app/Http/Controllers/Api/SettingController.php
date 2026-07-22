@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use App\Support\ContactPageContent;
+use App\Support\SiteEntityContent;
 use App\Support\PublicContentCache;
+use App\Support\SeoFeatureFlags;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
@@ -17,13 +19,14 @@ class SettingController extends Controller
      */
     public function publicSettings()
     {
-        $settings = PublicContentCache::remember('settings.public', ['schema' => 2], 600, function (): array {
-            $keys = ['company_name', 'company_address', 'hotline', 'email', 'social_links', 'homepage_meta', 'home_page_content', 'logo_url', 'about_mission', 'about_vision', 'about_timeline', 'contact_departments', 'contact_page_content', 'projects_page_hero', 'projects_page_cta', 'news_page_hero', 'news_page_cta', 'about_page_hero', 'about_page_intro', 'about_page_metrics', 'about_page_values', 'about_page_awards', 'about_page_ecosystem', 'about_page_sustainability', 'about_page_why_choose', 'about_page_brand_story', 'about_page_faqs', 'about_page_contact_cta', 'about_page_collections', 'footer_navigation', 'career_page_content'];
+        $settings = PublicContentCache::remember('settings.public', ['schema' => 3], 600, function (): array {
+            $keys = ['company_name', 'company_address', 'hotline', 'email', 'social_links', 'homepage_meta', 'home_page_content', 'logo_url', 'about_mission', 'about_vision', 'about_timeline', 'contact_departments', 'contact_page_content', 'projects_page_hero', 'projects_page_cta', 'news_page_hero', 'news_page_cta', 'about_page_hero', 'about_page_intro', 'about_page_metrics', 'about_page_values', 'about_page_awards', 'about_page_ecosystem', 'about_page_sustainability', 'about_page_why_choose', 'about_page_brand_story', 'about_page_faqs', 'about_page_contact_cta', 'about_page_collections', 'footer_navigation', 'career_page_content', 'site_entity'];
             $values = [];
 
             foreach ($keys as $key) {
                 $values[$key] = Setting::get($key);
             }
+            $values = array_merge($values, SeoFeatureFlags::all());
             $values['contact_page_content'] = ContactPageContent::normalize(
                 is_array($values['contact_page_content']) ? $values['contact_page_content'] : [],
                 is_array($values['contact_departments']) ? $values['contact_departments'] : [],
@@ -83,24 +86,50 @@ class SettingController extends Controller
 
         $settings = $request->settings;
         foreach ($settings as $index => &$item) {
-            if ($item['key'] !== 'contact_page_content') continue;
+            if (in_array($item['key'], SeoFeatureFlags::KEYS, true)) {
+                if ($item['type'] !== 'boolean' || !is_bool($item['value'])) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Cờ tính năng SEO phải là boolean.',
+                        'errors' => ["settings.{$index}.value" => ['Giá trị phải là true hoặc false.']],
+                    ], 422);
+                }
+            } elseif ($item['key'] === 'contact_page_content') {
+                if ($item['type'] !== 'json') {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Dữ liệu trang liên hệ chưa hợp lệ.',
+                        'errors' => ["settings.{$index}.type" => ['contact_page_content phải sử dụng kiểu json.']],
+                    ], 422);
+                }
 
-            if ($item['type'] !== 'json') {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Dữ liệu trang liên hệ chưa hợp lệ.',
-                    'errors' => ["settings.{$index}.type" => ['contact_page_content phải sử dụng kiểu json.']],
-                ], 422);
-            }
+                try {
+                    $item['value'] = ContactPageContent::validateAndNormalize($item['value']);
+                } catch (ValidationException $exception) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Dữ liệu trang liên hệ chưa hợp lệ.',
+                        'errors' => $exception->errors(),
+                    ], 422);
+                }
+            } elseif ($item['key'] === 'site_entity') {
+                if ($item['type'] !== 'json') {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Cấu hình chủ thể trang web phải sử dụng kiểu json.',
+                        'errors' => ["settings.{$index}.type" => ['site_entity phải sử dụng kiểu json.']],
+                    ], 422);
+                }
 
-            try {
-                $item['value'] = ContactPageContent::validateAndNormalize($item['value']);
-            } catch (ValidationException $exception) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Dữ liệu trang liên hệ chưa hợp lệ.',
-                    'errors' => $exception->errors(),
-                ], 422);
+                try {
+                    $item['value'] = SiteEntityContent::validateAndNormalize($item['value']);
+                } catch (ValidationException $exception) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Cấu hình chủ thể trang web chưa hợp lệ.',
+                        'errors' => $exception->errors(),
+                    ], 422);
+                }
             }
         }
         unset($item);

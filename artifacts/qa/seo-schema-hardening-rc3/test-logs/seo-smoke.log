@@ -1,0 +1,264 @@
+timestamp: 2026-07-21T18:35:35.6542198Z
+commit SHA: aae40a369c6f9dac62a5dfc742870084e1a0ad96
+command: SEO_BASE_URL=http://localhost:8746 SEO_SMOKE_STRICT=0 npm run test:seo (verified local fixtures)
+
+
+> temp-next-app@0.1.0 test:seo
+> node scripts/seo-smoke.mjs
+
+SEO smoke base URL: http://localhost:8746
+Strict fixtures: false
+PASS robots.txt returns HTTP 200
+PASS robots.txt contains wildcard user agent
+PASS robots.txt blocks /api/
+PASS sitemap.xml returns HTTP 200
+PASS sitemap excludes /ai-summary
+PASS sitemap excludes query page URLs
+PASS homepage returns HTTP 200
+PASS homepage redirect count <= 0
+PASS homepage has a title
+PASS homepage title has no duplicate brand
+PASS homepage has an absolute canonical
+PASS homepage has a meta description
+PASS homepage has exactly one H1
+PASS homepage has Open Graph title
+PASS homepage has Twitter card
+PASS homepage robots index policy is correct
+PASS homepage graph has unique @id values
+PASS homepage graph has no dangling local @id
+PASS homepage graph has no empty nodes
+PASS project listing returns HTTP 200
+PASS project listing redirect count <= 0
+PASS project listing has a title
+PASS project listing title has no duplicate brand
+PASS project listing has an absolute canonical
+PASS project listing has a meta description
+PASS project listing has exactly one H1
+PASS project listing has Open Graph title
+PASS project listing has Twitter card
+PASS project listing robots index policy is correct
+PASS project listing graph has unique @id values
+PASS project listing graph has no dangling local @id
+PASS project listing graph has no empty nodes
+PASS project pagination returns HTTP 200
+PASS project pagination redirect count <= 0
+PASS project pagination has a title
+PASS project pagination title has no duplicate brand
+PASS project pagination has an absolute canonical
+PASS project pagination has a meta description
+PASS project pagination has exactly one H1
+PASS project pagination has Open Graph title
+PASS project pagination has Twitter card
+PASS project pagination robots index policy is correct
+PASS project pagination robots follow policy is correct
+PASS project pagination graph has unique @id values
+PASS project pagination graph has no dangling local @id
+PASS project pagination graph has no empty nodes
+PASS project search returns HTTP 200
+PASS project search redirect count <= 0
+PASS project search has a title
+PASS project search title has no duplicate brand
+PASS project search has an absolute canonical
+PASS project search has a meta description
+PASS project search has exactly one H1
+PASS project search has Open Graph title
+PASS project search has Twitter card
+PASS project search robots index policy is correct
+PASS project search robots follow policy is correct
+PASS project search graph has unique @id values
+PASS project search graph has no dangling local @id
+PASS project search graph has no empty nodes
+PASS project region filter returns HTTP 200
+PASS project region filter redirect count <= 0
+PASS project region filter has a title
+PASS project region filter title has no duplicate brand
+PASS project region filter has an absolute canonical
+PASS project region filter has a meta description
+PASS project region filter has exactly one H1
+PASS project region filter has Open Graph title
+PASS project region filter has Twitter card
+PASS project region filter robots index policy is correct
+PASS project region filter robots follow policy is correct
+PASS project region filter graph has unique @id values
+PASS project region filter graph has no dangling local @id
+PASS project region filter graph has no empty nodes
+PASS news listing returns HTTP 200
+PASS news listing redirect count <= 0
+PASS news listing has a title
+PASS news listing title has no duplicate brand
+PASS news listing has an absolute canonical
+PASS news listing has a meta description
+PASS news listing has exactly one H1
+PASS news listing has Open Graph title
+PASS news listing has Twitter card
+PASS news listing robots index policy is correct
+PASS news listing graph has unique @id values
+PASS news listing graph has no dangling local @id
+PASS news listing graph has no empty nodes
+PASS news pagination returns HTTP 200
+PASS news pagination redirect count <= 0
+PASS news pagination has a title
+PASS news pagination title has no duplicate brand
+PASS news pagination has an absolute canonical
+PASS news pagination has a meta description
+PASS news pagination has exactly one H1
+PASS news pagination has Open Graph title
+PASS news pagination has Twitter card
+PASS news pagination robots index policy is correct
+PASS news pagination robots follow policy is correct
+PASS news pagination graph has unique @id values
+PASS news pagination graph has no dangling local @id
+PASS news pagination graph has no empty nodes
+PASS news search returns HTTP 200
+PASS news search redirect count <= 0
+PASS news search has a title
+PASS news search title has no duplicate brand
+PASS news search has an absolute canonical
+PASS news search has a meta description
+PASS news search has exactly one H1
+PASS news search has Open Graph title
+PASS news search has Twitter card
+PASS news search robots index policy is correct
+PASS news search robots follow policy is correct
+PASS news search graph has unique @id values
+PASS news search graph has no dangling local @id
+PASS news search graph has no empty nodes
+PASS investment listing returns HTTP 200
+PASS investment listing redirect count <= 0
+PASS investment listing has a title
+PASS investment listing title has no duplicate brand
+PASS investment listing has an absolute canonical
+PASS investment listing has a meta description
+PASS investment listing has exactly one H1
+PASS investment listing has Open Graph title
+PASS investment listing has Twitter card
+PASS investment listing robots index policy is correct
+PASS investment listing graph has unique @id values
+PASS investment listing graph has no dangling local @id
+PASS investment listing graph has no empty nodes
+PASS career listing returns HTTP 200
+PASS career listing redirect count <= 0
+PASS career listing has a title
+PASS career listing title has no duplicate brand
+PASS career listing has an absolute canonical
+PASS career listing has a meta description
+PASS career listing has exactly one H1
+PASS career listing has Open Graph title
+PASS career listing has Twitter card
+PASS career listing robots index policy is correct
+PASS career listing graph has unique @id values
+PASS career listing graph has no dangling local @id
+PASS career listing graph has no empty nodes
+PASS about page returns HTTP 200
+PASS about page redirect count <= 0
+PASS about page has a title
+PASS about page title has no duplicate brand
+PASS about page has an absolute canonical
+PASS about page has a meta description
+PASS about page has exactly one H1
+PASS about page has Open Graph title
+PASS about page has Twitter card
+PASS about page robots index policy is correct
+PASS about page graph has unique @id values
+PASS about page graph has no dangling local @id
+PASS about page graph has no empty nodes
+PASS contact page returns HTTP 200
+PASS contact page redirect count <= 0
+PASS contact page has a title
+PASS contact page title has no duplicate brand
+PASS contact page has an absolute canonical
+PASS contact page has a meta description
+PASS contact page has exactly one H1
+PASS contact page has Open Graph title
+PASS contact page has Twitter card
+PASS contact page robots index policy is correct
+PASS contact page graph has unique @id values
+PASS contact page graph has no dangling local @id
+PASS contact page graph has no empty nodes
+PASS custom page listing returns HTTP 200
+PASS custom page listing redirect count <= 0
+PASS custom page listing has a title
+PASS custom page listing title has no duplicate brand
+PASS custom page listing has an absolute canonical
+PASS custom page listing has a meta description
+PASS custom page listing has exactly one H1
+PASS custom page listing has Open Graph title
+PASS custom page listing has Twitter card
+PASS custom page listing robots index policy is correct
+PASS custom page listing graph has unique @id values
+PASS custom page listing graph has no dangling local @id
+PASS custom page listing graph has no empty nodes
+PASS project without Product returns HTTP 200
+PASS project without Product redirect count <= 0
+PASS project without Product has a title
+PASS project without Product title has no duplicate brand
+PASS project without Product has an absolute canonical
+PASS project without Product has a meta description
+PASS project without Product has exactly one H1
+PASS project without Product has Open Graph title
+PASS project without Product has Twitter card
+PASS project without Product robots index policy is correct
+PASS project without Product graph has unique @id values
+PASS project without Product graph has no dangling local @id
+PASS project without Product graph has no empty nodes
+PASS project with Offer returns HTTP 200
+PASS project with Offer redirect count <= 0
+PASS project with Offer has a title
+PASS project with Offer title has no duplicate brand
+PASS project with Offer has an absolute canonical
+PASS project with Offer has a meta description
+PASS project with Offer has exactly one H1
+PASS project with Offer has Open Graph title
+PASS project with Offer has Twitter card
+PASS project with Offer robots index policy is correct
+PASS project with Offer graph has unique @id values
+PASS project with Offer graph has no dangling local @id
+PASS project with Offer graph has no empty nodes
+SKIP projectReview fixture missing (SEO_PROJECT_REVIEW_SLUG)
+PASS news detail returns HTTP 200
+PASS news detail redirect count <= 0
+PASS news detail has a title
+PASS news detail title has no duplicate brand
+PASS news detail has an absolute canonical
+PASS news detail has a meta description
+PASS news detail has exactly one H1
+PASS news detail has Open Graph title
+PASS news detail has Twitter card
+PASS news detail robots index policy is correct
+PASS news detail graph has unique @id values
+PASS news detail graph has no dangling local @id
+PASS news detail graph has no empty nodes
+PASS event detail returns HTTP 200
+PASS event detail redirect count <= 0
+PASS event detail has a title
+PASS event detail title has no duplicate brand
+PASS event detail has an absolute canonical
+PASS event detail has a meta description
+PASS event detail has exactly one H1
+PASS event detail has Open Graph title
+PASS event detail has Twitter card
+PASS event detail robots index policy is correct
+PASS event detail graph has unique @id values
+PASS event detail graph has no dangling local @id
+PASS event detail graph has no empty nodes
+SKIP activeJob fixture missing (SEO_ACTIVE_JOB_SLUG)
+SKIP expiredJob fixture missing (SEO_EXPIRED_JOB_SLUG)
+PASS custom page detail returns HTTP 200
+PASS custom page detail redirect count <= 0
+PASS custom page detail has a title
+PASS custom page detail title has no duplicate brand
+PASS custom page detail has an absolute canonical
+PASS custom page detail has a meta description
+PASS custom page detail has exactly one H1
+PASS custom page detail has Open Graph title
+PASS custom page detail has Twitter card
+PASS custom page detail robots index policy is correct
+PASS custom page detail graph has unique @id values
+PASS custom page detail graph has no dangling local @id
+PASS custom page detail graph has no empty nodes
+PASS admin is noindex HTML or authentication redirect
+PASS admin uses noindex,nofollow
+PASS unknown route returns HTTP 404
+SUMMARY passed=248 failed=0 skipped=3
+
+exit code: 0
