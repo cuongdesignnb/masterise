@@ -1,6 +1,9 @@
 import { SITE_NAME, SITE_URL, OPERATOR_LOGO } from '@/config/seo';
 import { SiteEntityConfig } from '@/config/siteEntity';
 
+export { buildOffersNode } from './offerSchema';
+export type { OfferInput } from './offerSchema';
+
 export interface OperatorContext {
   enabled: boolean;
   id?: string;
@@ -149,54 +152,6 @@ export function buildResidenceNode(canonical: string, name: string, description:
     },
     containedInPlace: { '@id': `${canonical}#place` },
   };
-}
-
-// 8. Build Offers Node
-export interface OfferInput {
-  price?: number;
-  priceCurrency?: string;
-  lowPrice?: number;
-  highPrice?: number;
-  offerCount?: number;
-  availability?: string;
-}
-
-export function buildOffersNode(canonical: string, input: OfferInput) {
-  const availabilityMap: Record<string, string> = {
-    selling: 'https://schema.org/InStock',
-    coming_soon: 'https://schema.org/PreOrder',
-    sold_out: 'https://schema.org/OutOfStock',
-    handing_over: 'https://schema.org/InStock',
-    handover: 'https://schema.org/InStock',
-  };
-
-  const schemaAvailability = input.availability ? (availabilityMap[input.availability] || 'https://schema.org/InStock') : undefined;
-
-  if (input.lowPrice && input.lowPrice > 0) {
-    return {
-      '@type': 'AggregateOffer',
-      '@id': `${canonical}#offers`,
-      url: canonical,
-      priceCurrency: input.priceCurrency || 'VND',
-      lowPrice: input.lowPrice,
-      highPrice: input.highPrice && input.highPrice >= input.lowPrice ? input.highPrice : input.lowPrice,
-      offerCount: input.offerCount || undefined,
-      availability: schemaAvailability,
-    };
-  }
-
-  if (input.price && input.price > 0) {
-    return {
-      '@type': 'Offer',
-      '@id': `${canonical}#offers`,
-      url: canonical,
-      priceCurrency: input.priceCurrency || 'VND',
-      price: input.price,
-      availability: schemaAvailability,
-    };
-  }
-
-  return null;
 }
 
 // 9. Build Product Schema

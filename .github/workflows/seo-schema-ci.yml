@@ -23,6 +23,7 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npx tsc --noEmit
+      - run: npm run test:seo:schema
       - run: npm run test:seo:assets
       - run: npm run build
         env:

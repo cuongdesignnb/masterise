@@ -72,6 +72,11 @@ Invoke-QaLog -FileName 'frontend-tsc.log' -Command 'npx tsc --noEmit' -Action {
     try { npx tsc --noEmit } finally { Pop-Location }
 }
 
+Invoke-QaLog -FileName 'offer-schema-tests.log' -Command 'npm run test:seo:schema' -Action {
+    Push-Location $repoRoot
+    try { npm run test:seo:schema } finally { Pop-Location }
+}
+
 $dockerStarted = $false
 try {
     Push-Location $repoRoot
