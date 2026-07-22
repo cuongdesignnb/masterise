@@ -39,7 +39,8 @@ export default async function GioiThieuPage() {
   const webpageNode = buildWebPageNode(
     pageUrl,
     "Giới thiệu Masterise Homes",
-    "Nhà phát triển bất động sản hàng hiệu hàng đầu Việt Nam"
+    "Nhà phát triển bất động sản hàng hiệu hàng đầu Việt Nam",
+    { breadcrumbId: `${pageUrl}#breadcrumb` }
   );
   const breadcrumbNode = buildBreadcrumbSchema(pageUrl, [
     { name: "Trang chủ", item: "/" },

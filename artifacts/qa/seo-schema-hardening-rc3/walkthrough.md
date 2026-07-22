@@ -1,4 +1,4 @@
-# SEO & Schema Hardening - Round 4 QA Walkthrough
+# SEO & Schema Hardening - Round 5 QA Walkthrough
 
 ## SHA provenance
 
@@ -6,7 +6,8 @@
 - Previous final CI-verified SHA: `ed423d194307b03e21cedb4231221c76eb3eb118`.
 - Previous immutable tag: `seo-schema-rc3-20260722-015111`.
 - Round 4 corrective-code SHA: `eb74f0d6c36db7a2c6e50611e0f7382e783b1fc8`.
-- Final Round 4 CI SHA, RC4 tag, and both workflow URLs: recorded in the UTF-8 pull-request body after CI completes.
+- RC4 SHA and tag: `72c69a1c90c8db3a9361549d9cfee0d3de62d094`, `seo-schema-rc4-20260722-085111`.
+- Final Round 5 CI SHA, RC5 tag, and both workflow URLs: recorded in the UTF-8 pull-request body after CI completes.
 
 Historical logs are not represented as having been generated from a later SHA.
 
@@ -21,7 +22,7 @@ npm run test:seo:assets
 npm run build
 ```
 
-## Local frontend results at `eb74f0d...`
+## Local frontend results for Round 5
 
 | Check | Evidence |
 |---|---|
@@ -32,7 +33,7 @@ npm run build
 | Offer availability regression | [`test-logs/offer-schema-tests.log`](test-logs/offer-schema-tests.log) |
 | Asset validation | [`test-logs/asset-validation.log`](test-logs/asset-validation.log) |
 
-The Offer regression suite verifies all four supported full Schema.org URLs, internal `sold_out`, unknown input, empty input, and a rendered Product-schema assertion.
+The schema regression suite verifies all four supported full Schema.org Offer availability URLs, internal `sold_out`, unknown input, empty input, a rendered Product-schema assertion, homepage without dangling breadcrumb, conditional JobPosting references, and canonical-origin graph reference validation.
 
 ## Local backend/integration status
 

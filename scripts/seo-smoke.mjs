@@ -1,4 +1,5 @@
 import parserPackage from 'next/dist/compiled/node-html-parser/index.js';
+import { analyzeGraph, formatDanglingReferences } from './seo-graph-validator.mjs';
 
 const { parse } = parserPackage;
 const BASE_URL = (process.env.SEO_BASE_URL || process.env.TEST_URL || 'http://localhost:8746').replace(/\/$/, '');
@@ -81,31 +82,15 @@ function parseJsonLd(root, label) {
   }).filter(Boolean);
 }
 
-function collectGraphNodes(documents) {
-  return documents.flatMap((document) => Array.isArray(document?.['@graph']) ? document['@graph'] : [document]);
-}
-
-function collectLocalReferences(value, references = []) {
-  if (Array.isArray(value)) {
-    value.forEach((entry) => collectLocalReferences(entry, references));
-  } else if (value && typeof value === 'object') {
-    for (const [key, entry] of Object.entries(value)) {
-      if (key === '@id' && typeof entry === 'string' && entry.startsWith(BASE_URL)) references.push(entry);
-      else collectLocalReferences(entry, references);
-    }
-  }
-  return references;
-}
-
-function validateGraph(documents, label) {
-  const nodes = collectGraphNodes(documents).filter((node) => node && typeof node === 'object');
-  const ids = nodes.map((node) => node['@id']).filter((id) => typeof id === 'string');
-  assert(new Set(ids).size === ids.length, `${label} graph has unique @id values`);
-
-  const defined = new Set(ids);
-  const references = collectLocalReferences(documents).filter((id) => !defined.has(id));
-  assert(references.length === 0, `${label} graph has no dangling local @id`, references.join(', '));
-  assert(nodes.every((node) => Object.keys(node).length > 0), `${label} graph has no empty nodes`);
+function validateGraph(documents, label, canonical) {
+  const analysis = analyzeGraph(documents, canonical);
+  assert(analysis.duplicateIds.length === 0, `${label} graph has unique @id values`, analysis.duplicateIds.join(', '));
+  assert(
+    analysis.danglingReferences.length === 0,
+    `${label} graph has no dangling canonical-origin @id`,
+    formatDanglingReferences(analysis.danglingReferences)
+  );
+  assert(analysis.emptyNodes.length === 0, `${label} graph has no empty nodes`);
 }
 
 function robotsContent(root) {
@@ -134,7 +119,7 @@ async function validateHtmlRoute(pathname, { label = pathname, expectedStatus = 
   assert(!!root.querySelector('meta[name="twitter:card"]'), `${label} has Twitter card`);
   assert(noindex ? robots.includes('noindex') : !robots.includes('noindex'), `${label} robots index policy is correct`, robots);
   if (noindex) assert(follow ? robots.includes('follow') && !robots.includes('nofollow') : robots.includes('nofollow'), `${label} robots follow policy is correct`, robots);
-  if (jsonLd.length > 0) validateGraph(jsonLd, label);
+  if (jsonLd.length > 0) validateGraph(jsonLd, label, canonical);
 
   return { ...result, root, jsonLd };
 }

@@ -123,7 +123,7 @@ export default async function NewsArticleDetailPage({ params }: Props) {
   const operatorContext = buildOperatorContext(siteEntity);
   const operatorNode = buildOperatorNode(siteEntity);
   const websiteNode = buildWebSiteNode(operatorContext);
-  const webpageNode = buildWebPageNode(postUrl, post.title, metaDescription, `${postUrl}#article`);
+  const webpageNode = buildWebPageNode(postUrl, post.title, metaDescription, { aboutId: `${postUrl}#article`, breadcrumbId: `${postUrl}#breadcrumb` });
   const breadcrumbNode = buildBreadcrumbSchema(postUrl, [
     { name: "Trang chủ", item: "/" },
     { name: "Tin tức", item: "/tin-tuc" },

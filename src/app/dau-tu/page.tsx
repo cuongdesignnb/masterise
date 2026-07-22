@@ -29,7 +29,7 @@ export default async function DauTuPage() {
   const operatorNode = buildOperatorNode(siteEntity);
   const websiteNode = buildWebSiteNode(operatorContext);
   const webpageNode = {
-    ...buildWebPageNode(pageUrl, "Cơ hội đầu tư Masterise Homes", "Cập nhật các cơ hội sở hữu và phân tích đầu tư bất động sản"),
+    ...buildWebPageNode(pageUrl, "Cơ hội đầu tư Masterise Homes", "Cập nhật các cơ hội sở hữu và phân tích đầu tư bất động sản", { breadcrumbId: `${pageUrl}#breadcrumb` }),
     '@type': 'CollectionPage',
   };
   const breadcrumbNode = buildBreadcrumbSchema(pageUrl, [

@@ -67,7 +67,7 @@ export default async function ProjectsPage({ searchParams }: { searchParams: Pro
   const operatorNode = buildOperatorNode(siteEntity);
   const websiteNode = buildWebSiteNode(buildOperatorContext(siteEntity));
   const webpageNode = {
-    ...buildWebPageNode(pageUrl, "Dự án Masterise Homes", "Danh sách dự án bất động sản cao cấp của Masterise Homes"),
+    ...buildWebPageNode(pageUrl, "Dự án Masterise Homes", "Danh sách dự án bất động sản cao cấp của Masterise Homes", { breadcrumbId: `${pageUrl}#breadcrumb` }),
     '@type': 'CollectionPage',
   };
   const breadcrumbNode = buildBreadcrumbSchema(pageUrl, [

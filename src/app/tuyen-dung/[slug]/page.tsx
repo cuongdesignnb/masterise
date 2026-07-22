@@ -82,13 +82,6 @@ export default async function CareerDetailPage({ params }: Props) {
   const operatorContext = buildOperatorContext(siteEntity);
   const operatorNode = buildOperatorNode(siteEntity);
   const websiteNode = buildWebSiteNode(operatorContext);
-  const webpageNode = buildWebPageNode(jobUrl, job.title, description, `${jobUrl}#job`);
-  const breadcrumbNode = buildBreadcrumbSchema(jobUrl, [
-    { name: "Trang chủ", item: "/" },
-    { name: "Tuyển dụng", item: "/tuyen-dung" },
-    { name: job.title, item: `/tuyen-dung/${job.slug}` },
-  ]);
-
   const isRemote = job.workplace_type === 'remote';
   const hasLocation = isRemote
     ? Boolean(job.schema_applicant_country)
@@ -99,6 +92,16 @@ export default async function CareerDetailPage({ params }: Props) {
     && Boolean(job.description || job.short_description)
     && hasLocation
     && operatorContext.enabled;
+  const webpageNode = buildWebPageNode(jobUrl, job.title, description, {
+    aboutId: isJobSchemaEligible ? `${jobUrl}#job` : undefined,
+    breadcrumbId: `${jobUrl}#breadcrumb`,
+  });
+  const breadcrumbNode = buildBreadcrumbSchema(jobUrl, [
+    { name: "Trang chủ", item: "/" },
+    { name: "Tuyển dụng", item: "/tuyen-dung" },
+    { name: job.title, item: `/tuyen-dung/${job.slug}` },
+  ]);
+
   const jobPostingNode = isJobSchemaEligible ? buildJobPostingSchema(jobUrl, {
     title: job.title,
     description: job.description || job.short_description || '',

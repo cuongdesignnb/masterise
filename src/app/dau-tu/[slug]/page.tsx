@@ -105,7 +105,7 @@ export default async function InvestmentDetailPage({ params }: Props) {
   const operatorContext = buildOperatorContext(siteEntity);
   const operatorNode = buildOperatorNode(siteEntity);
   const websiteNode = buildWebSiteNode(operatorContext);
-  const webpageNode = buildWebPageNode(postUrl, post.title, metaDescription, isEvent ? `${postUrl}#event` : `${postUrl}#article`);
+  const webpageNode = buildWebPageNode(postUrl, post.title, metaDescription, { aboutId: isEvent ? `${postUrl}#event` : `${postUrl}#article`, breadcrumbId: `${postUrl}#breadcrumb` });
   const breadcrumbNode = buildBreadcrumbSchema(postUrl, [
     { name: "Trang chủ", item: "/" },
     { name: "Đầu tư", item: "/dau-tu" },

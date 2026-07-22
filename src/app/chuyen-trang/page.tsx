@@ -31,7 +31,7 @@ export default async function ChuyenTrangListPage() {
   const operatorNode = buildOperatorNode(siteEntity);
   const websiteNode = buildWebSiteNode(buildOperatorContext(siteEntity));
   const webpageNode = {
-    ...buildWebPageNode(pageUrl, 'Chuyên trang Masterise Homes', 'Tổng hợp các chuyên trang, chính sách và thông tin'),
+    ...buildWebPageNode(pageUrl, 'Chuyên trang Masterise Homes', 'Tổng hợp các chuyên trang, chính sách và thông tin', { breadcrumbId: `${pageUrl}#breadcrumb` }),
     '@type': 'CollectionPage',
   };
   const breadcrumbNode = buildBreadcrumbSchema(pageUrl, [

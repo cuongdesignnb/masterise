@@ -168,7 +168,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
   // Base Semantic Graph Nodes
   const operatorNode = buildOperatorNode(effectiveSiteEntity);
   const websiteNode = buildWebSiteNode(operatorContext);
-  const webpageNode = buildWebPageNode(projectUrl, projectDetail.name, projectDetail.description, `${projectUrl}#residence`);
+  const webpageNode = buildWebPageNode(projectUrl, projectDetail.name, projectDetail.description, { aboutId: `${projectUrl}#residence`, breadcrumbId: `${projectUrl}#breadcrumb` });
   const breadcrumbNode = buildBreadcrumbSchema(projectUrl, [
     { name: "Trang chủ", item: "/" },
     { name: "Dự án", item: "/du-an" },

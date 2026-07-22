@@ -51,7 +51,7 @@ export default async function CareerPage() {
   const operatorNode = buildOperatorNode(siteEntity);
   const websiteNode = buildWebSiteNode(operatorContext);
   const webpageNode = {
-    ...buildWebPageNode(pageUrl, 'Tuyển dụng Masterise Homes', 'Cơ hội nghề nghiệp và môi trường làm việc đẳng cấp quốc tế'),
+    ...buildWebPageNode(pageUrl, 'Tuyển dụng Masterise Homes', 'Cơ hội nghề nghiệp và môi trường làm việc đẳng cấp quốc tế', { breadcrumbId: `${pageUrl}#breadcrumb` }),
     '@type': 'CollectionPage',
   };
   const breadcrumbNode = buildBreadcrumbSchema(pageUrl, [

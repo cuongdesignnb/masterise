@@ -63,7 +63,7 @@ export default async function ChuyenTrangDetailPage({ params }: PageProps) {
 
   const operatorNode = buildOperatorNode(siteEntity);
   const websiteNode = buildWebSiteNode(buildOperatorContext(siteEntity));
-  const webpageNode = buildWebPageNode(pageUrl, page.title, description);
+  const webpageNode = buildWebPageNode(pageUrl, page.title, description, { breadcrumbId: `${pageUrl}#breadcrumb` });
   const breadcrumbNode = buildBreadcrumbSchema(pageUrl, [
     { name: "Trang chủ", item: "/" },
     { name: "Chuyên trang", item: "/chuyen-trang" },

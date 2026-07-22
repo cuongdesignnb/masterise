@@ -77,8 +77,15 @@ export function buildWebSiteNode(operator: OperatorContext = { enabled: false })
   };
 }
 
+export interface WebPageNodeOptions {
+  aboutId?: string;
+  breadcrumbId?: string;
+}
+
 // 3. Build WebPage Node
-export function buildWebPageNode(canonical: string, title: string, description: string, aboutId?: string) {
+export function buildWebPageNode(canonical: string, title: string, description: string, options: WebPageNodeOptions = {}) {
+  const { aboutId, breadcrumbId } = options;
+
   return {
     '@type': 'WebPage',
     '@id': `${canonical}#webpage`,
@@ -87,7 +94,7 @@ export function buildWebPageNode(canonical: string, title: string, description: 
     description,
     isPartOf: { '@id': `${SITE_URL}/#website` },
     about: aboutId ? { '@id': aboutId } : undefined,
-    breadcrumb: { '@id': `${canonical}#breadcrumb` },
+    breadcrumb: breadcrumbId ? { '@id': breadcrumbId } : undefined,
   };
 }
 

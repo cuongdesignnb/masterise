@@ -76,7 +76,7 @@ export default async function NewsPage({ searchParams }: { searchParams: Promise
   const operatorNode = buildOperatorNode(siteEntity);
   const websiteNode = buildWebSiteNode(buildOperatorContext(siteEntity));
   const webpageNode = {
-    ...buildWebPageNode(pageUrl, "Tin tức & Góc nhìn thị trường", "Cập nhật tin tức mới nhất về bất động sản"),
+    ...buildWebPageNode(pageUrl, "Tin tức & Góc nhìn thị trường", "Cập nhật tin tức mới nhất về bất động sản", { breadcrumbId: `${pageUrl}#breadcrumb` }),
     '@type': 'CollectionPage',
   };
   const breadcrumbNode = buildBreadcrumbSchema(pageUrl, [

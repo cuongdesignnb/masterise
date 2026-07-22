@@ -85,7 +85,7 @@ export default async function LienHePage() {
   const operatorNode = buildOperatorNode(siteEntity);
   const websiteNode = buildWebSiteNode(buildOperatorContext(siteEntity));
   const webpageNode = {
-    ...buildWebPageNode(pageUrl, content.seo.title, content.seo.description, `${SITE_URL}/#organization`),
+    ...buildWebPageNode(pageUrl, content.seo.title, content.seo.description, { aboutId: `${SITE_URL}/#organization`, breadcrumbId: `${pageUrl}#breadcrumb` }),
     '@type': 'ContactPage',
   };
   const breadcrumbNode = buildBreadcrumbSchema(pageUrl, [

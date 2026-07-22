@@ -32,6 +32,7 @@ try {
 
   if (compiled) {
     run(process.execPath, ['--test', join(outputDirectory, 'tests', 'offerSchema.test.js')]);
+    run(process.execPath, ['--test', join(repositoryRoot, 'tests', 'graphIntegrity.test.mjs')]);
   }
 } finally {
   rmSync(outputDirectory, { recursive: true, force: true });
