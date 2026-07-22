@@ -1,0 +1,60 @@
+timestamp: 2026-07-22T01:33:09.8673732Z
+commit SHA: eb74f0d6c36db7a2c6e50611e0f7382e783b1fc8
+command: npm run test:seo:schema
+
+
+> temp-next-app@0.1.0 test:seo:schema
+> node scripts/run-seo-schema-tests.mjs
+
+TAP version 13
+# Subtest: full InStock URL remains InStock
+ok 1 - full InStock URL remains InStock
+  ---
+  duration_ms: 1.1056
+  ...
+# Subtest: full OutOfStock URL remains OutOfStock
+ok 2 - full OutOfStock URL remains OutOfStock
+  ---
+  duration_ms: 0.1133
+  ...
+# Subtest: full PreOrder URL remains PreOrder
+ok 3 - full PreOrder URL remains PreOrder
+  ---
+  duration_ms: 0.1115
+  ...
+# Subtest: full LimitedAvailability URL remains LimitedAvailability
+ok 4 - full LimitedAvailability URL remains LimitedAvailability
+  ---
+  duration_ms: 0.1026
+  ...
+# Subtest: internal sold_out maps to OutOfStock
+ok 5 - internal sold_out maps to OutOfStock
+  ---
+  duration_ms: 0.1084
+  ...
+# Subtest: unknown availability is omitted instead of defaulting to InStock
+ok 6 - unknown availability is omitted instead of defaulting to InStock
+  ---
+  duration_ms: 0.1573
+  ...
+# Subtest: empty availability is omitted
+ok 7 - empty availability is omitted
+  ---
+  duration_ms: 0.179
+  ...
+# Subtest: rendered project Product schema preserves the Admin OutOfStock URL
+ok 8 - rendered project Product schema preserves the Admin OutOfStock URL
+  ---
+  duration_ms: 0.2365
+  ...
+1..8
+# tests 8
+# suites 0
+# pass 8
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 67.8265
+
+exit code: 0

@@ -1,5 +1,5 @@
-timestamp: 2026-07-21T18:29:30.6477292Z
-commit SHA: aae40a369c6f9dac62a5dfc742870084e1a0ad96
+timestamp: 2026-07-22T01:32:12.6537240Z
+commit SHA: eb74f0d6c36db7a2c6e50611e0f7382e783b1fc8
 command: npm ci
 
 npm warn EBADENGINE Unsupported engine {
@@ -9,12 +9,12 @@ npm warn EBADENGINE   current: { node: 'v20.15.1', npm: '10.7.0' }
 npm warn EBADENGINE }
 npm warn deprecated lodash.isequal@4.5.0: This package is deprecated. Use require('node:util').isDeepStrictEqual instead.
 
-added 379 packages, and audited 380 packages in 27s
+added 379 packages, and audited 380 packages in 14s
 
 147 packages are looking for funding
   run `npm fund` for details
 
-5 vulnerabilities (1 low, 2 moderate, 2 high)
+6 vulnerabilities (1 low, 1 moderate, 4 high)
 
 To address issues that do not require attention, run:
   npm audit fix
