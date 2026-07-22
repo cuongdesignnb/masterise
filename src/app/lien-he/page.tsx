@@ -82,10 +82,14 @@ export default async function LienHePage() {
   const faqItems = content.faqs.enabled ? activeSorted(content.faqs.items) : [];
   const pageUrl = `${SITE_URL}/lien-he`;
 
+  const operatorContext = buildOperatorContext(siteEntity);
   const operatorNode = buildOperatorNode(siteEntity);
-  const websiteNode = buildWebSiteNode(buildOperatorContext(siteEntity));
+  const websiteNode = buildWebSiteNode(operatorContext);
   const webpageNode = {
-    ...buildWebPageNode(pageUrl, content.seo.title, content.seo.description, { aboutId: `${SITE_URL}/#organization`, breadcrumbId: `${pageUrl}#breadcrumb` }),
+    ...buildWebPageNode(pageUrl, content.seo.title, content.seo.description, {
+      aboutId: operatorContext.enabled && operatorContext.id ? operatorContext.id : undefined,
+      breadcrumbId: `${pageUrl}#breadcrumb`,
+    }),
     '@type': 'ContactPage',
   };
   const breadcrumbNode = buildBreadcrumbSchema(pageUrl, [

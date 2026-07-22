@@ -45,6 +45,24 @@ test('job schema disabled has no #job reference', () => {
   assert(!JSON.stringify(nodes).includes(`${JOB_URL}#job`));
 });
 
+test('contact page without Organization node has no organization reference', () => {
+  const contactUrl = `${CANONICAL}/lien-he`;
+  const nodes = [
+    { '@type': 'WebSite', '@id': `${CANONICAL}/#website` },
+    {
+      '@type': 'ContactPage',
+      '@id': `${contactUrl}#webpage`,
+      url: contactUrl,
+      isPartOf: { '@id': `${CANONICAL}/#website` },
+      breadcrumb: { '@id': `${contactUrl}#breadcrumb` },
+    },
+    { '@type': 'BreadcrumbList', '@id': `${contactUrl}#breadcrumb` },
+  ];
+
+  assert.equal(analyzeGraph(graph(nodes), contactUrl).danglingReferences.length, 0);
+  assert(!JSON.stringify(nodes).includes(`${CANONICAL}/#organization`));
+});
+
 test('ineligible job has no #job reference', () => {
   const nodes = [
     { '@type': 'WebSite', '@id': `${CANONICAL}/#website` },

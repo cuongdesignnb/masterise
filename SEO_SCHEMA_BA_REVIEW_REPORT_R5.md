@@ -24,6 +24,7 @@ The graph integrity issue is resolved by:
 - emitting `breadcrumb` only when the page graph includes a matching `BreadcrumbList`;
 - leaving homepage WebPage without a breadcrumb reference because the homepage graph has no BreadcrumbList;
 - calculating career job eligibility before building WebPage and passing `#job` only when JobPosting will be emitted;
+- passing ContactPage `about -> #organization` only when the Organization node is emitted;
 - rewriting graph validation to use the rendered canonical origin instead of the local HTTP test-server origin.
 
 ## Canonical-origin graph validation
@@ -47,6 +48,7 @@ This catches production-origin dangling references even when CI fetches pages fr
 - job schema disabled has no `#job` reference;
 - ineligible job has no `#job` reference;
 - eligible job with flag enabled has `#job` reference and matching JobPosting node;
+- contact page without Organization node has no organization reference;
 - production-origin dangling `@id` fails while fetched from localhost;
 - matching production-origin reference passes;
 - all previous Offer availability regressions from Round 4.
@@ -58,7 +60,7 @@ Local verification performed without Docker:
 - `npm ci --cache C:\tmp\bds-npm-cache-rc5-elevated --no-audit --no-fund`: pass with existing Node engine warning.
 - `npm run lint`: pass with 0 errors and 406 existing warnings.
 - `npx tsc --noEmit`: pass.
-- `npm run test:seo:schema`: pass, 14/14 tests.
+- `npm run test:seo:schema`: pass, 15/15 tests.
 - `npm run test:seo:assets`: pass; HTTP checks skipped because no local base URL was provided.
 - `npm run build`: pass on Next.js 16.2.7 with the existing ImageResponse `z-index` warning.
 - `php artisan test`: pass, 191 tests and 892 assertions.
