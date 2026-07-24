@@ -43,6 +43,12 @@ import ProjectPricingPolicySection from "@/components/project-detail/ProjectPric
 import VR360Section from "@/components/vr360/VR360Section";
 import { leadService } from "@/services/leadService";
 import RichHtmlContent from "@/components/content/RichHtmlContent";
+import {
+  ProjectPageTitle,
+  ProjectSectionTitle as SharedProjectSectionTitle,
+  ProjectSubsectionTitle,
+  ProjectCardTitle,
+} from "@/components/project-detail/ProjectTypography";
 
 const iconMap: Record<ProjectIconName, LucideIcon> = {
   BadgeDollarSign,
@@ -267,9 +273,9 @@ function SectionTitle({
 }) {
   return (
     <div className="mb-5">
-      <h2 className="heading-font text-[24px] font-semibold leading-tight tracking-[0.02em] text-ink normal-case sm:text-[30px]">
+      <SharedProjectSectionTitle className="normal-case tracking-[0.02em]">
         {children}
-      </h2>
+      </SharedProjectSectionTitle>
     </div>
   );
 }
@@ -751,12 +757,12 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                 </span>
               ) : null}
             </div>
-            <h2 className="heading-font mt-4 text-[38px] font-medium leading-[1.08] text-ink">
+            <div className="project-display-title heading-font mt-4 text-ink">
               {project.name}
-            </h2>
+            </div>
             <p
               ref={(element) => { heroSubtitleRefs.current[0] = element; }}
-              className={`mt-3 text-[14px] font-medium leading-6 text-muted ${heroTextExpanded ? '' : 'line-clamp-3'}`}
+              className={`project-supporting-text mt-3 font-medium text-muted ${heroTextExpanded ? '' : 'line-clamp-3'}`}
             >
               {project.subtitle}
             </p>
@@ -870,14 +876,14 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                   </span>
                 )}
               </motion.div>
-              <motion.h1
+              <motion.div
                 initial={{ opacity: 0, y: 22 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.65, delay: 0.22, ease }}
-                className="heading-font mt-5 break-words text-[42px] font-medium leading-[1.02] tracking-[0.015em] text-ink sm:text-[52px] xl:text-[58px]"
+                className="mt-5 text-ink"
               >
-                {project.name}
-              </motion.h1>
+                <ProjectPageTitle>{project.name}</ProjectPageTitle>
+              </motion.div>
               <motion.p
                 ref={(element) => { heroSubtitleRefs.current[1] = element; }}
                 initial={{ opacity: 0, y: 18 }}
@@ -985,14 +991,14 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
               <p className="text-[11px] font-bold tracking-[0.16em] text-gold normal-case">
                 Tóm tắt nhanh cho AI & người đọc
               </p>
-              <h2 id="project-quick-summary-title" className="heading-font mt-2 text-2xl font-semibold text-ink sm:text-[30px]">
+              <SharedProjectSectionTitle id="project-quick-summary-title" className="mt-2">
                 Những điều cần biết về {project.name}
-              </h2>
+              </SharedProjectSectionTitle>
               <dl className="mt-5 grid gap-3 md:grid-cols-2">
                 {quickAnswerItems.map((item) => (
                   <div key={item.question} className="rounded-[16px] border border-line/80 bg-[#fcfaf6] p-4">
-                    <dt className="text-[13px] font-bold leading-5 text-ink">{item.question}</dt>
-                    <dd className="mt-2 text-[13px] leading-6 text-muted sm:text-sm sm:leading-7">{item.answer}</dd>
+                    <dt className="project-card-title text-ink">{item.question}</dt>
+                    <dd className="project-supporting-text mt-2 text-muted">{item.answer}</dd>
                   </div>
                 ))}
               </dl>
@@ -1006,9 +1012,9 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
             <section id="tong-quan" className="scroll-mt-32">
               <ProjectSectionTitle sectionKey="overview" fallbackTitle={`Tổng quan ${project.name}`} />
               <div className="mt-5">
-                <RichHtmlContent html={projectContentParts.before} />
+                <RichHtmlContent variant="project" html={projectContentParts.before} />
                 {inlineRelatedPosts.length ? <InlineRelatedArticleLinks posts={inlineRelatedPosts} /> : null}
-                <RichHtmlContent html={projectContentParts.after} />
+                <RichHtmlContent variant="project" html={projectContentParts.after} />
               </div>
             </section>
           </Reveal>
@@ -1025,12 +1031,12 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                   <p className="text-[10px] font-bold tracking-[0.12em] text-gold">{project.gallery.label}</p>
                 ) : null}
                 {project.gallery.title ? (
-                  <h2 className="heading-font mt-2 text-[25px] font-semibold leading-tight text-ink">
+                  <SharedProjectSectionTitle className="mt-2 leading-tight">
                     {project.gallery.title}
-                  </h2>
+                  </SharedProjectSectionTitle>
                 ) : null}
                 {project.gallery.description ? (
-                  <p className="mt-4 text-sm leading-6 text-muted sm:text-[15px] sm:leading-7">{project.gallery.description}</p>
+                  <p className="project-supporting-text mt-4 text-muted">{project.gallery.description}</p>
                 ) : null}
               </div>
             ) : null}
@@ -1067,9 +1073,9 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
               <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
                 <div>
                   <p className="text-[11px] font-bold tracking-[0.16em] text-gold normal-case">Video giới thiệu</p>
-                  <h2 className="heading-font mt-2 text-2xl font-semibold text-ink sm:text-[30px]">
+                  <SharedProjectSectionTitle className="mt-2">
                     Khám phá {project.name}
-                  </h2>
+                  </SharedProjectSectionTitle>
                 </div>
                 <button
                   type="button"
@@ -1109,7 +1115,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                     </span>
                   </button>
                   <div className="flex flex-col justify-center gap-4 p-5 sm:p-6">
-                    <p className="text-sm leading-6 text-muted sm:text-[15px] sm:leading-7">
+                    <p className="project-supporting-text text-muted">
                       Xem video giới thiệu tổng quan dự án, không gian sống và những điểm nổi bật ngay trên trang.
                     </p>
                     <div className="flex flex-wrap gap-3">
@@ -1150,7 +1156,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
           <section id="vi-tri" className="scroll-mt-32">
             <ProjectSectionTitle sectionKey="location" fallbackTitle="Kết nối toàn diện" />
             {project.locationDescription ? (
-              <p className="mb-6 whitespace-pre-line text-sm leading-6 text-muted sm:text-[15px] sm:leading-7">{project.locationDescription}</p>
+              <p className="project-supporting-text mb-6 whitespace-pre-line text-muted">{project.locationDescription}</p>
             ) : null}
             <div className={`grid items-start gap-8 ${project.mapImageUrl ? "lg:grid-cols-2" : ""}`}>
               <div className={`space-y-4 ${project.mapImageUrl ? "order-1 lg:order-2" : ""}`}>
@@ -1209,11 +1215,11 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                     </span>
                   </div>
                   <div className="flex flex-1 flex-col p-4 sm:p-5">
-                    <h3 className="heading-font line-clamp-2 min-h-[46px] text-[17px] font-semibold leading-[1.35] text-ink sm:text-[18px]">{amenity.title}</h3>
+                    <ProjectSubsectionTitle className="line-clamp-2 min-h-[46px]">{amenity.title}</ProjectSubsectionTitle>
                     {amenity.description ? <>
                       <p
                         id={`amenity-description-${index}`}
-                        className={`mt-2.5 text-[13px] leading-6 text-muted ${expandedAmenityIndex === index ? "" : "line-clamp-3"}`}
+                        className={`project-supporting-text mt-2.5 text-muted ${expandedAmenityIndex === index ? "" : "line-clamp-3"}`}
                       >
                         {amenity.description}
                       </p>
@@ -1346,15 +1352,15 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                     <p className="text-[12px] font-bold tracking-[0.06em] text-gold normal-case sm:text-[13px]">
                       {plan.productType || activeFloorTabLabel} · Mẫu {String(index + 1).padStart(2, "0")}
                     </p>
-                    <h3 className="mt-1 text-base font-bold text-ink">{plan.name}</h3>
-                    <div className="mt-2 space-y-1.5 text-[13px] leading-5 text-muted sm:text-sm sm:leading-6">
+                    <ProjectSubsectionTitle className="mt-1">{plan.name}</ProjectSubsectionTitle>
+                    <div className="project-meta-text mt-2 space-y-1.5 text-muted sm:text-[15px]">
                       {plan.area ? <p>Diện tích: <strong className="text-ink">{plan.area}</strong></p> : null}
                       {plan.totalArea && plan.totalArea !== plan.area ? <p>Tổng diện tích sàn: <strong className="text-ink">{plan.totalArea}</strong></p> : null}
                       {plan.price ? <p>Giá tham khảo: <strong className="text-ink">{plan.price}</strong></p> : null}
                       {plan.bedrooms ? <p>Phòng ngủ: <strong className="text-ink">{plan.bedrooms}</strong></p> : null}
                       {plan.status ? <p>Tình trạng: <strong className="text-ink">{plan.status}</strong></p> : null}
                     </div>
-                    {plan.description ? <p className="mt-3 whitespace-pre-line text-[13px] leading-5 text-muted sm:text-sm sm:leading-6">{plan.description}</p> : null}
+                    {plan.description ? <p className="project-supporting-text mt-3 whitespace-pre-line text-muted">{plan.description}</p> : null}
                     {thumbnailImage ? (
                       <button
                         type="button"
@@ -1410,8 +1416,8 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                     <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-[#fff7ea] text-gold">
                       <ProjectIcon name={item.icon} size={19} />
                     </div>
-                    <h3 className="text-[14px] font-bold leading-5 text-ink">{item.title}</h3>
-                    <p className="mt-2 text-[13px] leading-6 text-muted">{item.description}</p>
+                    <ProjectSubsectionTitle>{item.title}</ProjectSubsectionTitle>
+                    <p className="project-supporting-text mt-2 text-muted">{item.description}</p>
                   </div>
                 </article>
               ))}
@@ -1451,7 +1457,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                     </div>
                     <div className="pt-1 md:pt-3">
                       <p className={`text-[12px] font-bold ${active ? "text-gold-dark" : "text-ink"}`}>{item.date}</p>
-                      <p className="mt-1 text-[11px] leading-5 text-muted">{item.title}</p>
+                      <p className="project-supporting-text mt-1 text-muted">{item.title}</p>
                     </div>
                   </motion.div>
                 );
@@ -1471,8 +1477,8 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                   className="rounded-[14px] border border-line/75 bg-white px-4 py-5 text-center shadow-[0_10px_26px_rgba(87,61,28,.05)]"
                 >
                   <ProjectIcon name={reason.icon} size={27} className="mx-auto text-gold" />
-                  <h3 className="mt-3 text-[12px] font-bold leading-5 text-ink">{reason.title}</h3>
-                  <p className="mt-1 text-[11px] leading-5 text-muted">{reason.description}</p>
+                  <ProjectCardTitle className="mt-3">{reason.title}</ProjectCardTitle>
+                  <p className="project-supporting-text mt-1">{reason.description}</p>
                 </motion.article>
               ))}
             </div>
@@ -1490,7 +1496,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                 >
                   <div className="flex gap-3">
                     <Quote size={25} fill="currentColor" className="shrink-0 text-gold/35" />
-                    <p className="text-[13px] leading-6 text-muted">{testimonial.content}</p>
+                    <p className="project-supporting-text text-muted">{testimonial.content}</p>
                   </div>
                   <div className="mt-5 flex items-center gap-3">
                     <div className="flex min-w-0 items-center gap-3">
@@ -1504,8 +1510,8 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                         />
                       </div>
                       <div className="min-w-0">
-                        <h3 className="truncate text-[12px] font-bold">{testimonial.name}</h3>
-                        <p className="text-[11px] text-muted">{testimonial.role}</p>
+                        <ProjectCardTitle className="truncate">{testimonial.name}</ProjectCardTitle>
+                        <p className="project-meta-text text-muted">{testimonial.role}</p>
                       </div>
                     </div>
                   </div>
@@ -1526,8 +1532,8 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
             <dl className="grid gap-2 lg:grid-cols-2 xl:grid-cols-3">
               {project.faqs.map((faq) => (
                 <div key={faq.question} className="rounded-[10px] border border-line/80 bg-white px-4 py-3">
-                  <dt className="text-[12px] font-semibold leading-5 text-ink">{faq.question}</dt>
-                  <dd className="mt-3 border-t border-line/60 pt-3 text-[12px] leading-6 text-muted">{faq.answer}</dd>
+                  <dt className="project-card-title font-semibold text-ink">{faq.question}</dt>
+                  <dd className="project-supporting-text mt-3 border-t border-line/60 pt-3 text-muted">{faq.answer}</dd>
                 </div>
               ))}
             </dl>
@@ -1561,10 +1567,10 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
             />
             <div className="relative grid gap-7 p-6 sm:p-8 lg:grid-cols-[.75fr_1.6fr] lg:items-center lg:p-10">
               <div>
-                <p className="heading-font whitespace-pre-line text-[24px] font-semibold leading-tight normal-case sm:text-[28px]">
+                <SharedProjectSectionTitle className="whitespace-pre-line normal-case leading-tight">
                   {project.sectionTitles?.contact?.title || "Đăng ký tư vấn\nNhận thông tin dự án"}
-                </p>
-                <p className="mt-3 max-w-sm text-[13px] leading-6 text-muted">
+                </SharedProjectSectionTitle>
+                <p className="project-supporting-text mt-3 max-w-sm text-muted">
                   Để lại thông tin, chuyên viên tư vấn sẽ liên hệ và gửi chính sách bán hàng mới nhất.
                 </p>
               </div>
@@ -1580,7 +1586,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                     value={consultForm.name}
                     onChange={(event) => setConsultForm((value) => ({ ...value, name: event.target.value }))}
                     placeholder="Nhập họ và tên"
-                    className="mt-1.5 w-full rounded-[6px] border border-line bg-white/90 px-3 py-2.5 text-[12px] text-ink outline-none transition placeholder:text-muted/60 focus:border-gold"
+                    className="mt-1.5 w-full rounded-[6px] border border-line bg-white/90 px-3 py-2.5 text-base text-ink outline-none transition placeholder:text-muted/60 focus:border-gold sm:text-sm"
                   />
                 </label>
                 <label className="text-[11px] font-semibold text-muted">
@@ -1592,7 +1598,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                     value={consultForm.phone}
                     onChange={(event) => setConsultForm((value) => ({ ...value, phone: event.target.value }))}
                     placeholder="Nhập số điện thoại"
-                    className="mt-1.5 w-full rounded-[6px] border border-line bg-white/90 px-3 py-2.5 text-[12px] text-ink outline-none transition placeholder:text-muted/60 focus:border-gold"
+                    className="mt-1.5 w-full rounded-[6px] border border-line bg-white/90 px-3 py-2.5 text-base text-ink outline-none transition placeholder:text-muted/60 focus:border-gold sm:text-sm"
                   />
                 </label>
                 <label className="text-[11px] font-semibold text-muted">
@@ -1603,7 +1609,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                     value={consultForm.email}
                     onChange={(event) => setConsultForm((value) => ({ ...value, email: event.target.value }))}
                     placeholder="Nhập email"
-                    className="mt-1.5 w-full rounded-[6px] border border-line bg-white/90 px-3 py-2.5 text-[12px] text-ink outline-none transition placeholder:text-muted/60 focus:border-gold"
+                    className="mt-1.5 w-full rounded-[6px] border border-line bg-white/90 px-3 py-2.5 text-base text-ink outline-none transition placeholder:text-muted/60 focus:border-gold sm:text-sm"
                   />
                 </label>
                 <label className="relative text-[11px] font-semibold text-muted">
@@ -1612,7 +1618,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                     name="interest"
                     value={consultForm.interest}
                     onChange={(event) => setConsultForm((value) => ({ ...value, interest: event.target.value }))}
-                    className="mt-1.5 w-full appearance-none rounded-[6px] border border-line bg-white/90 px-3 py-2.5 pr-8 text-[12px] text-ink outline-none transition focus:border-gold"
+                    className="mt-1.5 w-full appearance-none rounded-[6px] border border-line bg-white/90 px-3 py-2.5 pr-8 text-base text-ink outline-none transition focus:border-gold sm:text-sm"
                   >
                     {consultInterestOptions.map((option) => (
                       <option key={option} value={option}>

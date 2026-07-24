@@ -13,6 +13,12 @@ import {
   ZoomIn,
 } from "lucide-react";
 import type { ProjectDetail, ProjectPriceItem } from "@/types/project-detail";
+import {
+  ProjectSectionTitle,
+  ProjectSubsectionTitle,
+  ProjectCardTitle,
+  ProjectSupportingText,
+} from "@/components/project-detail/ProjectTypography";
 
 type Props = {
   project: ProjectDetail;
@@ -73,12 +79,12 @@ export default function ProjectPricingPolicySection({ project }: Props) {
     <section className="rounded-[24px] border border-line/80 bg-[#fffaf4] p-4 shadow-soft sm:p-6 lg:p-8">
       <div className="mb-6 flex flex-col gap-3 text-left lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <h2 className="heading-font text-[24px] font-semibold leading-tight text-ink normal-case sm:text-[30px]">
+          <ProjectSectionTitle className="normal-case">
             {project.sectionTitles?.pricingPolicy?.title || "Cập nhật giá bán và chính sách ưu đãi"}
-          </h2>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-muted sm:text-[15px]">
+          </ProjectSectionTitle>
+          <ProjectSupportingText className="mt-3 max-w-2xl text-muted">
             Cập nhật thông tin giá bán, tiến độ thanh toán và chính sách ưu đãi mới nhất của dự án.
-          </p>
+          </ProjectSupportingText>
         </div>
         <button
           type="button"
@@ -94,7 +100,7 @@ export default function ProjectPricingPolicySection({ project }: Props) {
           <div className="rounded-[20px] border border-line/80 bg-white p-4 shadow-[0_12px_35px_rgba(87,61,28,.06)] sm:p-5">
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
-                <h3 className="text-sm font-bold text-ink">Bảng giá & tài liệu giá</h3>
+                <ProjectSubsectionTitle>Bảng giá & tài liệu giá</ProjectSubsectionTitle>
               </div>
               <BadgeDollarSign className="h-8 w-8 text-gold" />
             </div>
@@ -117,8 +123,8 @@ export default function ProjectPricingPolicySection({ project }: Props) {
                       </span>
                     </button>
                     <div className="p-3">
-                      {item.title ? <h4 className="text-[13px] font-bold text-ink">{item.title}</h4> : null}
-                      {item.description ? <p className="mt-1 whitespace-pre-line text-[12px] leading-5 text-muted">{item.description}</p> : null}
+                      {item.title ? <ProjectCardTitle>{item.title}</ProjectCardTitle> : null}
+                      {item.description ? <ProjectSupportingText className="mt-1 whitespace-pre-line text-muted">{item.description}</ProjectSupportingText> : null}
                       <a href={item.imageUrl} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-1.5 text-[11px] font-bold text-gold-dark">
                         Mở ảnh gốc <ExternalLink className="h-3.5 w-3.5" />
                       </a>
@@ -148,8 +154,8 @@ export default function ProjectPricingPolicySection({ project }: Props) {
                           </span>
                         </button>
                         <div className="p-3">
-                          {item.title ? <h4 className="text-[13px] font-bold text-ink">{item.title}</h4> : null}
-                          {item.description ? <p className="mt-1 whitespace-pre-line text-[12px] leading-5 text-muted">{item.description}</p> : null}
+                          {item.title ? <ProjectCardTitle>{item.title}</ProjectCardTitle> : null}
+                          {item.description ? <ProjectSupportingText className="mt-1 whitespace-pre-line text-muted">{item.description}</ProjectSupportingText> : null}
                           <a href={item.fileUrl} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-1.5 text-[11px] font-bold text-gold-dark">
                             Mở ảnh gốc <ExternalLink className="h-3.5 w-3.5" />
                           </a>
@@ -165,8 +171,8 @@ export default function ProjectPricingPolicySection({ project }: Props) {
                         <Icon className="h-5 w-5" />
                       </span>
                       <span className="min-w-0">
-                        <span className="block truncate text-[13px] font-bold text-ink">{item.title || getFileName(item.fileUrl)}</span>
-                        {item.description ? <span className="mt-1 block whitespace-pre-line text-[12px] leading-5 text-muted">{item.description}</span> : null}
+                        <span className="project-card-title block truncate text-ink">{item.title || getFileName(item.fileUrl)}</span>
+                        {item.description ? <span className="project-supporting-text mt-1 block whitespace-pre-line text-muted">{item.description}</span> : null}
                         <span className="mt-1 block text-[10px] font-bold text-gold-dark">{item.fileSize || item.fileType || "Tài liệu"}</span>
                       </span>
                     </a>
@@ -178,7 +184,7 @@ export default function ProjectPricingPolicySection({ project }: Props) {
             {rowItems.length > 0 ? (
               <>
                 <div className="hidden overflow-x-auto rounded-[14px] border border-line/80 md:block">
-                  <table className="w-full min-w-[720px] border-collapse text-left text-[12px]">
+                  <table className="project-pricing-table w-full min-w-[720px] border-collapse text-left text-[14px] leading-[1.55]">
                     <thead className="bg-[#fbf7f0] text-muted">
                       <tr>
                         <th className="px-4 py-3 font-semibold">Loại sản phẩm</th>
@@ -204,12 +210,12 @@ export default function ProjectPricingPolicySection({ project }: Props) {
                 <div className="grid gap-2 md:hidden">
                   {rowItems.map((row, index) => (
                     <article key={`${row.productType}-${index}`} className="rounded-[14px] border border-line/80 bg-[#fcfaf6] p-3">
-                      <h4 className="whitespace-pre-line text-[13px] font-bold text-ink">{row.productType}</h4>
-                      <div className="mt-2 grid grid-cols-2 gap-2 text-[12px]">
+                      <ProjectCardTitle className="whitespace-pre-line">{row.productType}</ProjectCardTitle>
+                      <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
                         <span className="whitespace-pre-line text-muted">Diện tích: <strong className="text-ink">{row.area}</strong></span>
                         <span className="whitespace-pre-line text-muted">Giá: <strong className="text-gold-dark">{row.price}</strong></span>
                       </div>
-                      {row.payment || row.status || row.note ? <p className="mt-2 whitespace-pre-line text-[12px] leading-5 text-muted">{row.payment || row.status || row.note}</p> : null}
+                      {row.payment || row.status || row.note ? <ProjectSupportingText className="mt-2 whitespace-pre-line text-muted">{row.payment || row.status || row.note}</ProjectSupportingText> : null}
                     </article>
                   ))}
                 </div>
@@ -219,8 +225,8 @@ export default function ProjectPricingPolicySection({ project }: Props) {
             {noteItems.length > 0 ? (
               <div className="mt-4 grid gap-2">
                 {noteItems.map((item, index) => (
-                  <div key={`${item.title}-${index}`} className={`rounded-[14px] border p-3 text-[12px] leading-5 ${item.highlight ? "border-gold/50 bg-[#fff7ea] text-ink" : "border-line/80 bg-[#fcfaf6] text-muted"}`}>
-                    {item.title ? <p className="whitespace-pre-line font-bold text-ink">{item.title}</p> : null}
+                  <div key={`${item.title}-${index}`} className={`rounded-[14px] border p-3 project-supporting-text ${item.highlight ? "border-gold/50 bg-[#fff7ea] text-ink" : "border-line/80 bg-[#fcfaf6] text-muted"}`}>
+                    {item.title ? <ProjectCardTitle className="whitespace-pre-line">{item.title}</ProjectCardTitle> : null}
                     {item.description ? <p className="mt-1 whitespace-pre-line">{item.description}</p> : null}
                   </div>
                 ))}
@@ -240,12 +246,12 @@ export default function ProjectPricingPolicySection({ project }: Props) {
                 ) : null}
                 <div className="p-4">
                   {policy.badge ? <span className="mb-2 inline-flex rounded-full bg-[#fff7ea] px-3 py-1 text-[10px] font-bold text-gold-dark">{policy.badge}</span> : null}
-                  <h3 className="text-[14px] font-bold leading-5 text-ink">{policy.title}</h3>
-                  {policy.description ? <p className="mt-2 whitespace-pre-line text-[12px] leading-5 text-muted">{policy.description}</p> : null}
+                  <ProjectSubsectionTitle>{policy.title}</ProjectSubsectionTitle>
+                  {policy.description ? <ProjectSupportingText className="mt-2 whitespace-pre-line text-muted">{policy.description}</ProjectSupportingText> : null}
                   {policy.bullets.length ? (
                     <ul className="mt-3 space-y-1.5">
                       {policy.bullets.map((bullet) => (
-                        <li key={bullet} className="flex gap-2 text-[12px] leading-5 text-muted">
+                        <li key={bullet} className="flex gap-2 project-supporting-text text-muted">
                           <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-gold" />
                           <span>{bullet}</span>
                         </li>
@@ -266,8 +272,8 @@ export default function ProjectPricingPolicySection({ project }: Props) {
 
       <div className="mt-5 rounded-[18px] border border-gold/30 bg-white/70 p-4 sm:flex sm:items-center sm:justify-between sm:gap-4">
         <div>
-          <h3 className="text-sm font-bold text-ink">Nhận bảng giá & chính sách mới nhất</h3>
-          <p className="mt-1 text-[12px] leading-5 text-muted">Chuyên viên sẽ gửi tài liệu chi tiết theo từng giai đoạn mở bán.</p>
+          <ProjectSubsectionTitle>Nhận bảng giá & chính sách mới nhất</ProjectSubsectionTitle>
+          <ProjectSupportingText className="mt-1 text-muted">Chuyên viên sẽ gửi tài liệu chi tiết theo từng giai đoạn mở bán.</ProjectSupportingText>
         </div>
         <button type="button" onClick={scrollToForm} className="gold-gradient mt-3 rounded-[8px] px-5 py-3 text-[11px] font-bold text-white sm:mt-0">
           Đăng ký nhận bảng giá

@@ -10,7 +10,8 @@
     "test:contact": "node scripts/run-contact-page-tests.mjs",
     "test:seo": "node scripts/seo-smoke.mjs",
     "test:seo:assets": "node scripts/validate-seo-assets.mjs",
-    "test:seo:schema": "node scripts/run-seo-schema-tests.mjs"
+    "test:seo:schema": "node scripts/run-seo-schema-tests.mjs",
+    "test:project:typography": "node tests/projectTypography.test.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
