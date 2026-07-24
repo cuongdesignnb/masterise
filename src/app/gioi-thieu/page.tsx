@@ -10,6 +10,7 @@ import {
   buildWebPageNode,
   buildBreadcrumbSchema,
   buildOperatorContext,
+  buildFaqPageNode,
 } from "@/lib/seo/schema";
 import JsonLd from "@/components/seo/JsonLd";
 
@@ -47,18 +48,7 @@ export default async function GioiThieuPage() {
     { name: "Giới thiệu", item: "/gioi-thieu" },
   ]);
 
-  const faqNode = {
-    "@type": "FAQPage",
-    "@id": `${pageUrl}#faq`,
-    mainEntity: aboutFaqs.map((faq) => ({
-      "@type": "Question",
-      name: faq.question,
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: faq.answer,
-      },
-    })),
-  };
+  const faqNode = buildFaqPageNode(pageUrl, aboutFaqs);
 
   const graph = [
     operatorNode,

@@ -206,7 +206,8 @@ class ProjectController extends Controller
                 'id', 'name', 'slug', 'description', 'project_label', 'location_id', 'location', 'address', 'region',
                 'price_min', 'price_max', 'price_text', 'area_min', 'area_max', 'area_text', 'project_status',
                 'open_sale_at', 'is_featured', 'is_hot', 'is_published', 'published_at', 'sort_order',
-                'thumbnail', 'banner_image', 'created_at', 'updated_at',
+                'thumbnail', 'banner_image', 'video_url', 'video_title', 'video_description', 'video_thumbnail_url',
+                'video_upload_date', 'video_duration_seconds', 'video_slug', 'video_is_indexable', 'created_at', 'updated_at',
             ])
             ->with([
                 'categories:id,name,slug,taxonomy_type',
@@ -479,6 +480,9 @@ class ProjectController extends Controller
             'slug' => $request->boolean('slug_is_auto')
                 ? PublicSlug::unique($requestedSlug)
                 : $requestedSlug,
+            'video_slug' => $request->filled('video_url')
+                ? PublicSlug::normalize($request->input('video_slug') ?: $requestedSlug)
+                : null,
         ]);
 
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
@@ -567,6 +571,13 @@ class ProjectController extends Controller
             'section_titles' => 'nullable|array',
             'brochure_url' => 'nullable|string',
             'video_url' => 'nullable|string',
+            'video_title' => 'nullable|string|max:255',
+            'video_description' => 'nullable|string',
+            'video_thumbnail_url' => 'nullable|string|max:2048',
+            'video_upload_date' => 'nullable|date',
+            'video_duration_seconds' => 'nullable|integer|min:1',
+            'video_slug' => ['nullable', 'string', 'max:255', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/', 'unique:projects,video_slug'],
+            'video_is_indexable' => 'boolean',
             'virtual_tour_url' => 'nullable|string',
             'map_image_url' => 'nullable|string',
             'location_description' => 'nullable|string',
@@ -596,6 +607,7 @@ class ProjectController extends Controller
             'seo_description' => 'nullable|string',
             'seo_keywords' => 'nullable|string|max:255',
         ]);
+        $this->addVideoIndexingValidation($validator, $request);
 
         if ($validator->fails()) {
             return response()->json([
@@ -629,7 +641,8 @@ class ProjectController extends Controller
             'is_published', 'sort_order', 'thumbnail', 'banner_image', 'gallery', 
             'gallery_label', 'gallery_title', 'gallery_description', 'detail_gallery',
             'detail_gallery_label', 'detail_gallery_title', 'detail_gallery_description', 'section_titles',
-            'brochure_url', 'video_url', 'virtual_tour_url', 'map_image_url', 'location_description', 'lat', 'lng',
+            'brochure_url', 'video_url', 'video_title', 'video_description', 'video_thumbnail_url', 'video_upload_date',
+            'video_duration_seconds', 'video_slug', 'video_is_indexable', 'virtual_tour_url', 'map_image_url', 'location_description', 'lat', 'lng',
             'area_size', 'developer', 'scale', 'amenities', 'amenity_details', 'floor_tabs',
             'floor_plans', 'floor_plan_groups', 'handover_standards', 'price_rows', 'schema_price', 'schema_price_currency', 'schema_availability'
         ]);
@@ -688,6 +701,9 @@ class ProjectController extends Controller
 
         $request->merge([
             'slug' => PublicSlug::normalize($request->input('slug') ?: $request->input('name')),
+            'video_slug' => $request->filled('video_url')
+                ? PublicSlug::normalize($request->input('video_slug') ?: $request->input('slug') ?: $request->input('name'))
+                : null,
         ]);
 
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
@@ -776,6 +792,13 @@ class ProjectController extends Controller
             'section_titles' => 'nullable|array',
             'brochure_url' => 'nullable|string',
             'video_url' => 'nullable|string',
+            'video_title' => 'nullable|string|max:255',
+            'video_description' => 'nullable|string',
+            'video_thumbnail_url' => 'nullable|string|max:2048',
+            'video_upload_date' => 'nullable|date',
+            'video_duration_seconds' => 'nullable|integer|min:1',
+            'video_slug' => ['nullable', 'string', 'max:255', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/', Rule::unique('projects', 'video_slug')->ignore($id)],
+            'video_is_indexable' => 'boolean',
             'virtual_tour_url' => 'nullable|string',
             'map_image_url' => 'nullable|string',
             'location_description' => 'nullable|string',
@@ -805,6 +828,7 @@ class ProjectController extends Controller
             'seo_description' => 'nullable|string',
             'seo_keywords' => 'nullable|string|max:255',
         ]);
+        $this->addVideoIndexingValidation($validator, $request);
 
         if ($validator->fails()) {
             return response()->json([
@@ -837,7 +861,8 @@ class ProjectController extends Controller
             'is_published', 'sort_order', 'thumbnail', 'banner_image', 'gallery', 
             'gallery_label', 'gallery_title', 'gallery_description', 'detail_gallery',
             'detail_gallery_label', 'detail_gallery_title', 'detail_gallery_description', 'section_titles',
-            'brochure_url', 'video_url', 'virtual_tour_url', 'map_image_url', 'location_description', 'lat', 'lng',
+            'brochure_url', 'video_url', 'video_title', 'video_description', 'video_thumbnail_url', 'video_upload_date',
+            'video_duration_seconds', 'video_slug', 'video_is_indexable', 'virtual_tour_url', 'map_image_url', 'location_description', 'lat', 'lng',
             'area_size', 'developer', 'scale', 'amenities', 'amenity_details', 'floor_tabs',
             'floor_plans', 'floor_plan_groups', 'handover_standards', 'price_rows', 'schema_price', 'schema_price_currency', 'schema_availability'
         ]);
@@ -1160,6 +1185,26 @@ class ProjectController extends Controller
         }
 
         return $projectData;
+    }
+
+    private function addVideoIndexingValidation($validator, Request $request): void
+    {
+        $validator->after(function ($validator) use ($request) {
+            if (!$request->boolean('video_is_indexable')) {
+                return;
+            }
+
+            foreach (['video_url', 'video_title', 'video_description', 'video_upload_date'] as $field) {
+                if (!$request->filled($field)) {
+                    $validator->errors()->add($field, 'Trường này là bắt buộc khi bật lập chỉ mục video.');
+                }
+            }
+
+            $videoUrl = trim((string) $request->input('video_url'));
+            if ($videoUrl !== '' && !preg_match('~(?:youtube\.com/(?:watch\?v=|embed/|shorts/)|youtu\.be/)~i', $videoUrl)) {
+                $validator->errors()->add('video_url', 'Video lập chỉ mục chỉ hỗ trợ URL YouTube hợp lệ trong phiên bản này.');
+            }
+        });
     }
 
     private function applyRegionFilter($query, string $value, bool $activeOnly): void

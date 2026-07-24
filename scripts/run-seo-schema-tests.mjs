@@ -17,7 +17,15 @@ try {
   const compiled = run(process.execPath, [
     join(repositoryRoot, 'node_modules', 'typescript', 'bin', 'tsc'),
     'tests/offerSchema.test.ts',
+    'tests/faqSchema.test.ts',
+    'tests/videoUrl.test.ts',
+    'tests/videoSchema.test.ts',
+    'tests/videoSitemap.test.ts',
     'src/lib/seo/offerSchema.ts',
+    'src/lib/seo/faqSchema.ts',
+    'src/lib/seo/videoSchema.ts',
+    'src/lib/video/videoUrl.ts',
+    'src/lib/video/videoSitemap.ts',
     '--module', 'commonjs',
     '--moduleResolution', 'node',
     '--target', 'es2022',
@@ -32,6 +40,10 @@ try {
 
   if (compiled) {
     run(process.execPath, ['--test', join(outputDirectory, 'tests', 'offerSchema.test.js')]);
+    run(process.execPath, ['--test', join(outputDirectory, 'tests', 'faqSchema.test.js')]);
+    run(process.execPath, ['--test', join(outputDirectory, 'tests', 'videoUrl.test.js')]);
+    run(process.execPath, ['--test', join(outputDirectory, 'tests', 'videoSchema.test.js')]);
+    run(process.execPath, ['--test', join(outputDirectory, 'tests', 'videoSitemap.test.js')]);
     run(process.execPath, ['--test', join(repositoryRoot, 'tests', 'graphIntegrity.test.mjs')]);
   }
 } finally {

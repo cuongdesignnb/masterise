@@ -23,6 +23,7 @@ import {
   buildOffersNode,
   buildProductNode,
   buildOperatorContext,
+  buildFaqPageNode,
 } from "@/lib/seo/schema";
 
 interface PageProps {
@@ -31,28 +32,6 @@ interface PageProps {
 
 function stripHtml(value?: string | null) {
   return (value || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
-}
-
-function getYouTubeEmbedUrl(url?: string | null) {
-  if (!url) return undefined;
-  try {
-    const parsed = new URL(url);
-    const host = parsed.hostname.replace(/^www\./, "").replace(/^m\./, "");
-    let id = "";
-    if (host === "youtu.be") id = parsed.pathname.split("/").filter(Boolean)[0] || "";
-    if (!id && parsed.pathname.startsWith("/embed/")) id = parsed.pathname.split("/").filter(Boolean)[1] || "";
-    if (!id && parsed.pathname.startsWith("/shorts/")) id = parsed.pathname.split("/").filter(Boolean)[1] || "";
-    if (!id) id = parsed.searchParams.get("v") || "";
-    return id ? `https://www.youtube.com/embed/${id}` : url;
-  } catch {
-    return url;
-  }
-}
-
-function getYouTubeThumbnailUrl(url?: string | null) {
-  const embedUrl = getYouTubeEmbedUrl(url);
-  const match = embedUrl?.match(/youtube(?:-nocookie)?\.com\/embed\/([A-Za-z0-9_-]{6,})/);
-  return match?.[1] ? `https://img.youtube.com/vi/${match[1]}/hqdefault.jpg` : undefined;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -189,18 +168,8 @@ export default async function ProjectDetailPage({ params }: PageProps) {
     projectImages
   );
 
-  const videoSchema = projectDetail.videoUrl
-    ? {
-        "@type": "VideoObject",
-        "@id": `${projectUrl}#video`,
-        name: `Video giới thiệu ${projectDetail.name}`,
-        description: projectDetail.description,
-        thumbnailUrl: getYouTubeThumbnailUrl(projectDetail.videoUrl) || projectDetail.heroImage,
-        uploadDate: projectData.published_at || projectData.created_at || projectData.updated_at,
-        embedUrl: getYouTubeEmbedUrl(projectDetail.videoUrl),
-        contentUrl: /\.(mp4|webm|ogg|mov)(\?.*)?$/i.test(projectDetail.videoUrl) ? projectDetail.videoUrl : undefined,
-      }
-    : null;
+
+  const projectFaqNode = buildFaqPageNode(projectUrl, projectDetail.faqs);
 
   const graph = [
     operatorNode,
@@ -210,7 +179,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
     placeNode,
     residenceNode,
     productNode,
-    videoSchema,
+    projectFaqNode,
   ].filter(Boolean);
 
   return (

@@ -279,6 +279,13 @@ export default function AdminProjects() {
   const [formDetailGallery, setFormDetailGallery] = useState<string[]>([]);
   const [formBrochureUrl, setFormBrochureUrl] = useState('');
   const [formVideoUrl, setFormVideoUrl] = useState('');
+  const [formVideoTitle, setFormVideoTitle] = useState('');
+  const [formVideoDescription, setFormVideoDescription] = useState('');
+  const [formVideoThumbnailUrl, setFormVideoThumbnailUrl] = useState('');
+  const [formVideoUploadDate, setFormVideoUploadDate] = useState('');
+  const [formVideoDurationSeconds, setFormVideoDurationSeconds] = useState<number | ''>('');
+  const [formVideoSlug, setFormVideoSlug] = useState('');
+  const [formVideoIsIndexable, setFormVideoIsIndexable] = useState(false);
   const [formVirtualTourUrl, setFormVirtualTourUrl] = useState('');
   const [formMapImageUrl, setFormMapImageUrl] = useState('');
   
@@ -741,6 +748,13 @@ export default function AdminProjects() {
     setFormDetailGallery([]);
     setFormBrochureUrl('');
     setFormVideoUrl('');
+    setFormVideoTitle('');
+    setFormVideoDescription('');
+    setFormVideoThumbnailUrl('');
+    setFormVideoUploadDate('');
+    setFormVideoDurationSeconds('');
+    setFormVideoSlug('');
+    setFormVideoIsIndexable(false);
     setFormVirtualTourUrl('');
     setFormMapImageUrl('');
     setFormSeoTitle('');
@@ -834,6 +848,13 @@ export default function AdminProjects() {
     setFormDetailGallery(asStrings(project.detail_gallery));
     setFormBrochureUrl(project.brochure_url || '');
     setFormVideoUrl(project.video_url || '');
+    setFormVideoTitle(project.video_title || '');
+    setFormVideoDescription(project.video_description || '');
+    setFormVideoThumbnailUrl(project.video_thumbnail_url || '');
+    setFormVideoUploadDate(project.video_upload_date ? project.video_upload_date.slice(0, 10) : '');
+    setFormVideoDurationSeconds(project.video_duration_seconds ? Number(project.video_duration_seconds) : '');
+    setFormVideoSlug(project.video_slug || project.slug || '');
+    setFormVideoIsIndexable(Boolean(project.video_is_indexable));
     setFormVirtualTourUrl(project.virtual_tour_url || '');
     setFormMapImageUrl(project.map_image_url || '');
     setFormSeoTitle(project.seo_meta?.title || '');
@@ -1052,6 +1073,13 @@ export default function AdminProjects() {
         section_titles: formSectionTitles,
         brochure_url: formBrochureUrl,
         video_url: formVideoUrl || null,
+        video_title: formVideoTitle || null,
+        video_description: formVideoDescription || null,
+        video_thumbnail_url: formVideoThumbnailUrl || null,
+        video_upload_date: formVideoUploadDate || null,
+        video_duration_seconds: formVideoDurationSeconds !== '' ? Number(formVideoDurationSeconds) : null,
+        video_slug: formVideoSlug || slugValue,
+        video_is_indexable: formVideoIsIndexable,
         virtual_tour_url: formVirtualTourUrl || null,
         map_image_url: formMapImageUrl || null,
         
@@ -3401,6 +3429,47 @@ export default function AdminProjects() {
                       />
                     </div>
                   </div>
+                )}
+
+                {activeTab === 'media' && (
+                    <div className="rounded-2xl border border-[#E8DCCB] bg-white p-4">
+                      <div className="mb-3">
+                        <h3 className="text-sm font-bold text-[#1F1B16]">Metadata trang xem video riêng</h3>
+                        <p className="mt-1 text-xs leading-5 text-[#8C7A6B]">
+                          Dùng cho URL /video/slug và VideoObject. Không dùng ngày cập nhật dự án thay cho ngày công bố video.
+                        </p>
+                      </div>
+                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <div>
+                          <label className="mb-1 block text-xs font-semibold text-[#8C7A6B]">Tiêu đề video</label>
+                          <input value={formVideoTitle} onChange={(e) => setFormVideoTitle(e.target.value)} className={inputClass} placeholder="Video giới thiệu dự án..." />
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-xs font-semibold text-[#8C7A6B]">Slug trang video</label>
+                          <input value={formVideoSlug} onChange={(e) => setFormVideoSlug(slugifyProjectName(e.target.value))} className={inputClass} placeholder={formSlug || "ten-du-an"} />
+                        </div>
+                        <div className="md:col-span-2">
+                          <label className="mb-1 block text-xs font-semibold text-[#8C7A6B]">Mô tả video</label>
+                          <textarea value={formVideoDescription} onChange={(e) => setFormVideoDescription(e.target.value)} rows={3} className={inputClass} placeholder="Mô tả riêng đúng nội dung video." />
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-xs font-semibold text-[#8C7A6B]">Thumbnail video</label>
+                          <input value={formVideoThumbnailUrl} onChange={(e) => setFormVideoThumbnailUrl(e.target.value)} className={inputClass} placeholder="https://img.youtube.com/vi/.../maxresdefault.jpg" />
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-xs font-semibold text-[#8C7A6B]">Ngày công bố video</label>
+                          <input type="date" value={formVideoUploadDate} onChange={(e) => setFormVideoUploadDate(e.target.value)} className={inputClass} />
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-xs font-semibold text-[#8C7A6B]">Thời lượng video (giây)</label>
+                          <input type="number" min={1} value={formVideoDurationSeconds} onChange={(e) => setFormVideoDurationSeconds(e.target.value !== '' ? Number(e.target.value) : '')} className={inputClass} placeholder="Ví dụ: 155" />
+                        </div>
+                        <label className="flex items-center gap-2 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] px-3 py-2 text-xs font-semibold text-[#1F1B16]">
+                          <input type="checkbox" checked={formVideoIsIndexable} onChange={(e) => setFormVideoIsIndexable(e.target.checked)} className="h-4 w-4 rounded border-[#E8DCCB] text-[#B88746] focus:ring-[#B88746]" />
+                          Cho phép tạo watch page và video sitemap khi đủ metadata
+                        </label>
+                      </div>
+                    </div>
                 )}
 
                 {/* TAB 5: SEO Configurations */}

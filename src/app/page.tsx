@@ -4,9 +4,10 @@ import type { HomepageHero } from "@/components/home/HomePageClient";
 import { DEFAULT_OG_IMAGE, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/config/seo";
 import { fetchApiResponse } from "@/lib/serverApi";
 import type { ApiResponse, Post, Project } from "@/types/api";
+import type { PublicFaq } from "@/types/faq";
 import { buildMetadata } from "@/lib/seo/buildMetadata";
 import { getSiteEntityConfig } from "@/services/siteEntityServerService";
-import { buildOperatorContext, buildOperatorNode, buildWebSiteNode, buildWebPageNode } from "@/lib/seo/schema";
+import { buildFaqPageNode, buildOperatorContext, buildOperatorNode, buildWebSiteNode, buildWebPageNode } from "@/lib/seo/schema";
 import JsonLd from "@/components/seo/JsonLd";
 
 export const metadata: Metadata = buildMetadata({
@@ -14,21 +15,26 @@ export const metadata: Metadata = buildMetadata({
 });
 
 export default async function Home() {
-  const [heroes, projects, posts, siteEntity] = await Promise.all([
+  const [heroes, projects, posts, faqs, siteEntity] = await Promise.all([
     fetchApiResponse<ApiResponse<HomepageHero[]>>("/hero-banners", { cache: "no-store" }),
     fetchApiResponse<ApiResponse<Project[]>>("/projects/featured?limit=6", { revalidate: 300, tags: ["projects-featured"] }),
     fetchApiResponse<ApiResponse<Post[]>>("/posts?per_page=6&post_type=news", { revalidate: 180, tags: ["posts"] }),
+    fetchApiResponse<ApiResponse<PublicFaq[]>>("/faqs", { revalidate: 60, tags: ["faqs"] }),
     getSiteEntityConfig(),
   ]);
+  const homepageFaqs = faqs?.data || [];
 
   const operatorNode = buildOperatorNode(siteEntity);
   const websiteNode = buildWebSiteNode(buildOperatorContext(siteEntity));
   const webpageNode = buildWebPageNode(SITE_URL, `${SITE_NAME} - Bất động sản cao cấp và hạng sang`, SITE_DESCRIPTION);
 
+  const faqNode = buildFaqPageNode(SITE_URL, homepageFaqs);
+
   const graph = [
     operatorNode,
     websiteNode,
     webpageNode,
+    faqNode,
   ].filter(Boolean);
 
   return (
@@ -38,6 +44,7 @@ export default async function Home() {
         initialHeroSlides={heroes?.data || []}
         initialProjects={projects?.data || []}
         initialPosts={posts?.data || []}
+        initialFaqs={homepageFaqs}
       />
     </>
   );

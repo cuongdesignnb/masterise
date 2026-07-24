@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Faq;
+use App\Support\NextCacheRevalidator;
 use Illuminate\Http\Request;
 
 class FaqController extends Controller
@@ -46,6 +47,7 @@ class FaqController extends Controller
         $faq = Faq::create($request->only([
             'question', 'answer', 'sort_order', 'is_active'
         ]));
+        NextCacheRevalidator::tags(['faqs']);
 
         return response()->json([
             'success' => true,
@@ -86,6 +88,7 @@ class FaqController extends Controller
         $faq->update($request->only([
             'question', 'answer', 'sort_order', 'is_active'
         ]));
+        NextCacheRevalidator::tags(['faqs']);
 
         return response()->json([
             'success' => true,
@@ -109,6 +112,7 @@ class FaqController extends Controller
         }
 
         $faq->delete();
+        NextCacheRevalidator::tags(['faqs']);
 
         return response()->json([
             'success' => true,

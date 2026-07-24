@@ -14,6 +14,7 @@ import {
   buildWebPageNode,
   buildBreadcrumbSchema,
   buildOperatorContext,
+  buildFaqPageNode,
 } from "@/lib/seo/schema";
 import JsonLd from "@/components/seo/JsonLd";
 
@@ -97,15 +98,7 @@ export default async function LienHePage() {
     { name: "Liên hệ", item: "/lien-he" },
   ]);
 
-  const faqNode = faqItems.length > 0 ? {
-    "@type": "FAQPage",
-    "@id": `${pageUrl}#faq`,
-    mainEntity: faqItems.map((faq) => ({
-      "@type": "Question",
-      name: faq.question,
-      acceptedAnswer: { "@type": "Answer", text: faq.answer },
-    })),
-  } : null;
+  const faqNode = buildFaqPageNode(pageUrl, faqItems);
 
   const graph = [
     operatorNode,
