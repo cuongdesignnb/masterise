@@ -132,3 +132,28 @@ test('matching production-origin reference passes', () => {
 
   assert.equal(analysis.danglingReferences.length, 0);
 });
+
+test('video watch page references a matching VideoObject node only on the watch URL', () => {
+  const videoUrl = `${CANONICAL}/video/lumiere-demo`;
+  const nodes = [
+    { '@type': 'WebSite', '@id': `${CANONICAL}/#website` },
+    {
+      '@type': 'WebPage',
+      '@id': `${videoUrl}#webpage`,
+      url: videoUrl,
+      isPartOf: { '@id': `${CANONICAL}/#website` },
+      about: { '@id': `${videoUrl}#video` },
+      breadcrumb: { '@id': `${videoUrl}#breadcrumb` },
+    },
+    { '@type': 'BreadcrumbList', '@id': `${videoUrl}#breadcrumb` },
+    {
+      '@type': 'VideoObject',
+      '@id': `${videoUrl}#video`,
+      name: 'Video dự án',
+    },
+  ];
+
+  const analysis = analyzeGraph(graph(nodes), videoUrl);
+  assert.equal(analysis.danglingReferences.length, 0);
+  assert(ids(nodes).includes(`${videoUrl}#video`));
+});

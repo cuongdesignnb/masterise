@@ -41,6 +41,7 @@ import {
   staggerContainerSlow,
 } from "@/lib/motion";
 import type { Post, Project } from "@/types/api";
+import type { PublicFaq } from "@/types/faq";
 
 export type HomepageHero = {
   id?: string | number;
@@ -75,9 +76,10 @@ interface HomePageClientProps {
   initialHeroSlides?: HomepageHero[];
   initialProjects?: Project[];
   initialPosts?: Post[];
+  initialFaqs?: PublicFaq[];
 }
 
-export default function HomePageClient({ initialHeroSlides = [], initialProjects = [], initialPosts = [] }: HomePageClientProps) {
+export default function HomePageClient({ initialHeroSlides = [], initialProjects = [], initialPosts = [], initialFaqs = [] }: HomePageClientProps) {
   const { homePageContent } = useSiteSettings();
   const [heroSlides] = useState<HomepageHero[]>(() => {
     const activeBanners = initialHeroSlides
@@ -567,7 +569,7 @@ export default function HomePageClient({ initialHeroSlides = [], initialProjects
 
               {/* FAQ */}
               <motion.div variants={fadeUp}>
-                <FAQ />
+                <FAQ faqs={initialFaqs} />
               </motion.div>
             </div>
           </Container>

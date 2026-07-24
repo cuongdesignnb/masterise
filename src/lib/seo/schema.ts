@@ -3,6 +3,10 @@ import { SiteEntityConfig } from '@/config/siteEntity';
 
 export { buildOffersNode } from './offerSchema';
 export type { OfferInput } from './offerSchema';
+export { buildFaqPageNode } from './faqSchema';
+export type { FaqSchemaItem } from './faqSchema';
+export { buildVideoObjectNode } from './videoSchema';
+export type { VideoSchemaInput } from './videoSchema';
 
 export interface OperatorContext {
   enabled: boolean;

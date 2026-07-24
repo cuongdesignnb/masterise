@@ -4,6 +4,7 @@ import { fetchApiResponse } from "@/lib/serverApi";
 import { getPublicPages } from "@/services/pageServerService";
 import type { ApiResponse, Post, Project } from "@/types/api";
 import type { CareerJob } from "@/types/career";
+import { getProjectVideo } from "@/lib/video/projectVideo";
 
 type ChangeFrequency = NonNullable<MetadataRoute.Sitemap[number]["changeFrequency"]>;
 
@@ -101,6 +102,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       };
     });
 
+  const videoRoutes: MetadataRoute.Sitemap = projectsData
+    .map(getProjectVideo)
+    .filter((video): video is NonNullable<typeof video> => Boolean(video))
+    .map((video) => ({
+      url: `${SITE_URL}${video.canonicalPath}`,
+      lastModified: stableLastModified(video.updatedAt),
+      changeFrequency: "weekly" as ChangeFrequency,
+      priority: 0.72,
+    }));
+
   const postRoutes: MetadataRoute.Sitemap = postsData
     .filter((post) => post.status === "published")
     .map((post) => {
@@ -130,7 +141,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     images: job.banner_image || job.thumbnail ? [absoluteUrl(job.banner_image || job.thumbnail || "")] : undefined,
   }));
 
-  const dynamicCount = projectRoutes.length + postRoutes.length + pageRoutes.length + careerRoutes.length;
+  const dynamicCount = projectRoutes.length + videoRoutes.length + postRoutes.length + pageRoutes.length + careerRoutes.length;
   const minimum = Number(process.env.SEO_SITEMAP_MIN_DYNAMIC_URLS || 0);
   const expected = Number(process.env.SEO_SITEMAP_EXPECTED_DYNAMIC_URLS || 0);
   const droppedMoreThanTwentyPercent = expected > 0 && dynamicCount < Math.floor(expected * 0.8);
@@ -140,5 +151,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     if (process.env.SEO_SITEMAP_STRICT === 'true') throw new Error(JSON.stringify(detail));
   }
 
-  return [...staticRoutes, ...projectRoutes, ...postRoutes, ...pageRoutes, ...careerRoutes];
+  return [...staticRoutes, ...projectRoutes, ...videoRoutes, ...postRoutes, ...pageRoutes, ...careerRoutes];
 }

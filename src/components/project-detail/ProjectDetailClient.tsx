@@ -35,6 +35,7 @@ import { type FormEvent, type KeyboardEvent as ReactKeyboardEvent, useState, use
 import type { ProjectIconName, ProjectDetail } from "@/types/project-detail";
 import type { FloorPlanItem } from "@/types/floor-plan";
 import { normalizeFloorPlanGroups } from "@/lib/projectFloorPlan";
+import { parseYouTubeVideoUrl } from "@/lib/video/videoUrl";
 import { splitArticleHtmlForInlineLinks } from "@/lib/articleContent";
 import InlineRelatedArticleLinks from "@/components/news-detail/InlineRelatedArticleLinks";
 import ProjectGalleryAlbumSection from "@/components/project-detail/ProjectGalleryAlbumSection";
@@ -94,6 +95,9 @@ function isAllOption(value: string) {
 }
 
 function getYouTubeEmbedUrl(url: string) {
+  const parsed = parseYouTubeVideoUrl(url);
+  if (parsed) return parsed.embedUrl;
+
   const trimmedUrl = url.trim();
 
   try {
@@ -129,6 +133,9 @@ function getYouTubeEmbedUrl(url: string) {
 }
 
 function getYouTubeThumbnailUrl(url: string) {
+  const parsed = parseYouTubeVideoUrl(url);
+  if (parsed) return parsed.thumbnailUrl;
+
   const embedUrl = getYouTubeEmbedUrl(url);
   const match = embedUrl.match(/youtube(?:-nocookie)?\.com\/embed\/([A-Za-z0-9_-]{6,})/);
   return match?.[1] ? `https://img.youtube.com/vi/${match[1]}/hqdefault.jpg` : "";
@@ -341,7 +348,10 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
     .filter((group) => group.tabs.length > 0), [project.floorPlanGroups, project.floorPlans, project.floorTabs]);
   const consultInterestOptions = useMemo(() => getConsultInterestOptions(project), [project]);
   const projectVideoEmbedUrl = useMemo(() => project.videoUrl ? getYouTubeEmbedUrl(project.videoUrl) : "", [project.videoUrl]);
-  const projectVideoThumbnailUrl = useMemo(() => project.videoUrl ? getYouTubeThumbnailUrl(project.videoUrl) : "", [project.videoUrl]);
+  const projectVideoThumbnailUrl = useMemo(
+    () => project.videoThumbnailUrl || (project.videoUrl ? getYouTubeThumbnailUrl(project.videoUrl) : ""),
+    [project.videoThumbnailUrl, project.videoUrl],
+  );
   const projectContentParts = useMemo(() => splitArticleHtmlForInlineLinks(project.content), [project.content]);
   const inlineRelatedPosts = useMemo(() => project.relatedPosts
     .filter((post, index, posts) => Boolean(post.slug) && posts.findIndex((candidate) => candidate.id === post.id) === index)
@@ -1103,10 +1113,19 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                       Xem video giới thiệu tổng quan dự án, không gian sống và những điểm nổi bật ngay trên trang.
                     </p>
                     <div className="flex flex-wrap gap-3">
+                      {project.videoWatchPath ? (
+                        <Link
+                          href={project.videoWatchPath}
+                          className="gold-gradient inline-flex h-11 items-center justify-center gap-2 rounded-[8px] px-5 text-[11px] font-bold uppercase tracking-[0.04em] text-white shadow-[0_12px_28px_rgba(143,99,47,.22)]"
+                        >
+                          <Play size={13} fill="currentColor" />
+                          Xem video đầy đủ
+                        </Link>
+                      ) : null}
                       <button
                         type="button"
                         onClick={() => setIsVideoModalOpen(true)}
-                        className="gold-gradient inline-flex h-11 items-center justify-center gap-2 rounded-[8px] px-5 text-[11px] font-bold uppercase tracking-[0.04em] text-white shadow-[0_12px_28px_rgba(143,99,47,.22)]"
+                        className="inline-flex h-11 items-center justify-center gap-2 rounded-[8px] border border-gold/35 bg-white px-5 text-[11px] font-bold uppercase tracking-[0.04em] text-gold-dark transition hover:border-gold"
                       >
                         <Play size={13} fill="currentColor" />
                         Xem video

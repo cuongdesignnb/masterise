@@ -150,6 +150,13 @@ export interface Project {
   gallery: string[] | null;
   brochure_url: string | null;
   video_url: string | null;
+  video_title?: string | null;
+  video_description?: string | null;
+  video_thumbnail_url?: string | null;
+  video_upload_date?: string | null;
+  video_duration_seconds?: number | string | null;
+  video_slug?: string | null;
+  video_is_indexable?: boolean | null;
   virtual_tour_url: string | null;
   map_image_url: string | null;
   lat: number | null;

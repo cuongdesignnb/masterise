@@ -4,6 +4,7 @@ import { ProjectDetail, IconDetail, ProjectIconName } from '@/types/project-deta
 import { getProjectStatusLabel } from '@/lib/projectStatus';
 import { getProjectPriceText } from '@/lib/projectPrice';
 import { flattenFloorPlanGroups, normalizeFloorPlanGroups } from '@/lib/projectFloorPlan';
+import { getProjectVideo } from '@/lib/video/projectVideo';
 
 const INTERNAL_IMAGE_PLACEHOLDER = '/file.svg';
 const UPDATING = 'Đang cập nhật';
@@ -536,6 +537,7 @@ export function mapApiProjectToProjectDetail(api: ApiProject): ProjectDetail {
   const facts = normalizeIconDetails(api.project_facts, 'MapPin');
   const floorPlanGroups = normalizeFloorPlanGroups(api.floor_plan_groups, api.floor_tabs, api.floor_plans);
   const flattenedFloorPlans = flattenFloorPlanGroups(floorPlanGroups);
+  const projectVideo = getProjectVideo(api);
 
   return {
     id: api.id,
@@ -584,6 +586,11 @@ export function mapApiProjectToProjectDetail(api: ApiProject): ProjectDetail {
     faqs: normalizeFaqs(api.project_faqs),
     brochureUrl: api.brochure_url || null,
     videoUrl: api.video_url || null,
+    videoWatchPath: projectVideo?.canonicalPath || null,
+    videoTitle: api.video_title || null,
+    videoDescription: api.video_description || null,
+    videoThumbnailUrl: api.video_thumbnail_url || null,
+    videoUploadDate: api.video_upload_date || null,
     virtualTourUrl: api.virtual_tour_url || null,
     mapImageUrl: api.map_image_url || null,
     locationDescription: api.location_description || null,

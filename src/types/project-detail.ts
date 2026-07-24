@@ -137,6 +137,11 @@ export type ProjectDetail = {
   faqs: { question: string; answer: string }[];
   brochureUrl?: string | null;
   videoUrl?: string | null;
+  videoWatchPath?: string | null;
+  videoTitle?: string | null;
+  videoDescription?: string | null;
+  videoThumbnailUrl?: string | null;
+  videoUploadDate?: string | null;
   virtualTourUrl?: string | null;
   mapImageUrl?: string | null;
   locationDescription?: string | null;
