@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, Maximize2, X } from "lucide-react";
 import type { ProjectDetail } from "@/types/project-detail";
+import { ProjectSectionTitle, ProjectSupportingText } from "@/components/project-detail/ProjectTypography";
 
 type Props = {
   project: ProjectDetail;
@@ -54,12 +55,12 @@ export default function ProjectGalleryAlbumSection({ project }: Props) {
         {project.detailGallery.label ? (
           <p className="text-[11px] font-bold tracking-[0.16em] text-gold normal-case">{project.detailGallery.label}</p>
         ) : null}
-        <h2 className="heading-font mt-2 text-[24px] font-semibold leading-tight text-ink normal-case sm:text-[30px]">
+        <ProjectSectionTitle className="mt-2 normal-case">
           {project.detailGallery.title || "Album ảnh dự án"}
-        </h2>
-        <p className="mt-3 max-w-2xl text-sm leading-6 text-muted sm:text-[15px]">
+        </ProjectSectionTitle>
+        <ProjectSupportingText className="mt-3 max-w-2xl text-muted">
           {project.detailGallery.description || "Khám phá hình ảnh thực tế, tiện ích, cảnh quan và những góc nhìn nổi bật của dự án."}
-        </p>
+        </ProjectSupportingText>
       </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:auto-rows-[180px] md:grid-cols-4">

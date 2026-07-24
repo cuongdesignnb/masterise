@@ -5,6 +5,11 @@ import Link from 'next/link';
 import { Star, CheckCircle2, MessageSquare, Send } from 'lucide-react';
 import type { PublicProjectReview, ProjectReviewAggregate } from '@/types/project-review';
 import { api, formatApiError } from '@/lib/api';
+import {
+  ProjectSectionTitle,
+  ProjectSubsectionTitle,
+  ProjectCardTitle,
+} from '@/components/project-detail/ProjectTypography';
 
 interface ProjectReviewsProps {
   projectId: number;
@@ -112,10 +117,10 @@ export default function ProjectReviews({
         {/* Section Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-heading font-[#1F1B16]">
+            <ProjectSectionTitle className="text-[#1F1B16]">
               Đánh giá dự án
-            </h2>
-            <p className="text-xs text-[#8C7A6B] mt-1">
+            </ProjectSectionTitle>
+            <p className="project-supporting-text text-[#8C7A6B] mt-1">
               Ý kiến công khai đã qua kiểm duyệt nội dung về {projectName}
             </p>
           </div>
@@ -140,7 +145,7 @@ export default function ProjectReviews({
               </div>
               <div className="space-y-1">
                 {renderStars(summary.ratingValue)}
-                <p className="text-xs text-[#8C7A6B]">
+                <p className="project-supporting-text text-[#8C7A6B]">
                   Dựa trên <strong className="text-[#1F1B16]">{summary.reviewCount}</strong> đánh giá đã duyệt
                 </p>
               </div>
@@ -151,7 +156,7 @@ export default function ProjectReviews({
             </div>
           </div>
         ) : (
-          <div className="bg-[#FBF8F2] border border-[#E8DCCB] rounded-2xl p-6 text-center text-xs text-[#8C7A6B]">
+          <div className="bg-[#FBF8F2] border border-[#E8DCCB] rounded-2xl p-6 text-center project-supporting-text text-[#8C7A6B]">
             {submissionEnabled
               ? 'Dự án chưa có đánh giá công khai nào. Bạn có thể gửi ý kiến để quản trị viên kiểm duyệt.'
               : 'Dự án chưa có đánh giá công khai nào.'}
@@ -161,7 +166,7 @@ export default function ProjectReviews({
         {/* Submit Review Form */}
         {showForm && (
           <div className="bg-white border border-[#E8DCCB] rounded-2xl p-6 shadow-sm space-y-4 animate-fadeIn">
-            <h3 className="text-sm font-bold text-[#1F1B16] uppercase">Gửi đánh giá của bạn</h3>
+            <ProjectSubsectionTitle className="uppercase">Gửi đánh giá của bạn</ProjectSubsectionTitle>
             
             {submitted ? (
               <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-xl flex items-center gap-2">
@@ -195,7 +200,7 @@ export default function ProjectReviews({
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       placeholder="Ví dụ: Nguyễn Văn A"
-                      className="w-full px-3.5 py-2 border border-[#E8DCCB] rounded-xl text-xs focus:outline-none focus:border-[#B88746]"
+                      className="w-full px-3.5 py-2 border border-[#E8DCCB] rounded-xl text-base focus:outline-none focus:border-[#B88746] sm:text-sm"
                     />
                   </div>
                   <div>
@@ -205,7 +210,7 @@ export default function ProjectReviews({
                       value={role}
                       onChange={(e) => setRole(e.target.value)}
                       placeholder="Ví dụ: Cư dân / Nhà đầu tư F1"
-                      className="w-full px-3.5 py-2 border border-[#E8DCCB] rounded-xl text-xs focus:outline-none focus:border-[#B88746]"
+                      className="w-full px-3.5 py-2 border border-[#E8DCCB] rounded-xl text-base focus:outline-none focus:border-[#B88746] sm:text-sm"
                     />
                   </div>
                 </div>
@@ -256,7 +261,7 @@ export default function ProjectReviews({
                     onChange={(e) => setBody(e.target.value)}
                     rows={4}
                     placeholder="Chia sẻ cảm nhận về vị trí, tiện ích, thiết kế hoặc tiến độ của dự án..."
-                    className="w-full px-3.5 py-2 border border-[#E8DCCB] rounded-xl text-xs focus:outline-none focus:border-[#B88746] resize-y"
+                    className="w-full px-3.5 py-2 border border-[#E8DCCB] rounded-xl text-base focus:outline-none focus:border-[#B88746] resize-y sm:text-sm"
                   />
                 </div>
 
@@ -290,7 +295,7 @@ export default function ProjectReviews({
                         {rev.reviewer_name.charAt(0)}
                       </div>
                       <div>
-                        <h4 className="text-xs font-bold text-[#1F1B16]">{rev.reviewer_name}</h4>
+                        <ProjectCardTitle className="text-[#1F1B16]">{rev.reviewer_name}</ProjectCardTitle>
                         {rev.reviewer_role && (
                           <span className="text-[10px] text-[#8C7A6B] block">{rev.reviewer_role}</span>
                         )}
@@ -299,7 +304,7 @@ export default function ProjectReviews({
                     {renderStars(rev.rating)}
                   </div>
 
-                  <p className="text-xs text-[#1F1B16]/90 leading-relaxed italic">
+                  <p className="project-supporting-text text-[#1F1B16]/90 italic">
                     &ldquo;{rev.review_body}&rdquo;
                   </p>
                 </div>

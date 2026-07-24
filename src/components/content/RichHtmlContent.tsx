@@ -2,6 +2,7 @@ import type { HTMLAttributes } from "react";
 
 interface RichHtmlContentProps extends Omit<HTMLAttributes<HTMLDivElement>, "children"> {
   html?: string | null;
+  variant?: "default" | "project";
 }
 
 function escapeHtml(value: string): string {
@@ -69,6 +70,12 @@ function sanitizeRichHtml(html: string): string {
     .replace(/\s(?:href|src)\s*=\s*(?:(['"])\s*javascript:[\s\S]*?\1|javascript:[^\s>]*)/gi, "");
 }
 
+function normalizeProjectHeadings(html: string): string {
+  return html
+    .replace(/<\/?h1\b/gi, (tag) => tag.replace(/h1/i, "h3"))
+    .replace(/<\/?h2\b/gi, (tag) => tag.replace(/h2/i, "h3"));
+}
+
 function wrapTables(html: string): string {
   const protectedTables: string[] = [];
   const protectedHtml = html.replace(
@@ -96,15 +103,17 @@ function wrapTables(html: string): string {
   return wrappedHtml.replace(/__RICH_HTML_TABLE_(\d+)__/g, (_token, index: string) => protectedTables[Number(index)] || "");
 }
 
-export default function RichHtmlContent({ html, className = "", ...props }: RichHtmlContentProps) {
+export default function RichHtmlContent({ html, variant = "default", className = "", ...props }: RichHtmlContentProps) {
   const normalizedHtml = typeof html === "string" ? html.trim() : "";
   if (!normalizedHtml) return null;
+  const sanitizedHtml = sanitizeRichHtml(normalizedHtml);
+  const renderedHtml = variant === "project" ? normalizeProjectHeadings(sanitizedHtml) : sanitizedHtml;
 
   return (
     <div
       {...props}
-      className={`rich-html-content ${className}`.trim()}
-      dangerouslySetInnerHTML={{ __html: wrapTables(sanitizeRichHtml(normalizedHtml)) }}
+      className={`rich-html-content ${variant === "project" ? "project-rich-content" : ""} ${className}`.trim()}
+      dangerouslySetInnerHTML={{ __html: wrapTables(renderedHtml) }}
     />
   );
 }
