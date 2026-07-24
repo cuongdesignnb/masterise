@@ -184,7 +184,7 @@ export default function ProjectPricingPolicySection({ project }: Props) {
             {rowItems.length > 0 ? (
               <>
                 <div className="hidden overflow-x-auto rounded-[14px] border border-line/80 md:block">
-                  <table className="w-full min-w-[720px] border-collapse text-left text-sm">
+                  <table className="project-pricing-table w-full min-w-[720px] border-collapse text-left text-[14px] leading-[1.55]">
                     <thead className="bg-[#fbf7f0] text-muted">
                       <tr>
                         <th className="px-4 py-3 font-semibold">Loại sản phẩm</th>
