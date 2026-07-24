@@ -985,27 +985,6 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
           </div>
         </Reveal> : null}
 
-        {quickAnswerItems.length ? (
-          <Reveal className="rounded-[22px] border border-line/80 bg-white p-5 shadow-soft sm:p-7">
-            <section aria-labelledby="project-quick-summary-title">
-              <p className="text-[11px] font-bold tracking-[0.16em] text-gold normal-case">
-                Tóm tắt nhanh cho AI & người đọc
-              </p>
-              <SharedProjectSectionTitle id="project-quick-summary-title" className="mt-2">
-                Những điều cần biết về {project.name}
-              </SharedProjectSectionTitle>
-              <dl className="mt-5 grid gap-3 md:grid-cols-2">
-                {quickAnswerItems.map((item) => (
-                  <div key={item.question} className="rounded-[16px] border border-line/80 bg-[#fcfaf6] p-4">
-                    <dt className="project-card-title text-ink">{item.question}</dt>
-                    <dd className="project-supporting-text mt-2 text-muted">{item.answer}</dd>
-                  </div>
-                ))}
-              </dl>
-            </section>
-          </Reveal>
-        ) : null}
-
         {/* TỔNG QUAN DỰ ÁN */}
         {project.content || inlineRelatedPosts.length ? (
           <Reveal className="rounded-[22px] border border-line/80 bg-white p-5 shadow-soft sm:p-7">
@@ -1551,6 +1530,24 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
             projectName={project.name}
             fallbackUrl={project.virtualTourUrl}
           />
+        ) : null}
+
+        {quickAnswerItems.length ? (
+          <Reveal className="rounded-[22px] border border-line/80 bg-white p-5 shadow-soft sm:p-7">
+            <section aria-labelledby="project-quick-summary-title">
+              <SharedProjectSectionTitle id="project-quick-summary-title" className="mt-2">
+                Những điều cần biết về {project.name}
+              </SharedProjectSectionTitle>
+              <dl className="mt-5 grid gap-3 md:grid-cols-2">
+                {quickAnswerItems.map((item) => (
+                  <div key={item.question} className="rounded-[16px] border border-line/80 bg-[#fcfaf6] p-4">
+                    <dt className="project-card-title text-ink">{item.question}</dt>
+                    <dd className="project-supporting-text mt-2 text-muted">{item.answer}</dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
+          </Reveal>
         ) : null}
 
         <Reveal>
