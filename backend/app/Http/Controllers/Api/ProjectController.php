@@ -550,6 +550,7 @@ class ProjectController extends Controller
             'sales_policy' => 'nullable|string',
             'booking_policy' => 'nullable|string',
             'policy_cards' => 'nullable|array',
+            'pricing_policy_description' => 'nullable|string',
             'project_timeline' => 'nullable|array',
             'investment_reasons' => 'nullable|array',
             'project_testimonials' => 'nullable|array',
@@ -588,10 +589,12 @@ class ProjectController extends Controller
             'scale' => 'nullable|string',
             'amenities' => 'nullable|array',
             'amenity_details' => 'nullable|array',
+            'amenities_description' => 'nullable|string',
             'floor_tabs' => 'nullable|array',
             'floor_plans' => 'nullable|array',
             ...$this->floorPlanValidationRules(),
             'handover_standards' => 'nullable|array',
+            'handover_description' => 'nullable|string',
             'price_rows' => 'nullable|array',
             'schema_price' => 'nullable|string|max:255',
             'schema_price_currency' => 'nullable|string|max:10',
@@ -643,8 +646,8 @@ class ProjectController extends Controller
             'detail_gallery_label', 'detail_gallery_title', 'detail_gallery_description', 'section_titles',
             'brochure_url', 'video_url', 'video_title', 'video_description', 'video_thumbnail_url', 'video_upload_date',
             'video_duration_seconds', 'video_slug', 'video_is_indexable', 'virtual_tour_url', 'map_image_url', 'location_description', 'lat', 'lng',
-            'area_size', 'developer', 'scale', 'amenities', 'amenity_details', 'floor_tabs',
-            'floor_plans', 'floor_plan_groups', 'handover_standards', 'price_rows', 'schema_price', 'schema_price_currency', 'schema_availability'
+            'area_size', 'developer', 'scale', 'amenities', 'amenity_details', 'amenities_description', 'floor_tabs',
+            'floor_plans', 'floor_plan_groups', 'handover_standards', 'handover_description', 'price_rows', 'policy_cards', 'pricing_policy_description', 'schema_price', 'schema_price_currency', 'schema_availability'
         ]);
         $projectData = $this->applyFloorPlanData($request, $projectData);
         if (array_key_exists('content', $projectData) && filled($projectData['content'])) {
@@ -771,6 +774,7 @@ class ProjectController extends Controller
             'sales_policy' => 'nullable|string',
             'booking_policy' => 'nullable|string',
             'policy_cards' => 'nullable|array',
+            'pricing_policy_description' => 'nullable|string',
             'project_timeline' => 'nullable|array',
             'investment_reasons' => 'nullable|array',
             'project_testimonials' => 'nullable|array',
@@ -809,10 +813,12 @@ class ProjectController extends Controller
             'scale' => 'nullable|string',
             'amenities' => 'nullable|array',
             'amenity_details' => 'nullable|array',
+            'amenities_description' => 'nullable|string',
             'floor_tabs' => 'nullable|array',
             'floor_plans' => 'nullable|array',
             ...$this->floorPlanValidationRules(),
             'handover_standards' => 'nullable|array',
+            'handover_description' => 'nullable|string',
             'price_rows' => 'nullable|array',
             'schema_price' => 'nullable|string|max:255',
             'schema_price_currency' => 'nullable|string|max:10',
@@ -863,8 +869,8 @@ class ProjectController extends Controller
             'detail_gallery_label', 'detail_gallery_title', 'detail_gallery_description', 'section_titles',
             'brochure_url', 'video_url', 'video_title', 'video_description', 'video_thumbnail_url', 'video_upload_date',
             'video_duration_seconds', 'video_slug', 'video_is_indexable', 'virtual_tour_url', 'map_image_url', 'location_description', 'lat', 'lng',
-            'area_size', 'developer', 'scale', 'amenities', 'amenity_details', 'floor_tabs',
-            'floor_plans', 'floor_plan_groups', 'handover_standards', 'price_rows', 'schema_price', 'schema_price_currency', 'schema_availability'
+            'area_size', 'developer', 'scale', 'amenities', 'amenity_details', 'amenities_description', 'floor_tabs',
+            'floor_plans', 'floor_plan_groups', 'handover_standards', 'handover_description', 'price_rows', 'policy_cards', 'pricing_policy_description', 'schema_price', 'schema_price_currency', 'schema_availability'
         ]);
         $projectData = $this->applyFloorPlanData($request, $projectData);
         if (array_key_exists('content', $projectData) && filled($projectData['content'])) {

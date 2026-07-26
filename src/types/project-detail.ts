@@ -110,6 +110,7 @@ export type ProjectDetail = {
     image?: string;
     icon: ProjectIconName;
   }[];
+  amenitiesDescription?: string | null;
   floorTabs: string[];
   floorPlanGroups?: FloorPlanGroup[];
   floorPlans: LegacyFloorPlanItem[];
@@ -119,9 +120,11 @@ export type ProjectDetail = {
     image?: string;
     icon: ProjectIconName;
   }[];
+  handoverDescription?: string | null;
   priceRows: ProjectPriceItem[];
   productSummary: { label: string; value: string }[];
   policies: ProjectPolicyCard[];
+  pricingPolicyDescription?: string | null;
   timeline: { date: string; title: string }[];
   investmentReasons: {
     title: string;

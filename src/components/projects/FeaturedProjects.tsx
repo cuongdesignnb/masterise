@@ -212,19 +212,19 @@ export default function FeaturedProjects({ initialProjects = [] }: { initialProj
                   {/* Content */}
                   <div className="flex flex-grow flex-col p-5 sm:p-4">
                     <Link href={project.slug ? `/${project.slug}` : `#`} className="hover:text-gold transition-colors">
-                      <h3 className="heading-font text-base font-bold leading-snug text-ink sm:text-sm">
+                      <h3 className="heading-font text-base font-bold leading-snug text-ink sm:text-base">
                         {project.name}
                       </h3>
                     </Link>
 
-                    <div className="mt-1.5 flex items-center gap-1 text-xs text-muted sm:text-[11px]">
+                    <div className="mt-1.5 flex items-center gap-1 text-xs text-muted sm:text-[13px]">
                       <MapPin size={12} className="shrink-0 text-muted/70" />
                       <span>{project.location}</span>
                     </div>
 
-                    <p className="mt-1 text-[11px] font-semibold text-gold/90 sm:text-[10px]">{project.type}</p>
+                    <p className="mt-1 text-xs font-semibold text-gold/90 sm:text-[13px]">{project.type}</p>
 
-                    <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-muted sm:mt-1.5 sm:text-[11px]">
+                    <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-muted sm:mt-1.5 sm:text-[13px]">
                       {project.description}
                     </p>
 

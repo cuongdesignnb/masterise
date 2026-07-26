@@ -124,12 +124,15 @@ export interface Project {
   section_titles?: Record<string, { eyebrow?: string; title?: string }> | null;
   connectivity?: unknown[] | null;
   amenity_details?: unknown[] | null;
+  amenities_description?: string | null;
   floor_tabs?: string[] | null;
   floor_plans?: unknown[] | null;
   floor_plan_groups?: FloorPlanGroup[] | null;
   handover_standards?: unknown[] | null;
+  handover_description?: string | null;
   price_rows?: unknown[] | null;
   policy_cards?: unknown[] | null;
+  pricing_policy_description?: string | null;
   project_timeline?: unknown[] | null;
   investment_reasons?: unknown[] | null;
   project_testimonials?: unknown[] | null;
