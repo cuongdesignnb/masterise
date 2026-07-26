@@ -5,7 +5,6 @@ import Footer from "@/components/Footer";
 import ProjectDetailClient from "@/components/project-detail/ProjectDetailClient";
 import ProjectReviews from "@/components/project-detail/ProjectReviews";
 import StickyLeadCTA from "@/components/lead/StickyLeadCTA";
-import FloatingContactButtons from "@/components/lead/FloatingContactButtons";
 import JsonLd from "@/components/seo/JsonLd";
 import { getProjectForSEO } from "@/services/projectServerService";
 import { getSiteEntityConfig } from "@/services/siteEntityServerService";
@@ -197,7 +196,6 @@ export default async function ProjectDetailPage({ params }: PageProps) {
         />
       </div>
       <StickyLeadCTA projectId={projectDetail.id || projectData.id} projectName={projectDetail.name} />
-      <FloatingContactButtons projectId={projectDetail.id || projectData.id} />
       <Footer />
     </>
   );

@@ -92,7 +92,7 @@ export default async function ChuyenTrangDetailPage({ params }: PageProps) {
             </h1>
 
             <div className="mt-6 border-t border-[#E8DCCB] pt-6">
-              <RichHtmlContent content={page.content || undefined} />
+              <RichHtmlContent html={page.content || undefined} />
             </div>
           </div>
         </section>

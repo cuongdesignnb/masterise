@@ -308,14 +308,17 @@ export default function AdminProjects() {
   const [formProjectFacts, setFormProjectFacts] = useState<IconValueItem[]>([]);
   const [formProjectStats, setFormProjectStats] = useState<StatItem[]>([]);
   const [formConnectivity, setFormConnectivity] = useState<ConnectivityItem[]>([]);
+  const [formAmenitiesDescription, setFormAmenitiesDescription] = useState('');
   const [formAmenityDetails, setFormAmenityDetails] = useState<AmenityItem[]>([]);
   const [formInvestmentReasons, setFormInvestmentReasons] = useState<ReasonItem[]>([]);
   const [formProjectTestimonials, setFormProjectTestimonials] = useState<TestimonialItem[]>([]);
   const [formProjectFaqs, setFormProjectFaqs] = useState<FaqItem[]>([]);
   const [formFloorPlanGroups, setFormFloorPlanGroups] = useState<FloorPlanGroup[]>([]);
   const [formHandoverStandards, setFormHandoverStandards] = useState<HandoverStandardItem[]>([]);
+  const [formHandoverDescription, setFormHandoverDescription] = useState('');
   const [formPriceRows, setFormPriceRows] = useState<PriceRowItem[]>([]);
   const [formPolicyCards, setFormPolicyCards] = useState<PolicyItem[]>([]);
+  const [formPricingPolicyDescription, setFormPricingPolicyDescription] = useState('');
   const [formProjectTimeline, setFormProjectTimeline] = useState<TimelineItem[]>([]);
 
   const slugifyProjectName = (value: string) => value
@@ -341,10 +344,13 @@ export default function AdminProjects() {
     floor_plans: 'Danh sách mặt bằng',
     handover_standards: 'Tiêu chuẩn bàn giao',
     price_rows: 'Dòng bảng giá',
+    pricing_policy_description: 'Mô tả chung bảng giá và chính sách',
     gallery: 'Danh sách ảnh không gian sống',
     gallery_label: 'Nhãn section Không gian sống',
     gallery_title: 'Tiêu đề section Không gian sống',
     gallery_description: 'Mô tả section Không gian sống',
+    amenities_description: 'Mô tả chung section Tiện ích nổi bật',
+    handover_description: 'Mô tả chung section Tiêu chuẩn bàn giao',
     detail_gallery: 'Album ảnh cuối trang chi tiết',
     detail_gallery_label: 'Nhãn album cuối trang',
     detail_gallery_title: 'Tiêu đề album cuối trang',
@@ -776,14 +782,17 @@ export default function AdminProjects() {
     setFormProjectFacts([]);
     setFormProjectStats([]);
     setFormConnectivity([]);
+    setFormAmenitiesDescription('');
     setFormAmenityDetails([]);
     setFormInvestmentReasons([]);
     setFormProjectTestimonials([]);
     setFormProjectFaqs([]);
     setFormFloorPlanGroups([]);
     setFormHandoverStandards([]);
+    setFormHandoverDescription('');
     setFormPriceRows([]);
     setFormPolicyCards([]);
+    setFormPricingPolicyDescription('');
     setFormProjectTimeline([]);
     
     setIsFormOpen(true);
@@ -876,14 +885,17 @@ export default function AdminProjects() {
     setFormProjectFacts(loadIconValueItems(project.project_facts, 'MapPin'));
     setFormProjectStats(loadStatItems(project.project_stats));
     setFormConnectivity(loadConnectivityItems(project.connectivity));
+    setFormAmenitiesDescription(project.amenities_description || '');
     setFormAmenityDetails(loadAmenityItems(project.amenity_details));
     setFormInvestmentReasons(loadReasonItems(project.investment_reasons));
     setFormProjectTestimonials(loadTestimonialItems(project.project_testimonials));
     setFormProjectFaqs(loadFaqItems(project.project_faqs));
     setFormFloorPlanGroups(normalizeFloorPlanGroups(project.floor_plan_groups, project.floor_tabs, project.floor_plans));
     setFormHandoverStandards(loadHandoverStandardItems(project.handover_standards));
+    setFormHandoverDescription(project.handover_description || '');
     setFormPriceRows(loadPriceRowItems(project.price_rows));
     setFormPolicyCards(loadPolicyItems(project.policy_cards));
+    setFormPricingPolicyDescription(project.pricing_policy_description || '');
     setFormProjectTimeline(loadTimelineItems(project.project_timeline));
   };
 
@@ -1044,14 +1056,17 @@ export default function AdminProjects() {
         project_facts: projectFacts,
         project_stats: projectStats,
         connectivity,
+        amenities_description: formAmenitiesDescription || null,
         amenity_details: amenityDetails,
         investment_reasons: investmentReasons,
         project_testimonials: projectTestimonials,
         project_faqs: projectFaqs,
         floor_plan_groups: floorPlanGroups,
         handover_standards: handoverStandards,
+        handover_description: formHandoverDescription || null,
         price_rows: priceRows,
         policy_cards: policyCards,
+        pricing_policy_description: formPricingPolicyDescription || null,
         project_timeline: projectTimeline,
         category_ids: formCategoryIds,
         highlight_points: highlightsArr,
@@ -1977,6 +1992,17 @@ export default function AdminProjects() {
   const renderPricingPolicyEditor = () => (
     <div className="space-y-5">
       {sectionNote('Quản lý bảng giá, ảnh bảng giá, tài liệu giá và chính sách bán hàng. Có thể nhập từng dòng hoặc chọn ảnh/PDF từ Media Library để tiết kiệm thời gian.')}
+
+      <div data-project-field="pricing_policy_description" className="rounded-2xl border border-[#E8DCCB] bg-white p-4">
+        <label className="mb-1 block text-xs font-semibold text-[#8C7A6B]">Mô tả chung bảng giá và chính sách</label>
+        <p className="mb-3 text-xs text-[#8C7A6B]">Nội dung này hiển thị ở cột trái; ảnh bảng giá và ảnh chính sách bảo hành hiển thị ở cột phải ngoài Client.</p>
+        <RichTextEditor
+          value={formPricingPolicyDescription}
+          onChange={setFormPricingPolicyDescription}
+          placeholder="Nhập mô tả chung về bảng giá, chính sách thanh toán và chính sách bảo hành"
+          editorLabel="Mô tả chung bảng giá và chính sách"
+        />
+      </div>
 
       <div className="rounded-2xl border border-[#E8DCCB] bg-[#FBF8F2] p-4">
         <h3 className="text-sm font-bold text-[#1F1B16]">Giá dùng cho bộ lọc và thẻ dự án</h3>
@@ -3260,6 +3286,15 @@ export default function AdminProjects() {
                 {activeTab === 'amenities' && (
                   <div className="space-y-4">
                     {sectionNote('Phần này hiển thị ở section “Tiện ích nổi bật”. Không nhập thêm danh sách tiện ích dạng chữ ở nơi khác để tránh trùng lặp ngoài Client.')}
+                    <div data-project-field="amenities_description">
+                      <label className="mb-1 block text-xs font-semibold text-[#8C7A6B]">Mô tả chung section tiện ích nổi bật</label>
+                      <RichTextEditor
+                        value={formAmenitiesDescription}
+                        onChange={setFormAmenitiesDescription}
+                        placeholder="Nhập đoạn mô tả chung hiển thị ngay dưới tiêu đề Tiện ích nổi bật"
+                        editorLabel="Mô tả chung tiện ích nổi bật"
+                      />
+                    </div>
                     {renderTextPairRepeater('Tiện ích nổi bật', formAmenityDetails, setFormAmenityDetails, { title: '', description: '', image: '', icon: 'Sparkles' }, [
                       { key: 'title', label: 'Tên tiện ích' },
                       { key: 'icon', label: 'Biểu tượng' },
@@ -3279,6 +3314,15 @@ export default function AdminProjects() {
                 {activeTab === 'handover' && (
                   <div className="space-y-4">
                     {sectionNote('Phần này quản lý section “Tiêu chuẩn bàn giao” hiển thị ngay dưới mục Mặt bằng ngoài Client. Có thể thêm nhiều hạng mục, chọn ảnh từ Media Library và chỉnh thứ tự bằng nút đưa lên/đưa xuống.')}
+                    <div data-project-field="handover_description">
+                      <label className="mb-1 block text-xs font-semibold text-[#8C7A6B]">Mô tả chung section tiêu chuẩn bàn giao</label>
+                      <RichTextEditor
+                        value={formHandoverDescription}
+                        onChange={setFormHandoverDescription}
+                        placeholder="Nhập đoạn mô tả chung hiển thị ngay dưới tiêu đề Tiêu chuẩn bàn giao"
+                        editorLabel="Mô tả chung tiêu chuẩn bàn giao"
+                      />
+                    </div>
                     {renderTextPairRepeater('Tiêu chuẩn bàn giao', formHandoverStandards, setFormHandoverStandards, { title: '', description: '', image: '', icon: 'ClipboardCheck' }, [
                       { key: 'title', label: 'Hạng mục, ví dụ: Sàn, tường, thiết bị vệ sinh' },
                       { key: 'icon', label: 'Biểu tượng' },

@@ -13,6 +13,7 @@ import {
   ZoomIn,
 } from "lucide-react";
 import type { ProjectDetail, ProjectPriceItem } from "@/types/project-detail";
+import RichHtmlContent from "@/components/content/RichHtmlContent";
 import {
   ProjectSectionTitle,
   ProjectSubsectionTitle,
@@ -68,6 +69,14 @@ export default function ProjectPricingPolicySection({ project }: Props) {
 
   const hasPriceData = rowItems.length > 0 || imageItems.length > 0 || fileItems.length > 0 || noteItems.length > 0;
   const hasPolicyData = project.policies.length > 0;
+  const visualItems = useMemo(() => [
+    ...imageItems.map((item) => ({ url: item.imageUrl, title: item.title || "Bảng giá dự án", label: "Bảng giá" })),
+    ...fileItems.filter(isImageFile).map((item) => ({ url: item.fileUrl, title: item.title || "Bảng giá dự án", label: "Bảng giá" })),
+    ...project.policies
+      .filter((policy) => Boolean(policy.imageUrl))
+      .map((policy) => ({ url: policy.imageUrl as string, title: policy.title || "Chính sách bảo hành", label: "Chính sách" })),
+  ], [fileItems, imageItems, project.policies]);
+  const hasVisualSplit = Boolean(project.pricingPolicyDescription?.trim()) && visualItems.length > 0;
 
   if (!hasPriceData && !hasPolicyData) return null;
 
@@ -82,9 +91,11 @@ export default function ProjectPricingPolicySection({ project }: Props) {
           <ProjectSectionTitle className="normal-case">
             {project.sectionTitles?.pricingPolicy?.title || "Cập nhật giá bán và chính sách ưu đãi"}
           </ProjectSectionTitle>
-          <ProjectSupportingText className="mt-3 max-w-2xl text-muted">
-            Cập nhật thông tin giá bán, tiến độ thanh toán và chính sách ưu đãi mới nhất của dự án.
-          </ProjectSupportingText>
+          {!project.pricingPolicyDescription ? (
+            <ProjectSupportingText className="mt-3 max-w-2xl text-muted">
+              Cập nhật thông tin giá bán, tiến độ thanh toán và chính sách ưu đãi mới nhất của dự án.
+            </ProjectSupportingText>
+          ) : null}
         </div>
         <button
           type="button"
@@ -94,6 +105,35 @@ export default function ProjectPricingPolicySection({ project }: Props) {
           Nhận bảng giá <Download className="h-4 w-4" />
         </button>
       </div>
+
+      {hasVisualSplit ? (
+        <div className="mb-5 grid gap-5 lg:grid-cols-2">
+          <div className="rounded-[20px] border border-line/80 bg-white p-5 shadow-[0_12px_35px_rgba(87,61,28,.06)] sm:p-6">
+            <ProjectSubsectionTitle>Mô tả bảng giá & chính sách</ProjectSubsectionTitle>
+            <RichHtmlContent className="project-supporting-text mt-4 text-muted" variant="project" html={project.pricingPolicyDescription} />
+          </div>
+          <div className="rounded-[20px] border border-line/80 bg-white p-4 shadow-[0_12px_35px_rgba(87,61,28,.06)] sm:p-5">
+            <ProjectSubsectionTitle className="mb-4">Ảnh bảng giá & chính sách bảo hành</ProjectSubsectionTitle>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
+              {visualItems.map((item, index) => (
+                <article key={`${item.url}-${index}`} className="overflow-hidden rounded-[16px] border border-line/80 bg-[#fbf7f0]">
+                  <button type="button" onClick={() => setLightboxImage(item.url)} className="group relative block w-full overflow-hidden bg-[#fbf7f0] text-left">
+                    <img src={item.url} alt={item.title} className="h-auto max-h-[300px] w-full object-contain" />
+                    <span className="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1 text-[10px] font-bold text-gold-dark shadow-sm">{item.label}</span>
+                    <span className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 transition group-hover:opacity-100">
+                      <span className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-[11px] font-bold text-ink shadow-lg"><ZoomIn className="h-4 w-4" /> Xem ảnh lớn</span>
+                    </span>
+                  </button>
+                </article>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : project.pricingPolicyDescription ? (
+        <div className="mb-5 rounded-[20px] border border-line/80 bg-white p-5 shadow-[0_12px_35px_rgba(87,61,28,.06)] sm:p-6">
+          <RichHtmlContent className="project-supporting-text text-muted" variant="project" html={project.pricingPolicyDescription} />
+        </div>
+      ) : null}
 
       <div className="grid gap-5 lg:grid-cols-[1.45fr_1fr]">
         {hasPriceData ? (
@@ -105,7 +145,7 @@ export default function ProjectPricingPolicySection({ project }: Props) {
               <BadgeDollarSign className="h-8 w-8 text-gold" />
             </div>
 
-            {imageItems.length > 0 ? (
+            {imageItems.length > 0 && !hasVisualSplit ? (
               <div className="mb-4 grid gap-4">
                 {imageItems.map((item, index) => (
                   <article key={`${item.imageUrl}-${index}`} className="overflow-hidden rounded-[16px] border border-line/80 bg-[#fbf7f0]">
@@ -138,6 +178,7 @@ export default function ProjectPricingPolicySection({ project }: Props) {
               <div className="mb-4 grid gap-4">
                 {fileItems.map((item, index) => {
                   if (isImageFile(item)) {
+                    if (hasVisualSplit) return null;
                     return (
                       <article key={`${item.fileUrl}-${index}`} className="overflow-hidden rounded-[16px] border border-line/80 bg-[#fbf7f0]">
                         <button
@@ -239,7 +280,7 @@ export default function ProjectPricingPolicySection({ project }: Props) {
           <div className="space-y-3">
             {project.policies.map((policy, index) => (
               <article key={`${policy.title}-${index}`} className="overflow-hidden rounded-[20px] border border-line/80 bg-white shadow-[0_12px_35px_rgba(87,61,28,.06)] transition hover:-translate-y-0.5 hover:border-gold/50">
-                {policy.imageUrl ? (
+                {policy.imageUrl && !hasVisualSplit ? (
                   <button type="button" onClick={() => setLightboxImage(policy.imageUrl || null)} className="relative block w-full overflow-hidden bg-[#fbf7f0]">
                     <img src={policy.imageUrl} alt={policy.title} className="h-auto w-full object-contain" />
                   </button>

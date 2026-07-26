@@ -554,9 +554,9 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
   const hasGallery = project.gallery.images.length > 0;
   const hasGalleryCopy = Boolean(project.gallery.label || project.gallery.title || project.gallery.description);
   const hasConnectivity = project.connectivity.length > 0 || Boolean(project.mapImageUrl);
-  const hasAmenities = project.amenities.length > 0;
+  const hasAmenities = project.amenities.length > 0 || Boolean(project.amenitiesDescription?.trim());
   const hasFloorSection = floorPlanGroups.length > 0;
-  const hasHandoverStandards = project.handoverStandards.length > 0;
+  const hasHandoverStandards = project.handoverStandards.length > 0 || Boolean(project.handoverDescription?.trim());
   const hasPriceRows = project.priceRows.length > 0;
   const hasProductInfo = hasPriceRows || project.productSummary.length > 0;
   const hasPolicies = project.policies.length > 0;
@@ -940,7 +940,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                 href={`#${item.id}`}
                 onClick={() => setActiveSectionId(item.id)}
                 aria-current={activeSectionId === item.id ? "location" : undefined}
-                className={`shrink-0 snap-start rounded-full px-3.5 py-2 text-[11px] font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50 ${
+                className={`shrink-0 snap-start rounded-full px-3.5 py-2 text-xs font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50 md:text-[13px] ${
                   activeSectionId === item.id
                     ? "bg-gold text-white shadow-sm"
                     : "text-muted hover:bg-beige hover:text-gold-dark"
@@ -963,8 +963,8 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
               >
                 <ProjectIcon name={fact.icon} className="shrink-0 text-gold" />
                 <div className="min-w-0">
-                  <p className="text-[10px] text-muted">{fact.label}</p>
-                  <p className="mt-0.5 text-[11px] font-bold leading-5 text-ink">{fact.value}</p>
+                  <p className="text-xs text-muted md:text-[13px]">{fact.label}</p>
+                  <p className="mt-0.5 text-xs font-bold leading-5 text-ink md:text-sm">{fact.value}</p>
                 </div>
               </div>
             ))}
@@ -979,7 +979,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                 className={`text-center lg:px-5 ${index ? "lg:border-l lg:border-line/80" : ""}`}
               >
                 <p className="text-2xl font-bold text-gold sm:text-[28px]">{stat.value}</p>
-                <p className="mt-2 text-[12px] font-medium text-muted">{stat.label}</p>
+                <p className="mt-2 text-sm font-medium text-muted">{stat.label}</p>
               </div>
             ))}
           </div>
@@ -1137,7 +1137,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
             {project.locationDescription ? (
               <p className="project-supporting-text mb-6 whitespace-pre-line text-muted">{project.locationDescription}</p>
             ) : null}
-            <div className={`grid items-start gap-8 ${project.mapImageUrl ? "lg:grid-cols-2" : ""}`}>
+            <div className={`grid items-start gap-8 ${project.mapImageUrl ? "lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]" : ""}`}>
               <div className={`space-y-4 ${project.mapImageUrl ? "order-1 lg:order-2" : ""}`}>
                 {project.connectivity.map((item) => (
                   <div key={item.time} className="flex items-center gap-3">
@@ -1145,8 +1145,8 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                       <MapPin size={15} />
                     </div>
                     <div>
-                      <p className="text-[13px] font-bold text-ink">{item.time}</p>
-                      <p className="text-[12px] leading-5 text-muted">{item.label}</p>
+                      <p className="text-sm font-bold text-ink md:text-[15px]">{item.time}</p>
+                      <p className="text-[13px] leading-5 text-muted md:text-sm">{item.label}</p>
                     </div>
                   </div>
                 ))}
@@ -1170,6 +1170,11 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                 {project.amenities.length} trải nghiệm
               </span>
             </div>
+            {project.amenitiesDescription ? (
+              <div className="project-supporting-text mt-4 text-muted">
+                <RichHtmlContent variant="project" html={project.amenitiesDescription} />
+              </div>
+            ) : null}
             <div className="-mx-4 overflow-x-auto px-4 pb-4 sm:-mx-7 sm:px-7 lg:-mx-9 lg:px-9">
               <div className="flex snap-x snap-mandatory gap-4 lg:gap-5">
                 {project.amenities.map((amenity, index) => (
@@ -1373,6 +1378,11 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
         {hasHandoverStandards ? <Reveal>
           <section id="tieu-chuan-ban-giao" className="scroll-mt-32">
             <ProjectSectionTitle sectionKey="handover" fallbackTitle="Tiêu chuẩn bàn giao" />
+            {project.handoverDescription ? (
+              <div className="project-supporting-text mt-4 text-muted">
+                <RichHtmlContent variant="project" html={project.handoverDescription} />
+              </div>
+            ) : null}
             <div className="-mx-4 overflow-x-auto px-4 pb-2 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
               <div className="flex snap-x snap-mandatory gap-3">
               {project.handoverStandards.map((item, index) => (

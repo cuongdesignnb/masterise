@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/context/AuthContext';
 import { initVisitorTracking } from '@/services/utmService';
 import SiteSettingsProvider from '@/providers/SiteSettingsProvider';
+import FloatingContactButtons from '@/components/lead/FloatingContactButtons';
 
 export default function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(
@@ -26,7 +27,10 @@ export default function Providers({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <SiteSettingsProvider>{children}</SiteSettingsProvider>
+        <SiteSettingsProvider>
+          <FloatingContactButtons />
+          {children}
+        </SiteSettingsProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

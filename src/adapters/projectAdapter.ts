@@ -571,15 +571,18 @@ export function mapApiProjectToProjectDetail(api: ApiProject): ProjectDetail {
     sectionTitles: normalizeSectionTitles(api.section_titles),
     connectivity: normalizeConnectivity(api.connectivity, api.nearby_places),
     amenities: normalizeAmenities(api.amenity_details),
+    amenitiesDescription: api.amenities_description || null,
     floorTabs: flattenedFloorPlans.floorTabs.length ? flattenedFloorPlans.floorTabs : asArray(api.floor_tabs),
     floorPlanGroups,
     floorPlans: flattenedFloorPlans.floorPlans.length ? flattenedFloorPlans.floorPlans : normalizeFloorPlans(api.floor_plans),
     handoverStandards: normalizeHandoverStandards(api.handover_standards),
+    handoverDescription: api.handover_description || null,
     priceRows: normalizePriceRows(api.price_rows),
     productSummary: buildProductSummary(api),
     policies: api.policy_cards && Array.isArray(api.policy_cards)
       ? normalizePolicyCards(api.policy_cards, 'ClipboardCheck')
       : buildPoliciesFromRealFields(api),
+    pricingPolicyDescription: api.pricing_policy_description || null,
     timeline: normalizeTimeline(api.project_timeline),
     investmentReasons: normalizeTextCards(api.investment_reasons, 'TrendingUp'),
     testimonials: normalizeTestimonials(api.project_testimonials),
