@@ -81,12 +81,12 @@ const ToastContext = createContext<ToastContextValue | null>(null);
 export function useToast(): ToastContextValue {
   const ctx = useContext(ToastContext);
   if (!ctx) {
-    // Fallback: log to console when used outside provider (safety net)
+    const noop = () => undefined;
     return {
-      success: (m) => console.log('[toast:success]', m),
-      error: (m) => console.error('[toast:error]', m),
-      warning: (m) => console.warn('[toast:warning]', m),
-      info: (m) => console.info('[toast:info]', m),
+      success: noop,
+      error: noop,
+      warning: noop,
+      info: noop,
     };
   }
   return ctx;

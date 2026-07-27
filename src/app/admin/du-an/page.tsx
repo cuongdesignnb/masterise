@@ -595,18 +595,6 @@ export default function AdminProjects() {
   }));
   const cleanArray = <T,>(items: T[], isFilled: (item: T) => boolean) => items.filter(isFilled);
 
-  const isProjectSaveDebugEnabled = () => {
-    if (process.env.NODE_ENV !== 'production') return true;
-    if (typeof window === 'undefined') return false;
-    return window.localStorage.getItem('mh_project_save_debug') === '1';
-  };
-
-  const debugProjectSave = (label: string, value: unknown) => {
-    if (isProjectSaveDebugEnabled()) {
-      console.log(label, value);
-    }
-  };
-
   // Queries
   const { data: projectsData, isLoading: isProjectsLoading } = useQuery({
     queryKey: ['admin-projects', search, categoryFilter, statusFilter, page],
@@ -905,7 +893,6 @@ export default function AdminProjects() {
     try {
       const response = await api.get<Project>(`/admin/projects/${listProject.id}`);
       const project = response.data || listProject;
-      debugProjectSave('[PROJECT_ADMIN_DETAIL_BEFORE_EDIT]', response);
       setEditingProject(project);
       setActiveTab('overview');
       setFormError('');
@@ -1106,14 +1093,6 @@ export default function AdminProjects() {
         schema_availability: formSchemaAvailability || null,
       };
 
-      debugProjectSave('[PROJECT_SAVE_PAYLOAD]', payload);
-      debugProjectSave('[GALLERY_IN_PAYLOAD]', payload.gallery);
-      debugProjectSave('[LIVING_SECTION_PAYLOAD]', {
-        gallery_label: payload.gallery_label,
-        gallery_title: payload.gallery_title,
-        gallery_description: payload.gallery_description,
-      });
-
       const response = editingProject
         ? await api.put<Project>(`/projects/${editingProject.id}`, payload)
         : await api.post<Project>('/projects', payload);
@@ -1124,7 +1103,6 @@ export default function AdminProjects() {
       };
     },
     onSuccess: async ({ response, submittedRelatedPostIds }, mode) => {
-      debugProjectSave('[PROJECT_SAVE_RESPONSE]', response);
       const savedProject = response.data;
       const requestedSlug = formSlug.trim() || slugifyProjectName(formName);
       const autoAdjustedSlug = !editingProject
@@ -1135,7 +1113,6 @@ export default function AdminProjects() {
 
       if (savedProject?.id) {
         const freshResponse = await api.get<Project>(`/admin/projects/${savedProject.id}`);
-        debugProjectSave('[PROJECT_FRESH_DETAIL_AFTER_SAVE]', freshResponse);
         freshProject = freshResponse.data || savedProject;
 
         const candidateRelatedPosts: ProjectRelatedPost[] = relatedCandidates
