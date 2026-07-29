@@ -1,5 +1,6 @@
 import type { FloorPlanGroup, LegacyFloorPlanItem } from './floor-plan';
 import type { ProjectRelatedPost } from './api';
+import type { ProjectTimelineItem } from './project-timeline';
 
 export type ProjectIconName =
   | "BadgeDollarSign"
@@ -127,7 +128,7 @@ export type ProjectDetail = {
   productSummary: { label: string; value: string }[];
   policies: ProjectPolicyCard[];
   pricingPolicyDescription?: string | null;
-  timeline: { date: string; title: string }[];
+  timeline: ProjectTimelineItem[];
   investmentReasons: {
     title: string;
     description: string;

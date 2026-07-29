@@ -64,14 +64,25 @@ class AdminProjectSaveProofTest extends TestCase
             'project_facts' => [['label' => 'Proof fact', 'value' => 'Fact value', 'icon' => 'Building']],
             'project_stats' => [['value' => '2.000+', 'label' => 'Sản phẩm']],
             'connectivity' => [['time' => '5 phút', 'label' => 'Đến trung tâm']],
+            'location_description' => '<p>Mô tả <strong>vị trí chiến lược</strong></p>',
             'amenity_details' => [['title' => 'Proof amenity', 'description' => 'Proof', 'image' => '/uploads/proof-amenity.jpg', 'icon' => 'Sparkles']],
+            'amenities_description' => '<p>Mô tả chung <strong>Tiện ích nổi bật</strong></p>',
             'floor_tabs' => ['Nhà phố', 'Căn hộ'],
             'floor_plans' => [['productType' => 'Nhà phố', 'name' => 'Proof floor', 'area' => '80 m2', 'totalArea' => '120 m2', 'image' => '/uploads/proof-floor.jpg', 'images' => ['/uploads/proof-floor.jpg', '/uploads/proof-floor-2.jpg']]],
             'floor_plan_description' => '<p>Mô tả chung <strong>Sản phẩm &amp; Mặt bằng</strong></p>',
             'handover_standards' => [['title' => 'Proof standard', 'description' => 'Proof handover', 'image' => '/uploads/proof-standard.jpg', 'icon' => 'ClipboardCheck']],
+            'handover_description' => '<p>Mô tả chung <strong>Tiêu chuẩn bàn giao</strong></p>',
             'price_rows' => [['Nhà phố', '80 - 120 m2', '8,9 tỷ']],
             'policy_cards' => [['title' => 'Proof policy', 'description' => 'Proof', 'icon' => 'CalendarDays']],
-            'project_timeline' => [['date' => 'Q1/2026', 'title' => 'Proof milestone']],
+            'pricing_policy_description' => '<p>Mô tả chung <strong>Bảng giá &amp; chính sách</strong></p>',
+            'project_timeline' => [[
+                'key' => 'timeline-proof',
+                'date' => 'Q1/2026',
+                'title' => 'Proof milestone',
+                'description' => 'Proof timeline description',
+                'bullets' => ['Proof bullet 1', 'Proof bullet 2'],
+                'images' => ['/uploads/timeline-1.jpg', '/uploads/timeline-2.jpg'],
+            ]],
             'investment_reasons' => [['title' => 'Proof reason', 'description' => 'Proof', 'icon' => 'TrendingUp']],
             'project_testimonials' => [['name' => 'Proof customer', 'role' => 'Nhà đầu tư', 'content' => 'Proof feedback', 'avatar' => '/uploads/proof-avatar.jpg']],
             'project_faqs' => [['question' => 'Proof question?', 'answer' => 'Proof answer']],
@@ -107,7 +118,9 @@ class AdminProjectSaveProofTest extends TestCase
             ->assertJsonPath('data.quick_cards.0.label', 'Proof quick card')
             ->assertJsonPath('data.project_facts.0.label', 'Proof fact')
             ->assertJsonPath('data.connectivity.0.time', '5 phút')
+            ->assertJsonPath('data.location_description', '<p>Mô tả <strong>vị trí chiến lược</strong></p>')
             ->assertJsonPath('data.amenity_details.0.image', '/uploads/proof-amenity.jpg')
+            ->assertJsonPath('data.amenities_description', '<p>Mô tả chung <strong>Tiện ích nổi bật</strong></p>')
             ->assertJsonPath('data.floor_tabs.1', 'Mặt bằng / Căn hộ')
             ->assertJsonPath('data.floor_plans.0.name', 'Proof floor')
             ->assertJsonPath('data.floor_plans.0.images.1', '/uploads/proof-floor-2.jpg')
@@ -115,9 +128,16 @@ class AdminProjectSaveProofTest extends TestCase
             ->assertJsonPath('data.floor_plan_description', '<p>Mô tả chung <strong>Sản phẩm &amp; Mặt bằng</strong></p>')
             ->assertJsonPath('data.handover_standards.0.title', 'Proof standard')
             ->assertJsonPath('data.handover_standards.0.image', '/uploads/proof-standard.jpg')
+            ->assertJsonPath('data.handover_description', '<p>Mô tả chung <strong>Tiêu chuẩn bàn giao</strong></p>')
             ->assertJsonPath('data.price_rows.0.2', '8,9 tỷ')
             ->assertJsonPath('data.policy_cards.0.title', 'Proof policy')
+            ->assertJsonPath('data.pricing_policy_description', '<p>Mô tả chung <strong>Bảng giá &amp; chính sách</strong></p>')
             ->assertJsonPath('data.project_timeline.0.title', 'Proof milestone')
+            ->assertJsonPath('data.project_timeline.0.key', 'timeline-proof')
+            ->assertJsonPath('data.project_timeline.0.description', 'Proof timeline description')
+            ->assertJsonPath('data.project_timeline.0.bullets.1', 'Proof bullet 2')
+            ->assertJsonPath('data.project_timeline.0.images.0', '/uploads/timeline-1.jpg')
+            ->assertJsonPath('data.project_timeline.0.images.1', '/uploads/timeline-2.jpg')
             ->assertJsonPath('data.investment_reasons.0.title', 'Proof reason')
             ->assertJsonPath('data.project_testimonials.0.name', 'Proof customer')
             ->assertJsonPath('data.project_faqs.0.answer', 'Proof answer')
@@ -131,10 +151,57 @@ class AdminProjectSaveProofTest extends TestCase
             'project_label' => 'Lumiere Series',
             'gallery_title' => $proofValue,
             'floor_plan_description' => '<p>Mô tả chung <strong>Sản phẩm &amp; Mặt bằng</strong></p>',
+            'location_description' => '<p>Mô tả <strong>vị trí chiến lược</strong></p>',
+            'amenities_description' => '<p>Mô tả chung <strong>Tiện ích nổi bật</strong></p>',
+            'handover_description' => '<p>Mô tả chung <strong>Tiêu chuẩn bàn giao</strong></p>',
+            'pricing_policy_description' => '<p>Mô tả chung <strong>Bảng giá &amp; chính sách</strong></p>',
             'schema_price' => '8.9',
             'schema_price_currency' => 'VND',
             'schema_availability' => 'InStock',
         ]);
+    }
+
+    public function test_project_timeline_accepts_legacy_items_and_rejects_unsafe_image_urls(): void
+    {
+        $admin = User::factory()->create();
+        Role::create(['name' => 'admin', 'guard_name' => 'web']);
+        $admin->assignRole('admin');
+
+        $project = Project::create([
+            'name' => 'Timeline validation project',
+            'slug' => 'timeline-validation-project',
+            'description' => 'Timeline validation',
+            'project_status' => 'selling',
+            'is_published' => false,
+        ]);
+        $basePayload = [
+            'name' => $project->name,
+            'slug' => $project->slug,
+            'description' => $project->description,
+            'project_status' => 'selling',
+            'is_published' => false,
+        ];
+
+        $this->actingAs($admin, 'sanctum')
+            ->putJson("/api/v1/projects/{$project->id}", array_merge($basePayload, [
+                'project_timeline' => [['date' => 'Quý I/2026', 'title' => 'Hoàn thành phần móng']],
+            ]))
+            ->assertOk()
+            ->assertJsonPath('data.project_timeline.0.title', 'Hoàn thành phần móng');
+
+        $this->actingAs($admin, 'sanctum')
+            ->putJson("/api/v1/projects/{$project->id}", array_merge($basePayload, [
+                'project_timeline' => [[
+                    'key' => 'timeline-unsafe',
+                    'date' => 'Tháng 07/2026',
+                    'title' => 'Unsafe image',
+                    'description' => '',
+                    'bullets' => [],
+                    'images' => ['javascript:alert(1)'],
+                ]],
+            ]))
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('project_timeline.0.images.0');
     }
 
     public function test_public_project_label_query_is_ignored_but_labels_remain_in_response(): void

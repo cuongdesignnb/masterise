@@ -40,6 +40,7 @@ import { splitArticleHtmlForInlineLinks } from "@/lib/articleContent";
 import InlineRelatedArticleLinks from "@/components/news-detail/InlineRelatedArticleLinks";
 import ProjectGalleryAlbumSection from "@/components/project-detail/ProjectGalleryAlbumSection";
 import ProjectPricingPolicySection from "@/components/project-detail/ProjectPricingPolicySection";
+import ProjectTimelineGallerySection from "@/components/project-detail/ProjectTimelineGallerySection";
 import VR360Section from "@/components/vr360/VR360Section";
 import { leadService } from "@/services/leadService";
 import RichHtmlContent from "@/components/content/RichHtmlContent";
@@ -1428,39 +1429,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
           </Reveal>
         </div>
 
-        {hasTimeline ? <Reveal>
-          <section id="tien-do" className="scroll-mt-32 py-2">
-            <ProjectSectionTitle sectionKey="timeline" fallbackTitle="Tiến độ thi công" />
-            <div className="relative grid gap-5 md:grid-cols-5 md:gap-0">
-              <div className="absolute left-[10%] right-[10%] top-6 hidden h-px bg-gold/55 md:block" />
-              {project.timeline.map((item, index) => {
-                const active = index === project.timeline.length - 1;
-                return (
-                  <motion.div
-                    key={item.date}
-                    initial={{ opacity: 0.82, y: 10 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: index * 0.08, ease }}
-                    className="relative flex gap-4 md:block md:px-4 md:text-center"
-                  >
-                    <div
-                      className={`relative z-10 mx-auto flex h-12 w-12 shrink-0 items-center justify-center rounded-full border bg-ivory ${
-                        active ? "border-gold text-gold shadow-[0_0_0_5px_rgba(184,135,70,.1)]" : "border-line text-muted"
-                      }`}
-                    >
-                      <HardHat size={18} />
-                    </div>
-                    <div className="pt-1 md:pt-3">
-                      <p className={`text-[12px] font-bold ${active ? "text-gold-dark" : "text-ink"}`}>{item.date}</p>
-                      <p className="project-supporting-text mt-1 text-muted">{item.title}</p>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
-          </section>
-        </Reveal> : null}
+        {hasTimeline ? <Reveal><ProjectTimelineGallerySection project={project} /></Reveal> : null}
 
         {hasInvestmentReasons ? <Reveal>
           <section id="ly-do-dau-tu" className="scroll-mt-32">

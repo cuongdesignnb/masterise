@@ -147,8 +147,8 @@ export default function ProjectPricingPolicyAdminEditor(props: Props) {
           <div className="mt-4 rounded-xl border border-amber-300 bg-amber-50 p-3">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <p className="text-xs font-bold text-amber-900">Có {legacyGallery.length} ảnh dữ liệu cũ đang được fallback ngoài client</p>
-                <p className="mt-1 text-xs text-amber-800">Ảnh chưa mất. Hãy chuyển vào gallery mới để quản lý tiêu đề, chú thích và thứ tự ngay tại đây.</p>
+                <p className="text-xs font-bold text-amber-900">Phát hiện {legacyGallery.length} ảnh trong dữ liệu cũ</p>
+                <p className="mt-1 text-xs text-amber-800">Ảnh chưa mất nhưng không còn tự động hiển thị ngoài client. Hãy chuyển vào gallery mới để sử dụng và quản lý tại đây.</p>
               </div>
               <button type="button" onClick={importLegacyGallery} className="inline-flex items-center gap-2 rounded-lg bg-amber-800 px-4 py-2 text-xs font-bold text-white"><ImagePlus className="h-4 w-4" /> Đưa ảnh cũ vào gallery</button>
             </div>

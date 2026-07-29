@@ -121,11 +121,8 @@ export function buildLegacyPricingPolicyHtml(priceRows: ProjectPriceItem[], poli
   return parts.join('');
 }
 
-export function derivePricingPolicyGallery(priceRows: ProjectPriceItem[], policies: ProjectPolicyCard[]): PricingPolicyGalleryItem[] {
-  return uniqueGalleryItems([
-    ...derivePricingPolicyExplicitGallery(priceRows),
-    ...derivePricingPolicyLegacyGallery(priceRows, policies),
-  ]);
+export function derivePricingPolicyGallery(priceRows: ProjectPriceItem[]): PricingPolicyGalleryItem[] {
+  return derivePricingPolicyExplicitGallery(priceRows);
 }
 
 export function derivePricingPolicyExplicitGallery(priceRows: ProjectPriceItem[]): PricingPolicyGalleryItem[] {

@@ -306,4 +306,37 @@ class ProjectTypeVsLabelRegressionTest extends TestCase
             'project_category_id' => $collection->id,
         ]);
     }
+
+    public function test_21_stale_admin_payload_ignores_collection_ids_when_saving_project_types(): void
+    {
+        $oldType = $this->category('can-ho');
+        $newType = $this->category('biet-thu');
+        $collection = $this->category('lumiere-series', [
+            'taxonomy_type' => ProjectCategory::TYPE_COLLECTION,
+        ]);
+        $project = $this->project(['is_published' => false], [$oldType, $collection]);
+
+        $this->actingAs($this->admin(), 'sanctum')
+            ->putJson("/api/v1/projects/{$project->id}", $this->payload([
+                'name' => $project->name,
+                'slug' => $project->slug,
+                'category_ids' => [$newType->id, $collection->id],
+                'floor_plan_description' => '<p>Mô tả mặt bằng phải được lưu</p>',
+            ]))
+            ->assertOk()
+            ->assertJsonPath('data.floor_plan_description', '<p>Mô tả mặt bằng phải được lưu</p>');
+
+        $this->assertDatabaseMissing('project_category_project', [
+            'project_id' => $project->id,
+            'project_category_id' => $oldType->id,
+        ]);
+        $this->assertDatabaseHas('project_category_project', [
+            'project_id' => $project->id,
+            'project_category_id' => $newType->id,
+        ]);
+        $this->assertDatabaseHas('project_category_project', [
+            'project_id' => $project->id,
+            'project_category_id' => $collection->id,
+        ]);
+    }
 }

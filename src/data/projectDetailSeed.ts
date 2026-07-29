@@ -202,11 +202,11 @@ export const projectDetail: ProjectDetail = {
       bullets: [],
     },
   ],  timeline: [
-    { date: "Q4/2023", title: "Khởi công dự án" },
-    { date: "Q2/2024", title: "Hoàn thành hạ tầng phân khu 1" },
-    { date: "Q4/2024", title: "Thi công xây dựng phần thô" },
-    { date: "Q2/2025", title: "Hoàn thiện mặt ngoài phân khu 1" },
-    { date: "Q1/2026", title: "Dự kiến bàn giao phân khu 1" },
+    { key: "timeline-q4-2023", date: "Q4/2023", title: "Khởi công dự án", description: "", bullets: [], images: [] },
+    { key: "timeline-q2-2024", date: "Q2/2024", title: "Hoàn thành hạ tầng phân khu 1", description: "", bullets: [], images: [] },
+    { key: "timeline-q4-2024", date: "Q4/2024", title: "Thi công xây dựng phần thô", description: "", bullets: [], images: [] },
+    { key: "timeline-q2-2025", date: "Q2/2025", title: "Hoàn thiện mặt ngoài phân khu 1", description: "", bullets: [], images: [] },
+    { key: "timeline-q1-2026", date: "Q1/2026", title: "Dự kiến bàn giao phân khu 1", description: "", bullets: [], images: [] },
   ],
   investmentReasons: [
     { title: "Vị trí trung tâm", description: "TP. Thủ Đức", icon: "MapPin" },

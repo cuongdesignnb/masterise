@@ -32,6 +32,10 @@ import type { FloorPlanGroup, FloorPlanItem, FloorPlanTab } from '@/types/floor-
 import { createFloorPlanKey, normalizeFloorPlanGroups, uniqueFloorPlanImages } from '@/lib/projectFloorPlan';
 import ProjectStatusManagerModal from '@/components/admin/ProjectStatusManagerModal';
 import ProjectPricingPolicyAdminEditor from '@/components/admin/ProjectPricingPolicyAdminEditor';
+import ProjectTimelineAdminEditor from '@/components/admin/ProjectTimelineAdminEditor';
+import { normalizeProjectTimeline, uniqueProjectTimelineImages } from '@/lib/projectTimeline';
+import type { ProjectTimelineItem } from '@/types/project-timeline';
+import { getProjectTypeCategoryIds, normalizeProjectTypeCategoryIds } from '@/lib/projectTaxonomy';
 
 type SelectOption = {
   id: number;
@@ -84,7 +88,6 @@ type PolicyItem = {
   cta_url: string;
   file_url: string;
 };
-type TimelineItem = { date: string; title: string };
 type ProjectSectionTitleKey =
   | 'overview'
   | 'location'
@@ -321,7 +324,7 @@ export default function AdminProjects() {
   const [formPriceRows, setFormPriceRows] = useState<PriceRowItem[]>([]);
   const [formPolicyCards, setFormPolicyCards] = useState<PolicyItem[]>([]);
   const [formPricingPolicyDescription, setFormPricingPolicyDescription] = useState('');
-  const [formProjectTimeline, setFormProjectTimeline] = useState<TimelineItem[]>([]);
+  const [formProjectTimeline, setFormProjectTimeline] = useState<ProjectTimelineItem[]>([]);
 
   const slugifyProjectName = (value: string) => value
     .toString()
@@ -348,6 +351,7 @@ export default function AdminProjects() {
     handover_standards: 'Tiêu chuẩn bàn giao',
     price_rows: 'Dòng bảng giá',
     pricing_policy_description: 'Mô tả chung bảng giá và chính sách',
+    location_description: 'Mô tả vị trí chiến lược',
     gallery: 'Danh sách ảnh không gian sống',
     gallery_label: 'Nhãn section Không gian sống',
     gallery_title: 'Tiêu đề section Không gian sống',
@@ -378,16 +382,20 @@ export default function AdminProjects() {
     detail_gallery_title: 'media',
     detail_gallery_description: 'media',
     location: 'location',
+    location_description: 'location',
     address: 'location',
     map_image_url: 'location',
     connectivity: 'location',
     amenity_details: 'amenities',
+    amenities_description: 'amenities',
     floor_tabs: 'floor',
     floor_plans: 'floor',
     floor_plan_description: 'floor',
     handover_standards: 'handover',
+    handover_description: 'handover',
     price_rows: 'pricingPolicy',
     policy_cards: 'pricingPolicy',
+    pricing_policy_description: 'pricingPolicy',
     project_timeline: 'timeline',
     investment_reasons: 'investment',
     project_testimonials: 'investment',
@@ -395,6 +403,7 @@ export default function AdminProjects() {
     seo_title: 'seo',
     seo_description: 'seo',
     schema_price: 'seo',
+    category_ids: 'overview',
   };
   const getErrorMessage = (error: unknown) => error instanceof Error ? error.message : 'Lỗi khi xử lý yêu cầu.';
   const normalizeApiErrors = (error: unknown) => {
@@ -592,10 +601,6 @@ export default function AdminProjects() {
     cta_label: textValue(item.cta_label || item.ctaLabel),
     cta_url: textValue(item.cta_url || item.ctaUrl),
     file_url: textValue(item.file_url || item.fileUrl),
-  }));
-  const loadTimelineItems = (value: unknown): TimelineItem[] => asRecords(value).map((item) => ({
-    date: textValue(item.date),
-    title: textValue(item.title),
   }));
   const cleanArray = <T,>(items: T[], isFilled: (item: T) => boolean) => items.filter(isFilled);
 
@@ -838,7 +843,7 @@ export default function AdminProjects() {
     setFormContent(project.content || '');
     setFormRelatedPostIds(project.related_post_ids || (project.related_posts || []).map((post) => post.id));
     setFormAmenities(asStrings(project.amenities).join(', '));
-    setFormCategoryIds(project.categories ? project.categories.map(c => c.id) : []);
+    setFormCategoryIds(getProjectTypeCategoryIds(project.categories));
     setFormHighlightPoints(asStrings(project.highlight_points).join('\n'));
     setFormNearbyPlaces(asStrings(project.nearby_places).join('\n'));
     setFormPaymentPolicy(project.payment_policy || '');
@@ -890,7 +895,7 @@ export default function AdminProjects() {
     setFormPriceRows(loadPriceRowItems(project.price_rows));
     setFormPolicyCards(loadPolicyItems(project.policy_cards));
     setFormPricingPolicyDescription(project.pricing_policy_description || '');
-    setFormProjectTimeline(loadTimelineItems(project.project_timeline));
+    setFormProjectTimeline(normalizeProjectTimeline(project.project_timeline));
   };
 
   // Open Form for Edit
@@ -987,9 +992,19 @@ export default function AdminProjects() {
           cta_url: item.cta_url,
           file_url: item.file_url,
         }));
-      const projectTimeline = cleanArray(formProjectTimeline, item => Boolean(item.date || item.title));
+      const projectTimeline = formProjectTimeline
+        .filter(item => Boolean(item.date.trim() || item.title.trim() || item.description.trim() || item.bullets.length || item.images.length))
+        .map(item => ({
+          key: item.key,
+          date: item.date.trim(),
+          title: item.title.trim(),
+          description: item.description.trim(),
+          bullets: item.bullets.map(value => value.trim()).filter(Boolean),
+          images: uniqueProjectTimelineImages(item.images),
+        }));
       const gallery = asStrings(formGallery);
       const detailGallery = asStrings(formDetailGallery);
+      const categoryIds = normalizeProjectTypeCategoryIds(formCategoryIds, categoriesData);
       const slugValue = formSlug.trim() || slugifyProjectName(formName);
       const shouldPublish = mode === 'publish' ? true : mode === 'draft' ? false : formIsPublished;
 
@@ -1062,7 +1077,7 @@ export default function AdminProjects() {
         policy_cards: policyCards,
         pricing_policy_description: formPricingPolicyDescription || null,
         project_timeline: projectTimeline,
-        category_ids: formCategoryIds,
+        category_ids: categoryIds,
         highlight_points: highlightsArr,
         nearby_places: nearbyArr,
         payment_policy: formPaymentPolicy || null,
@@ -1186,8 +1201,8 @@ export default function AdminProjects() {
       const normalized = normalizeApiErrors(err);
       setFormError(normalized.message);
       setFieldErrors(normalized.fieldErrors);
-      toast.error(normalized.fieldErrors.slug || normalized.message);
       const firstField = Object.keys(normalized.fieldErrors)[0];
+      toast.error(firstField ? normalized.fieldErrors[firstField] : normalized.message);
       if (firstField) {
         const targetTab = fieldTabMap[firstField] || 'overview';
         setActiveTab(targetTab);
@@ -1484,7 +1499,7 @@ export default function AdminProjects() {
       !(formPriceRows.length || formPolicyCards.length || formPriceText.trim()) ? 'Bảng giá hoặc chính sách bán hàng' : null,
     ], false, 'price_rows'),
     buildChecklistItem('timeline', 'Tiến độ thi công', [
-      !formProjectTimeline.length ? 'Tiến độ thi công' : null,
+      !formProjectTimeline.some(item => item.date.trim() && item.title.trim()) ? 'Ít nhất một mốc có thời gian và tiêu đề' : null,
     ], true, 'project_timeline'),
     buildChecklistItem('investment', 'Đầu tư & Đánh giá', [
       !(formInvestmentReasons.length || formProjectTestimonials.length) ? 'Lý do đầu tư hoặc đánh giá khách hàng' : null,
@@ -3361,10 +3376,7 @@ export default function AdminProjects() {
                 {activeTab === 'timeline' && (
                   <div className="space-y-4">
                     {sectionNote('Phần này hiển thị ở section “Tiến độ thi công”. Nếu chưa nhập dữ liệu, Client sẽ ẩn section này.')}
-                    {renderTextPairRepeater('Tiến độ thi công', formProjectTimeline, setFormProjectTimeline, { date: '', title: '' }, [
-                      { key: 'date', label: 'Mốc thời gian, ví dụ: Quý 1/2026' },
-                      { key: 'title', label: 'Nội dung tiến độ' },
-                    ])}
+                    <ProjectTimelineAdminEditor items={formProjectTimeline} onChange={setFormProjectTimeline} />
                   </div>
                 )}
 

@@ -52,8 +52,8 @@ export default function ProjectPricingPolicySection({ project }: Props) {
     [canonicalHtml, fallbackHtml],
   );
   const gallery = useMemo(
-    () => derivePricingPolicyGallery(project.priceRows, project.policies),
-    [project.policies, project.priceRows],
+    () => derivePricingPolicyGallery(project.priceRows),
+    [project.priceRows],
   );
   const updatedDate = formatProjectUpdatedAt(project.updatedAt);
   const [activeImageIndex, setActiveImageIndex] = useState(0);

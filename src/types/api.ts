@@ -1,5 +1,6 @@
 import type { FloorPlanGroup } from './floor-plan';
 import type { ProjectReviewBundle } from './project-review';
+import type { ProjectTimelineItem } from './project-timeline';
 
 export interface User {
   id: number;
@@ -134,7 +135,7 @@ export interface Project {
   price_rows?: unknown[] | null;
   policy_cards?: unknown[] | null;
   pricing_policy_description?: string | null;
-  project_timeline?: unknown[] | null;
+  project_timeline?: ProjectTimelineItem[] | null;
   investment_reasons?: unknown[] | null;
   project_testimonials?: unknown[] | null;
   project_faqs?: unknown[] | null;

@@ -5,6 +5,7 @@ import { getProjectStatusLabel } from '@/lib/projectStatus';
 import { getProjectPriceText } from '@/lib/projectPrice';
 import { flattenFloorPlanGroups, normalizeFloorPlanGroups } from '@/lib/projectFloorPlan';
 import { getProjectVideo } from '@/lib/video/projectVideo';
+import { normalizeProjectTimeline } from '@/lib/projectTimeline';
 
 const INTERNAL_IMAGE_PLACEHOLDER = '/file.svg';
 const UPDATING = 'Đang cập nhật';
@@ -332,19 +333,6 @@ function buildProductSummary(api: ApiProject) {
   ].filter(notNull);
 }
 
-function normalizeTimeline(value: unknown) {
-  if (!Array.isArray(value)) return [];
-  return value
-    .map((item) => {
-      if (!item || typeof item !== 'object') return null;
-      const record = item as Record<string, unknown>;
-      const date = String(record.date || '').trim();
-      const title = String(record.title || '').trim();
-      return date && title ? { date, title } : null;
-    })
-    .filter(notNull);
-}
-
 function normalizePolicyCards(value: unknown, fallbackIcon: ProjectIconName) {
   if (!Array.isArray(value)) return [];
   return value
@@ -585,7 +573,7 @@ export function mapApiProjectToProjectDetail(api: ApiProject): ProjectDetail {
       ? normalizePolicyCards(api.policy_cards, 'ClipboardCheck')
       : buildPoliciesFromRealFields(api),
     pricingPolicyDescription: api.pricing_policy_description || null,
-    timeline: normalizeTimeline(api.project_timeline),
+    timeline: normalizeProjectTimeline(api.project_timeline),
     investmentReasons: normalizeTextCards(api.investment_reasons, 'TrendingUp'),
     testimonials: normalizeTestimonials(api.project_testimonials),
     faqs: normalizeFaqs(api.project_faqs),

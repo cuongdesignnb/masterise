@@ -13,7 +13,9 @@
     "test:seo:schema": "node scripts/run-seo-schema-tests.mjs",
     "test:project:typography": "node tests/projectTypography.test.mjs",
     "test:project:summary": "node tests/projectSummarySchema.test.mjs",
-    "test:project:pricing-policy": "node tests/projectPricingPolicySection.test.mjs"
+    "test:project:pricing-policy": "node tests/projectPricingPolicySection.test.mjs",
+    "test:project:timeline-gallery": "node tests/projectTimelineGallery.test.mjs",
+    "test:project:admin-save": "node tests/projectAdminSavePayload.test.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",

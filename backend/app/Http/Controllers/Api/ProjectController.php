@@ -73,6 +73,32 @@ class ProjectController extends Controller
         ];
     }
 
+    private function projectTimelineValidationRules(): array
+    {
+        return [
+            'project_timeline' => ['nullable', 'array', 'max:24'],
+            'project_timeline.*.key' => ['nullable', 'string', 'max:100', 'distinct'],
+            'project_timeline.*.date' => ['nullable', 'string', 'max:100'],
+            'project_timeline.*.title' => ['nullable', 'string', 'max:255'],
+            'project_timeline.*.description' => ['nullable', 'string', 'max:5000'],
+            'project_timeline.*.bullets' => ['nullable', 'array', 'max:20'],
+            'project_timeline.*.bullets.*' => ['string', 'max:500'],
+            'project_timeline.*.images' => ['nullable', 'array', 'max:30'],
+            'project_timeline.*.images.*' => [
+                'string',
+                'max:2048',
+                function ($attribute, $value, $fail) {
+                    $scheme = is_string($value) ? strtolower((string) parse_url($value, PHP_URL_SCHEME)) : '';
+                    $isInternalPath = is_string($value) && Str::startsWith($value, '/') && !Str::startsWith($value, '//');
+                    $isHttpUrl = filter_var($value, FILTER_VALIDATE_URL) && in_array($scheme, ['http', 'https'], true);
+                    if (!$isInternalPath && !$isHttpUrl) {
+                        $fail('Ảnh tiến độ phải là URL HTTP(S) hoặc đường dẫn nội bộ hợp lệ.');
+                    }
+                },
+            ],
+        ];
+    }
+
     private function applyFloorPlanData(Request $request, array $projectData): array
     {
         if ($request->exists('floor_plan_groups')) {
@@ -88,6 +114,31 @@ class ProjectController extends Controller
 
         $projectData['floor_plan_groups'] = $groups;
         return array_merge($projectData, ProjectFloorPlanStructure::flatten($groups));
+    }
+
+    private function projectTypeCategoryIds(array $categoryIds): array
+    {
+        $submittedIds = collect($categoryIds)
+            ->map(fn ($id) => (int) $id)
+            ->filter(fn ($id) => $id > 0)
+            ->unique()
+            ->values();
+
+        if ($submittedIds->isEmpty()) {
+            return [];
+        }
+
+        $projectTypeIds = ProjectCategory::query()
+            ->where('taxonomy_type', ProjectCategory::TYPE_PROJECT)
+            ->whereIn('id', $submittedIds->all())
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->flip();
+
+        return $submittedIds
+            ->filter(fn ($id) => $projectTypeIds->has($id))
+            ->values()
+            ->all();
     }
 
     private function noStore($response)
@@ -551,7 +602,7 @@ class ProjectController extends Controller
             'booking_policy' => 'nullable|string',
             'policy_cards' => 'nullable|array',
             'pricing_policy_description' => 'nullable|string',
-            'project_timeline' => 'nullable|array',
+            ...$this->projectTimelineValidationRules(),
             'investment_reasons' => 'nullable|array',
             'project_testimonials' => 'nullable|array',
             'project_faqs' => 'nullable|array',
@@ -602,8 +653,9 @@ class ProjectController extends Controller
             'schema_availability' => 'nullable|string|max:255',
             'category_ids' => 'nullable|array',
             'category_ids.*' => [
-                Rule::exists('project_categories', 'id')
-                    ->where(fn ($query) => $query->where('taxonomy_type', ProjectCategory::TYPE_PROJECT)),
+                'integer',
+                'distinct',
+                Rule::exists('project_categories', 'id'),
             ],
             ...$this->relatedPostValidationRules(),
             // SEO Meta
@@ -656,11 +708,14 @@ class ProjectController extends Controller
         }
         $projectData = $this->normalizeProjectPriceData($projectData);
         $projectData['region'] = $location?->region?->name;
-        $project = DB::transaction(function () use ($projectData, $request) {
+        $projectTypeCategoryIds = $request->has('category_ids')
+            ? $this->projectTypeCategoryIds($request->input('category_ids', []))
+            : null;
+        $project = DB::transaction(function () use ($projectData, $request, $projectTypeCategoryIds) {
             $project = Project::create($projectData);
 
-            if ($request->has('category_ids')) {
-                $project->categories()->sync($request->input('category_ids', []));
+            if ($projectTypeCategoryIds !== null) {
+                $project->categories()->sync($projectTypeCategoryIds);
             }
 
             $this->syncProjectRelatedPosts($project, $request->input('related_post_ids', []));
@@ -776,7 +831,7 @@ class ProjectController extends Controller
             'booking_policy' => 'nullable|string',
             'policy_cards' => 'nullable|array',
             'pricing_policy_description' => 'nullable|string',
-            'project_timeline' => 'nullable|array',
+            ...$this->projectTimelineValidationRules(),
             'investment_reasons' => 'nullable|array',
             'project_testimonials' => 'nullable|array',
             'project_faqs' => 'nullable|array',
@@ -827,8 +882,9 @@ class ProjectController extends Controller
             'schema_availability' => 'nullable|string|max:255',
             'category_ids' => 'nullable|array',
             'category_ids.*' => [
-                Rule::exists('project_categories', 'id')
-                    ->where(fn ($query) => $query->where('taxonomy_type', ProjectCategory::TYPE_PROJECT)),
+                'integer',
+                'distinct',
+                Rule::exists('project_categories', 'id'),
             ],
             ...$this->relatedPostValidationRules(),
             // SEO Meta
@@ -884,10 +940,13 @@ class ProjectController extends Controller
         } elseif ($project->location_id !== null || !$project->is_published) {
             $projectData['region'] = null;
         }
-        DB::transaction(function () use ($project, $projectData, $request) {
+        $projectTypeCategoryIds = $request->has('category_ids')
+            ? $this->projectTypeCategoryIds($request->input('category_ids', []))
+            : null;
+        DB::transaction(function () use ($project, $projectData, $request, $projectTypeCategoryIds) {
             $project->update($projectData);
 
-            if ($request->has('category_ids')) {
+            if ($projectTypeCategoryIds !== null) {
                 $collectionCategoryIds = $project->categories()
                     ->where('taxonomy_type', ProjectCategory::TYPE_COLLECTION)
                     ->pluck('project_categories.id')
@@ -895,7 +954,7 @@ class ProjectController extends Controller
 
                 $project->categories()->sync(array_values(array_unique([
                     ...$collectionCategoryIds,
-                    ...$request->input('category_ids', []),
+                    ...$projectTypeCategoryIds,
                 ])));
             }
 
