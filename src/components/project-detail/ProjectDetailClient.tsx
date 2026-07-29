@@ -31,7 +31,7 @@ import {
   Maximize2,
   type LucideIcon,
 } from "lucide-react";
-import { type FormEvent, type KeyboardEvent as ReactKeyboardEvent, useState, useEffect, useMemo, useRef } from "react";
+import { type FormEvent, type KeyboardEvent as ReactKeyboardEvent, type ReactNode, useState, useEffect, useMemo, useRef } from "react";
 import type { ProjectIconName, ProjectDetail } from "@/types/project-detail";
 import type { FloorPlanItem } from "@/types/floor-plan";
 import { normalizeFloorPlanGroups } from "@/lib/projectFloorPlan";
@@ -73,6 +73,88 @@ const iconMap: Record<ProjectIconName, LucideIcon> = {
 };
 
 const ease = [0.22, 1, 0.36, 1] as const;
+
+function HorizontalTabRail({
+  children,
+  label,
+  className = "",
+}: {
+  children: ReactNode;
+  label: string;
+  className?: string;
+}) {
+  const railRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  useEffect(() => {
+    const rail = railRef.current;
+    if (!rail) return;
+
+    const updateScrollState = () => {
+      setCanScrollLeft(rail.scrollLeft > 4);
+      setCanScrollRight(rail.scrollLeft + rail.clientWidth < rail.scrollWidth - 4);
+    };
+
+    const initialFrame = window.requestAnimationFrame(updateScrollState);
+    rail.addEventListener("scroll", updateScrollState, { passive: true });
+    const observer = new ResizeObserver(updateScrollState);
+    observer.observe(rail);
+    Array.from(rail.children).forEach((child) => observer.observe(child));
+
+    return () => {
+      window.cancelAnimationFrame(initialFrame);
+      rail.removeEventListener("scroll", updateScrollState);
+      observer.disconnect();
+    };
+  }, [children]);
+
+  const slide = (direction: -1 | 1) => {
+    const rail = railRef.current;
+    if (!rail) return;
+    rail.scrollBy({
+      left: direction * Math.max(240, rail.clientWidth * 0.72),
+      behavior: "smooth",
+    });
+  };
+
+  return (
+    <div className={`relative flex min-w-0 items-center gap-2 ${className}`}>
+      <button
+        type="button"
+        aria-label={`Xem tab trước trong ${label}`}
+        onClick={() => slide(-1)}
+        disabled={!canScrollLeft}
+        className={`hidden size-9 shrink-0 place-items-center rounded-full border border-line bg-white text-gold-dark shadow-sm transition md:grid ${
+          canScrollLeft ? "hover:border-gold hover:bg-beige" : "pointer-events-none opacity-30"
+        }`}
+      >
+        <ChevronLeft className="size-4" aria-hidden="true" />
+      </button>
+
+      <div
+        ref={railRef}
+        role="tablist"
+        aria-label={label}
+        className="scrollbar-none flex min-w-0 flex-1 snap-x snap-proximity flex-nowrap gap-2 overflow-x-auto overscroll-x-contain scroll-smooth pb-1 touch-pan-x"
+      >
+        {children}
+      </div>
+
+      <button
+        type="button"
+        aria-label={`Xem thêm tab trong ${label}`}
+        onClick={() => slide(1)}
+        disabled={!canScrollRight}
+        className={`hidden size-9 shrink-0 place-items-center rounded-full border border-line bg-white text-gold-dark shadow-sm transition md:grid ${
+          canScrollRight ? "hover:border-gold hover:bg-beige" : "pointer-events-none opacity-30"
+        }`}
+      >
+        <ChevronRight className="size-4" aria-hidden="true" />
+      </button>
+    </div>
+  );
+}
 const compactProductLabels = new Set([
   "gia tham khao",
   "ban giao",
@@ -1239,7 +1321,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                 <RichHtmlContent variant="project" html={project.floorPlanDescription} />
               </div>
             ) : null}
-            {floorPlanGroups.length > 1 ? <div className="scrollbar-none mb-3 flex max-w-full gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Nhóm mặt bằng">
+            {floorPlanGroups.length > 1 ? <HorizontalTabRail className="mb-3" label="Nhóm mặt bằng">
               {floorPlanGroups.map((group) => (
                 <button
                   key={group.key}
@@ -1260,15 +1342,15 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                     setActiveFloorTabKey(group.tabs[0]?.key || "");
                     setFloorPlansExpanded(false);
                   }}
-                  className={`shrink-0 rounded-full border px-5 py-2.5 text-[13px] font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50 sm:text-sm ${
+                  className={`shrink-0 snap-start whitespace-nowrap rounded-full border px-5 py-2.5 text-[13px] font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50 sm:text-sm ${
                     activeFloorGroup?.key === group.key ? "border-gold bg-gold text-white" : "border-line bg-white text-muted hover:border-gold/60 hover:text-gold-dark"
                   }`}
                 >
                   {group.label}
                 </button>
               ))}
-            </div> : null}
-            {activeFloorGroup ? <div className="scrollbar-none mb-5 flex max-w-full gap-2 overflow-x-auto border-b border-line pb-2" role="tablist" aria-label={`Loại mặt bằng ${activeFloorGroup.label}`}>
+            </HorizontalTabRail> : null}
+            {activeFloorGroup ? <HorizontalTabRail className="mb-5 border-b border-line pb-1" label={`Loại mặt bằng ${activeFloorGroup.label}`}>
               {(activeFloorGroup.tabs.length > 1
                 ? [{ key: "__all__", label: "Tất cả", items: [] }, ...activeFloorGroup.tabs]
                 : activeFloorGroup.tabs
@@ -1287,7 +1369,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                     tabIndex={resolvedActiveFloorTabKey === tab.key ? 0 : -1}
                     onKeyDown={(event) => handleFloorTabKeyDown(event, tabKeys, resolvedActiveFloorTabKey, selectFloorTab)}
                     onClick={() => selectFloorTab(tab.key)}
-                    className={`shrink-0 rounded-[6px] px-4 py-2.5 text-[13px] font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50 sm:text-sm ${
+                    className={`shrink-0 snap-start whitespace-nowrap rounded-[6px] px-4 py-2.5 text-[13px] font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50 sm:text-sm ${
                       resolvedActiveFloorTabKey === tab.key ? "gold-gradient text-white" : "bg-beige/60 text-muted hover:bg-beige hover:text-gold-dark"
                     }`}
                   >
@@ -1295,7 +1377,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                   </button>
                 );
               })}
-            </div> : null}
+            </HorizontalTabRail> : null}
             {visibleFloorPlans.length ? <>
               <div id="floor-plan-panel" role="tabpanel" aria-labelledby={`floor-child-tab-${resolvedActiveFloorTabKey}`} className="grid gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3">
               {displayedFloorPlans.map((plan, index) => {
