@@ -67,6 +67,7 @@ class AdminProjectSaveProofTest extends TestCase
             'amenity_details' => [['title' => 'Proof amenity', 'description' => 'Proof', 'image' => '/uploads/proof-amenity.jpg', 'icon' => 'Sparkles']],
             'floor_tabs' => ['Nhà phố', 'Căn hộ'],
             'floor_plans' => [['productType' => 'Nhà phố', 'name' => 'Proof floor', 'area' => '80 m2', 'totalArea' => '120 m2', 'image' => '/uploads/proof-floor.jpg', 'images' => ['/uploads/proof-floor.jpg', '/uploads/proof-floor-2.jpg']]],
+            'floor_plan_description' => '<p>Mô tả chung <strong>Sản phẩm &amp; Mặt bằng</strong></p>',
             'handover_standards' => [['title' => 'Proof standard', 'description' => 'Proof handover', 'image' => '/uploads/proof-standard.jpg', 'icon' => 'ClipboardCheck']],
             'price_rows' => [['Nhà phố', '80 - 120 m2', '8,9 tỷ']],
             'policy_cards' => [['title' => 'Proof policy', 'description' => 'Proof', 'icon' => 'CalendarDays']],
@@ -111,6 +112,7 @@ class AdminProjectSaveProofTest extends TestCase
             ->assertJsonPath('data.floor_plans.0.name', 'Proof floor')
             ->assertJsonPath('data.floor_plans.0.images.1', '/uploads/proof-floor-2.jpg')
             ->assertJsonPath('data.floor_plan_groups.0.tabs.0.items.0.name', 'Proof floor')
+            ->assertJsonPath('data.floor_plan_description', '<p>Mô tả chung <strong>Sản phẩm &amp; Mặt bằng</strong></p>')
             ->assertJsonPath('data.handover_standards.0.title', 'Proof standard')
             ->assertJsonPath('data.handover_standards.0.image', '/uploads/proof-standard.jpg')
             ->assertJsonPath('data.price_rows.0.2', '8,9 tỷ')
@@ -128,6 +130,7 @@ class AdminProjectSaveProofTest extends TestCase
             'id' => $project->id,
             'project_label' => 'Lumiere Series',
             'gallery_title' => $proofValue,
+            'floor_plan_description' => '<p>Mô tả chung <strong>Sản phẩm &amp; Mặt bằng</strong></p>',
             'schema_price' => '8.9',
             'schema_price_currency' => 'VND',
             'schema_availability' => 'InStock',

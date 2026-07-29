@@ -128,6 +128,7 @@ export interface Project {
   floor_tabs?: string[] | null;
   floor_plans?: unknown[] | null;
   floor_plan_groups?: FloorPlanGroup[] | null;
+  floor_plan_description?: string | null;
   handover_standards?: unknown[] | null;
   handover_description?: string | null;
   price_rows?: unknown[] | null;

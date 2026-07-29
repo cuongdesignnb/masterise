@@ -58,7 +58,7 @@ function sanitizeInlineStyle(style: string): string {
 }
 
 function sanitizeRichHtml(html: string): string {
-  return normalizeRichHtml(html)
+  const sanitized = normalizeRichHtml(html)
     .replace(/<(script|style|iframe|object|embed|applet|form)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, "")
     .replace(/<(script|style|iframe|object|embed|applet|form)\b[^>]*\/?>/gi, "")
     .replace(/\son\w+\s*=\s*(?:(['"]).*?\1|[^\s>]+)/gi, "")
@@ -68,6 +68,16 @@ function sanitizeRichHtml(html: string): string {
     })
     .replace(/\s(?:srcdoc|formaction)\s*=\s*(?:(['"]).*?\1|[^\s>]+)/gi, "")
     .replace(/\s(?:href|src)\s*=\s*(?:(['"])\s*javascript:[\s\S]*?\1|javascript:[^\s>]*)/gi, "");
+
+  return sanitized.replace(/<a\b([^>]*)>/gi, (tag, attributes: string) => {
+    const classValue = attributes.match(/\bclass\s*=\s*["']([^"']*)["']/i)?.[1] || "";
+    if (!classValue.split(/\s+/).includes("article-file-link")) return tag;
+    const href = attributes.match(/\bhref\s*=\s*["']([^"']*)["']/i)?.[1]?.trim() || "";
+    if (!/^(?:https?:\/\/|\/)/i.test(href)) return '<a class="article-file-link" data-file-type="other">';
+    const requestedType = attributes.match(/\bdata-file-type\s*=\s*["']([^"']*)["']/i)?.[1]?.toLowerCase() || "other";
+    const fileType = /^(?:pdf|excel|word|other)$/.test(requestedType) ? requestedType : "other";
+    return `<a class="article-file-link" href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer" data-file-type="${fileType}">`;
+  });
 }
 
 function normalizeProjectHeadings(html: string): string {
@@ -97,7 +107,7 @@ function wrapTables(html: string): string {
       }, 0);
     }));
     const widthClass = columnCount > 2 ? " rich-html-table-wrap--wide" : "";
-    return `<div class="rich-html-table-wrap${widthClass}" role="region" tabindex="0" aria-label="Bảng dữ liệu">${table}</div>`;
+    return `<div class="rich-html-table-wrap${widthClass}" role="region" tabindex="0" aria-label="Bảng dữ liệu"><span class="rich-html-table-cue" aria-hidden="true">↔ Cuộn ngang để xem đầy đủ</span>${table}</div>`;
   });
 
   return wrappedHtml.replace(/__RICH_HTML_TABLE_(\d+)__/g, (_token, index: string) => protectedTables[Number(index)] || "");

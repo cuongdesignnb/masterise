@@ -75,6 +75,7 @@ export type ProjectPolicyCard = {
 
 export type ProjectDetail = {
   id?: number;
+  updatedAt?: string | null;
   slug: string;
   badge?: string;
   projectStatus?: string;
@@ -114,6 +115,7 @@ export type ProjectDetail = {
   floorTabs: string[];
   floorPlanGroups?: FloorPlanGroup[];
   floorPlans: LegacyFloorPlanItem[];
+  floorPlanDescription?: string | null;
   handoverStandards: {
     title: string;
     description: string;

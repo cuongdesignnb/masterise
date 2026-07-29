@@ -24,9 +24,18 @@ class MediaController extends Controller
             $query->where('mime_type', 'like', "%{$request->mime_type}%");
         }
 
+        if ($request->string('kind')->toString() === 'image') {
+            $query->where('mime_type', 'like', 'image/%');
+        } elseif ($request->string('kind')->toString() === 'document') {
+            $query->where('mime_type', 'not like', 'image/%')
+                ->where('mime_type', 'not like', 'video/%');
+        }
+
         if ($request->has('q') && ! empty($request->q)) {
-            $query->where('name', 'like', "%{$request->q}%")
-                ->orWhere('file_name', 'like', "%{$request->q}%");
+            $query->where(function ($searchQuery) use ($request) {
+                $searchQuery->where('name', 'like', "%{$request->q}%")
+                    ->orWhere('file_name', 'like', "%{$request->q}%");
+            });
         }
 
         $perPage = $request->get('per_page', 18);

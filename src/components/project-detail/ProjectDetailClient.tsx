@@ -555,7 +555,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
   const hasGalleryCopy = Boolean(project.gallery.label || project.gallery.title || project.gallery.description);
   const hasConnectivity = project.connectivity.length > 0 || Boolean(project.mapImageUrl);
   const hasAmenities = project.amenities.length > 0 || Boolean(project.amenitiesDescription?.trim());
-  const hasFloorSection = floorPlanGroups.length > 0;
+  const hasFloorSection = floorPlanGroups.length > 0 || Boolean(project.floorPlanDescription?.trim());
   const hasHandoverStandards = project.handoverStandards.length > 0 || Boolean(project.handoverDescription?.trim());
   const hasPriceRows = project.priceRows.length > 0;
   const hasProductInfo = hasPriceRows || project.productSummary.length > 0;
@@ -1135,7 +1135,9 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
           <section id="vi-tri" className="scroll-mt-32">
             <ProjectSectionTitle sectionKey="location" fallbackTitle="Kết nối toàn diện" />
             {project.locationDescription ? (
-              <p className="project-supporting-text mb-6 whitespace-pre-line text-muted">{project.locationDescription}</p>
+              <div className="project-supporting-text mb-6 text-muted">
+                <RichHtmlContent variant="project" html={project.locationDescription} />
+              </div>
             ) : null}
             <div className={`grid items-start gap-8 ${project.mapImageUrl ? "lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]" : ""}`}>
               <div className={`space-y-4 ${project.mapImageUrl ? "order-1 lg:order-2" : ""}`}>
@@ -1231,6 +1233,11 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
         {hasFloorSection ? <Reveal>
           <section id="mat-bang" className="scroll-mt-32">
             <ProjectSectionTitle sectionKey="floorPlans" fallbackTitle="Mặt bằng điển hình" />
+            {project.floorPlanDescription ? (
+              <div className="project-supporting-text mb-5 mt-4 text-muted">
+                <RichHtmlContent variant="project" html={project.floorPlanDescription} />
+              </div>
+            ) : null}
             {floorPlanGroups.length > 1 ? <div className="scrollbar-none mb-3 flex max-w-full gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Nhóm mặt bằng">
               {floorPlanGroups.map((group) => (
                 <button

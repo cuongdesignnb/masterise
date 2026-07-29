@@ -13,14 +13,24 @@ interface MediaSelectModalProps {
   onSelect: (urls: string | string[]) => void;
   multiple?: boolean;
   selectedUrls?: string[];
+  kind?: 'image' | 'document' | 'all';
 }
 
-export default function MediaSelectModal({
+const EMPTY_SELECTED_URLS: string[] = [];
+
+export default function MediaSelectModal(props: MediaSelectModalProps) {
+  if (!props.isOpen) return null;
+
+  return <MediaSelectModalContent {...props} />;
+}
+
+function MediaSelectModalContent({
   isOpen,
   onClose,
   onSelect,
   multiple = false,
-  selectedUrls = [],
+  selectedUrls = EMPTY_SELECTED_URLS,
+  kind = 'all',
 }: MediaSelectModalProps) {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
@@ -30,9 +40,9 @@ export default function MediaSelectModal({
 
   // Fetch media library
   const { data: mediaData, isLoading } = useQuery({
-    queryKey: ['media-select', search, page],
+    queryKey: ['media-select', kind, search, page],
     queryFn: async () => {
-      const response = await api.get<Media[]>(`/media?q=${search}&page=${page}&per_page=12`);
+      const response = await api.get<Media[]>(`/media?kind=${kind}&q=${encodeURIComponent(search)}&page=${page}&per_page=12`);
       return response;
     },
     enabled: isOpen,
@@ -68,6 +78,13 @@ export default function MediaSelectModal({
     const files = e.target.files;
     if (files && files.length > 0) {
       Array.from(files).forEach((file) => {
+        const matchesKind = kind === 'all'
+          || (kind === 'image' && file.type.startsWith('image/'))
+          || (kind === 'document' && !file.type.startsWith('image/') && !file.type.startsWith('video/'));
+        if (!matchesKind) {
+          alert(kind === 'image' ? 'Vui lòng chọn đúng tệp ảnh.' : 'Vui lòng chọn PDF, Word, Excel hoặc tài liệu khác.');
+          return;
+        }
         uploadMutation.mutate(file);
       });
     }
@@ -98,8 +115,6 @@ export default function MediaSelectModal({
   const mediaList = mediaData?.data || [];
   const meta = mediaData?.meta;
 
-  if (!isOpen) return null;
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
@@ -122,7 +137,11 @@ export default function MediaSelectModal({
         <div className="px-6 py-4 border-b border-[#E8DCCB] flex justify-between items-center bg-[#FBF8F2]">
           <div>
             <h3 className="font-heading font-medium text-lg text-[#1F1B16]">
-              {multiple ? 'Chọn nhiều file từ Thư viện Media' : 'Chọn một file từ Thư viện Media'}
+              {kind === 'image'
+                ? (multiple ? 'Chọn nhiều ảnh từ Thư viện Media' : 'Chọn một ảnh từ Thư viện Media')
+                : kind === 'document'
+                  ? 'Chọn tài liệu từ Thư viện Media'
+                  : (multiple ? 'Chọn nhiều file từ Thư viện Media' : 'Chọn một file từ Thư viện Media')}
             </h3>
             <p className="text-xs text-[#8C7A6B]">
               {multiple
@@ -147,7 +166,7 @@ export default function MediaSelectModal({
             </div>
             <input
               type="text"
-              placeholder="Tìm kiếm file..."
+              placeholder={kind === 'image' ? 'Tìm kiếm ảnh...' : kind === 'document' ? 'Tìm kiếm tài liệu...' : 'Tìm kiếm file...'}
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
@@ -169,7 +188,11 @@ export default function MediaSelectModal({
               <input
                 type="file"
                 multiple
-                accept="image/*,video/mp4,video/webm,video/quicktime,application/pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/zip"
+                accept={kind === 'image'
+                  ? 'image/*'
+                  : kind === 'document'
+                    ? 'application/pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/zip'
+                    : 'image/*,video/mp4,video/webm,video/quicktime,application/pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip'}
                 className="hidden"
                 onChange={handleFileUpload}
                 disabled={uploading}

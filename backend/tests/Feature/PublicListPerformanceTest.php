@@ -24,7 +24,7 @@ class PublicListPerformanceTest extends TestCase
             ->assertJsonPath('data.0.name', 'Dự án tiếng Việt');
 
         $item = $response->json('data.0');
-        foreach (['content', 'gallery', 'detail_gallery', 'floor_plans', 'floor_plan_groups', 'amenities', 'seo_meta'] as $field) {
+        foreach (['content', 'gallery', 'detail_gallery', 'floor_plans', 'floor_plan_groups', 'floor_plan_description', 'amenities', 'seo_meta'] as $field) {
             $this->assertArrayNotHasKey($field, $item);
         }
         $this->assertSame($project->id, $item['id']);

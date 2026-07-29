@@ -2,13 +2,17 @@
 
 import React from "react";
 import Link from "next/link";
-import { Phone, Mail, MapPin, ArrowUp } from "lucide-react";
+import { Phone, Mail, MapPin, ArrowUp, MessageCircle } from "lucide-react";
 import { useSiteSettings } from "@/providers/SiteSettingsProvider";
 import Container from "./Container";
 
 export default function Footer() {
   const { hotline, email, companyAddress, companyName, socialLinks, footerNavigation } = useSiteSettings();
   const hotlineHref = hotline.replace(/[^\d+]/g, "");
+  const zaloHandle = socialLinks.zalo.trim();
+  const zaloHref = /^https?:\/\//i.test(zaloHandle)
+    ? zaloHandle
+    : `https://zalo.me/${zaloHandle.replace(/\D/g, "") || zaloHandle}`;
   const resolvedFooterNavigation = footerNavigation.map((column, index) => index !== 0 || column.links.some((link) => link.href === '/tuyen-dung')
     ? column
     : { ...column, links: [...column.links.slice(0, 4), { label: 'Tuyển dụng', href: '/tuyen-dung' }, ...column.links.slice(4)] });
@@ -149,6 +153,20 @@ export default function Footer() {
                   <span className="text-sm font-bold text-line/90">Đang cập nhật</span>
                 )}
               </li>
+              {zaloHandle ? (
+                <li className="flex items-start gap-2.5">
+                  <MessageCircle size={14} className="text-gold mt-1 flex-shrink-0" />
+                  <a
+                    href={zaloHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm font-semibold text-line/90 transition-colors hover:text-gold"
+                    aria-label="Chat Zalo"
+                  >
+                    Zalo
+                  </a>
+                </li>
+              ) : null}
               <li className="flex items-start gap-2.5 min-w-0">
                 <Mail size={14} className="text-gold mt-1 flex-shrink-0" />
                 {email ? (

@@ -31,6 +31,7 @@ import VR360Tab from '@/components/admin/vr360/VR360Tab';
 import type { FloorPlanGroup, FloorPlanItem, FloorPlanTab } from '@/types/floor-plan';
 import { createFloorPlanKey, normalizeFloorPlanGroups, uniqueFloorPlanImages } from '@/lib/projectFloorPlan';
 import ProjectStatusManagerModal from '@/components/admin/ProjectStatusManagerModal';
+import ProjectPricingPolicyAdminEditor from '@/components/admin/ProjectPricingPolicyAdminEditor';
 
 type SelectOption = {
   id: number;
@@ -107,7 +108,7 @@ const defaultProjectSectionTitles: ProjectSectionTitles = {
   floorPlans: { eyebrow: '', title: 'Mặt bằng điển hình' },
   handover: { eyebrow: '', title: 'Tiêu chuẩn bàn giao' },
   productInfo: { eyebrow: '', title: 'Sản phẩm & Bảng giá' },
-  pricingPolicy: { eyebrow: '', title: 'Bảng giá & Chính sách' },
+  pricingPolicy: { eyebrow: 'THÔNG TIN DỰ ÁN', title: 'Bảng giá & Chính sách bán hàng' },
   policies: { eyebrow: '', title: 'Chính sách bán hàng' },
   timeline: { eyebrow: '', title: 'Tiến độ thi công' },
   investment: { eyebrow: '', title: 'Vì sao nên đầu tư?' },
@@ -141,7 +142,7 @@ const normalizeProjectSectionTitles = (value: unknown): ProjectSectionTitles => 
   return projectSectionTitleLabels.reduce((acc, item) => {
     const current = record[item.key] || {};
     acc[item.key] = {
-      eyebrow: '',
+      eyebrow: typeof current.eyebrow === 'string' ? current.eyebrow : defaultProjectSectionTitles[item.key].eyebrow,
       title: typeof current.title === 'string' ? current.title : defaultProjectSectionTitles[item.key].title,
     };
     return acc;
@@ -314,6 +315,7 @@ export default function AdminProjects() {
   const [formProjectTestimonials, setFormProjectTestimonials] = useState<TestimonialItem[]>([]);
   const [formProjectFaqs, setFormProjectFaqs] = useState<FaqItem[]>([]);
   const [formFloorPlanGroups, setFormFloorPlanGroups] = useState<FloorPlanGroup[]>([]);
+  const [formFloorPlanDescription, setFormFloorPlanDescription] = useState('');
   const [formHandoverStandards, setFormHandoverStandards] = useState<HandoverStandardItem[]>([]);
   const [formHandoverDescription, setFormHandoverDescription] = useState('');
   const [formPriceRows, setFormPriceRows] = useState<PriceRowItem[]>([]);
@@ -342,6 +344,7 @@ export default function AdminProjects() {
     seo_title: 'Tiêu đề SEO',
     seo_description: 'Mô tả SEO',
     floor_plans: 'Danh sách mặt bằng',
+    floor_plan_description: 'Mô tả chung section Sản phẩm & Mặt bằng',
     handover_standards: 'Tiêu chuẩn bàn giao',
     price_rows: 'Dòng bảng giá',
     pricing_policy_description: 'Mô tả chung bảng giá và chính sách',
@@ -381,6 +384,7 @@ export default function AdminProjects() {
     amenity_details: 'amenities',
     floor_tabs: 'floor',
     floor_plans: 'floor',
+    floor_plan_description: 'floor',
     handover_standards: 'handover',
     price_rows: 'pricingPolicy',
     policy_cards: 'pricingPolicy',
@@ -776,6 +780,7 @@ export default function AdminProjects() {
     setFormProjectTestimonials([]);
     setFormProjectFaqs([]);
     setFormFloorPlanGroups([]);
+    setFormFloorPlanDescription('');
     setFormHandoverStandards([]);
     setFormHandoverDescription('');
     setFormPriceRows([]);
@@ -879,6 +884,7 @@ export default function AdminProjects() {
     setFormProjectTestimonials(loadTestimonialItems(project.project_testimonials));
     setFormProjectFaqs(loadFaqItems(project.project_faqs));
     setFormFloorPlanGroups(normalizeFloorPlanGroups(project.floor_plan_groups, project.floor_tabs, project.floor_plans));
+    setFormFloorPlanDescription(project.floor_plan_description || '');
     setFormHandoverStandards(loadHandoverStandardItems(project.handover_standards));
     setFormHandoverDescription(project.handover_description || '');
     setFormPriceRows(loadPriceRowItems(project.price_rows));
@@ -1049,6 +1055,7 @@ export default function AdminProjects() {
         project_testimonials: projectTestimonials,
         project_faqs: projectFaqs,
         floor_plan_groups: floorPlanGroups,
+        floor_plan_description: formFloorPlanDescription || null,
         handover_standards: handoverStandards,
         handover_description: formHandoverDescription || null,
         price_rows: priceRows,
@@ -1592,6 +1599,14 @@ export default function AdminProjects() {
     }
 
     if (mode === 'publish') {
+      const untitledPricingImage = formPriceRows.find((item) => item.kind === 'image' && item.image_url.trim() && !item.title.trim());
+      if (untitledPricingImage) {
+        const message = 'Ảnh bảng giá và chính sách phải có tiêu đề/alt trước khi xuất bản.';
+        setFormError(message);
+        setFieldErrors({ pricing_policy_gallery: message });
+        setActiveTab('pricingPolicy');
+        return;
+      }
       const missingFields = getPublishMissingFields();
       if (missingFields.length > 0) {
         const confirmed = window.confirm(
@@ -1966,7 +1981,7 @@ export default function AdminProjects() {
     </div>
   );
 
-  const renderPricingPolicyEditor = () => (
+  const renderPricingPolicyLegacyEditor = () => (
     <div className="space-y-5">
       {sectionNote('Quản lý bảng giá, ảnh bảng giá, tài liệu giá và chính sách bán hàng. Có thể nhập từng dòng hoặc chọn ảnh/PDF từ Media Library để tiết kiệm thời gian.')}
 
@@ -2188,6 +2203,28 @@ export default function AdminProjects() {
         )}
       </div>
     </div>
+  );
+
+  // Legacy controls remain in memory for backward-compatible loading, but the active UI is intentionally reduced to three groups.
+  void renderPricingPolicyLegacyEditor;
+  const renderPricingPolicyEditor = () => (
+    <ProjectPricingPolicyAdminEditor
+      description={formPricingPolicyDescription}
+      onDescriptionChange={setFormPricingPolicyDescription}
+      priceRows={formPriceRows}
+      onPriceRowsChange={setFormPriceRows}
+      policies={formPolicyCards}
+      priceMin={formPriceMin}
+      onPriceMinChange={setFormPriceMin}
+      priceMax={formPriceMax}
+      onPriceMaxChange={setFormPriceMax}
+      priceText={formPriceText}
+      onPriceTextChange={setFormPriceText}
+      pricePerSqmMin={formPricePerSqmMin}
+      onPricePerSqmMinChange={setFormPricePerSqmMin}
+      pricePerSqmMax={formPricePerSqmMax}
+      onPricePerSqmMaxChange={setFormPricePerSqmMax}
+    />
   );
 
   return (
@@ -2970,14 +3007,13 @@ export default function AdminProjects() {
                     </div>
 
                     {/* Location Description */}
-                    <div>
+                    <div data-project-field="location_description">
                       <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Mô tả vị trí chiến lược (Hiển thị ở cột bên trái bản đồ dự án)</label>
-                      <textarea
+                      <RichTextEditor
                         value={formLocationDescription}
-                        onChange={(e) => setFormLocationDescription(e.target.value)}
-                        rows={2}
-                        className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none focus:ring-1 focus:ring-[#B88746]"
+                        onChange={setFormLocationDescription}
                         placeholder="Ví dụ: Tọa lạc tại trung tâm TP. Thủ Đức, kết nối nhanh đến trung tâm và các khu vực trọng điểm..."
+                        editorLabel="Mô tả vị trí chiến lược"
                       />
                     </div>
 
@@ -3284,6 +3320,15 @@ export default function AdminProjects() {
                 {activeTab === 'floor' && (
                   <div className="space-y-4">
                     {sectionNote('Phần này quản lý cấu trúc Nhóm cha → Tab con → Mặt bằng → Nhiều ảnh. Phiên bản này sắp xếp bằng nút Lên/Xuống và dùng Media Library hiện có.')}
+                    <div data-project-field="floor_plan_description">
+                      <label className="mb-1 block text-xs font-semibold text-[#8C7A6B]">Mô tả chung section Sản phẩm &amp; Mặt bằng</label>
+                      <RichTextEditor
+                        value={formFloorPlanDescription}
+                        onChange={setFormFloorPlanDescription}
+                        placeholder="Nhập đoạn mô tả chung hiển thị ngay dưới tiêu đề Sản phẩm & Mặt bằng"
+                        editorLabel="Mô tả chung Sản phẩm và Mặt bằng"
+                      />
+                    </div>
                     {renderFloorPlanRepeater()}
                   </div>
                 )}
@@ -3728,6 +3773,14 @@ export default function AdminProjects() {
               mediaSelectorTarget === 'gallery'
               || mediaSelectorTarget === 'detailGallery'
               || (typeof mediaSelectorTarget === 'object' && mediaSelectorTarget?.group === 'floorPlanGroups')
+            }
+            kind={
+              mediaSelectorTarget === 'brochure'
+              || (typeof mediaSelectorTarget === 'object'
+                && (mediaSelectorTarget.group === 'priceRows' || mediaSelectorTarget.group === 'policyCards')
+                && mediaSelectorTarget.field === 'file_url')
+                ? 'document'
+                : 'image'
             }
             selectedUrls={getMediaSelectorSelectedUrls()}
           />

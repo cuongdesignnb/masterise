@@ -101,6 +101,7 @@ class Project extends Model
         'floor_tabs',
         'floor_plans',
         'floor_plan_groups',
+        'floor_plan_description',
         'handover_standards',
         'handover_description',
         'price_rows',

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useId, useRef, useState } from 'react';
 import MediaSelectModal from '@/components/admin/MediaSelectModal';
-import { ImageIcon, Link2, Search, Table2, X } from 'lucide-react';
+import { FilePlus2, ImageIcon, Link2, Search, Table2, X } from 'lucide-react';
 import { api } from '@/lib/api';
 import { projectService } from '@/services/projectService';
 import type { Media, Project } from '@/types/api';
@@ -25,6 +25,12 @@ type ArticleImageValue = {
 type ImageModalState = ArticleImageValue & {
   mode: 'insert' | 'edit';
   index: number | null;
+};
+
+type ArticleFileValue = {
+  href: string;
+  label: string;
+  fileType: 'pdf' | 'excel' | 'word' | 'other';
 };
 
 interface RichTextEditorProps {
@@ -104,6 +110,19 @@ function imageValueFromNode(node: HTMLElement): ArticleImageValue | null {
   };
 }
 
+function inferArticleFileType(url: string): ArticleFileValue['fileType'] {
+  const extension = url.split('?')[0].split('.').pop()?.toLowerCase();
+  if (extension === 'pdf') return 'pdf';
+  if (extension === 'xls' || extension === 'xlsx' || extension === 'csv') return 'excel';
+  if (extension === 'doc' || extension === 'docx') return 'word';
+  return 'other';
+}
+
+function fileLabelFromUrl(url: string) {
+  const fileName = decodeURIComponent(url.split('?')[0].split('/').pop() || 'Tải tài liệu');
+  return fileName.replace(/[-_]+/g, ' ');
+}
+
 function serializeEditorHtml(quill: any) {
   const clone = quill.root.cloneNode(true) as HTMLElement;
   clone.querySelectorAll('.ql-multi-range-overlay').forEach((element) => element.remove());
@@ -158,6 +177,8 @@ export default function RichTextEditor({
   const highlightName = `ql-multi-${useId().replace(/:/g, '')}`;
 
   const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
+  const [mediaKind, setMediaKind] = useState<'image' | 'document'>('image');
+  const [documentModal, setDocumentModal] = useState<ArticleFileValue | null>(null);
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [projectSearch, setProjectSearch] = useState('');
   const [projects, setProjects] = useState<Project[]>([]);
@@ -347,7 +368,34 @@ export default function RichTextEditor({
     savedRangeRef.current = { index: range.index, length: range.length };
     imageSelectionHandledRef.current = false;
     imageCommitInProgressRef.current = false;
+    setMediaKind('image');
     setIsMediaModalOpen(true);
+  };
+
+  const openDocumentMediaModal = () => {
+    const quill = quillRef.current;
+    if (!quill) return;
+    const range = savedRangeRef.current || quill.getSelection() || lastSelectionRef.current || { index: Math.max(0, quill.getLength() - 1), length: 0 };
+    savedRangeRef.current = { index: range.index, length: range.length };
+    imageSelectionHandledRef.current = false;
+    setMediaKind('document');
+    setIsMediaModalOpen(true);
+  };
+
+  const confirmDocument = () => {
+    const quill = quillRef.current;
+    if (!quill || !documentModal?.href || !documentModal.label.trim()) return;
+    const range = savedRangeRef.current || lastSelectionRef.current || { index: Math.max(0, quill.getLength() - 1), length: 0 };
+    quill.updateContents([
+      { retain: range.index },
+      ...(range.length > 0 ? [{ delete: range.length }] : []),
+      { insert: { articleFileLink: { ...documentModal, label: documentModal.label.trim() } } },
+      { insert: '\n' },
+    ], 'user');
+    quill.setSelection(range.index + 2, 0, 'silent');
+    onChangeRef.current(serializeEditorHtml(quill));
+    savedRangeRef.current = null;
+    setDocumentModal(null);
   };
 
   const confirmImage = () => {
@@ -601,8 +649,31 @@ export default function RichTextEditor({
             return imageValueFromNode(node) || { src: '', alt: '', caption: '' };
           }
         }
+        class ArticleFileLinkBlot extends BlockEmbed {
+          static blotName = 'articleFileLink';
+          static tagName = 'a';
+          static className = 'article-file-link';
+          static create(value: ArticleFileValue) {
+            const node = super.create() as HTMLAnchorElement;
+            node.href = value.href;
+            node.target = '_blank';
+            node.rel = 'noopener noreferrer';
+            node.dataset.fileType = value.fileType || inferArticleFileType(value.href);
+            node.textContent = value.label || fileLabelFromUrl(value.href);
+            node.setAttribute('contenteditable', 'false');
+            return node;
+          }
+          static value(node: HTMLAnchorElement): ArticleFileValue {
+            return {
+              href: node.getAttribute('href') || '',
+              label: node.textContent?.trim() || fileLabelFromUrl(node.getAttribute('href') || ''),
+              fileType: inferArticleFileType(node.getAttribute('href') || ''),
+            };
+          }
+        }
         Quill.register(ArticleTableBlot, true);
         Quill.register(ArticleImageBlot, true);
+        Quill.register(ArticleFileLinkBlot, true);
 
         if (!active || !containerRef.current || quillRef.current) return;
         const editorContainer = document.createElement('div');
@@ -627,6 +698,16 @@ export default function RichTextEditor({
         quill.clipboard.addMatcher('FIGURE', (node: Node, delta: unknown) => {
           const value = imageValueFromNode(node as HTMLElement);
           return value ? new Delta().insert({ articleImage: value }) : delta;
+        });
+        quill.clipboard.addMatcher('A', (node: Node, delta: unknown) => {
+          const anchor = node as HTMLAnchorElement;
+          if (!anchor.classList.contains('article-file-link')) return delta;
+          const href = anchor.getAttribute('href') || '';
+          return href ? new Delta().insert({ articleFileLink: {
+            href,
+            label: anchor.textContent?.trim() || fileLabelFromUrl(href),
+            fileType: inferArticleFileType(href),
+          } }) : delta;
         });
         quillRef.current = quill;
 
@@ -865,12 +946,16 @@ export default function RichTextEditor({
   }, [isProjectModalOpen]);
 
   const handleMediaSelect = (url: string | string[]) => {
-    const imageUrl = Array.isArray(url) ? url[0] : url;
-    if (!imageUrl || !quillRef.current || imageSelectionHandledRef.current) return;
+    const selectedUrl = Array.isArray(url) ? url[0] : url;
+    if (!selectedUrl || !quillRef.current || imageSelectionHandledRef.current) return;
     imageSelectionHandledRef.current = true;
-    imageCommitInProgressRef.current = false;
     setIsMediaModalOpen(false);
-    setImageModal({ mode: 'insert', index: null, src: imageUrl, alt: '', caption: '' });
+    if (mediaKind === 'document') {
+      setDocumentModal({ href: selectedUrl, label: fileLabelFromUrl(selectedUrl), fileType: inferArticleFileType(selectedUrl) });
+      return;
+    }
+    imageCommitInProgressRef.current = false;
+    setImageModal({ mode: 'insert', index: null, src: selectedUrl, alt: '', caption: '' });
   };
 
   const openProjectLinkModal = () => {
@@ -934,6 +1019,9 @@ export default function RichTextEditor({
           <button type="button" onPointerDown={saveCurrentSelection} onClick={openTableForInsert} className="inline-flex items-center gap-2 rounded-lg border border-[#E8DCCB] bg-white px-3 py-2 text-xs font-bold text-[#6E5F51] hover:border-[#B88746] hover:text-[#8F632F]">
             <Table2 className="h-4 w-4" /> Chèn bảng
           </button>
+          <button type="button" onPointerDown={saveCurrentSelection} onClick={openDocumentMediaModal} className="inline-flex items-center gap-2 rounded-lg border border-[#E8DCCB] bg-white px-3 py-2 text-xs font-bold text-[#6E5F51] hover:border-[#B88746] hover:text-[#8F632F]">
+            <FilePlus2 className="h-4 w-4" /> Chèn tài liệu
+          </button>
         </div>
         <div ref={toolbarHostRef} className="rich-text-editor-toolbar-host" />
         {pastedImageStatus === 'uploading' ? <p className="px-3 pb-2 text-xs font-semibold text-[#8F632F]">Đang tải ảnh dán vào Media Library...</p> : null}
@@ -942,7 +1030,28 @@ export default function RichTextEditor({
 
       <div ref={containerRef} className="quill-editor-container" />
 
-      <MediaSelectModal isOpen={isMediaModalOpen} onClose={() => setIsMediaModalOpen(false)} onSelect={handleMediaSelect} multiple={false} />
+      <MediaSelectModal isOpen={isMediaModalOpen} onClose={() => setIsMediaModalOpen(false)} onSelect={handleMediaSelect} multiple={false} kind={mediaKind} />
+
+      {documentModal ? (
+        <div className="fixed inset-0 z-[125] flex items-center justify-center bg-black/55 p-3" onMouseDown={(event) => { if (event.target === event.currentTarget) setDocumentModal(null); }}>
+          <div className="w-full max-w-lg rounded-2xl border border-[#E8DCCB] bg-white p-5 shadow-2xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h3 className="text-base font-black text-[#1F1B16]">Chèn tài liệu vào nội dung</h3>
+                <p className="mt-1 text-xs text-[#8C7A6B]">Tài liệu sẽ hiển thị thành nút tải riêng, không ảnh hưởng các liên kết thường.</p>
+              </div>
+              <button type="button" aria-label="Đóng" onClick={() => setDocumentModal(null)} className="rounded-full p-2 text-[#8C7A6B] hover:bg-[#FBF8F2]"><X className="h-4 w-4" /></button>
+            </div>
+            <label className="mt-5 block text-xs font-bold text-[#6E5F51]">Nhãn tài liệu</label>
+            <input value={documentModal.label} onChange={(event) => setDocumentModal({ ...documentModal, label: event.target.value })} className="mt-2 w-full rounded-xl border border-[#E8DCCB] px-3 py-2 text-sm outline-none focus:border-[#B88746]" />
+            <p className="mt-2 break-all text-[11px] text-[#8C7A6B]">{documentModal.href}</p>
+            <div className="mt-5 flex justify-end gap-2">
+              <button type="button" onClick={() => setDocumentModal(null)} className="rounded-lg border border-[#E8DCCB] px-4 py-2 text-xs font-bold">Hủy</button>
+              <button type="button" disabled={!documentModal.label.trim()} onClick={confirmDocument} className="rounded-lg bg-[#B88746] px-4 py-2 text-xs font-bold text-white disabled:opacity-50">Chèn tài liệu</button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {imageModal ? (
         <div className="fixed inset-0 z-[125] flex items-center justify-center bg-black/55 p-3 sm:p-5" onMouseDown={(event) => { if (event.target === event.currentTarget) setImageModal(null); }}>

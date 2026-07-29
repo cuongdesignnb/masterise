@@ -467,7 +467,7 @@ const defaultProjectSectionTitles: Record<string, { eyebrow?: string; title?: st
   floorPlans: { title: "Mặt bằng điển hình" },
   handover: { title: "Tiêu chuẩn bàn giao" },
   productInfo: { title: "Sản phẩm & Bảng giá" },
-  pricingPolicy: { title: "Bảng giá & Chính sách" },
+  pricingPolicy: { eyebrow: "THÔNG TIN DỰ ÁN", title: "Bảng giá & Chính sách bán hàng" },
   policies: { title: "Chính sách bán hàng" },
   timeline: { title: "Tiến độ thi công" },
   investment: { title: "Vì sao nên đầu tư?" },
@@ -488,7 +488,7 @@ function normalizeSectionTitles(value: unknown): Record<string, { eyebrow?: stri
       return [
         key,
         {
-          eyebrow: "",
+          eyebrow: typeof item.eyebrow === "string" ? item.eyebrow : fallback.eyebrow,
           title: typeof item.title === "string" ? item.title : fallback.title,
         },
       ];
@@ -541,6 +541,7 @@ export function mapApiProjectToProjectDetail(api: ApiProject): ProjectDetail {
 
   return {
     id: api.id,
+    updatedAt: api.updated_at || null,
     slug: api.slug,
     badge: api.badge_text || '',
     projectStatus: api.project_status ? getProjectStatusLabel(api.project_status, api.project_status_detail) : undefined,
@@ -575,6 +576,7 @@ export function mapApiProjectToProjectDetail(api: ApiProject): ProjectDetail {
     floorTabs: flattenedFloorPlans.floorTabs.length ? flattenedFloorPlans.floorTabs : asArray(api.floor_tabs),
     floorPlanGroups,
     floorPlans: flattenedFloorPlans.floorPlans.length ? flattenedFloorPlans.floorPlans : normalizeFloorPlans(api.floor_plans),
+    floorPlanDescription: api.floor_plan_description || null,
     handoverStandards: normalizeHandoverStandards(api.handover_standards),
     handoverDescription: api.handover_description || null,
     priceRows: normalizePriceRows(api.price_rows),
