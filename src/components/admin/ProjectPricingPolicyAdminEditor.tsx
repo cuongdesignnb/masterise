@@ -6,7 +6,7 @@ import { ChevronDown, ImagePlus, MoveDown, MoveUp, Trash2 } from 'lucide-react';
 import MediaSelectModal from '@/components/admin/MediaSelectModal';
 import RichTextEditor from '@/components/admin/RichTextEditor';
 import RichHtmlContent from '@/components/content/RichHtmlContent';
-import { buildLegacyPricingPolicyHtml, getPricingLegacyCounts, hasPricingLegacyData } from '@/lib/projectPricingPolicy';
+import { buildLegacyPricingPolicyHtml, derivePricingPolicyLegacyGallery, getPricingLegacyCounts, hasPricingLegacyData } from '@/lib/projectPricingPolicy';
 import type { ProjectPolicyCard, ProjectPriceItem } from '@/types/project-detail';
 
 export type AdminPriceRowItem = {
@@ -72,6 +72,7 @@ export default function ProjectPricingPolicyAdminEditor(props: Props) {
   const publicPolicies = useMemo(() => toPublicPolicies(props.policies), [props.policies]);
   const legacyCounts = useMemo(() => getPricingLegacyCounts(publicRows, publicPolicies), [publicPolicies, publicRows]);
   const legacyHtml = useMemo(() => buildLegacyPricingPolicyHtml(publicRows, publicPolicies), [publicPolicies, publicRows]);
+  const legacyGallery = useMemo(() => derivePricingPolicyLegacyGallery(publicRows, publicPolicies), [publicPolicies, publicRows]);
   const legacyPresent = hasPricingLegacyData(legacyCounts);
   const gallery = props.priceRows.map((item, index) => ({ item, index })).filter(({ item }) => item.kind === 'image' && item.image_url);
 
@@ -108,6 +109,17 @@ export default function ProjectPricingPolicyAdminEditor(props: Props) {
     props.onDescriptionChange(legacyHtml);
   };
 
+  const importLegacyGallery = () => {
+    if (!legacyGallery.length) return;
+    if (!window.confirm(`Đưa ${legacyGallery.length} ảnh dữ liệu cũ vào gallery mới? Dữ liệu gốc vẫn được giữ nguyên để tương thích ngược.`)) return;
+    const importedRows = legacyGallery.map((image): AdminPriceRowItem => ({
+      kind: 'image', productType: '', area: '', price: '', payment: '', status: '', note: '',
+      title: image.title, description: image.description, image_url: image.url,
+      file_url: '', file_type: 'other', file_size: '', button_label: 'Phóng to', highlight: false,
+    }));
+    props.onPriceRowsChange([...props.priceRows, ...importedRows]);
+  };
+
   return (
     <div className="space-y-5">
       <div data-project-field="pricing_policy_description" className="rounded-2xl border border-[#E8DCCB] bg-white p-4">
@@ -131,6 +143,25 @@ export default function ProjectPricingPolicyAdminEditor(props: Props) {
           <div><h3 className="text-sm font-bold text-[#1F1B16]">2. Ảnh bảng giá &amp; chính sách</h3><p className="mt-1 text-xs text-[#8C7A6B]">Chỉ chọn ảnh. Tiêu đề/alt là bắt buộc trước khi xuất bản; chú thích là tùy chọn.</p></div>
           <button type="button" onClick={() => setMediaOpen(true)} className="inline-flex items-center gap-2 rounded-lg bg-[#B88746] px-4 py-2 text-xs font-bold text-white"><ImagePlus className="h-4 w-4" /> Chọn nhiều ảnh</button>
         </div>
+        {legacyGallery.length ? (
+          <div className="mt-4 rounded-xl border border-amber-300 bg-amber-50 p-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-bold text-amber-900">Có {legacyGallery.length} ảnh dữ liệu cũ đang được fallback ngoài client</p>
+                <p className="mt-1 text-xs text-amber-800">Ảnh chưa mất. Hãy chuyển vào gallery mới để quản lý tiêu đề, chú thích và thứ tự ngay tại đây.</p>
+              </div>
+              <button type="button" onClick={importLegacyGallery} className="inline-flex items-center gap-2 rounded-lg bg-amber-800 px-4 py-2 text-xs font-bold text-white"><ImagePlus className="h-4 w-4" /> Đưa ảnh cũ vào gallery</button>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-5">
+              {legacyGallery.map((image) => (
+                <div key={image.url} className="overflow-hidden rounded-lg border border-amber-200 bg-white p-1.5">
+                  <img src={image.url} alt={image.title} className="aspect-[4/3] w-full rounded object-cover" />
+                  <p className="mt-1 truncate px-1 text-[10px] font-semibold text-amber-900" title={image.title}>{image.title}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
         {gallery.length ? <div className="mt-4 space-y-3">{gallery.map(({ item, index }, galleryIndex) => (
           <div key={`${item.image_url}-${index}`} className="grid gap-3 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] p-3 md:grid-cols-[170px_minmax(0,1fr)_auto]">
             <img src={item.image_url} alt={item.title || ''} className="h-28 w-full rounded-lg bg-white object-contain" />

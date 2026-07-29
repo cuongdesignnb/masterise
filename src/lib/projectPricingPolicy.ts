@@ -122,16 +122,28 @@ export function buildLegacyPricingPolicyHtml(priceRows: ProjectPriceItem[], poli
 }
 
 export function derivePricingPolicyGallery(priceRows: ProjectPriceItem[], policies: ProjectPolicyCard[]): PricingPolicyGalleryItem[] {
+  return uniqueGalleryItems([
+    ...derivePricingPolicyExplicitGallery(priceRows),
+    ...derivePricingPolicyLegacyGallery(priceRows, policies),
+  ]);
+}
+
+export function derivePricingPolicyExplicitGallery(priceRows: ProjectPriceItem[]): PricingPolicyGalleryItem[] {
+  return uniqueGalleryItems(priceRows.flatMap((item) => {
+    if (item.kind !== 'image' || !item.imageUrl) return [];
+    return [{
+      url: item.imageUrl,
+      title: item.title?.trim() || 'Ảnh bảng giá và chính sách',
+      description: item.description?.trim() || '',
+    }];
+  }));
+}
+
+export function derivePricingPolicyLegacyGallery(priceRows: ProjectPriceItem[], policies: ProjectPolicyCard[]): PricingPolicyGalleryItem[] {
+  const explicitUrls = new Set(derivePricingPolicyExplicitGallery(priceRows).map((item) => item.url.trim()));
   const candidates: PricingPolicyGalleryItem[] = [];
 
   priceRows.forEach((item) => {
-    if (item.kind === 'image' && item.imageUrl) {
-      candidates.push({
-        url: item.imageUrl,
-        title: item.title?.trim() || 'Ảnh bảng giá và chính sách',
-        description: item.description?.trim() || '',
-      });
-    }
     if (item.kind === 'file' && item.fileUrl && (item.fileType === 'image' || IMAGE_PATTERN.test(item.fileUrl))) {
       candidates.push({
         url: item.fileUrl,
@@ -150,6 +162,10 @@ export function derivePricingPolicyGallery(priceRows: ProjectPriceItem[], polici
     });
   });
 
+  return uniqueGalleryItems(candidates).filter((item) => !explicitUrls.has(item.url.trim()));
+}
+
+function uniqueGalleryItems(candidates: PricingPolicyGalleryItem[]): PricingPolicyGalleryItem[] {
   const seen = new Set<string>();
   return candidates.filter((item) => {
     const key = item.url.trim();
