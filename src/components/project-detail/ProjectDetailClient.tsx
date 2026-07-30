@@ -1074,9 +1074,17 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
             <section id="tong-quan" className="scroll-mt-32">
               <ProjectSectionTitle sectionKey="overview" fallbackTitle={`Tổng quan ${project.name}`} />
               <div className="mt-5">
-                <RichHtmlContent variant="project" html={projectContentParts.before} />
+                <RichHtmlContent
+                  variant="project"
+                  html={projectContentParts.before}
+                  className="project-overview-rich-content"
+                />
                 {inlineRelatedPosts.length ? <InlineRelatedArticleLinks posts={inlineRelatedPosts} /> : null}
-                <RichHtmlContent variant="project" html={projectContentParts.after} />
+                <RichHtmlContent
+                  variant="project"
+                  html={projectContentParts.after}
+                  className="project-overview-rich-content"
+                />
               </div>
             </section>
           </Reveal>

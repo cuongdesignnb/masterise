@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Schema;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -46,10 +47,14 @@ class AdminProjectSaveProofTest extends TestCase
         ]);
 
         $proofValue = 'Test lưu dữ liệu lúc phpunit';
+        $longHeroSubtitle = trim(str_repeat('Không gian sống chuẩn quốc tế giữa trung tâm thành phố. ', 8));
+        $this->assertGreaterThan(255, mb_strlen($longHeroSubtitle));
+        $this->assertSame('text', Schema::getColumnType('projects', 'hero_subtitle'));
         $payload = [
             'name' => $project->name,
             'slug' => $project->slug,
             'description' => $project->description,
+            'hero_subtitle' => $longHeroSubtitle,
             'project_label' => 'Lumiere Series',
             'project_status' => 'selling',
             'is_featured' => false,
@@ -98,6 +103,7 @@ class AdminProjectSaveProofTest extends TestCase
         $putResponse
             ->assertOk()
             ->assertJsonPath('data.gallery_title', $proofValue)
+            ->assertJsonPath('data.hero_subtitle', $longHeroSubtitle)
             ->assertJsonPath('data.project_label', 'Lumiere Series')
             ->assertJsonPath('data.gallery.0', '/uploads/proof-1.jpg')
             ->assertJsonPath('data.quick_cards.0.label', 'Proof quick card')
@@ -113,6 +119,7 @@ class AdminProjectSaveProofTest extends TestCase
         $freshResponse
             ->assertOk()
             ->assertJsonPath('data.gallery_title', $proofValue)
+            ->assertJsonPath('data.hero_subtitle', $longHeroSubtitle)
             ->assertJsonPath('data.project_label', 'Lumiere Series')
             ->assertJsonPath('data.gallery.1', '/uploads/proof-2.jpg')
             ->assertJsonPath('data.quick_cards.0.label', 'Proof quick card')
@@ -150,6 +157,7 @@ class AdminProjectSaveProofTest extends TestCase
             'id' => $project->id,
             'project_label' => 'Lumiere Series',
             'gallery_title' => $proofValue,
+            'hero_subtitle' => $longHeroSubtitle,
             'floor_plan_description' => '<p>Mô tả chung <strong>Sản phẩm &amp; Mặt bằng</strong></p>',
             'location_description' => '<p>Mô tả <strong>vị trí chiến lược</strong></p>',
             'amenities_description' => '<p>Mô tả chung <strong>Tiện ích nổi bật</strong></p>',

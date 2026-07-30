@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarDays, CheckCircle2, HardHat } from "lucide-react";
+import { CheckCircle2, HardHat } from "lucide-react";
 import { useState } from "react";
 import ProjectImageGallery from "@/components/project-detail/ProjectImageGallery";
 import { ProjectSectionTitle, ProjectSupportingText } from "@/components/project-detail/ProjectTypography";
@@ -14,21 +14,16 @@ export default function ProjectTimelineGallerySection({ project }: Props) {
 
   const safeActiveIndex = Math.min(Math.max(activeIndex, 0), project.timeline.length - 1);
   const activeItem = project.timeline[safeActiveIndex];
-  const latestItem = project.timeline[project.timeline.length - 1];
   const sectionTitle = project.sectionTitles?.timeline;
   const panelId = `project-timeline-panel-${activeItem.key}`;
 
   return (
     <section id="tien-do" className="scroll-mt-32 py-2" aria-labelledby="project-timeline-heading">
-      <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+      <div className="mb-8">
         <div>
           <p className="text-[11px] font-bold tracking-[0.16em] text-gold">{sectionTitle?.eyebrow || "CẬP NHẬT DỰ ÁN"}</p>
           <ProjectSectionTitle id="project-timeline-heading" className="mt-2 normal-case">{sectionTitle?.title || "Tiến độ thi công"}</ProjectSectionTitle>
           <ProjectSupportingText className="mt-3 text-muted">Cập nhật các mốc thi công và hình ảnh thực tế mới nhất của dự án.</ProjectSupportingText>
-        </div>
-        <div className="inline-flex w-fit items-center gap-2 rounded-[10px] border border-line/90 bg-white px-4 py-3 text-sm text-muted shadow-[0_8px_24px_rgba(87,61,28,.04)]">
-          <CalendarDays className="h-5 w-5" aria-hidden="true" />
-          <span>Cập nhật gần nhất: {latestItem.date}</span>
         </div>
       </div>
 

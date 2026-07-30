@@ -3198,7 +3198,13 @@ export default function AdminProjects() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Dòng mô tả dưới tên dự án</label>
-                        <input value={formHeroSubtitle} onChange={(e) => setFormHeroSubtitle(e.target.value)} className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none" placeholder="Ví dụ: Biểu tượng sống mới tại trung tâm thành phố" />
+                        <textarea
+                          value={formHeroSubtitle}
+                          onChange={(e) => setFormHeroSubtitle(e.target.value)}
+                          rows={3}
+                          className="w-full resize-y px-3 py-2 border border-[#E8DCCB] rounded-xl bg-[#FBF8F2] text-sm focus:outline-none"
+                          placeholder="Ví dụ: Biểu tượng sống mới tại trung tâm thành phố"
+                        />
                       </div>
                       <div>
                         <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Nhãn nổi bật trên hero</label>
@@ -3274,7 +3280,13 @@ export default function AdminProjects() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Dòng mô tả dưới tên dự án</label>
-                        <input value={formHeroSubtitle} onChange={(e) => setFormHeroSubtitle(e.target.value)} className={inputClass} placeholder="Ví dụ: Trung tâm mới của TP. Thủ Đức" />
+                        <textarea
+                          value={formHeroSubtitle}
+                          onChange={(e) => setFormHeroSubtitle(e.target.value)}
+                          rows={3}
+                          className={`${inputClass} resize-y`}
+                          placeholder="Ví dụ: Trung tâm mới của TP. Thủ Đức"
+                        />
                       </div>
                       <div>
                         <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Nhãn nổi bật trên Hero</label>

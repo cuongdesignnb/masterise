@@ -145,7 +145,7 @@ export default function ProjectPricingPolicySection({ project }: Props) {
 
   return (
     <section className="project-pricing-policy rounded-[22px] border border-[#eadfce] bg-[#fffdf9] p-4 shadow-[0_18px_55px_rgba(87,61,28,.07)] sm:p-6 lg:p-8">
-      <header className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+      <header className="mb-6">
         <div className="min-w-0">
           <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#9c692b]">{eyebrow}</p>
           <ProjectSectionTitle className="mt-1">{title}</ProjectSectionTitle>
@@ -153,12 +153,6 @@ export default function ProjectPricingPolicySection({ project }: Props) {
             Thông tin giá bán, chính sách thanh toán, ưu đãi và tài liệu cập nhật của dự án.
           </p>
         </div>
-        {updatedDate ? (
-          <div className="inline-flex w-fit shrink-0 items-center gap-2 rounded-[9px] border border-[#eadfce] bg-white px-4 py-3 text-xs font-semibold text-[#6f665c]">
-            <CalendarDays className="h-4 w-4 text-[#9c692b]" aria-hidden="true" />
-            Cập nhật gần nhất: {updatedDate}
-          </div>
-        ) : null}
       </header>
 
       <div className={`grid items-stretch gap-5 ${preparedContent.html && gallery.length ? 'lg:grid-cols-[minmax(0,1.86fr)_minmax(330px,1fr)]' : ''}`}>
@@ -177,20 +171,18 @@ export default function ProjectPricingPolicySection({ project }: Props) {
               </details>
             ) : null}
 
-            <div className={`mt-4 ${preparedContent.headings.length >= 2 ? 'lg:grid lg:grid-cols-[174px_minmax(0,1fr)] lg:gap-5' : ''}`}>
-              {preparedContent.headings.length >= 2 ? (
-                <nav className="hidden self-start rounded-[10px] border border-[#eadfce] bg-[#fffdf9] p-3 lg:sticky lg:top-28 lg:block" aria-label="Mục lục bảng giá và chính sách">
-                  <p className="mb-3 text-sm font-semibold text-[#1f1b16]">Nội dung chính</p>
-                  <div className="space-y-1.5 border-l border-[#eadfce]">
-                    {preparedContent.headings.map((heading, index) => (
-                      <a key={heading.id} href={`#${heading.id}`} className={`block border-l-2 px-3 py-1.5 text-xs leading-5 transition ${index === 0 ? '-ml-px border-[#b88746] font-semibold text-[#9c692b]' : '-ml-px border-transparent text-[#6f665c] hover:border-[#d7b98d] hover:text-[#9c692b]'}`}>
-                        {heading.label}
-                      </a>
-                    ))}
-                  </div>
-                </nav>
-              ) : null}
+            {preparedContent.headings.length >= 2 ? (
+              <nav className="mt-4 hidden min-w-0 items-center gap-2 overflow-x-auto rounded-[10px] border border-[#eadfce] bg-[#fffdf9] p-2 lg:flex" aria-label="Mục lục bảng giá và chính sách">
+                <span className="shrink-0 px-2 text-xs font-semibold text-[#1f1b16]">Nội dung:</span>
+                {preparedContent.headings.map((heading, index) => (
+                  <a key={heading.id} href={`#${heading.id}`} className={`shrink-0 rounded-full border px-3 py-1.5 text-xs leading-5 transition ${index === 0 ? 'border-[#d8bc91] bg-[#fbf0dd] font-semibold text-[#9c692b]' : 'border-[#eadfce] bg-white text-[#6f665c] hover:border-[#d7b98d] hover:text-[#9c692b]'}`}>
+                    {heading.label}
+                  </a>
+                ))}
+              </nav>
+            ) : null}
 
+            <div className="mt-4 min-w-0">
               <div className="min-w-0">
                 <div
                   id="project-pricing-policy-content"

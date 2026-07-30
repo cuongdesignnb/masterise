@@ -561,6 +561,24 @@ body {
 .project-rich-content h4 { font-size: clamp(1rem, 0.7vw, 1.125rem); }
 .project-rich-content .ql-size-large { font-size: 1.125em; }
 .project-rich-content .ql-size-huge { font-size: 1.25em; }
+
+/* Keep large editor images readable inside the project overview on desktop. */
+@media (min-width: 768px) {
+  .project-overview-rich-content img {
+    display: block;
+    width: auto;
+    max-width: min(100%, 860px);
+    max-height: min(72vh, 720px);
+    object-fit: contain;
+    margin-inline: auto;
+  }
+
+  .project-overview-rich-content figure {
+    width: fit-content;
+    max-width: min(100%, 860px);
+    margin-inline: auto;
+  }
+}
 .rich-html-content .ql-font-serif { font-family: Georgia, "Times New Roman", serif; }
 .rich-html-content .ql-font-monospace { font-family: Monaco, "Courier New", monospace; }
 .rich-html-content .ql-color-white { color: #fff; }
