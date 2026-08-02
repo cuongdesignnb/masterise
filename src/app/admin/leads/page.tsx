@@ -572,13 +572,13 @@ export default function LeadManager() {
                           🏢 {lead.project.name}
                         </div>
                       )}
-                      {(lead.demand_type || lead.budget_range) && (
+                      {(lead.product_type || lead.demand_type || lead.budget_range) && (
                         <div className="text-[#8C7A6B] flex flex-col gap-0.5">
-                          {lead.demand_type && <span>Nhu cầu: {lead.demand_type}</span>}
+                          {(lead.product_type || lead.demand_type) && <span>Nhu cầu: {lead.product_type || lead.demand_type}</span>}
                           {lead.budget_range && <span>Ngân sách: {lead.budget_range}</span>}
                         </div>
                       )}
-                      {!lead.project && !lead.demand_type && !lead.budget_range && <span className="text-[#8C7A6B]/60">Chưa cập nhật</span>}
+                      {!lead.project && !lead.product_type && !lead.demand_type && !lead.budget_range && <span className="text-[#8C7A6B]/60">Chưa cập nhật</span>}
                     </td>
 
                     {/* UTM / Source */}
@@ -779,7 +779,7 @@ export default function LeadManager() {
                             </div>
                           </div>
                           <div>
-                            <div className="text-[#8C7A6B] mb-0.5">Mục đích mua:</div>
+                            <div className="text-[#8C7A6B] mb-0.5">Nhu cầu quan tâm:</div>
                             <div className="text-[#1F1B16] font-semibold">{leadDetails.demand_type || 'Chưa xác định'}</div>
                           </div>
                           <div>

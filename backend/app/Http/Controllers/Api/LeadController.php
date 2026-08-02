@@ -12,10 +12,19 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Validation\Rule;
 use Carbon\Carbon;
 
 class LeadController extends Controller
 {
+    private const PROJECT_DETAIL_INTEREST_OPTIONS = [
+        'Studio',
+        '1BR, 1BR+, 1BR+1MR',
+        '2BR, 2BR+, 2BR+1MR',
+        '3BR, 3BR+, 3BR+1MR, 3BR Lift',
+        '4BR, 4BR Lift, Duplex, Penthouse',
+    ];
+
     /**
      * Helper to normalize Vietnamese phone number.
      */
@@ -89,6 +98,8 @@ class LeadController extends Controller
      */
     public function submit(Request $request)
     {
+        $isProjectDetailConsultForm = $request->input('lead_source_position') === 'project_detail_consult_form';
+
         // 1. Anti-spam: Rate limit by real client IP (Temporarily disabled for testing)
         // $ip = $request->header('X-Real-IP') ?: ($request->header('X-Forwarded-For') ?: $request->ip());
         // $rateLimitKey = 'submit-lead:' . $ip;
@@ -120,11 +131,25 @@ class LeadController extends Controller
             'email' => 'nullable|email|max:255',
             'type' => 'nullable|string|in:contact,consultation,download_brochure,newsletter,schedule_visit,finance_consult',
             'message' => 'nullable|string',
-            'project_id' => 'nullable|exists:projects,id',
+            'project_id' => [
+                $isProjectDetailConsultForm ? 'required' : 'nullable',
+                'integer',
+                'exists:projects,id',
+            ],
             'user_id' => 'nullable|exists:users,id',
-            'demand_type' => 'nullable|string|max:100',
+            'demand_type' => [
+                $isProjectDetailConsultForm ? 'required' : 'nullable',
+                'string',
+                'max:100',
+                ...($isProjectDetailConsultForm ? [Rule::in(self::PROJECT_DETAIL_INTEREST_OPTIONS)] : []),
+            ],
             'budget_range' => 'nullable|string|max:100',
-            'product_type' => 'nullable|string|max:100',
+            'product_type' => [
+                $isProjectDetailConsultForm ? 'required' : 'nullable',
+                'string',
+                'max:100',
+                ...($isProjectDetailConsultForm ? [Rule::in(self::PROJECT_DETAIL_INTEREST_OPTIONS)] : []),
+            ],
             'utm_source' => 'nullable|string|max:100',
             'utm_medium' => 'nullable|string|max:100',
             'utm_campaign' => 'nullable|string|max:100',
@@ -143,6 +168,11 @@ class LeadController extends Controller
             'phone.required' => 'Vui lòng nhập Số điện thoại.',
             'email.email' => 'Địa chỉ email không chính xác.',
             'project_id.exists' => 'Dự án đã chọn không hợp lệ.',
+            'project_id.required' => 'Vui lòng xác định dự án khách hàng đang quan tâm.',
+            'demand_type.required' => 'Vui lòng chọn nhu cầu quan tâm.',
+            'demand_type.in' => 'Nhu cầu quan tâm chưa hợp lệ.',
+            'product_type.required' => 'Vui lòng chọn loại sản phẩm quan tâm.',
+            'product_type.in' => 'Loại sản phẩm quan tâm chưa hợp lệ.',
         ]);
 
         if ($validator->fails()) {

@@ -74,6 +74,14 @@ const iconMap: Record<ProjectIconName, LucideIcon> = {
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
+const PROJECT_CONSULT_INTEREST_OPTIONS = [
+  "Studio",
+  "1BR, 1BR+, 1BR+1MR",
+  "2BR, 2BR+, 2BR+1MR",
+  "3BR, 3BR+, 3BR+1MR, 3BR Lift",
+  "4BR, 4BR Lift, Duplex, Penthouse",
+] as const;
+
 function HorizontalTabRail({
   children,
   label,
@@ -175,14 +183,6 @@ function normalizeInfoLabel(value: string) {
     .trim();
 }
 
-function normalizeOption(value: unknown) {
-  return String(value || "").trim();
-}
-
-function isAllOption(value: string) {
-  return value.toLocaleLowerCase("vi-VN") === "tất cả";
-}
-
 function getYouTubeEmbedUrl(url: string) {
   const parsed = parseYouTubeVideoUrl(url);
   if (parsed) return parsed.embedUrl;
@@ -258,46 +258,6 @@ function ProjectVideoFrame({
       )}
     </div>
   );
-}
-
-function getConsultInterestOptions(project: ProjectDetail) {
-  const options = new Set<string>();
-
-  project.floorTabs.forEach((tab) => {
-    const label = normalizeOption(tab);
-    if (label && !isAllOption(label)) {
-      options.add(label);
-    }
-  });
-
-  project.floorPlans.forEach((plan) => {
-    const productType = normalizeOption(plan.productType);
-    const name = normalizeOption(plan.name);
-
-    if (productType && !isAllOption(productType)) {
-      options.add(productType);
-    } else if (name) {
-      options.add(name);
-    }
-  });
-
-  project.priceRows.forEach((row) => {
-    if (row.kind !== "row") return;
-    const productType = normalizeOption(row.productType);
-    if (productType && !isAllOption(productType)) {
-      options.add(productType);
-    }
-  });
-
-  if (options.size === 0) {
-    options.add("Tư vấn dự án hiện tại");
-    options.add("Căn hộ");
-    options.add("Duplex");
-    options.add("Penthouse");
-    options.add("Shophouse");
-  }
-
-  return Array.from(options);
 }
 
 function ProjectContainer({
@@ -435,7 +395,6 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
       tabs: group.tabs.filter((tab) => tab.items.length > 0),
     }))
     .filter((group) => group.tabs.length > 0), [project.floorPlanGroups, project.floorPlans, project.floorTabs]);
-  const consultInterestOptions = useMemo(() => getConsultInterestOptions(project), [project]);
   const projectVideoEmbedUrl = useMemo(() => project.videoUrl ? getYouTubeEmbedUrl(project.videoUrl) : "", [project.videoUrl]);
   const projectVideoThumbnailUrl = useMemo(
     () => project.videoThumbnailUrl || (project.videoUrl ? getYouTubeThumbnailUrl(project.videoUrl) : ""),
@@ -457,22 +416,18 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
   const [floorPlanLimit, setFloorPlanLimit] = useState(6);
   const [consultStatus, setConsultStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [consultError, setConsultError] = useState("");
-  const [consultForm, setConsultForm] = useState({
+  const [consultForm, setConsultForm] = useState<{
+    name: string;
+    phone: string;
+    email: string;
+    interest: string;
+  }>({
     name: "",
     phone: "",
     email: "",
-    interest: "",
+    interest: PROJECT_CONSULT_INTEREST_OPTIONS[0],
   });
   const heroSubtitleRefs = useRef<(HTMLParagraphElement | null)[]>([]);
-
-  useEffect(() => {
-    if (!consultForm.interest && consultInterestOptions.length > 0) {
-      setConsultForm((value) => ({
-        ...value,
-        interest: consultInterestOptions[0],
-      }));
-    }
-  }, [consultForm.interest, consultInterestOptions]);
 
   const handleConsultSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -494,7 +449,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
 
     try {
       const params = new URLSearchParams(window.location.search);
-      const selectedInterest = consultForm.interest || consultInterestOptions[0] || "Tư vấn dự án hiện tại";
+      const selectedInterest = consultForm.interest;
       await leadService.submitLead({
         name: consultForm.name.trim(),
         phone: consultForm.phone.trim(),
@@ -516,7 +471,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
       });
 
       setConsultStatus("success");
-      setConsultForm({ name: "", phone: "", email: "", interest: consultInterestOptions[0] || "Tư vấn dự án hiện tại" });
+      setConsultForm({ name: "", phone: "", email: "", interest: PROJECT_CONSULT_INTEREST_OPTIONS[0] });
     } catch (err: unknown) {
       setConsultError(err instanceof Error ? err.message : "Chưa thể gửi thông tin. Vui lòng thử lại sau.");
       setConsultStatus("error");
@@ -1688,12 +1643,13 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                 <label className="relative text-[11px] font-semibold text-muted">
                   Nhu cầu quan tâm
                   <select
+                    required
                     name="interest"
                     value={consultForm.interest}
                     onChange={(event) => setConsultForm((value) => ({ ...value, interest: event.target.value }))}
                     className="mt-1.5 w-full appearance-none rounded-[6px] border border-line bg-white/90 px-3 py-2.5 pr-8 text-base text-ink outline-none transition focus:border-gold sm:text-sm"
                   >
-                    {consultInterestOptions.map((option) => (
+                    {PROJECT_CONSULT_INTEREST_OPTIONS.map((option) => (
                       <option key={option} value={option}>
                         {option}
                       </option>
