@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import ProjectDetailPage, {
+import { ProjectDetailPage,
   generateMetadata as generateProjectMetadata,
 } from "@/app/du-an/[slug]/page";
 import NewsArticleDetailPage, {

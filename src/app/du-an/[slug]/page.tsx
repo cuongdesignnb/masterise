@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProjectDetailClient from "@/components/project-detail/ProjectDetailClient";
@@ -58,7 +58,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   });
 }
 
-export default async function ProjectDetailPage({ params }: PageProps) {
+/**
+ * Render the canonical project detail page. The root `/{slug}` route imports
+ * this named export so there is only one public URL for a project.
+ */
+export async function ProjectDetailPage({ params }: PageProps) {
   const { slug } = await params;
   const [projectData, siteEntity, featureFlags] = await Promise.all([
     getProjectForSEO(slug),
@@ -199,4 +203,19 @@ export default async function ProjectDetailPage({ params }: PageProps) {
       <Footer />
     </>
   );
+}
+
+/**
+ * `/du-an/{slug}` is the legacy project URL. Keep it as a permanent redirect
+ * so old links continue to work without exposing duplicate project content.
+ */
+export default async function LegacyProjectDetailRedirect({ params }: PageProps) {
+  const { slug } = await params;
+  const project = await getProjectForSEO(slug);
+
+  if (!project) {
+    notFound();
+  }
+
+  permanentRedirect(`/${project.slug}`);
 }
