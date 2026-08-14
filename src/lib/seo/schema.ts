@@ -84,11 +84,12 @@ export function buildWebSiteNode(operator: OperatorContext = { enabled: false })
 export interface WebPageNodeOptions {
   aboutId?: string;
   breadcrumbId?: string;
+  imageId?: string;
 }
 
 // 3. Build WebPage Node
 export function buildWebPageNode(canonical: string, title: string, description: string, options: WebPageNodeOptions = {}) {
-  const { aboutId, breadcrumbId } = options;
+  const { aboutId, breadcrumbId, imageId } = options;
 
   return {
     '@type': 'WebPage',
@@ -99,6 +100,7 @@ export function buildWebPageNode(canonical: string, title: string, description: 
     isPartOf: { '@id': `${SITE_URL}/#website` },
     about: aboutId ? { '@id': aboutId } : undefined,
     breadcrumb: breadcrumbId ? { '@id': breadcrumbId } : undefined,
+    primaryImageOfPage: imageId ? { '@id': imageId } : undefined,
   };
 }
 

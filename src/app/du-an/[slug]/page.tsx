@@ -10,13 +10,15 @@ import { getProjectForSEO } from "@/services/projectServerService";
 import { getSiteEntityConfig } from "@/services/siteEntityServerService";
 import { getSeoFeatureFlags } from "@/services/seoFeatureFlagsServerService";
 import { mapApiProjectToProjectDetail } from "@/adapters/projectAdapter";
-import { absoluteUrl, SITE_NAME, SITE_URL } from "@/config/seo";
+import type { Project as ApiProject } from "@/types/api";
+import { absoluteUrl, SITE_URL } from "@/config/seo";
 import { buildMetadata } from "@/lib/seo/buildMetadata";
 import {
   buildOperatorNode,
   buildWebSiteNode,
   buildWebPageNode,
   buildBreadcrumbSchema,
+  buildImageObjectNode,
   buildPlaceNode,
   buildResidenceNode,
   buildOffersNode,
@@ -31,6 +33,25 @@ interface PageProps {
 
 function stripHtml(value?: string | null) {
   return (value || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function collectProjectSchemaImages(project: ApiProject) {
+  const candidates = [
+    project.seo_meta?.og_image,
+    project.banner_image,
+    project.thumbnail,
+    ...(Array.isArray(project.gallery) ? project.gallery : []),
+    ...(Array.isArray(project.detail_gallery) ? project.detail_gallery : []),
+    project.map_image_url,
+    project.video_thumbnail_url,
+  ];
+
+  return Array.from(new Set(candidates
+    .map((value) => typeof value === "string" ? value.trim() : "")
+    .filter((value) => value.length > 0)
+    .filter((value) => !/^data:|^blob:/i.test(value))
+    .filter((value) => !/(^|\/)file\.svg(?:$|[?#])/i.test(value))
+    .map((value) => absoluteUrl(value))));
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -48,8 +69,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const seoTitle = project.seo_meta?.title ? { absolute: project.seo_meta.title } : project.name;
   const seoDescription = project.seo_meta?.description || project.description || `Thông tin chi tiết dự án ${project.name}.`;
   const seoImage = project.seo_meta?.og_image || project.banner_image || project.thumbnail || undefined;
-  const projectUrl = absoluteUrl(`/${project.slug}`);
-
   return buildMetadata({
     title: seoTitle,
     description: seoDescription,
@@ -76,13 +95,14 @@ export async function ProjectDetailPage({ params }: PageProps) {
 
   const projectDetail = mapApiProjectToProjectDetail(projectData);
   const projectUrl = `${SITE_URL}/${projectDetail.slug}`;
-  const projectImages = Array.from(new Set([
-    projectDetail.heroImage,
-    projectDetail.thumbnail,
-    ...projectDetail.gallery.images,
-    ...projectDetail.detailGallery.images,
-    projectDetail.mapImageUrl,
-  ].filter(Boolean).map((image) => absoluteUrl(image as string))));
+  const schemaDescription = stripHtml(projectDetail.description) || projectDetail.name;
+  // Use only real, crawlable project media. The UI adapter intentionally has
+  // a /file.svg placeholder for missing images; that placeholder must never
+  // be advertised as the project's structured-data image.
+  const projectImages = collectProjectSchemaImages(projectData);
+  const primaryImageNode = projectImages[0]
+    ? buildImageObjectNode(projectUrl, projectImages[0], projectDetail.name)
+    : null;
 
   // Numerical Price / Offer Nodes
   const priceMin = projectData.price_min ? Number(projectData.price_min) : undefined;
@@ -110,7 +130,15 @@ export async function ProjectDetailPage({ params }: PageProps) {
     worstRating: 1,
   } : undefined;
 
-  const reviewNodes = reviewsList.map((rev) => ({
+  const reviewNodes = reviewsList
+    .filter((rev) => {
+      const rating = Number(rev.rating);
+      return Boolean(rev.reviewer_name?.trim() && rev.review_body?.trim())
+        && Number.isFinite(rating)
+        && rating >= 1
+        && rating <= 5;
+    })
+    .map((rev) => ({
     "@type": "Review",
     author: {
       "@type": "Person",
@@ -124,7 +152,7 @@ export async function ProjectDetailPage({ params }: PageProps) {
       bestRating: 5,
       worstRating: 1,
     },
-  }));
+    }));
 
   // Eligibility Gate: Only emit Product schema if there is a valid offer or real reviews
   const schemaReviewSummary = featureFlags.projectReviewSchema ? aggregateRatingNode : undefined;
@@ -140,7 +168,7 @@ export async function ProjectDetailPage({ params }: PageProps) {
 
   const productNode = isProductEligible ? buildProductNode(projectUrl, {
     name: projectDetail.name,
-    description: projectDetail.description,
+    description: schemaDescription,
     images: projectImages,
     offers: offerNode || undefined,
     aggregateRating: schemaReviewSummary,
@@ -150,7 +178,11 @@ export async function ProjectDetailPage({ params }: PageProps) {
   // Base Semantic Graph Nodes
   const operatorNode = buildOperatorNode(effectiveSiteEntity);
   const websiteNode = buildWebSiteNode(operatorContext);
-  const webpageNode = buildWebPageNode(projectUrl, projectDetail.name, projectDetail.description, { aboutId: `${projectUrl}#residence`, breadcrumbId: `${projectUrl}#breadcrumb` });
+  const webpageNode = buildWebPageNode(projectUrl, projectDetail.name, schemaDescription, {
+    aboutId: `${projectUrl}#residence`,
+    breadcrumbId: `${projectUrl}#breadcrumb`,
+    imageId: primaryImageNode ? `${projectUrl}#primaryimage` : undefined,
+  });
   const breadcrumbNode = buildBreadcrumbSchema(projectUrl, [
     { name: "Trang chủ", item: "/" },
     { name: "Dự án", item: "/du-an" },
@@ -166,7 +198,7 @@ export async function ProjectDetailPage({ params }: PageProps) {
   const residenceNode = buildResidenceNode(
     projectUrl,
     projectDetail.name,
-    projectDetail.description,
+    schemaDescription,
     projectDetail.address,
     projectImages
   );
@@ -179,6 +211,7 @@ export async function ProjectDetailPage({ params }: PageProps) {
     websiteNode,
     webpageNode,
     breadcrumbNode,
+    primaryImageNode,
     placeNode,
     residenceNode,
     productNode,

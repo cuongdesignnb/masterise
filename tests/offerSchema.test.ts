@@ -56,3 +56,14 @@ test('rendered project Product schema preserves the Admin OutOfStock URL', () =>
   assert.equal(renderedSchema['@graph'][0].offers.availability, OUT_OF_STOCK);
   assert.doesNotMatch(JSON.stringify(renderedSchema), /schema\.org\/InStock/);
 });
+
+test('nested Product offers stay inline without a dangling graph id', () => {
+  const offer = buildOffersNode('https://example.test/project', {
+    lowPrice: 8_500_000_000,
+    highPrice: 12_000_000_000,
+    priceCurrency: 'VND',
+  });
+
+  assert.equal(offer?.['@type'], 'AggregateOffer');
+  assert.equal(offer && '@id' in offer ? offer['@id'] : undefined, undefined);
+});

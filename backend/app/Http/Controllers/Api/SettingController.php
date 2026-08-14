@@ -8,6 +8,7 @@ use App\Support\ContactPageContent;
 use App\Support\SiteEntityContent;
 use App\Support\PublicContentCache;
 use App\Support\SeoFeatureFlags;
+use App\Support\NextCacheRevalidator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
@@ -137,6 +138,11 @@ class SettingController extends Controller
         foreach ($settings as $item) {
             Setting::set($item['key'], $item['value'], $item['type']);
         }
+
+        // Feature flags and site-entity settings are read by Next.js server
+        // components. Invalidate those tagged fetches immediately after an
+        // admin save instead of waiting for the normal revalidation window.
+        NextCacheRevalidator::tags(['settings', 'seo-feature-flags']);
 
         return response()->json([
             'success' => true,

@@ -39,7 +39,6 @@ export function buildOffersNode(canonical: string, input: OfferInput) {
   if (input.lowPrice && input.lowPrice > 0) {
     return {
       '@type': 'AggregateOffer',
-      '@id': `${canonical}#offers`,
       url: canonical,
       priceCurrency: input.priceCurrency || 'VND',
       lowPrice: input.lowPrice,
@@ -52,7 +51,6 @@ export function buildOffersNode(canonical: string, input: OfferInput) {
   if (input.price && input.price > 0) {
     return {
       '@type': 'Offer',
-      '@id': `${canonical}#offers`,
       url: canonical,
       priceCurrency: input.priceCurrency || 'VND',
       price: input.price,
