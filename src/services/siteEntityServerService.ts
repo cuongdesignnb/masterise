@@ -36,7 +36,19 @@ export async function getSiteEntityConfig(): Promise<SiteEntityConfig> {
     if (!rawEntity) return FALLBACK_SITE_ENTITY;
 
     const parsed = typeof rawEntity === 'string' ? JSON.parse(rawEntity) : rawEntity;
-    const validated = validateSiteEntity(parsed);
+    const entity = parsed && typeof parsed === 'object' ? parsed as Record<string, unknown> : {};
+    const publicSettings = json?.data && typeof json.data === 'object'
+      ? json.data as Record<string, unknown>
+      : {};
+    const validated = validateSiteEntity({
+      ...entity,
+      logoUrl: entity.logoUrl || publicSettings.logo_url,
+      email: entity.email || publicSettings.email,
+      telephone: entity.telephone || publicSettings.hotline,
+      address: entity.address || (publicSettings.company_address
+        ? { streetAddress: publicSettings.company_address, addressCountry: 'VN' }
+        : undefined),
+    });
 
     if (!validated || json?.data?.seo_site_entity_enabled !== true) {
       return FALLBACK_SITE_ENTITY;

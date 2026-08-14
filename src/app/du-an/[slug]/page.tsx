@@ -120,8 +120,15 @@ export async function ProjectDetailPage({ params }: PageProps) {
   // Real Reviews and Summary from Backend
   const reviewsList = projectData.reviews?.items ?? [];
   const reviewSummary = projectData.reviews?.aggregate ?? null;
+  const validReviewCount = reviewsList.filter((rev) => {
+    const rating = Number(rev.rating);
+    return Boolean(rev.reviewer_name?.trim() && rev.review_body?.trim())
+      && Number.isFinite(rating)
+      && rating >= 1
+      && rating <= 5;
+  }).length;
 
-  const aggregateRatingNode = reviewSummary && reviewSummary.ratingCount > 0 ? {
+  const aggregateRatingNode = reviewSummary && reviewSummary.ratingCount > 0 && validReviewCount > 0 ? {
     "@type": "AggregateRating",
     ratingValue: reviewSummary.ratingValue,
     ratingCount: reviewSummary.ratingCount,
@@ -130,35 +137,13 @@ export async function ProjectDetailPage({ params }: PageProps) {
     worstRating: 1,
   } : undefined;
 
-  const reviewNodes = reviewsList
-    .filter((rev) => {
-      const rating = Number(rev.rating);
-      return Boolean(rev.reviewer_name?.trim() && rev.review_body?.trim())
-        && Number.isFinite(rating)
-        && rating >= 1
-        && rating <= 5;
-    })
-    .map((rev) => ({
-    "@type": "Review",
-    author: {
-      "@type": "Person",
-      name: rev.reviewer_name,
-    },
-    datePublished: rev.reviewed_at || undefined,
-    reviewBody: rev.review_body,
-    reviewRating: {
-      "@type": "Rating",
-      ratingValue: Number(rev.rating),
-      bestRating: 5,
-      worstRating: 1,
-    },
-    }));
-
-  // Eligibility Gate: Only emit Product schema if there is a valid offer or real reviews
+  // Keep one aggregate rating on the Product. Individual Review nodes are
+  // rendered visibly in the page UI, but nesting every review under Product
+  // makes Google's review parser create one rich-result item per review and
+  // report "Review has multiple aggregate ratings" for the same product.
   const schemaReviewSummary = featureFlags.projectReviewSchema ? aggregateRatingNode : undefined;
-  const schemaReviewNodes = featureFlags.projectReviewSchema ? reviewNodes : [];
   const isProductEligible = featureFlags.projectProductSchema
-    && (!!offerNode || !!schemaReviewSummary || schemaReviewNodes.length > 0);
+    && (!!offerNode || !!schemaReviewSummary);
 
   const effectiveSiteEntity = {
     ...siteEntity,
@@ -172,7 +157,6 @@ export async function ProjectDetailPage({ params }: PageProps) {
     images: projectImages,
     offers: offerNode || undefined,
     aggregateRating: schemaReviewSummary,
-    reviews: schemaReviewNodes.length > 0 ? schemaReviewNodes : undefined,
   }, operatorContext) : null;
 
   // Base Semantic Graph Nodes

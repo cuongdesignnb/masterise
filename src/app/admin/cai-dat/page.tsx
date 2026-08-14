@@ -288,6 +288,7 @@ export default function AdminSettings() {
   const [entityLogoUrl, setEntityLogoUrl] = useState('');
   const [entityEmail, setEntityEmail] = useState('');
   const [entityTelephone, setEntityTelephone] = useState('');
+  const [entityPriceRange, setEntityPriceRange] = useState('');
   const [entityStreetAddress, setEntityStreetAddress] = useState('');
   const [entityLocality, setEntityLocality] = useState('');
   const [entityRegion, setEntityRegion] = useState('');
@@ -350,6 +351,7 @@ export default function AdminSettings() {
       setEntityLogoUrl(entity?.logoUrl || '');
       setEntityEmail(entity?.email || '');
       setEntityTelephone(entity?.telephone || '');
+      setEntityPriceRange(entity?.priceRange || '');
       setEntityStreetAddress(entity?.address?.streetAddress || '');
       setEntityLocality(entity?.address?.addressLocality || '');
       setEntityRegion(entity?.address?.addressRegion || '');
@@ -806,6 +808,7 @@ export default function AdminSettings() {
               logoUrl: entityLogoUrl,
               email: entityEmail,
               telephone: entityTelephone,
+              priceRange: entityPriceRange,
               address: {
                 streetAddress: entityStreetAddress,
                 addressLocality: entityLocality,
@@ -3524,6 +3527,18 @@ export default function AdminSettings() {
                       value={entityTelephone}
                       onChange={(e) => setEntityTelephone(e.target.value)}
                       placeholder="Ví dụ: +84988888888"
+                      className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl text-xs focus:outline-none focus:border-[#B88746]"
+                    />
+                  </div>
+
+                  {/* Price range */}
+                  <div>
+                    <label className="block text-xs font-semibold text-[#8C7A6B] mb-1">Khoảng giá hiển thị cho Google</label>
+                    <input
+                      type="text"
+                      value={entityPriceRange}
+                      onChange={(e) => setEntityPriceRange(e.target.value)}
+                      placeholder="Ví dụ: $$$"
                       className="w-full px-3 py-2 border border-[#E8DCCB] rounded-xl text-xs focus:outline-none focus:border-[#B88746]"
                     />
                   </div>

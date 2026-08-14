@@ -61,7 +61,9 @@ export function buildOperatorNode(config: SiteEntityConfig) {
     taxID: config.taxId,
     url: config.url,
     logo: logoUrl ? { '@type': 'ImageObject', url: logoUrl } : undefined,
+    image: logoUrl || undefined,
     telephone,
+    priceRange: config.priceRange || undefined,
     email,
     address,
     sameAs: config.sameAs && config.sameAs.length > 0 ? config.sameAs : undefined,
@@ -174,7 +176,6 @@ export interface ProductInput {
   images?: string[];
   offers?: Record<string, unknown>;
   aggregateRating?: Record<string, unknown>;
-  reviews?: Array<Record<string, unknown>>;
 }
 
 export function buildProductNode(canonical: string, input: ProductInput, operator: OperatorContext = { enabled: false }) {
@@ -187,7 +188,6 @@ export function buildProductNode(canonical: string, input: ProductInput, operato
     brand: operator.enabled && operator.id ? { '@id': operator.id } : undefined,
     offers: input.offers || undefined,
     aggregateRating: input.aggregateRating || undefined,
-    review: input.reviews && input.reviews.length > 0 ? input.reviews : undefined,
   };
 }
 

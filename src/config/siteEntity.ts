@@ -10,6 +10,7 @@ export interface SiteEntityConfig {
   logoUrl?: string;
   email?: string;
   telephone?: string;
+  priceRange?: string;
   address?: {
     streetAddress?: string;
     addressLocality?: string;
@@ -40,6 +41,7 @@ export function validateSiteEntity(config: unknown): SiteEntityConfig | null {
     logoUrl: raw.logoUrl ? String(raw.logoUrl).trim() : undefined,
     email: raw.email ? String(raw.email).trim() : undefined,
     telephone: raw.telephone ? String(raw.telephone).trim() : undefined,
+    priceRange: raw.priceRange ? String(raw.priceRange).trim() : undefined,
     address: raw.address
       ? {
           streetAddress: raw.address.streetAddress ? String(raw.address.streetAddress).trim() : undefined,

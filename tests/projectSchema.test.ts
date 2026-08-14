@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { buildProductNode, buildWebPageNode } from '../src/lib/seo/schema';
+import { buildOperatorNode, buildProductNode, buildWebPageNode } from '../src/lib/seo/schema';
 
 test('project Product schema keeps crawlable image URLs and review data', () => {
   const node = buildProductNode('https://example.test/project', {
@@ -17,6 +17,7 @@ test('project Product schema keeps crawlable image URLs and review data', () => 
 
   assert.deepEqual(node.image, ['https://cdn.example.test/project.webp']);
   assert.equal(node.aggregateRating?.ratingValue, 4.8);
+  assert.equal('review' in node, false);
 });
 
 test('project WebPage links its primary image only when one is defined', () => {
@@ -30,4 +31,21 @@ test('project WebPage links its primary image only when one is defined', () => {
   assert.deepEqual(node.primaryImageOfPage, {
     '@id': 'https://example.test/project#primaryimage',
   });
+});
+
+test('operator schema exposes configured business image and price range', () => {
+  const node = buildOperatorNode({
+    enabled: true,
+    type: 'RealEstateAgent',
+    name: 'Example Homes',
+    url: 'https://example.test',
+    logoUrl: 'https://example.test/logo.png',
+    telephone: '+84123456789',
+    priceRange: '$$$',
+    sameAs: [],
+  });
+
+  assert.equal(node?.image, 'https://example.test/logo.png');
+  assert.equal(node?.telephone, '+84123456789');
+  assert.equal(node?.priceRange, '$$$');
 });
