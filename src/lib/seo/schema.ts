@@ -33,6 +33,11 @@ export function buildOperatorNode(config: SiteEntityConfig) {
   const telephone = config.telephone || undefined;
   const email = config.email || undefined;
   const logoUrl = config.logoUrl || OPERATOR_LOGO;
+  // `priceRange` is a qualitative signal for LocalBusiness (for example `$$$`),
+  // not a project price. Keep the admin value authoritative and provide a
+  // conservative premium-business default so the rendered node remains
+  // complete when the optional setting has not been configured yet.
+  const priceRange = config.priceRange?.trim() || '$$$';
   
   const address = config.address
     ? {
@@ -63,7 +68,7 @@ export function buildOperatorNode(config: SiteEntityConfig) {
     logo: logoUrl ? { '@type': 'ImageObject', url: logoUrl } : undefined,
     image: logoUrl || undefined,
     telephone,
-    priceRange: config.priceRange || undefined,
+    priceRange,
     email,
     address,
     sameAs: config.sameAs && config.sameAs.length > 0 ? config.sameAs : undefined,

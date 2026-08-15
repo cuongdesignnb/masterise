@@ -49,3 +49,15 @@ test('operator schema exposes configured business image and price range', () => 
   assert.equal(node?.telephone, '+84123456789');
   assert.equal(node?.priceRange, '$$$');
 });
+
+test('operator schema supplies a valid default price range when not configured', () => {
+  const node = buildOperatorNode({
+    enabled: true,
+    type: 'RealEstateAgent',
+    name: 'Example Homes',
+    url: 'https://example.test',
+    sameAs: [],
+  });
+
+  assert.equal(node?.priceRange, '$$$');
+});
