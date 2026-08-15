@@ -1,14 +1,12 @@
 'use client';
 
-import React from 'react';
+import { useEffect, useMemo } from 'react';
 
 interface JsonLdProps {
   schema: Record<string, any> | Record<string, any>[] | null | undefined;
 }
 
 export default function JsonLd({ schema }: JsonLdProps) {
-  if (!schema) return null;
-
   // Clean empty values recursively to keep schema lightweight
   const cleanSchema = (obj: any): any => {
     if (Array.isArray(obj)) {
@@ -29,15 +27,33 @@ export default function JsonLd({ schema }: JsonLdProps) {
     return obj;
   };
 
-  const finalSchema = cleanSchema(schema);
-  if (!finalSchema) return null;
+  const serializedSchema = useMemo(() => {
+    if (!schema) return null;
 
-  return (
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{
-        __html: JSON.stringify(finalSchema).replace(/</g, '\\u003c'),
-      }}
-    />
-  );
+    const finalSchema = cleanSchema(schema);
+    if (!finalSchema) return null;
+
+    return JSON.stringify(finalSchema).replace(/</g, '\\u003c');
+  }, [schema]);
+
+  // Inject after hydration so Next's RSC payload cannot expose a second
+  // application/ld+json copy to crawlers such as Google's Rich Results Test.
+  useEffect(() => {
+    const existing = document.getElementById('masterise-jsonld');
+    existing?.remove();
+
+    if (!serializedSchema) return;
+
+    const script = document.createElement('script');
+    script.id = 'masterise-jsonld';
+    script.type = 'application/ld+json';
+    script.textContent = serializedSchema;
+    document.head.appendChild(script);
+
+    return () => {
+      script.remove();
+    };
+  }, [serializedSchema]);
+
+  return null;
 }
