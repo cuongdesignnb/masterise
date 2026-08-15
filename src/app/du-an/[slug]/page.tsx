@@ -108,11 +108,15 @@ export async function ProjectDetailPage({ params }: PageProps) {
   const priceMin = projectData.price_min ? Number(projectData.price_min) : undefined;
   const priceMax = projectData.price_max ? Number(projectData.price_max) : undefined;
   const schemaPrice = projectDetail.schemaPrice ? Number(projectDetail.schemaPrice) : undefined;
+  const offerCount = projectDetail.floorPlans.filter((plan) => {
+    return Boolean(plan.name?.trim() || plan.productType?.trim());
+  }).length;
 
   const offerNode = buildOffersNode(projectUrl, {
     price: schemaPrice || (priceMin && !priceMax ? priceMin : undefined),
     lowPrice: priceMin && priceMax && priceMax > priceMin ? priceMin : undefined,
     highPrice: priceMin && priceMax && priceMax > priceMin ? priceMax : undefined,
+    offerCount: offerCount > 0 ? offerCount : undefined,
     priceCurrency: projectDetail.schemaPriceCurrency || "VND",
     availability: projectDetail.schemaAvailability || undefined,
   });

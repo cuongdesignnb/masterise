@@ -67,3 +67,14 @@ test('nested Product offers stay inline without a dangling graph id', () => {
   assert.equal(offer?.['@type'], 'AggregateOffer');
   assert.equal(offer && '@id' in offer ? offer['@id'] : undefined, undefined);
 });
+
+test('AggregateOffer preserves a real published offer count', () => {
+  const offer = buildOffersNode('https://example.test/project', {
+    lowPrice: 8_500_000_000,
+    highPrice: 12_000_000_000,
+    offerCount: 6,
+    priceCurrency: 'VND',
+  });
+
+  assert.equal(offer?.offerCount, 6);
+});
