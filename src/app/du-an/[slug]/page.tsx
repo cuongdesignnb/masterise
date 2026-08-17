@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound, permanentRedirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProjectDetailClient from "@/components/project-detail/ProjectDetailClient";
@@ -227,16 +227,10 @@ export async function ProjectDetailPage({ params }: PageProps) {
 }
 
 /**
- * `/du-an/{slug}` is the legacy project URL. Keep it as a permanent redirect
- * so old links continue to work without exposing duplicate project content.
+ * Legacy `/du-an/{slug}` requests are resolved by `src/proxy.ts` before the
+ * route can render. Keep a non-redirect fallback so there is one redirect
+ * owner and unknown requests remain a real 404.
  */
-export default async function LegacyProjectDetailRedirect({ params }: PageProps) {
-  const { slug } = await params;
-  const project = await getProjectForSEO(slug);
-
-  if (!project) {
-    notFound();
-  }
-
-  permanentRedirect(`/${project.slug}`);
+export default function LegacyProjectDetailNotFound() {
+  notFound();
 }

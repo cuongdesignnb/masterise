@@ -5,13 +5,6 @@ const nextConfig: NextConfig = {
   compiler: {
     removeConsole: process.env.NODE_ENV === "production",
   },
-  async redirects() {
-    return [
-      { source: "/du-an/:slug", destination: "/:slug", permanent: true },
-      { source: "/tin-tuc/:slug", destination: "/:slug", permanent: true },
-      { source: "/dau-tu/:slug", destination: "/:slug", permanent: true },
-    ];
-  },
   images: {
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],

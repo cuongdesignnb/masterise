@@ -3,12 +3,8 @@ import { notFound } from "next/navigation";
 import { ProjectDetailPage,
   generateMetadata as generateProjectMetadata,
 } from "@/app/du-an/[slug]/page";
-import NewsArticleDetailPage, {
-  generateMetadata as generateNewsMetadata,
-} from "@/app/tin-tuc/[slug]/page";
-import InvestmentDetailPage, {
-  generateMetadata as generateInvestmentMetadata,
-} from "@/app/dau-tu/[slug]/page";
+import { NewsArticlePage, generateNewsMetadata } from "@/app/tin-tuc/[slug]/page";
+import { InvestmentPage, generateInvestmentMetadata } from "@/app/dau-tu/[slug]/page";
 import { resolvePublicSlug } from "@/lib/publicSlugResolver";
 
 type Props = {
@@ -34,8 +30,8 @@ export default async function PublicSlugPage(props: Props) {
   const kind = await resolvePublicSlug(slug);
 
   if (kind === "project") return ProjectDetailPage(props);
-  if (kind === "news") return NewsArticleDetailPage(props);
-  if (kind === "investment") return InvestmentDetailPage(props);
+  if (kind === "news") return NewsArticlePage(props);
+  if (kind === "investment") return InvestmentPage(props);
 
   notFound();
 }

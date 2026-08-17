@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound, permanentRedirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import MobileTabBar from "@/components/MobileTabBar";
@@ -42,7 +42,8 @@ async function getInvestmentPost(slug: string): Promise<PostDetailResponse | nul
   return data;
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+/** Metadata for the canonical root `/{slug}` investment renderer. */
+export async function generateInvestmentMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const data = await getInvestmentPost(slug);
   const post = data?.post;
@@ -71,7 +72,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   });
 }
 
-export default async function InvestmentDetailPage({ params }: Props) {
+export async function InvestmentPage({ params }: Props) {
   const { slug } = await params;
   const [data, siteEntity, featureFlags] = await Promise.all([
     getInvestmentPost(slug),
@@ -80,7 +81,6 @@ export default async function InvestmentDetailPage({ params }: Props) {
   ]);
 
   if (!data?.post) notFound();
-  if (data.post.post_type === "news") permanentRedirect(`/${data.post.slug}`);
 
   const { post, inline_related = [], related = [], previous = null, next = null } = data;
   const postUrl = `${SITE_URL}/${post.slug}`;
@@ -220,4 +220,13 @@ export default async function InvestmentDetailPage({ params }: Props) {
       <Footer />
     </>
   );
+}
+
+/**
+ * Legacy `/dau-tu/{slug}` requests are resolved by `src/proxy.ts` before the
+ * route can render. Keep a non-redirect fallback so there is one redirect
+ * owner and unknown requests remain a real 404.
+ */
+export default function LegacyInvestmentNotFound() {
+  notFound();
 }
