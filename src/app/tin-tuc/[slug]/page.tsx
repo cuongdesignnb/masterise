@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { cache } from "react";
-import { notFound, permanentRedirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import MobileTabBar from "@/components/MobileTabBar";
@@ -71,7 +71,8 @@ function getPostMetaDescription(post: PostDetailResponse["post"]) {
   return `${shortened.slice(0, lastSpace > 120 ? lastSpace : 180).trim()}…`;
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+/** Metadata for the canonical root `/{slug}` news renderer. */
+export async function generateNewsMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const data = await getPost(slug);
   const post = data?.post;
@@ -100,7 +101,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   });
 }
 
-export default async function NewsArticleDetailPage({ params }: Props) {
+export async function NewsArticlePage({ params }: Props) {
   const { slug } = await params;
   const [data, siteEntity] = await Promise.all([
     getPost(slug),
@@ -108,7 +109,6 @@ export default async function NewsArticleDetailPage({ params }: Props) {
   ]);
 
   if (!data?.post) notFound();
-  if (data.post.post_type !== "news") permanentRedirect(`/${data.post.slug}`);
 
   const { post, inline_related = [], related = [], previous = null, next = null } = data;
   const postUrl = `${SITE_URL}/${post.slug}`;
@@ -186,4 +186,13 @@ export default async function NewsArticleDetailPage({ params }: Props) {
       <Footer />
     </>
   );
+}
+
+/**
+ * Legacy `/tin-tuc/{slug}` requests are resolved by `src/proxy.ts` before the
+ * route can render. Keep a non-redirect fallback so there is one redirect
+ * owner and unknown requests remain a real 404.
+ */
+export default function LegacyNewsArticleNotFound() {
+  notFound();
 }
