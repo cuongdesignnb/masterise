@@ -61,7 +61,7 @@ export default function AdminSettings() {
   const queryClient = useQueryClient();
   const toast = useToast();
   const [activeTab, setActiveTab] = useState<'general' | 'homepage' | 'about' | 'contact' | 'projects_page' | 'news_page' | 'smtp' | 'footer' | 'site_entity'>('general');
-  const [mediaTarget, setMediaTarget] = useState<{ type: 'logo' | 'entity_logo' | 'home_about_image' | 'projects_hero_image' | 'projects_cta_image' | 'news_hero_image' | 'about_hero_image' | 'about_intro_image_0' | 'about_intro_image_1' | 'about_intro_image_2' | 'about_sustainability_image' | 'about_brand_story_image' | 'about_contact_cta_image' | 'about_collection_image'; index?: number } | null>(null);
+  const [mediaTarget, setMediaTarget] = useState<{ type: 'logo' | 'favicon' | 'entity_logo' | 'home_about_image' | 'projects_hero_image' | 'projects_cta_image' | 'news_hero_image' | 'about_hero_image' | 'about_intro_image_0' | 'about_intro_image_1' | 'about_intro_image_2' | 'about_sustainability_image' | 'about_brand_story_image' | 'about_contact_cta_image' | 'about_collection_image'; index?: number } | null>(null);
 
   const [footerNavigation, setFooterNavigation] = useState<{ title: string; links: { label: string; href: string }[] }[]>([]);
   const [suggestTarget, setSuggestTarget] = useState<{ colIdx: number; linkIdx: number } | null>(null);
@@ -119,6 +119,7 @@ export default function AdminSettings() {
   const [hotline, setHotline] = useState('');
   const [email, setEmail] = useState('');
   const [logoUrl, setLogoUrl] = useState('');
+  const [faviconUrl, setFaviconUrl] = useState('');
   
   // SMTP settings states
   const [mailHost, setMailHost] = useState('');
@@ -340,6 +341,7 @@ export default function AdminSettings() {
       setHotline(getVal('hotline'));
       setEmail(getVal('email'));
       setLogoUrl(getVal('logo_url'));
+      setFaviconUrl(getVal('favicon_url'));
 
       const entity = getVal('site_entity', 'json');
       setEntityEnabled(!!entity?.enabled);
@@ -626,6 +628,7 @@ export default function AdminSettings() {
           { key: 'hotline', value: hotline, type: 'string' },
           { key: 'email', value: email, type: 'string' },
           { key: 'logo_url', value: logoUrl, type: 'string' },
+          { key: 'favicon_url', value: faviconUrl, type: 'string' },
           { key: 'mail_host', value: mailHost, type: 'string' },
           { key: 'mail_port', value: mailPort, type: 'string' },
           { key: 'mail_username', value: mailUsername, type: 'string' },
@@ -877,6 +880,8 @@ export default function AdminSettings() {
     if (!mediaTarget) return;
     if (mediaTarget.type === 'logo') {
       setLogoUrl(url as string);
+    } else if (mediaTarget.type === 'favicon') {
+      setFaviconUrl(url as string);
     } else if (mediaTarget.type === 'entity_logo') {
       setEntityLogoUrl(url as string);
     } else if (mediaTarget.type === 'home_about_image') {
@@ -1085,6 +1090,41 @@ export default function AdminSettings() {
                       className="px-3 py-1.5 bg-[#1F1B16] hover:bg-[#B88746] text-white text-xs font-semibold rounded-lg transition-colors"
                     >
                       Chọn logo từ Thư viện
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Browser Favicon */}
+              <div className="space-y-2 border-t border-[#E8DCCB]/60 pt-5">
+                <div>
+                  <label className="block text-xs font-semibold text-[#8C7A6B]">Favicon website</label>
+                  <p className="mt-1 text-[11px] text-[#8C7A6B]">
+                    Chọn file ICO chuẩn (khuyến nghị có đủ kích thước 16/32/48). File này được dùng cho biểu tượng tab trình duyệt.
+                  </p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#E8DCCB] bg-[#FBF8F2]">
+                    {faviconUrl ? (
+                      <img src={faviconUrl} alt="Favicon preview" className="h-10 w-10 object-contain" />
+                    ) : (
+                      <img src="/favicon.ico" alt="Favicon mặc định" className="h-10 w-10 object-contain" />
+                    )}
+                  </div>
+                  <div className="flex flex-1 gap-2">
+                    <input
+                      type="url"
+                      value={faviconUrl}
+                      onChange={(e) => setFaviconUrl(e.target.value)}
+                      className="min-w-0 flex-1 rounded-xl border border-[#E8DCCB] bg-[#FBF8F2] px-3 py-1.5 text-xs focus:outline-none"
+                      placeholder="URL favicon .ico hoặc .png"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setMediaTarget({ type: 'favicon' })}
+                      className="shrink-0 rounded-lg bg-[#1F1B16] px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[#B88746]"
+                    >
+                      Chọn favicon
                     </button>
                   </div>
                 </div>
@@ -3684,6 +3724,7 @@ export default function AdminSettings() {
             isOpen={mediaTarget !== null}
             onClose={() => setMediaTarget(null)}
             onSelect={handleMediaSelected}
+            kind={mediaTarget?.type === 'favicon' ? 'image' : 'all'}
           />
         )}
       </AnimatePresence>

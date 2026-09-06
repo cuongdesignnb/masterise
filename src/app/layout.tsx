@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Roboto } from "next/font/google";
 import { DEFAULT_OG_IMAGE, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/config/seo";
+import { getServerApiUrl } from "@/lib/serverApi";
 import "./globals.css";
 
 const roboto = Roboto({
@@ -10,7 +11,7 @@ const roboto = Roboto({
   display: "swap",
 });
 
-export const metadata: Metadata = {
+const baseMetadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
     default: `${SITE_NAME} - Bất động sản cao cấp và hạng sang`,
@@ -31,6 +32,14 @@ export const metadata: Metadata = {
   authors: [{ name: SITE_NAME }],
   creator: SITE_NAME,
   publisher: SITE_NAME,
+  // Keep a conventional same-origin fallback. When an administrator selects
+  // a favicon in Settings, generateMetadata replaces these URLs with the
+  // configured media URL.
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/apple-icon.png",
+  },
   openGraph: {
     type: "website",
     locale: "vi_VN",
@@ -58,6 +67,39 @@ export const metadata: Metadata = {
     },
   },
 };
+
+/**
+ * Resolve the site favicon from the public settings so an administrator can
+ * change it without rebuilding the frontend. The bundled app icons remain the
+ * fallback when no favicon has been configured yet.
+ */
+export async function generateMetadata(): Promise<Metadata> {
+  try {
+    const response = await fetch(`${getServerApiUrl()}/settings/public`, {
+      next: { revalidate: 60, tags: ["settings"] },
+      headers: { Accept: "application/json" },
+    });
+    const payload = await response.json().catch(() => null) as { data?: { favicon_url?: unknown } } | null;
+    const configuredFavicon = typeof payload?.data?.favicon_url === "string"
+      ? payload.data.favicon_url.trim()
+      : "";
+
+    if (configuredFavicon && /^https?:\/\//i.test(configuredFavicon)) {
+      return {
+        ...baseMetadata,
+        icons: {
+          icon: configuredFavicon,
+          shortcut: configuredFavicon,
+          apple: configuredFavicon,
+        },
+      };
+    }
+  } catch {
+    // Keep the bundled favicon when the settings API is unavailable.
+  }
+
+  return baseMetadata;
+}
 
 import Providers from "./providers";
 

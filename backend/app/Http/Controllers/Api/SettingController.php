@@ -21,7 +21,7 @@ class SettingController extends Controller
     public function publicSettings()
     {
         $settings = PublicContentCache::remember('settings.public', ['schema' => 3], 600, function (): array {
-            $keys = ['company_name', 'company_address', 'hotline', 'email', 'social_links', 'homepage_meta', 'home_page_content', 'logo_url', 'about_mission', 'about_vision', 'about_timeline', 'contact_departments', 'contact_page_content', 'projects_page_hero', 'projects_page_cta', 'news_page_hero', 'news_page_cta', 'about_page_hero', 'about_page_intro', 'about_page_metrics', 'about_page_values', 'about_page_awards', 'about_page_ecosystem', 'about_page_sustainability', 'about_page_why_choose', 'about_page_brand_story', 'about_page_faqs', 'about_page_contact_cta', 'about_page_collections', 'footer_navigation', 'career_page_content', 'site_entity'];
+            $keys = ['company_name', 'company_address', 'hotline', 'email', 'social_links', 'homepage_meta', 'home_page_content', 'logo_url', 'favicon_url', 'about_mission', 'about_vision', 'about_timeline', 'contact_departments', 'contact_page_content', 'projects_page_hero', 'projects_page_cta', 'news_page_hero', 'news_page_cta', 'about_page_hero', 'about_page_intro', 'about_page_metrics', 'about_page_values', 'about_page_awards', 'about_page_ecosystem', 'about_page_sustainability', 'about_page_why_choose', 'about_page_brand_story', 'about_page_faqs', 'about_page_contact_cta', 'about_page_collections', 'footer_navigation', 'career_page_content', 'site_entity'];
             $values = [];
 
             foreach ($keys as $key) {

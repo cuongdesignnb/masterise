@@ -17,7 +17,9 @@ class MediaStorageService
         $extension = strtolower($file->getClientOriginalExtension());
         $mimeType = (string) $file->getClientMimeType();
 
-        if (str_starts_with($mimeType, 'image/') && ! in_array($extension, ['gif', 'svg', 'webp'], true)) {
+        // Favicon ICO files must remain ICO files. Converting them to WebP makes
+        // the browser icon unusable and also loses the multi-size ICO entries.
+        if (str_starts_with($mimeType, 'image/') && ! in_array($extension, ['gif', 'svg', 'webp', 'ico'], true)) {
             try {
                 $encoded = Image::read($file)->toWebp(85);
                 $fileName = Str::slug($originalName).'-'.time().'.webp';

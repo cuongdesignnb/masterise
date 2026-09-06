@@ -189,7 +189,7 @@ function MediaSelectModalContent({
                 type="file"
                 multiple
                 accept={kind === 'image'
-                  ? 'image/*'
+                  ? 'image/*,.ico'
                   : kind === 'document'
                     ? 'application/pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/zip'
                     : 'image/*,video/mp4,video/webm,video/quicktime,application/pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip'}

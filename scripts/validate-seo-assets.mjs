@@ -41,15 +41,16 @@ for (const [relativePath, expectedFormat, width, height, publicPath] of assets) 
   }
 }
 
-const faviconBytes = await fs.readFile(path.join(ROOT, 'src/app/favicon.ico'));
+const faviconPath = 'public/favicon.ico';
+const faviconBytes = await fs.readFile(path.join(ROOT, faviconPath));
 const faviconCount = faviconBytes.readUInt16LE(4);
 const faviconSizes = Array.from({ length: faviconCount }, (_, index) => {
   const offset = 6 + (index * 16);
   return [faviconBytes[offset] || 256, faviconBytes[offset + 1] || 256];
 });
-assert(faviconBytes.readUInt16LE(0) === 0 && faviconBytes.readUInt16LE(2) === 1, 'src/app/favicon.ico has an ICO signature');
-assert(faviconBytes.length > 1024, 'src/app/favicon.ico is not empty or a tiny placeholder');
-assert([[16, 16], [32, 32], [48, 48]].every(([width, height]) => faviconSizes.some(([w, h]) => w === width && h === height)), 'src/app/favicon.ico contains 16, 32 and 48 pixel entries');
+assert(faviconBytes.readUInt16LE(0) === 0 && faviconBytes.readUInt16LE(2) === 1, `${faviconPath} has an ICO signature`);
+assert(faviconBytes.length > 1024, `${faviconPath} is not empty or a tiny placeholder`);
+assert([[16, 16], [32, 32], [48, 48]].every(([width, height]) => faviconSizes.some(([w, h]) => w === width && h === height)), `${faviconPath} contains 16, 32 and 48 pixel entries`);
 
 if (BASE_URL) {
   for (const [publicPath, expectedType, width, height] of [

@@ -1,7 +1,7 @@
 import { revalidateTag } from 'next/cache';
 import { NextResponse } from 'next/server';
 
-const TAG_PATTERN = /^(project|project-reviews)-[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const TAG_PATTERN = /^(settings|seo-feature-flags|(?:project|project-reviews)-[a-z0-9]+(?:-[a-z0-9]+)*)$/;
 
 export async function POST(request: Request) {
   const secret = process.env.NEXT_REVALIDATION_SECRET;
