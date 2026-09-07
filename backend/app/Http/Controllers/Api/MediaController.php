@@ -59,7 +59,10 @@ class MediaController extends Controller
     public function upload(Request $request)
     {
         $purpose = $request->string('purpose')->toString();
-        $fileRule = $purpose === 'favicon'
+        $originalFilename = strtolower((string) $request->file('file')?->getClientOriginalName());
+        $isFaviconUpload = $purpose === 'favicon'
+            || preg_match('/(^|[._-])(favicon|site[-_]?icon)([._-]|$)/i', $originalFilename) === 1;
+        $fileRule = $isFaviconUpload
             ? 'required|file|max:102400|mimetypes:image/x-icon,image/vnd.microsoft.icon,image/png,image/gif,image/svg+xml'
             : 'required|file|max:102400|mimes:jpg,jpeg,png,gif,webp,svg,ico,pdf,doc,docx,xls,xlsx,ppt,pptx,zip,mp4,webm,mov';
 
@@ -82,7 +85,7 @@ class MediaController extends Controller
                 $request->file('file'),
                 $request->string('name')->toString() ?: null,
                 $request->user()?->id,
-                $purpose === 'favicon',
+                $isFaviconUpload,
             );
         } catch (\Throwable $exception) {
             report($exception);
