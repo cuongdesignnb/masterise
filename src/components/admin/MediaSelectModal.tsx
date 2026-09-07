@@ -14,6 +14,7 @@ interface MediaSelectModalProps {
   multiple?: boolean;
   selectedUrls?: string[];
   kind?: 'image' | 'document' | 'all';
+  uploadPurpose?: 'favicon';
 }
 
 const EMPTY_SELECTED_URLS: string[] = [];
@@ -31,6 +32,7 @@ function MediaSelectModalContent({
   multiple = false,
   selectedUrls = EMPTY_SELECTED_URLS,
   kind = 'all',
+  uploadPurpose,
 }: MediaSelectModalProps) {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
@@ -52,7 +54,7 @@ function MediaSelectModalContent({
   const uploadMutation = useMutation({
     mutationFn: async (file: File) => {
       setUploading(true);
-      return api.upload<Media>('/media/upload', file);
+      return api.upload<Media>('/media/upload', file, 'file', uploadPurpose ? { purpose: uploadPurpose } : {});
     },
     onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: ['media-select'] });
@@ -78,8 +80,11 @@ function MediaSelectModalContent({
     const files = e.target.files;
     if (files && files.length > 0) {
       Array.from(files).forEach((file) => {
+        const isFaviconFile = uploadPurpose === 'favicon'
+          && (file.type.startsWith('image/') || /\.ico$/i.test(file.name));
         const matchesKind = kind === 'all'
           || (kind === 'image' && file.type.startsWith('image/'))
+          || (kind === 'image' && isFaviconFile)
           || (kind === 'document' && !file.type.startsWith('image/') && !file.type.startsWith('video/'));
         if (!matchesKind) {
           alert(kind === 'image' ? 'Vui lòng chọn đúng tệp ảnh.' : 'Vui lòng chọn PDF, Word, Excel hoặc tài liệu khác.');
@@ -188,8 +193,10 @@ function MediaSelectModalContent({
               <input
                 type="file"
                 multiple
-                accept={kind === 'image'
-                  ? 'image/*,.ico'
+                accept={uploadPurpose === 'favicon'
+                  ? '.ico,image/x-icon,image/png,image/gif,image/svg+xml'
+                  : kind === 'image'
+                    ? 'image/*,.ico'
                   : kind === 'document'
                     ? 'application/pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/zip'
                     : 'image/*,video/mp4,video/webm,video/quicktime,application/pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip'}

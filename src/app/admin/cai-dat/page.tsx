@@ -3725,6 +3725,7 @@ export default function AdminSettings() {
             onClose={() => setMediaTarget(null)}
             onSelect={handleMediaSelected}
             kind={mediaTarget?.type === 'favicon' ? 'image' : 'all'}
+            uploadPurpose={mediaTarget?.type === 'favicon' ? 'favicon' : undefined}
           />
         )}
       </AnimatePresence>

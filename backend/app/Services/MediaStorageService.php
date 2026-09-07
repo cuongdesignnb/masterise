@@ -10,16 +10,29 @@ use Intervention\Image\Laravel\Facades\Image;
 
 class MediaStorageService
 {
-    public function storeUploadedFile(UploadedFile $file, ?string $displayName, ?int $uploadedBy): Media
+    public function storeUploadedFile(
+        UploadedFile $file,
+        ?string $displayName,
+        ?int $uploadedBy,
+        bool $preserveImage = false,
+    ): Media
     {
         $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
         $name = $displayName ?: $originalName;
         $extension = strtolower($file->getClientOriginalExtension());
         $mimeType = (string) $file->getClientMimeType();
+        $detectedMimeType = (string) ($file->getMimeType() ?: $mimeType);
+
+        // Favicon uploads may be supplied as a PNG with an .ico filename. Keep
+        // the original bytes and use the actual detected image format so the
+        // browser can decode the URL instead of receiving an invalid WebP/ICO.
+        if ($preserveImage && str_starts_with($detectedMimeType, 'image/')) {
+            [$extension, $mimeType] = $this->imageFormat($detectedMimeType, $extension, $mimeType);
+        }
 
         // Favicon ICO files must remain ICO files. Converting them to WebP makes
         // the browser icon unusable and also loses the multi-size ICO entries.
-        if (str_starts_with($mimeType, 'image/') && ! in_array($extension, ['gif', 'svg', 'webp', 'ico'], true)) {
+        if (! $preserveImage && str_starts_with($mimeType, 'image/') && ! in_array($extension, ['gif', 'svg', 'webp', 'ico'], true)) {
             try {
                 $encoded = Image::read($file)->toWebp(85);
                 $fileName = Str::slug($originalName).'-'.time().'.webp';
@@ -43,6 +56,28 @@ class MediaStorageService
             'url' => Storage::disk('public')->url($path),
             'uploaded_by' => $uploadedBy,
         ]);
+    }
+
+    /**
+     * Return a stable extension/MIME pair based on the detected file contents.
+     * This is intentionally used only for assets that must keep their source
+     * format (currently the browser favicon).
+     *
+     * @return array{0: string, 1: string}
+     */
+    private function imageFormat(string $detectedMimeType, string $fallbackExtension, string $fallbackMimeType): array
+    {
+        $formats = [
+            'image/x-icon' => ['ico', 'image/x-icon'],
+            'image/vnd.microsoft.icon' => ['ico', 'image/x-icon'],
+            'image/png' => ['png', 'image/png'],
+            'image/gif' => ['gif', 'image/gif'],
+            'image/svg+xml' => ['svg', 'image/svg+xml'],
+            'image/webp' => ['webp', 'image/webp'],
+            'image/jpeg' => ['jpg', 'image/jpeg'],
+        ];
+
+        return $formats[$detectedMimeType] ?? [$fallbackExtension, $fallbackMimeType];
     }
 
     public function storeInlineImage(string $binary, string $sourceMimeType, string $displayName, ?int $uploadedBy): Media
